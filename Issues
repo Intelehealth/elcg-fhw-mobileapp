@@ -1,0 +1,30 @@
+29 Sep, 2023
+1."Warning" for Internet availability?: It is not Warning. the pop up should appear like " Check for Internet" etc. Warning creates apprehension among the users.
+2. "Emergency" alert for SOS Data Entry? It is not emergency here. SOS means, the user will enter data, whenever she or he misses or wants to enter parameters. Emergency word is not good term, we can use "SOS" as pop up.
+3. "Check Urine Acetone Values: A-, A Trace, A+, A++, A+++, A++++ (total 6 values)
+4. Caput values should be: 0 (None), +, ++, +++ (Marked). The +++ value only will have "Marked' tag.
+5. Medicine: Yes/No Radio button. After Yes click, medication or medication list, dose, route etc are not showed.
+
+- Active case (in progress)
+- Upcoming
+
+- Completed
+    - Labour completed
+    - Refer to other
+    - All
+
+- Outcome Pending
+    - Stage 2
+    - Stage 1
+
+SELECT P.date_of_birth, P.uuid, V.enddate, V. startdate,V.uuid as visitId, P.openmrs_id,
+P.dateCreated, CASE WHEN middle_name IS NULL THEN first_name || ' ' || last_name ELSE first_name || ' ' || middle_name || ' ' || last_name END fullName,
+(SELECT CASE WHEN U.name LIKE '%Stage1%'  THEN 'Stage-1' WHEN U.name LIKE '%Stage2%'  THEN 'Stage-2' ELSE U.name END Stage FROM tbl_encounter E, tbl_uuid_dictionary U
+WHERE E.visituuid =V.uuid  and E.voided = '0'  and U.uuid = E.encounter_type_uuid  ORDER BY U.name DESC LIMIT 1)  as stage ,
+(SELECT value FROM tbl_visit_attribute where visit_attribute_type_uuid = '2bfbfd6c-7714-4432-a7e8-b0130889c2ff' AND visit_uuid = V.uuid) as outcomePending
+FROM  tbl_visit V
+LEFT JOIN tbl_patient P ON P.uuid = V.patientuuid
+LEFT JOIN tbl_visit_attribute VA ON VA.visit_uuid = V.uuid
+WHERE  V.uuid NOT IN (Select visituuid FROM tbl_encounter WHERE  encounter_type_uuid ='bd1fbfaa-f5fb-4ebd-b75c-564506fc309e' )
+AND V.voided IN ('0', 'false', 'FALSE') AND VA.value = '0c812a8b-a65e-4891-9a5c-ebb9d401344b'
+AND outcomePending = 'true'  GROUP BY  V.uuid   ORDER BY  P.dateCreated  DESC  LIMIT 20

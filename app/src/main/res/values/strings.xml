@@ -1,0 +1,1111 @@
+<resources>
+    <string name="app_name" translatable="false">eZazi</string>
+    <string name="notification_title">Realtime sync is ON!</string>
+    <string name="notificationTitle_Timeline">Patient: %1s</string>
+    //Generic
+    <string name="generic_the_flipping_word_next">Next</string>
+    <string name="hint_required">Required</string>
+    <string name="hint_optional">Optional</string>
+    <string name="tag_optional">optional</string>
+    <string name="generic_ok">OK</string>
+    <string name="generic_cancel">Cancel</string>
+    <string name="generic_yes">Yes</string>
+    <string name="generic_no">No</string>
+    <string name="generic_back">Back</string>
+    <string name="generic_coming_soon">Coming Soon.....</string>
+    <string name="action_print">Print</string>
+    <string name="action_sms">Sms</string>
+    <string name="action_home">Home</string>
+    <string name="action_settings">Settings</string>
+    <string name="generic_warning">Warning!</string>
+    <string name="generic_update">Update</string>
+    <string name="generic_deleted">Deleted</string>
+
+
+    //Database Schema Names
+    <string name="db_first_name" translatable="false">first_name</string>
+    <string name="db_middle_name" translatable="false">middle_name</string>
+    <string name="db_last_name" translatable="false">last_name</string>
+    <string name="db_dob" translatable="false">date_of_birth</string>
+    <string name="db_phone_number" translatable="false">phone_number</string>
+    <string name="db_address_line1" translatable="false">address1</string>
+    <string name="db_address_line2" translatable="false">address2</string>
+    <string name="db_city" translatable="false">city_village</string>
+    <string name="db_state" translatable="false">state_province</string>
+    <string name="db_postal_code" translatable="false">postal_code</string>
+    <string name="db_country" translatable="false">country</string>
+    <string name="db_gender" translatable="false">gender</string>
+    <string name="db_patient_id1" translatable="false">patient_identifier1</string>
+    <string name="db_patient_id2" translatable="false">patient_identifier2</string>
+    <string name="db_patient_id3" translatable="false">patient_identifier3</string>
+
+    //Login Screen
+    <string name="title_activity_login">eZazi</string>
+    <string name="prompt_email">Username</string>
+    <string name="prompt_password">Password</string>
+    <string name="prompt_admin_password">Admin Password</string>
+    <string name="action_sign_in">Login</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="url_invalid">Check your URL.</string>
+    <string name="prefix_invalid">Select a different prefix!</string>
+    <string name="error_invalid_email">This username is invalid</string>
+    <string name="error_require_email">Username is required</string>
+    <string name="error_require_password">Password is required</string>
+    <string name="error_invalid_password">8+ characters required for password</string>
+    <string name="error_invalid_pwd">Invalid Password</string>
+    <string name="reset_password_hint">Password must be of atleast 8 characters &amp; a mix of upper &amp; lower case letters, numbers &amp; symbols.</string>
+    <string name="error_incorrect_password">please check username and password entered</string>
+    <string name="error_field_required">This field is required</string>
+    <string name="error_network" translatable="false">Network Error</string>
+    <string name="error_location_not_selected">Please select the location.</string>
+    <string name="error_location_not_fetched">Unable to fetch locations</string>
+    <string name="permission_rationale" translatable="false">Contacts permissions are needed for providing email completions.
+    </string>
+    <string name="device_id">Device ID:</string>
+    <string name="identification_screen_prompt_time">Time:</string>
+    <string name="identification_screen_picker_hours" translatable="false">Hours</string>
+    <string name="identification_screen_picker_minute" translatable="false">Minutes</string>
+    <string name="cant_login_user">Can\'t log in?</string>
+    <string name="email_link">Please contact your System Administrator to reset your password or send an email to support@intelehealth.io</string>
+    <string name="contact_whatsapp">Please contact your System Administrator to reset your password</string>
+
+    //Home Screen (after login)
+    <string name="title_home_screen">Home</string>
+    <string name="button_new_pt">New Patient</string>
+    <string name="button_find_pt">Find Patient</string>
+    <string name="button_diagnostic_tests">Diagnostic Tests</string>
+    <string name="button_active_pt">Active Patients</string>
+    <string name="menu_option_sync">Refresh Data</string>
+    <string name="menu_option_settings">Settings</string>
+    <string name="menu_option_end_of_day">End of Day</string>
+    <string name="menu_option_logout">Log-out</string>
+
+
+    //Identification Screen
+    <string name="title_activity_identification">Add New Patient</string>
+    <string name="identification_screen_prompt_first_name">First name *</string>
+    <string name="identification_screen_prompt_middle_name">Middle name</string>
+    <string name="identification_screen_prompt_last_name">Last name *</string>
+    <string name="identification_screen_prompt_address">Address line 1</string>
+    <string name="identification_screen_prompt_address2">Address line 2</string>
+    <string name="identification_screen_prompt_phone_number">Phone number</string>
+    <string name="admin_password_dialog_heading">Enter Admin Password</string>
+    <string name="identification_screen_prompt_gender">Gender *</string>
+    <string name="identification_screen_checkbox_male">Male</string>
+    <string name="identification_screen_checkbox_female">Female</string>
+    <string name="identification_screen_prompt_birthday">Date of birth*</string>
+    <string name="identification_screen_prompt_age">Age:</string>
+    <string name="identification_screen_prompt_city">Village/Town/City *</string>
+    <string name="identification_screen_prompt_state">State *</string>
+    <string name="identification_screen_prompt_caste">Caste</string>
+    <string name="identification_screen_prompt_economic_status">Economic status</string>
+    <string name="identification_screen_prompt_education">Education level</string>
+    <string name="identification_screen_prompt_country">Country *</string>
+    <string name="identification_screen_prompt_postal_code">Postal code</string>
+    <string name="identification_screen_prompt_relationship">Son/Daughter/Wife of</string>
+    <string name="identification_screen_prompt_occupation">Occupation</string>
+    <string name="identification_screen_snack_patient_created">Patient created! Uploading to server.</string>
+    <string name="identification_screen_error_data_fields">Error: data fields are not formatted correctly</string>
+    <string name="identification_screen_dialog_age">Please enter age in years</string>
+    <string name="identification_screen_dialog_error_dob">Date of birth is set for date after today</string>
+    <string name="identification_screen_dialog_error_gender">Gender is not selected</string>
+    <string name="identification_screen_required_fields">Please enter required fields</string>
+    <string name="identification_screen_error_dob">Enter a valid DOB</string>
+    <string name="identification_screen_error_age">Enter a valid age</string>
+    <string name="identification_screen_text_years"> years </string>
+    <string name="identification_screen_text_months"> months</string>
+    <string name="identification_screen_picker_years">years</string>
+    <string name="identification_screen_picker_months">months</string>
+
+    //Active Patients Screen
+    <string name="title_activity_active_patient">Active Visits</string>
+
+    //Patient History Screen
+    <string name="title_activity_get_patient_history">Patient History</string>
+    <string name="title_activity_search_patient">Patient Lookup</string>
+
+    //Complaint Node Screen
+    <string name="title_activity_complaint_select">Select Complaints</string>
+    <string name="title_activity_complaint_questions">Answer All Questions</string>
+    <string name="title_activity_complaint_node">Select Complaints</string>
+    <string name="complaint_category_selected">Selected Categories:</string>
+    <string name="complaint_complaint_selected">Selected Complaints:</string>
+    <string name="complaint_dialog_title">Reason for visit</string>
+    <string name="complaint_required">Complaint must be selected!</string>
+
+    //Question Node Screen
+    <string name="title_activity_question_node">QuestionNodeActivity</string>
+    <string name="complaint_change_selected">Modify</string>
+    <string name="question_answer_all">Are you sure you have answered all questions.</string>
+    <string name="question_answer_all_phy_exam">Please answer all general exam questions.</string>
+    <string name="question_duration_picker">Please enter duration</string>
+    <string name="question_text_input">Please enter text</string>
+    <string name="question_date_picker">Please select date</string>
+    <string name="question_location_picker">Please select locations</string>
+    <string name="question_number_picker">Please enter number</string>
+    <string name="question_area_picker">Please enter the area (width X length)</string>
+    <string name="question_range_picker">Please enter a range</string>
+    <string name="question_frequency_picker">Please enter how many times</string>
+
+
+    //Table Exam Screen
+    <string name="title_activity_vitals">Vitals</string>
+    <string name="table_hw">Body Measurements</string>
+    <string name="table_height">Height (cm)</string>
+    <string name="table_weight">Weight (kg)</string>
+    <string name="table_bmi">BMI </string>
+    <string name="table_pulse">Pulse (bpm)</string>
+    <string name="table_bp">Vital Signs</string>
+    <string name="table_bpsys">BP Sys</string>
+    <string name="table_bpdia">BP Dia</string>
+    <string name="table_temp">Temperature (C)</string>
+    <string name="table_spo2">SpO2 (%)</string>
+
+    //Patient Search Screen
+    <string name="search_hint">Type to search patient by name…</string>
+    <string name="action_search">Search</string>
+    <string name="alert_none_found">Please check username and pasword entered</string>
+    <string name="title_search_patient">Search Patient</string>
+
+    //Past Medical History Screen
+    <string name="title_activity_patient_history">Past Medical History</string>
+
+    //Visit Summary Screen
+    <string name="title_activity_family_history">Family History</string>
+    <string name="title_activity_physical_exam">Physical Exam</string>
+    <string name="title_activity_patient_summary">Visit Summary</string>
+    <string name="visit_summary_temperature">Temperature(C)</string>
+    <string name="visit_summary_pulseox">SpO2 (%)</string>
+    <string name="visit_summary_hw_on_duty">CHW On Duty</string>
+    <string name="visit_summary_vitals_heading">Vitals</string>
+    <string name="visit_summary_height_heading">Height (cm)</string>
+    <string name="visit_summary_weight">Weight (kg)</string>
+    <string name="visit_summary_bmi">BMI</string>
+    <string name="visit_summary_bp">BP</string>
+    <string name="visit_summary_pulse">Pulse</string>
+    <string name="visit_summary_previous_reports">Previous Reports</string>
+    <string name="visit_summary_medical_history">Medical history</string>
+    <string name="visit_summary_family_history">Family history</string>
+    <string name="visit_summary_on_examination">On examination</string>
+    <string name="visit_summary_complaint">Reason for visit</string>
+    <string name="visit_summary_vitals">Vitals</string>
+    <string name="visit_summary_doctor_details">Doctor Details</string>
+    <string name="visit_summary_rx">Prescribed Medications</string>
+    <string name="visit_summary_diagnosis">Diagnosis</string>
+    <string name="visit_summary_advice">Medical Advice</string>
+    <string name="visit_summary_tests_prescribed">Tests/Referrals</string>
+    <string name="visit_summary_additional_comments">Additional Comments</string>
+    <string name="visit_summary_heading_name">Name</string>
+    <string name="visit_summary_heading_id">ID</string>
+    <string name="visit_summary_button_download">Download</string>
+    <string name="visit_summary_button_upload">Upload</string>
+    <string name="name_button_download">button_download</string>
+    <string name="visit_summary_follow_up_date">Follow Up Date</string>
+    <string name="visit_summary_follow_up_reminder">Please remind the patient of their follow up date: </string>
+    <string name="visit_summary_upload_reminder">Please upload first before attempting to end the visit.</string>
+
+
+    //Diagnostic Tests Screen
+    <string name="title_activity_diagnostic_tests_list">Choose a Diagnostic Test</string>
+
+    //Physical Exam Dialog
+    <string name="wash_hands">Remember to wash your hands</string>
+
+
+    //Patient Detail Screen
+    <string name="header_patient_detail">Patient information</string>
+    <string name="button_history">Patient History</string>
+    <string name="title_activity_patient_detail">Patient Detail</string>
+    <string name="header_medical_history">History</string>
+    <string name="button_new_visit">Start new visit</string>
+    <string name="header_previous_visits">Previous visits</string>
+    <string name="header_patient_history">Medical history</string>
+    <string name="header_family_history">Family history</string>
+    <string name="string_no_hist">No history of illness</string>
+    <string name="row_patient_id">Patient ID</string>
+    <string name="row_dob">DOB</string>
+    <string name="row_age">Age</string>
+    <string name="row_gender">Gender</string>
+    <string name="row_address">Address</string>
+    <string name="row_phone_number">Phone number</string>
+    <string name="row_open_visit">Click to open visit</string>
+    <string name="title_activity_settings">Settings</string>
+
+    <!-- Strings related to Settings -->
+
+    <!-- Example General settings -->
+    <string name="pref_header_general">General</string>
+
+    <string name="pref_title_social_recommendations">Enable social recommendations</string>
+    <string name="pref_description_social_recommendations">Recommendations for people to contact based on your message
+        history
+    </string>
+
+    <string name="pref_title_display_name">Display name</string>
+    <string name="pref_default_display_name">John Smith</string>
+
+
+    <!-- Example settings for Data & syncBackground -->
+    <string name="pref_header_data_sync">Data &amp; Refresh</string>
+
+    <string name="pref_title_server_url">Server URL</string>
+    <string name="pref_title_id_prefix">Location Prefix</string>
+
+    <!-- Example settings for Notifications -->
+    <string name="pref_header_notifications">Notifications</string>
+    <string name="pref_title_new_message_notifications">New message notifications</string>
+    <string name="pref_title_ringtone">Ringtone</string>
+    <string name="pref_ringtone_silent">Silent</string>
+    <string name="pref_title_vibrate">Vibrate</string>
+    <string name="toast_crash">Application error encountered; report sent</string>
+
+
+    <string name="title_activity_setup">Setup</string>
+
+    <string name="title_activity_camera">Camera</string>
+    <string name="title_activity_today_patient">Today\'s Visits</string>
+    <string name="title_activity_additional_documents">Additional Documents</string>
+    <string name="title_activity_video_library">Video Library</string>
+    <string name="visit_summary_patient_details">Visit details</string>
+
+    <!--Setup Activity-->
+    <string name="setup_internet">A strong Internet connection is required for setup.</string>
+    <string name="generic_manual_entry">Manual Entry</string>
+    <string name="generic_erase_redo">Erase and Re-Do</string>
+    <string name="visit_summary_edit_vitals">You can re-do the vitals from the vitals screen</string>
+
+    //Camera Permissions
+    <string name="permission_camera_rationale">Camera permission is needed to show the camera preview.</string>
+    <string name="permission_camera_denied">Camera permission was denied. Please consider granting it in order to access the camera!</string>
+    <string name="permission_camera_never_askagain">Camera permission was denied with never ask again.</string>
+    <string name="button_allow">Allow</string>
+    <string name="button_deny">Deny</string>
+    <string name="button_ok">OK</string>
+    <string name="button_cancel">Cancel</string>
+    <string name="picture_taken">Picture taken</string>
+    <string name="switch_flash">Switch flash</string>
+    <string name="switch_camera">Switch camera</string>
+    <string name="flash_auto">Flash auto</string>
+    <string name="flash_off">Flash off</string>
+    <string name="flash_on">Flash on</string>
+
+    //SEND SMS Permissions
+    <string name="permission_sms_rationale">SMS permission is needed to send SMS.</string>
+    <string name="permission_sms_denied">SMS permission was denied. Please consider granting it in order to send sms from the application!</string>
+    <string name="permission_sms_never_askagain">SMS permission was denied with never ask again.</string>
+
+    <string name="button_save">Save</string>
+    <string name="button_delete">Delete</string>
+
+    //Camera Dialog
+    <string name="camera_dialog_default">Please click document photo in good lighting conditions only. If document photo is not clear, please retake the document photo.</string>
+
+    <!--Offline Login Errors-->
+    <string name="offline_credentials_unavailable">Offline Login is not available.</string>
+    <string name="offline_user_does_not_match">User does not match.</string>
+    <string name="offline_authentication_not_possible">Unable to authenticate offline.</string>
+    <string name="admin_authentication_not_possible">Unable to authenticate.</string>
+
+    <string name="login_location_select">Select location</string>
+    <string name="prompt_licensekey">License key</string>
+    <string name="setup_use_demo_mindmap">Use demo protocols</string>
+    <string name="setup_download_mindmap">Download protocols</string>
+
+    <string name="please_wait_progress">Please Wait</string>
+    <string name="downloading_protocols">Downloading protocols</string>
+    <string name="logging_in">Logging in</string>
+    <string name="error_downloading_protocols">Error Downloading Mind Maps</string>
+
+    //Sync strings
+    <string name="sync_stopped">Stopped</string>
+    <string name="sync_in_progress">In progress</string>
+    <string name="sync_complete">Complete</string>
+    <string name="sync_error">Error : No such status</string>
+
+    <string name="id_number">ID Number</string>
+    <string name="uploading">Uploading</string>
+    <string name="downloading">Downloading...</string>
+
+    <string name="visit">Visit</string>
+    <string name="visit_update">Visit Update</string>
+    <string name="patient">Patient</string>
+    <string name="patient_update">Patient Update</string>
+    <string name="patient_images">Patient Profile Image</string>
+    <string name="visit_images">Visit Images</string>
+    <string name="prescription">Prescription</string>
+
+    <string name="error_no_data">Please download first before attempting to end the visit.</string>
+    <string name="error_phone_number">Phone number can\'t be empty</string>
+    <string name="action_end_visit">End Visit</string>
+
+    <string name="error_sms">SMS failed, please try again later!</string>
+    <string name="sms_success">SMS Sent!</string>
+
+    <string name="question_update_details">Do you want to update details?</string>
+
+    <string name="backup_completed">Backup Completed!</string>
+
+    <string name="hide_text">HIDE</string>
+    <string name="show_text">SHOW</string>
+
+    <string name="new_patient">New Patient</string>
+    <string name="find_patient">Find Patients</string>
+    <string name="video_library">Video Library</string>
+
+    <string name="error_no_sd">This feature is only available to devices with SD cards.</string>
+    <string name="error_admin_password">Admin Password Wrong</string>
+    <string name="error_no_file">No Files in this directory</string>
+    <string name="error_no_camera">No camera installed.</string>
+    <string name="error_delete">Error in deleting</string>
+    <string name="error_offline_login">Offline Login Unsuccessful</string>
+    <string name="success_offline_login">Offline Login Successful</string>
+    <string name="invalidate_offline_login">Offline Login Invalidated</string>
+
+    <string name="patient_upload_error">Patient has not been uploaded</string>
+    <string name="patient_not_registered">Patient not registered</string>
+
+    <string name="action_sync_all">Refresh Data</string>
+
+    <!-- Vitals Screen Error-->
+
+    <string name="weight_error">Weight should be less than %1$s kg</string>
+    <string name="height_error">Height should be between 0 and %1$s cm</string>
+    <string name="spo2_error">SpO2 should be in between %1$s and %2$s</string>
+    <string name="pulse_error">Pulse should be in between %1$s and %2$s</string>
+    <string name="bpsys_error">Systolic pressure should be in between %1$s and %2$s</string>
+    <string name="bpdia_error">Diastolic pressure should be in between %1$s and %2$s</string>
+    <string name="resp_error">Respiratory rate should be in between %1$s and %2$s</string>
+    <string name="temp_error">Temperature should be in between %1$s and %2$s</string>
+
+    <string name="not_provided">Not provided</string>
+
+    <!-- Patient Exit Survey -->
+    <string name="exit_survey_label">How was your experience?</string>
+    <string name="exit_survey_prompt">Enter your comments here</string>
+    <string name="exit_survey_skip">SKIP</string>
+    <string name="exit_survey_submit">Submit</string>
+    <string name="exit_survey_toast">Please select a smiley before submitting</string>
+
+
+    <!--DB Backup-->
+
+    <string name="db_backup_complete">Database Backup Complete!</string>
+    <string name="db_restore_complete">Database Restore Complete!</string>
+
+    <!--Cloud Backup-->
+
+    <string name="cloud_upload_header">Uploading database to cloud</string>
+    <string name="no_network">Internet connection not available</string>
+    <string name="no_data">No data to backup!</string>
+    <string name="local_backup_failed">Local backup not available</string>
+    <string name="local_backup_restore">Restoring from local backup</string>
+
+    <string name="cloud_restore_header">Restore form cloud</string>
+    <string name="restore_data">Restoring data</string>
+    <string name="error_existing_data">Database contains data, cannot restore!</string>
+    <string name="cloud_download_data">Downloading database from cloud</string>
+
+    <string name="force_restore_header">Restoring data from cloud(Forced)</string>
+
+    <string name="database_upload">Database Upload</string>
+    <string name="database_uploading">Database Uploading</string>
+    <string name="database_upload_complete">Database Upload Complete</string>
+    <string name="database_upload_failed">Database Upload Failed</string>
+
+    <string name="db_backup_unavailable">Database backup not available</string>
+    <string name="db_file_write_error">Error writing backup file</string>
+
+    <string name="local_restore_alert_title">Restore backup</string>
+    <string name="local_restore_alert_message">A local backup has been found. Do you want to restore?</string>
+
+
+    <!--Image Download Service-->
+    <string name="image_downloading_service_title">Downloading</string>
+    <string name="image_downloading_service_message">Downloading Image Data</string>
+    <string name="image_downloading_service_complete_title">Image Data Download Complete</string>
+    <string name="image_downloading_service_complete_message">All image files have been downloaded</string>
+    <string name="image_downloading_service_process_message">Downloaded</string>
+    <string name="error_img_unavailable">Image not available</string>
+    <string name="error_img_download_failed">Image Download failed</string>
+
+    <!--Parse Validation User login-->
+
+    <string name="user_logged_in">Already logged in!</string>
+    <string name="user_logged_in_other_device">Already logged in.Please logout from other device.</string>
+    <string name="user_logged_out">Logged out from server</string>
+    <string name="user_login_check_success">Login Successful!</string>
+    <string name="user_login_error">Another user is logged into this location. Please contact admin</string>
+    <string name="user_server_unreachable">Device Offline. Cannot check server for login verification</string>
+
+    <string name="title_activity_splash_acticity">SplashActicity</string>
+    <string name="title_activity_home">HomeActivity</string>
+    <string name="title_activity_sync">ActivityRefresh</string>
+    <string name="title_activity_privacy_notice">Privacy Notice</string>
+    <string name="title_activity_visit_summary">VisitSummaryActivity</string>
+    <string name="title_activity_past_medical_history">PastMedicalHistoryActivity</string>
+    <string name="title_activity_patient_survey">PatientSurveyActivity</string>
+
+    <!--Privacy Notice Activity-->
+    <string name="privacy_toast">Please select an option</string>
+    <string name="temperature_f">Temperature (F)</string>
+    <string name="sync_now">Refresh Now</string>
+    <string name="lastsync">lastsync</string>
+    <string name="enter_password">Enter your password</string>
+    <string name="enter_username">Enter your username</string>
+    <string name="patient_denies">Patient denies</string>
+    <string name="patient_reports">Patient reports</string>
+
+    <string name="associated_symptoms">Associated symptoms</string>
+    <string name="enter_server_url">Enter Server URL</string>
+    <string name="enter_license_key"><b>Enter license key</b></string>
+    <string name="invalid_url">Invalid URL</string>
+    <string name="years">Years</string>
+    <string name="months">Months</string>
+    <string name="please_wait_till_sync_is_completed">Please wait till refresh is completed</string>
+    <string name="patient_name">Patient name</string>
+    <string name="son_daughter_wife_of">Son/Daughter/Wife of</string>
+    <string name="occupation">Occupation</string>
+    <string name="economic_status">Economic status</string>
+    <string name="education_level">Education level</string>
+    <string name="caste">Caste</string>
+    <string name="previous_visits">Previous visits</string>
+    <string name="accept">Accept</string>
+    <string name="reject">Reject</string>
+    <string name="next">Next</string>
+    <string name="which_server_would_you_like_to_connect_to">Which server would you like to connect to?</string>
+    <string name="enter_url">Enter URL</string>
+    <string name="choose_a_location_to_login">Choose a location to login</string>
+    <string name="choose_an_option_for_protocols">Choose an option for protocols</string>
+    <string name="please_enter_your_username_and_password">Please enter your username and password</string>
+    <string name="android_id">Android Id:</string>
+    <string name="respiratory_rate">Respiratory Rate</string>
+    <string name="click_to_download_the_images">Click to download the images</string>
+    <string name="doctor">Doctor Details</string>
+    <string name="health_worker">Health worker</string>
+    <string name="priority">Priority</string>
+    <string name="server_url">Server url</string>
+    <string name="sync">Refresh</string>
+    <string name="update_protocols">Update Protocols</string>
+    <string name="end_all_visit">End All Visit</string>
+    <string name="filter_by_creator">Filter by creator</string>
+    <string name="planet_name">Planet Name</string>
+    <string name="ok">Ok</string>
+    <string name="cancel">Cancel</string>
+    <string name="unable_to_end">Unable to end</string>
+    <string name="upload_before_end_visit_active"> visits.Please upload visit before attempting to end the visit.</string>
+    <string name="active">Active</string>
+    <string name="closed">Closed</string>
+
+    <string name="syncInProgress">Refresh in progress</string>
+    <string name="please_wait">Please wait...</string>
+    <string name="sync_notif_title">refresh</string>
+    <string name="sync_background_completed">refreshBackground Completed</string>
+    <string name="sync_not_available">Refresh not available</string>
+    <string name="please_connect_to_internet">Please connect to an internet connection!</string>
+    <string name="image_upload">ImageUpload</string>
+    <string name="image_upload_failed">ImageUpload failed</string>
+    <string name="sure_to_exit">Are you sure you want to EXIT?</string>
+    <string name="sure_to_logout">Are you sure you want to Logout?</string>
+    <string name="lastsync_normal">Last Refresh</string>
+    <string name="update_patient_identification">Update Patient</string>
+    <string name="are_you_want_go_back">Are you sure you want to go back ?</string>
+    <string name="error">Error</string>
+    <string name="patient_data_upload">Patient Data Upload</string>
+    <string name="patient_image_download_notifi">Patient Image Download</string>
+    <string name="image_download_complete_notifi">\'s Image Download complete.</string>
+    <string name="no_prior_visits">No prior visits.</string>
+    <string name="end_visit_notif">End visit</string>
+    <string name="visit_ended_notif">Visit ended</string>
+    <string name="this_question_only_one_answer">This question can have only one answer.</string>
+    <string name="uploading_to_doctor_notif">Uploading to doctor.</string>
+    <string name="visit_data_upload">Visit Data Upload</string>
+    <string name="uploading_visit_data_notif">Uploading visit data</string>
+    <string name="uploaded_visit_data_notif">Uploaded visit data</string>
+    <string name="failed_to_upload">failed to Uploaded</string>
+    <string name="upload_completed">Upload Completed</string>
+    <string name="check_your_connectivity">Check your connectivity</string>
+    <string name="download_from_doctor">Download from doctor</string>
+    <string name="prescription_downloaded">Prescription downloaded</string>
+    <string name="downloading_prescription">Downloading prescription</string>
+    <string name="visit_data_failed">Visit Data Failed</string>
+    <string name="patient_data_failed">Patient Data Failed</string>
+    <string name="privacy_notice_title">Privacy Notice</string>
+    <string name="no_data_active_patients">No patient records for this health worker found.</string>
+    <string name="syncing_visitDialog">Refreshing</string>
+    <string name="successfully_synced_notif">Successfully Refreshed</string>
+    <string name="languages">Languages</string>
+    <string name="change_languages">Change Languages</string>
+    <string name="current_language">Current Language</string>
+
+    <string name="protocols_downloaded_successfully">Protocols Downloaded Successfully!</string>
+    <string name="no_protocols_found">No protocols found</string>
+    <string name="unable_to_get_proper_response">There was a problem downloading protocols, Please contact system administrator</string>
+    <string name="last_synced">Last Refreshed - </string>
+    <string name="location_setup">Setup Location - </string>
+    <string name="today_visits">Today\'s Visits</string>
+    <string name="active_visits">Active Visits</string>
+    <string name="day">day</string>
+    <string name="hour">hour</string>
+    <string name="minute">minute</string>
+    <string name="s">s</string>
+    <string name="ago">ago</string>
+    <string name="successfully_synced">Successfully refreshed</string>
+    <string name="failed_synced"><![CDATA[Failed refresh, check your internet connection]]></string>
+    <string name="visit_not_uploaded">Visit Not Uploaded</string>
+    <string name="upload_started">Uploading...</string>
+    <string name="visit_uploaded_successfully">Visit Uploaded Successfully</string>
+    <string name="visit_uploaded_failed">Will be uploaded when internet is available</string>
+    <string name="visitID">Visit ID</string>
+
+    <string name="end_visit_msg">Are you sure you want to end the visit?</string>
+    <string name="prescription_not_downloaded_check_internet">Prescription not downloaded, check internet connection</string>
+    <string name="privacy_reject_toast">You cannot register a patient without consent</string>
+    <string name="not_answered">Not answered</string>
+    <string name="new_update_available">New Update Available</string>
+    <string name="update_app_note">New version is available with new features please update app</string>
+    <string name="update">Update</string>
+    <string name="hello_thankyou_for_using_intelehealth_app_to_download_click_here">"Hello, Thank you for using Intelehealth. To Download your prescription please click here "</string>
+    <string name="and_enter_your_patient_id">" and enter your Patient ID - "</string>
+
+
+    <!--New Ayu Related Changes-->
+    <string name="what_is_the_reason_for_your_visit">What is the reason for your visit?</string>
+    <string name="swipe_down_to_return">Swipe Down for previous / Up for next</string>
+    <string name="swipe_up">Swipe to Up for Next</string>
+    <string name="swipe_down">Swipe to Down for previous</string>
+    <string name="have_symptom">Do you have this Symptom?</string>
+
+
+    <!--New UI changes 2.1-->
+    <string name="personal_information">Personal Information</string>
+    <string name="address_details">Address Details</string>
+    <string name="txt_others">Others</string>
+    <string name="do_you_need_help_please_contact_us">Do you need help? Please contact us!</string>
+    <string name="whatsapp_helpline">WhatsApp Helpline</string>
+    <string name="Whatsapp_Help_Cardview">Help</string>
+    <string name="skip">skip</string>
+    <string name="start">Start</string>
+    <string name="who_is_this_napplication_for">Who is this \napplication for?</string>
+    <string name="custom_setup">Setup</string>
+    <string name="demo_version">Demo version</string>
+    <string name="sample_text">sample text</string>
+    <string name="test_2_vibha_onplus_6t_10fke_7">Test 2 Vibha onplus 6T, 10FKE-7</string>
+    <string name="age_11_years_5_months">Age: 11 years, 5 months</string>
+    <string name="active_defaultTag">Active</string>
+    <string name="since_when_have_you_had_this_symptom">Since when have you had this symptom?</string>
+    <string name="hello_n_n_i_m_ayu_a_digital_health_assistant_let_s_get_started">Hello\n\n I’m Ayu, a digital health assistant. Let’s get started!</string>
+    <string name="hello_n_n_i_m_ayu_a_digital_health_assistant_let_s_get_started_normal_Screen">Hello\n\n I’m Ayu, a digital health assistant. Let’s get started!</string>
+    <string name="hello_my_name_is">"Hello, my name is "</string>
+    <string name="i_need_assistance">" and I need some assistance."</string>
+    <string name="economic_values_missing">Economic values are missing</string>
+    <string name="education_values_missing">Education values are missing</string>
+    <string name="intelehealth_a_telemedicine_platform">Intelehealth is a telemedicine application that connects health workers in rural and remote areas with remote doctors so they can provide high quality health services for their patients.</string>
+    <string name="intelehealth_name">Intelehealth</string>
+    <string name="Ayu_name">Ayu</string>
+    <string name="close_button">Close</string>
+    <string name="active_tag_patientDetail">" Active"</string>
+    <string name="associated_symptoms_patientDetail">Associated symptoms</string>
+    <string name="device_ID">Device Id: </string>
+    <string name="enter_valid_license_url">Enter valid License Url</string>
+    <string name="please_enter_url_and_key">Please enter URL and Key</string>
+    <string name="please_enter_valid_license_key">Please enter a valid license key</string>
+    <string name="permission_denied">Permission Denied\n</string>
+    <string name="reject_permission_results"><![CDATA[If you reject permission,you can not use this service\n\nPlease turn on permissions at [Setting] > [Permission]]]></string>
+    <string name="current_time"><![CDATA[\"Current time => \"]]></string>
+    <string name="temperature_C">"Temperature(C): "</string>
+    <string name="temperature_F">"Temperature(F): "</string>
+    <string name="no_history_family_found">No history of illness in family provided.</string>
+    <string name="no_history_patient_illness_found">No history of patient\'s illness provided.</string>
+    <string name="dr_registration_no">Registration No: </string>
+    <string name="dr_phone_number">Phone Number: </string>
+    <string name="dr_email">Email: </string>
+    <string name="_visit_summary"> Visit Summary</string>
+    <string name="patient_id_">Patient Id: </string>
+    <string name="patient_name_title">Patient Name: </string>
+    <string name="patient_DOB">Patient DOB: </string>
+    <string name="error_non_decimal_no_added">Error: non-decimal number entered.</string>
+    <string name="download_protocols">Downloading Protocols</string>
+    <string name="mindmap_internect_connection">To download mindmaps you need a Internet connectivity, please turn on your Internet</string>
+    <string name="days">Days</string>
+    <string name="contact">Contact</string>
+    <string name="has_a_new_prescription">has a new prescription</string>
+    <string name="whatsapp_presc_toast">Select prescription PDF from file explorer - Internal storage/Intelehealth_PDF</string>
+    <string name="enter_mobile_number_to_share_prescription">Enter the mobile number to which you want to share the prescription.</string>
+    <string name="share">Share</string>
+    <string name="please_enter_mobile_number">Please enter a mobile number</string>
+    <string name="download_prescription_first_before_sharing">Download prescription first before sharing</string>
+    <string name="i_sevika_confirm_that_i_have_read_out_the_privacy_notice_and_consent_to_the_patient">*I (Health Worker) confirm that I have read out the privacy notice and consent to the patient.</string>
+    <string name="enter_10_digits">Enter 10 digits</string>
+    <string name="enter_9_digits">Enter 9 digits</string>
+    <string name="please_read_out_privacy_consent_first">Please read out the Privacy Consent first.</string>
+    <string name="view_print">View/Print</string>
+    <string name="refresh">Refresh</string>
+    <string name="family_member">Family Member</string>
+    <string name="no_family_member_registered">No Family Member Registered</string>
+    <string name="question_not_answered">Question not answered</string>
+    <string name="version_settings">Version 1.3</string>
+    <string name="gender_male">Male</string>
+    <string name="gender_female">Female</string>
+    <string name="document_">"Document - "</string>
+    <string name="Hours">Hours</string>
+    <string name="Days">Days</string>
+    <string name="Weeks">Weeks</string>
+    <string name="Months">Months</string>
+    <string name="Years">Years</string>
+    <string name="per_Hour">per Hour</string>
+    <string name="per_Day">per Day</string>
+    <string name="per_Week">Per Week</string>
+    <string name="per_Month">per Month</string>
+    <string name="per_Year">per Year</string>
+    <!--@lincon-->
+    <string name="failed_initial_synced">Failed refresh, check your internet connection. Please restart the app.</string>
+
+    //setup activity
+    <string name="setup_internet_available">A strong Internet connection is required for setup.</string>
+    <string name="setup_internet_not_available">You are not connected to the Internet.</string>
+    <string name="generic_info">Info!</string>
+    <string name="speciality_cardview_title">Speciality</string>
+    <string name="select_specialization_text">Select Specialization</string>
+    <string name="please_select_specialization_msg">Please select specialization</string>
+    <string name="chat_fab">chat fab</string>
+
+    <string name="visit_closed">Visit Closed</string>
+    <string name="ok_close_now">Ok, Close It</string>
+    <string name="retry_again">Retry Again!</string>
+    <string name="required_permission">Permission Required</string>
+    <string name="take_photo">Take Photo</string>
+    <string name="choose_from_gallery">Choose from Gallery</string>
+    <string name="additional_doc_image_picker_title">Add Additional Document!</string>
+    <string name="something_went_wrong">Something went wrong. Please contact support</string>
+
+    <!--    Strings for special Check-->
+    <string name="str_check_Odisha">Odisha</string>
+    <string name="str_check_Bukidnon">Bukidnon</string>
+    <string name="str_check_India">India</string>
+    <string name="str_check_UnitedStates">United States</string>
+    <string name="str_check_Philippines">Philippines</string>
+    <string name="loading_more">Loading more...</string>
+    <string name="warning_app_update">Please update the app to the latest version.</string>
+    <string name="location">Location</string>
+
+    //Follow-up Visits
+    <string name="title_follow_up">Follow Up Visits</string>
+    <string name="title_follow_reminder">Follow up visit reminder</string>
+    <string name="title_follow_up_reminder_desc">Hello, there are some follow up visits are pending, please do follow up.</string>
+    <string name="due_on">Due Date:</string>
+
+
+    //----------reset app strings-------------
+    <string name="reset_app">Reset app</string>
+    <string name="app_reset_toast">App Reset is done!</string>
+    <string name="resetting_app_dialog">Resetting App</string>
+    <string name="sure_to_reset_app">Are you sure you want to reset app?</string>
+
+    //Reset App functionality
+    <string name="sync_failed">Sync Failed! Please try again later.</string>
+    <string name="no_network_sync">You are not connected to the internet. Please try again later.</string>
+    <string name="app_sync">Syncing App..</string>
+
+    <string name="saving_captured_image">Saving Captured Image...</string>
+    <string name="alert_message_for_discard_visit">New started visit will be not saved!</string>
+
+    //Language Screen
+    <string name="choose_lang_title">Choose your Language</string>
+    <string name="save_button">Save</string>
+    <string name="selectLanguageToast">Please select Language</string>
+    <string name="config_not_found_alert_message">No config attribute found</string>
+    <string name="error_login_title">Error Login</string>
+    <string name="config_file_error">config file error</string>
+    <string name="internet_connected_txt">Connected to Internet!</string>
+    <string name="not_connected_txt">Not connected to Internet!</string>
+    <string name="config_error">Config Error</string>
+
+    <string name="notification_message"></string>
+    <string name="ticker_text">Looking for new task</string>
+    <string name="identification_screen_prompt_citizen_id">Citizen ID(*)</string>
+    <string name="citizen_id_validation_message">Please enter 14 digits Citizen ID</string>
+    <string name="country_matching_String_forIndia">India</string>
+    <string name="country_matching_String_forPhilippines">Philippines</string>
+    <string name="country_matching_String_forKyrgyzstan">Kyrgyzstan</string>
+    <!--Prescription-->
+    <string name="prescription_age">Age</string>
+    <string name="prescription_gender">Gender</string>
+    <string name="prescription_address_contact">Address and Contact</string>
+    <string name="prescription_patient_id">Patient Id</string>
+    <string name="prescription_date_of_visit">Date of visit</string>
+    <string name="prescription_vitals">Vitals</string>
+    <string name="prescription_rr">Respiratory Rate</string>
+    <string name="prescription_pulse">Pulse(bpm)</string>
+    <string name="prescription_bp">Blood Pressure</string>
+    <string name="prescription_bmi">BMI</string>
+
+    <string name="prescription_wt">Weight(kg)</string>
+    <string name="prescription_ht">Height(cm)</string>
+    <string name="prescription_pre_comp">Presenting complaint(s)</string>
+    <string name="prescription_diagnosis">Diagnosis</string>
+    <string name="prescription_med_plan">Medication(s) plan</string>
+    <string name="prescription_rec_investigation">Recommended Investigation(s)</string>
+    <string name="prescription_general_advice">General Advice</string>
+    <string name="prescription_follow_up_date">Follow Up Date</string>
+    <string name="prescription_temp_c">Temperature (C) : </string>
+    <string name="prescription_temp_f">Temperature (F) : </string>
+
+    <string name="intro_text_1">
+        Telemedicine app makes specialist doctor consultations available to the rural populations coming to primary healthcare . It helps in saving patients from traveling miles for healthcare.
+        \n\n
+        Telemedicine app allows Health Officers to collect detailed patient complaints and symptoms and generates a comprehensive clinical case history. The app also allows them to capture details of previous medications, diagnostics, prescriptions and treatment.
+    </string>
+
+    <string name="book_appointment">Book Appointment</string>
+    <string name="reschedule_appointment">Reschedule Appointment</string>
+    <string name="appointment_booking_confirmation_txt">Are you sure to book this slot?</string>
+    <string name="appointment_booking_cancel_confirmation_txt">Are you sure to cancel appointment?</string>
+    <string name="cancel_appointment">Cancel Appointment</string>
+    <string name="slot_empty_message">Appointment slot is not available for selected date and speciality!</string>
+    <string name="appointment_empty_message">You don\'t have any appointment!</string>
+    <string name="appointment_listing_title">Appointment Listing</string>
+    <string name="appointment_booking_title">Appointment Booking</string>
+    <string name="appointment_for">Appointment For</string>
+    <string name="please_select_appointment_slot">Please select appointment slot</string>
+    <string name="please_select_speciality">Please select speciality!</string>
+
+    <string name="doctor_appointments">Doctor Appointments</string>
+    <string name="slot_info">Slot info</string>
+    <string name="appointment_booked">Appointment Booked</string>
+    <string name="minutes_txt">minutes</string>
+    <string name="booked_txt">booked</string>
+    <string name="cancelled_txt">cancelled</string>
+    <string name="please_upload_visit">Please upload the visit first before booking appointment.</string>
+    <string name="appointment_booked_successfully">Appointment booked successfully!</string>
+    <string name="appointment_booked_failed">Appointment booked failed!</string>
+    <string name="postal_code_invalid_txt">Please enter valid postal code</string>
+    <string name="failed_to_cancel_appointment">Failed to cancel the appointment!</string>
+    <string name="appointment_cancelled_success_txt">The appointment was canceled successfully!</string>
+    <string name="have_you_spoken_with_the_patient_directly">Have you spoken with the patient directly?</string>
+    <string name="patient_interaction">Patient Interaction</string>
+
+    <string name="diagnosis">Diagnosis</string>
+    <string name="primary">Primary</string>
+    <string name="secondary">Secondary</string>
+    <string name="provisiona">Provisional</string>
+    <string name="confirmed">Confirmed</string>
+    <string name="recommended_medication">Recommended Medication</string>
+    <string name="medication">Medication</string>
+    <string name="strength">Strength</string>
+    <string name="units">Units (eg: mg)</string>
+    <string name="units_tab">Units (eg: Tab/Syrup)</string>
+    <string name="for_duration">For Duration</string>
+    <string name="units_eg_days_weeks_etc">Units (eg: Days/Weeks/etc.)</string>
+    <string name="additional_instruction">Additional Instruction</string>
+    <string name="recommended_tests">Recommended Tests</string>
+    <string name="test">Test</string>
+
+    <string name="advice_or_refer_patient">Advice or Refer Patient</string>
+    <string name="notes">Notes</string>
+    <string name="notes_not_shared_with_the_patient">Notes (not shared with the patient)</string>
+    <string name="follow_up">Follow Up</string>
+    <string name="sign_and_submit">Sign and Submit</string>
+    <string name="add_test">Add Test</string>
+    <string name="add_advice">Add Advice</string>
+    <string name="add_note">Add Note</string>
+    <string name="schedule_a_follow_up">Schedule a follow up</string>
+    <string name="submit">Submit</string>
+    <string name="add_meds">Add Meds</string>
+    <string name="add_diagnosis">Add Diagnosis</string>
+    <string name="startVisitNote">Start Visit Note</string>
+
+    <string name="prescGivenSuccessfully">Thank you! Prescription is given successfully</string>
+    <string name="morethanonefollowupnotallowed">Please provide only one Followup at a time.</string>
+    <string name="amount">Amount</string>
+    <string name="frequency">Frequency</string>
+    <string name="route_optional">Route (Optional)</string>
+    <string name="reason_optional">Reason (Optional)</string>
+    <string name="choose_a_date">Choose a date</string>
+    <string name="follow_up_remark">Follow up remark</string>
+    <string name="visit_summary_upload_reminder_prescription" translatable="false">Please upload first before attempting to give prescription.</string>
+    <string name="visit_summary_prescription_already_given">Prescription already provided. Please download prescription.</string>
+
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="type_to_search">Type to Search..</string>
+
+    //----download protocol failed alert dialog-----------
+    <string name="protocol_download_failed_alertdialog">Unable to download the protocol. Press \'Yes\' to retry protocol download. \'No\' to continue with Demo protocols.</string>
+    <string name="am">06:00 AM</string>
+    <string name="am15">06:15 AM</string>
+    <string name="am30">06:30 AM</string>
+    <string name="am45">06:45 AM</string>
+    <string name="search_visits_hint">Search cases...</string>
+    <string name="daughter_wife_of">Daughter/Wife of</string>
+    <string name="total_birth_count_val_txt">Please enter the total birth count</string>
+    <string name="total_miscarriage_count_val_txt">Please enter the total abortion count</string>
+    <string name="labor_onset_val_txt">"Please select labor onset "</string>
+    <string name="active_labor_diagnosed_date_val_txt">Select the active labor diagnosed date</string>
+    <string name="active_labor_diagnosed_time_val_txt">Select the active labor diagnosed time</string>
+    <string name="membrane_ruptured_date_val_txt">Please select membrane ruptured date</string>
+    <string name="membrane_ruptured_time_val_txt">Please select membrane ruptured time</string>
+    <string name="risk_factors_val_txt">Please select the risk factors</string>
+    <string name="hospital_matermnity_val_txt">Please select hospital/maternity</string>
+    <string name="setupUrl">ezazi.intelehealth.org</string>
+    <string name="endStageButton">End First Stage</string>
+    <string name="end2StageButton">End Second Stage</string>
+    <string name="add_out_of_time_reason">Add Reason</string>
+    <string name="update_out_of_time_reason">Update Reason</string>
+    <string name="view_more">View more</string>
+    <string name="view_less">View less</string>
+    <string name="notificationTimeline_Description">You can start entering the data now</string>
+    <string name="click_to_enter"><u>Click to Enter</u></string>
+    <string name="missed_interval"><u>Missed</u></string>
+    <string name="submitted_interval"><u>Submitted</u></string>
+    <string name="add_patient_txt">Add Patient</string>
+    <string name="title_activity_epartogram">WHO LCG View</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of "de Finibus Bonorum et Malorum" (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, very popular during the Renaissance. The first line of Lorem Ipsum, "Lorem ipsum dolor sit amet..", comes from a line in section 1.10.32.</string>
+    <string name="live_birth">Live Birth</string>
+    <string name="still_birth">Stillbirth</string>
+    <string name="action_birthoutcome">Birth Outcome</string>
+    <string name="endedStage1Button">First Stage Ended</string>
+    <string name="unique_Ezazi_registration_number">UER No</string>
+    <string name="this_option_available_tablet_device">Please use 8inch or more tablet for viewing the eLCG</string>
+    <string name="move_to_stage2">Move to Stage 2</string>
+    <string name="refer_to_other_hospital">Refer to other Hospital</string>
+    <string name="self_discharge_medical_advice">Self discharge against Medical Advice</string>
+    <string name="select_an_option">Select an option</string>
+    <string name="self_discharge_successful">Self Discharge successful</string>
+    <string name="refer_successfully">%1$s successfully</string>
+    <string name="please_select_an_option">Please select an option</string>
+    <string name="refer_hospital_name">Refer Hospital Name</string>
+    <string name="refer_doctor_name">Refer Doctor Name</string>
+    <string name="refer_note">Note</string>
+    <string name="refer_section">Refer Section</string>
+    <string name="refer_data_submitted_successfully">Refer data submitted successfully</string>
+    <string name="select_birth_outcome">Select Birth Outcome</string>
+    <string name="primary_doct_val_txt">Please select primary Doctor</string>
+    <string name="seconday_doct_val_txt">Please select secondary Doctor</string>
+    <string name="birth_weight">Birth Weight</string>
+    <string name="apgar_1min">Apgar at 1min</string>
+    <string name="apgar_5min">Apgar at 5min</string>
+    <string name="sex">Sex</string>
+    <string name="baby_status">Baby Status</string>
+    <string name="mother_status">Mother Status</string>
+    <string name="additional_information">Additional Information</string>
+    <string name="time_out_reason_title">Visit Time Out Information</string>
+    <string name="end_shift">End Shift</string>
+    <string name="no_more_visits_to_assign">No more visits/patients to assign other nurse.</string>
+    <string name="patient_assigned_successfully">Patient assigned successfully!</string>
+    <string name="additional_info_submitted_successfully">Additional Information is submitted successfully</string>
+    <string name="time_out_info_submitted_successfully">Time out reason information is submitted successfully</string>
+    <string name="enter_birth_weight">Enter Birth Weight</string>
+    <string name="enter_apgar_at_1_min">Enter Apgar at 1 min</string>
+    <string name="enter_apgar_at_5_min">Enter Apgar at 5 min</string>
+    <string name="enter_sex_of_baby">Enter Sex of baby</string>
+    <string name="enter_baby_status">Enter Baby Status</string>
+    <string name="enter_mother_status">Enter Mother Status</string>
+    <string name="lbl_help">Help</string>
+    <string name="don_t_have_any_active_visit">Don\'t have any active visit!</string>
+    <string name="active_cases">Active Cases (%1$d)</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <!--    <string name="hello_blank_fragment">Hello blank fragment</string>-->
+
+    <!-- Add Patient -->
+    <string name="add_patient">Add New Patient</string>
+    <string name="personal">Personal</string>
+    <string name="address">Address</string>
+    <string name="other">Other</string>
+    <string name="add_a_picture">Add a picture</string>
+    <string name="first_name">First Name*</string>
+    <string name="middle_name">Middle Name</string>
+    <string name="last_name">Last Name*</string>
+    <string name="date_of_birth">Date of Birth*</string>
+    <string name="age">Age*</string>
+    <string name="mobile_number">Mobile Number</string>
+    <string name="alternate_mobile_no">Alternate Mobile Number</string>
+    <string name="back">Back</string>
+    <string name="country">Country*</string>
+    <string name="state">State*</string>
+    <string name="village_town_city">Village/Town/City*</string>
+    <string name="address_line1">Address Line 1</string>
+    <string name="address_line2">Address Line 2</string>
+    <string name="postal_code">Postal Code</string>
+    <string name="admission_date">Admission Date &amp; Time*</string>
+    <string name="date">Date*</string>
+    <string name="time">Time*</string>
+    <string name="parity">Parity*</string>
+    <string name="total_birth">Total Birth</string>
+    <string name="total_miscarriage">Total Abortion</string>
+    <string name="labor_onset">Labor Onset*</string>
+    <string name="spontaneous">Spontaneous</string>
+    <string name="induced">Induced</string>
+    <string name="when_diagnosed">When was active labor diagnosed?*</string>
+    <string name="sac_ruptured">When was the amniotic sac ruptured?*</string>
+    <string name="risk_factors">Risk Factors*</string>
+    <string name="hospital_maternity">Hospital/Maternity?*</string>
+    <string name="primary_doctor">Primary Doctor*</string>
+    <string name="secondary_doctor">Secondary Doctor*</string>
+    <string name="bed_number">Bed Number</string>
+    <string name="hospital">Hospital</string>
+    <string name="maternity">Maternity</string>
+    <string name="lbl_sos">SOS</string>
+    <string name="stage_1">Stage 1</string>
+    <string name="stage_2">Stage 2</string>
+    <string name="select_risk_factors">Select Risk Factors</string>
+    <string name="age_title">Age</string>
+    <string name="dob_title">Date of Birth</string>
+    <string name="start_obs">Start Recording Observations</string>
+    <string name="bed_number_title">Bed Number</string>
+    <string name="patient_info">Patient Information</string>
+    <string name="unknown">Unknown</string>
+    <string name="select_primary_doctor">Select Primary Doctor</string>
+    <string name="select_secondary_doctor">Select Secondary Doctor</string>
+
+
+    <string name="mo">Mo</string>
+    <string name="tu">Tu</string>
+    <string name="we">We</string>
+    <string name="th">Th</string>
+    <string name="fr">Fr</string>
+    <string name="sa">Sa</string>
+    <string name="su">Su</string>
+    <string name="okay">Okay</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="enter_value">Enter Value:</string>
+
+    <string name="are_you_sure_to_capture_emergency_data">Are you sure to capture the  data now?</string>
+    <string name="are_you_sure_want_to_complete_visit">Are you sure you want to complete visit now with \"%1$s\"?</string>
+    <string name="are_you_sure_want_to_end_stage_1">Are you sure you want to End Stage 1?</string>
+    <string name="are_you_sure_want_to_refer_other">Are you sure you want to \"Refer to other hospital\"?</string>
+    <string name="are_you_sure_want_to_self_discharge">Are you sure patient wants to \"Self discharge against Medical Advice\"?</string>
+    <string name="are_you_sure_want_to_shift_to_c_section">Are you sure patient wants to \"Shift to C-Section\"?</string>
+    <string name="are_you_sure_want_to_refer_to_icu">Are you sure patient wants to \"Refer to high dependency unit / ICU\"?</string>
+    <string name="hospital_name">Hospital Name</string>
+    <string name="time_out_reason">Timeout Reason</string>
+    <string name="enter_out_of_time_reason">Enter Reason</string>
+    <string name="doctor_name">Doctor Name</string>
+    <string name="note">Note</string>
+    <string name="enter_hospital_name">Enter Hospital Name</string>
+    <string name="enter_doctor_name">Enter Doctor Name</string>
+    <string name="enter_note">Enter Note</string>
+    <string name="search_patients">Search Patients</string>
+
+    <string name="enter_first_name">Please enter first name</string>
+    <string name="enter_last_name">Please enter last name</string>
+    <string name="select_dob">Please select date of birth</string>
+    <string name="select_age">Age must be greater than 9 years</string>
+    <string name="mobile_no_length">Length must be 10 digits</string>
+    <string name="select_admission_date">Please select admission date</string>
+    <string name="select_admission_time">Please select admission time</string>
+    <string name="select_sac_ruptured_date">Select amniotic sac ruptured date</string>
+    <string name="select_sac_ruptured_time">Select amniotic sac ruptured time</string>
+    <string name="enter_bed_no">Please enter bed number</string>
+    <string name="select_country">Please select country</string>
+    <string name="select_state">Please select state</string>
+    <string name="select_city_village">Please enter city/village</string>
+    <string name="enter_postal_limit">Please enter 6 digits valid postal code</string>
+    <string name="please_select_risk_factor">Please select risk factor</string>
+    <string name="enter_hospital_other">Enter other location except Hospital &amp; Maternity</string>
+    <string name="enter_hospital_other_error">Please enter other location except Hospital &amp; Maternity</string>
+    <string name="district">District*</string>
+    <string name="select_spinner">Select</string>
+    <string name="select_district">Please select district</string>
+    <string name="total_birth_count_limit">Please enter count below or equal to 15</string>
+    <string name="miscarriage_count_limit">Please enter count below or equal to 8</string>
+    <string name="otp_sent">OTP sent successfully</string>
+    <string name="otp_verified">Otp verified successfully</string>
+    <string name="password_reset_success">Password reset successful</string>
+
+
+    <string name="gender">Gender</string>
+    <string name="are_you_head_of_the_family">Are you head of the family?</string>
+    <string name="what_is_your_occupation">What is your occupation?</string>
+    <string name="do_you_have_a_bank_account">Do you have bank account?</string>
+    <string name="what_kind_of_mobile_phone_do_you_personally_own">What kind of mobile phone do you personally own?</string>
+    <string name="do_you_or_any_of_your_family_member_use_whatsapp">Do you or any of your family member use Whatsapp?</string>
+    <string name="total_number_of_members_in_the_household">Total number of members in the household</string>
+    <string name="enter_number">Enter number</string>
+    <string name="how_many_members_usually_live_in_your_household_or_are_staying_with_you_now">How many members usually live in your household or are staying with you now?</string>
+    <string name="what_is_the_main_source_of_drinking_water_for_members_of_your_household">What is the main source of drinking water for members of your household?</string>
+    <string name="what_do_you_do_to_make_drinking_water_safer">What do you do to make drinking water safer?</string>
+    <string name="how_long_does_it_take_to_go_there_get_water_and_come_back_in_one_trip">How long does it take to go there get water and come back in one trip?</string>
+    <string name="declined">Declined</string>
+    <string name="enter_time">Enter time</string>
+    <string name="in_the_past_two_weeks_was_the_water_from_this_source_not_available_for_at_least_one_full_day">In the past two weeks was the water from this source not available for at least one full day</string>
+    <string name="what_kind_of_toilet_facility_do_members_of_your_household_usually_use">What kind of toilet facility do members of your household usually use?</string>
+    <string name="select_the_structure_of_house">Select the structure of house</string>
+    <string name="how_much_hectars_of_cultivable_land_your_family_owns">How much hectars of cultivable land your family owns?</string>
+    <string name="enter_answer">Enter answer</string>
+    <string name="enter_occupation">Enter Occupation</string>
+    <string name="please_select_specialization">Please select specialization</string>
+    <string name="speciality">Speciality</string>
+    <string name="select_speciality">Select Speciality</string>
+    <string name="image_saved">Image Save</string>
+    <string name="emergency_confirmation">Emergency Confirmation</string>
+    <string name="table_spo" translatable="false">SpO2 (%)</string>
+    <string name="spo_error">SpO2  %1$s  %2$s </string>
+
+    <string name="error_medical_visit_data">దయచేసి వైద్య సలహాను ఎంచుకోండి లేదా నమోదు చేయండి</string>
+    <string name="text_patient_and_advice_created">రోగి &amp; వైద్య సలహా విజయవంతంగా నమోదు చేయబడింది</string>
+    <string name="text_advice_created">వైద్య సలహా విజయవంతంగా నమోదు చేయబడింది</string>
+
+    <string name="vaccination_guidance">Vaccination Guidance</string>
+    <string name="concern_about_covid_re_infection">COVID concern</string>
+    <string name="managing_breathlessness">Managing Breathlessness</string>
+    <string name="managing_issues_with_voice">managing_issues_with_voice</string>
+    <string name="managing_eating_drinking">managing_eating_drinking</string>
+    <string name="dealing_problems">dealing_problems</string>
+    <string name="managing_mental_health">managing_mental_health</string>
+    <string name="exercises">exercises</string>
+    <string name="txt_additional_info">txt_additional_info</string>
+    <string name="medical_advice">medical_advice</string>
+
+    <string name="text_medical_advice">text_medical_advice</string>
+    <string name="text_new_visit">text_new_visit</string>
+    <string name="text_new_advice">text_new_advice</string>
+    <string name="power_from">from</string>
+    <string name="lbl_outcome"><![CDATA[ <b>Outcome</b>: %1$s ]]></string>
+    <string name="outcome_reason"><![CDATA[ <br/><b>Reason</b>: %1$s ]]></string>
+
+    <string name="type_of_iv_fluid">Type of IV Fluid*</string>
+    <string name="enter_iv_infusion_rate">Enter IV Infusion Rate (drops/minute)</string>
+    <string name="iv_infusion_status">IV Infusion Status*</string>
+    <string name="iv_infusion_rate">IV Infusion Rate*\n(drops/minute)</string>
+    <string name="strength_unit">Strength (U/L)*</string>
+    <string name="list_of_medicines">List of medicines</string>
+    <string name="dosage">Dose*</string>
+    <string name="lbl_dosage">Dose</string>
+    <string name="route">Route*</string>
+    <string name="lbl_route">Route</string>
+    <string name="title_iv_infusion_status">IV Infusion Status</string>
+    <string name="dosage_unit">Dose Unit*</string>
+    <string name="hint_type">Type*</string>
+    <string name="lbl_type">Type</string>
+    <string name="error_medicine">Please add at least 1 medicine\n\nOR\n\nSelect \"No\" to continue.</string>
+    <string name="medicine_name">Medicine name</string>
+    <string name="baseline_fhr_err">Please enter Baseline FHR in between %1$s and %2$s</string>
+    <string name="pulse_err">Please enter Pulse in between %1$s and %2$s</string>
+    <string name="systolic_bp_range_toast_err">Please enter Systolic BP in between %1$s and %2$s</string>
+    <string name="diastolic_bp_range_toast_err">Please enter Diastolic BP in between %1$s and %2$s. \n Diastolic BP should be less than Systolic BP</string>
+    <string name="contraction_duration_range_toast_err">Please enter Duration of contraction in between %1$s and %2$s</string>
+    <string name="contraction_duration_err">Please enter Duration of contraction in between %1$s and %2$s</string>
+    <string name="temp_error_new">Please enter Temperature in between %1$s and %2$s</string>
+    <string name="form">Form*</string>
+    <string name="duration">Duration*</string>
+    <string name="duration_unit">Duration Unit*</string>
+    <string name="remark">Remark</string>
+    <string name="content_elcg_internet_require">WHO LCG view requires an internet connection. Please ensure you are connected to the internet.</string>
+    <string name="decision_pending_title">Outcome Pending</string>
+    <string name="decision_pending">Outcome Pending (%1$d)</string>
+    <string name="outcome_decision_stage_1">Please enter the outcome of Stage 1</string>
+    <string name="patient_age_validation">Age must be greater than 13 years</string>
+    <string name="outcome_decision_stage_2">Please enter the outcome of Stage 2</string>
+    <string name="lbl_plan">Plan</string>
+    <string name="lbl_medicine">Medicine</string>
+    <string name="lbl_oxytocin">Oxytocin</string>
+    <string name="lbl_iv_fluid">IV Fluid</string>
+    <string name="action_hide">Hide</string>
+    <string name="title_visit_status">Visits</string>
+    <string name="empty_administer_list_message">Please add %1$s\nhere to administer</string>
+    <string name="no_data_message">No record for\n%1$s</string>
+    <string name="title_upcoming_visit">Upcoming Visit</string>
+</resources>

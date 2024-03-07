@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="risk_factors">
+        <item>None</item>
+        <item>Previous LSCS (History of Cesarean Section)</item>
+        <item>Young Primigravida (Age less than 20 Years)</item>
+        <item>Elderly Gravida (Age more than 35 Years)</item>
+        <item>Grand Multipara (&gt; 4 Livebirths)</item>
+        <item>History of Abortions </item>
+        <item>History of Stillbirth </item>
+        <item>History of Neonatal Deaths </item>
+        <item>History of Newborn with Congenital Defect </item>
+        <item>History of Obstructed Labour </item>
+        <item>History of Premature Birth </item>
+        <item>History of Newborn with Low Birth Weight (&lt; 2500 g)</item>
+        <item>History of Newborn with Excess Birth Weight (&gt; 4500 g)</item>
+        <item>History of Treatment for Infertility</item>
+        <item>History of Surgery on Reproductive Tract</item>
+        <item>History of Spinal Deformities (Scoliosis/Kyphosis/Polio)</item>
+        <item>History of Admission for High BP in the previous pregnancy</item>
+        <item>History of Thalassemia</item>
+        <item>Short Stature (Height &lt; 145 cm)</item>
+        <item>Pregnancy Induced Hypertension (PIH)(Hihg BP in Pregnancy)</item>
+        <item>Pre-eclampsia</item>
+        <item>Severe Pre-eclampsia</item>
+        <item>Eclampsia (Pre-eclamsic Toxemia)</item>
+        <item>Severe Anemia (Hb &lt; 7 g/dl)</item>
+        <item>Rh Negative Pregnancy</item>
+        <item>Gestational Diabetes Mellitus (GDM)</item>
+        <item>Hypothyroidism (Pregnancy/Systemic Disease)</item>
+        <item>Syphilis</item>
+        <item>Twin (Multiple) Pregnancy</item>
+        <item>Placenta Previa (Low lying placenta)</item>
+        <item>Intra-Uterine Growth Retardation (IUGR)</item>
+        <item>HIV (AIDS) Infection</item>
+        <item>Hepatitis B Infection</item>
+        <item>Malpresentation</item>
+        <item>Diabetes Mellitus (Systemic Disease)</item>
+        <item>Asthma (Systemic Disease)</item>
+        <item>Epilepsy (Seizure Disorder/Convulsions)(Systemic Disease)</item>
+        <item>Tuberculosis (Systemic Disease)</item>
+        <item>Hypertension (High BP) (Systemic Disease)</item>
+        <item>Heart Disease (Systemic Disease)</item>
+        <item>@string/other_risk</item>
+    </string-array>
+
+    <string-array name="medicines">
+        <item>Capsule Ampicillin 500 mg</item>
+        <item>Tablet Metronidazole 400 mg</item>
+        <item>Tablet Paracetamol 500 mg</item>
+        <item>Tablet Paracetamol 650 mg</item>
+        <item>Tablet Ibuprofen 400 mg</item>
+        <item>Tablet B Complex</item>
+        <item>Tablet Misoprostol 200 mcg</item>
+        <item>Injection Gentamycin</item>
+        <item>Injection Betamethasone</item>
+        <item>Injection Hydralazine</item>
+        <item>Capsule Nifedipine</item>
+        <item>Tablet Methyldopa</item>
+        <item>Injection Labetalol</item>
+        <item>Injection Magnesium Sulfate 50%</item>
+        <item>Injection Metronidazole</item>
+        <item>Injection Calcium Gluconate</item>
+        <item>Injection Dexamethasone</item>
+        <item>Injection Ampicillin</item>
+        <item>Injection Lignocaine 2%</item>
+        <item>Injection Adrenaline</item>
+        <item>Injection Hydrocortisone Succinate</item>
+        <item>Injection Diazepam</item>
+        <item>Injection Pheniramine Maleate</item>
+        <item>Injection Carboprost</item>
+        <item>Injection Pentazocin Chloride</item>
+        <item>Injection Promethazine</item>
+        <item>Injection Ceftriaxone</item>
+        <!--        <item>Other Medicine*</item>-->
+    </string-array>
+
+    <string-array name="medicine_routes">
+        <item>Oral</item>
+        <item>Sublingual (SL)</item>
+        <item>Intravenous (IV)</item>
+        <item>IV Infusion</item>
+        <item>Intramuscular (IM)</item>
+        <item>Subcutaneous (SC)</item>
+        <item>Intradermal (ID)</item>
+    </string-array>
+
+    <string-array name="dose_units">
+        <item>mL</item>
+<!--        <item>mg</item>-->
+<!--        <item>ug</item>-->
+<!--        <item>%</item>-->
+<!--        <item>IU</item>-->
+        <item>Tab</item>
+        <item>Cap</item>
+        <item>Drop</item>
+    </string-array>
+
+    <string-array name="medicine_form">
+        <item>Capsule</item>
+        <item>Tablet</item>
+        <item>Injection</item>
+        <item>IV Fluid</item>
+        <item>Liquid</item>
+        <item>Drop</item>
+        <item>Inhaler</item>
+        <item>Suppositorie</item>
+        <item>Topical</item>
+        <item>Implant</item>
+        <item>Patche</item>
+    </string-array>
+
+    <string-array name="medicine_frequencies">
+        <item>Once daily (OD)</item>
+        <item>Twice daily (BD)</item>
+        <item>Thrice daily (TID)</item>
+        <item>Four times in a day (QID)</item>
+        <item>Single Dose, Stat Dose</item>
+        <item>Single Dose, Stat Dose</item>
+        <item>As required (SOS)</item>
+    </string-array>
+
+    <string-array name="months">
+        <item>Jan</item>
+        <item>Feb</item>
+        <item>Mar</item>
+        <item>Apr</item>
+        <item>May</item>
+        <item>Jun</item>
+        <item>Jul</item>
+        <item>Aug</item>
+        <item>Sep</item>
+        <item>Oct</item>
+        <item>Nov</item>
+        <item>Dec</item>
+    </string-array>
+
+    <string-array name="labours">
+        <item>@string/live_birth</item>
+        <item>@string/still_birth</item>
+        <item>@string/other</item>
+    </string-array>
+
+    <string-array name="gender">
+        <item>@string/male</item>
+        <item>@string/female</item>
+        <item>@string/other</item>
+    </string-array>
+
+    <string-array name="medicine_duration_units">
+        <item>Minute</item>
+        <item>Minutes</item>
+        <item>Hour</item>
+        <item>Hours</item>
+        <item>Day</item>
+        <item>Days</item>
+    </string-array>
+
+    <string-array name="medicine_strength">
+        <item>5 mg</item>
+        <item>10 mg</item>
+        <item>50 mg</item>
+        <item>75 mg</item>
+        <item>100 mg</item>
+        <item>500 mg</item>
+        <item>1000 mg</item>
+        <item>100 mg</item>
+        <item>150 mg</item>
+        <item>200 mg</item>
+        <item>250 mg</item>
+        <item>750 mg</item>
+        <item>-</item>
+        <item>2000 mg</item>
+        <item>5%</item>
+        <item>0.9%</item>
+        <item>10 IU/mL</item>
+        <item>5 IU/mL</item>
+        <item>25 mg/mL</item>
+        <item>30 mg/mL</item>
+        <item>125 ug</item>
+        <item>5 mg/mL</item>
+        <item>1 mg/mL</item>
+        <item>2%</item>
+        <item>4 mg/mL</item>
+        <item>100 mg/mL</item>
+        <item>500  mg/mL</item>
+        <item>500 mg/100 mL mg/mL</item>
+        <item>20 mg/mL</item>
+        <item>40 mg/mL</item>
+        <item>10 mg/mL</item>
+        <item>200 ug</item>
+        <item>400  mg</item>
+        <item>650  mg</item>
+    </string-array>
+</resources>

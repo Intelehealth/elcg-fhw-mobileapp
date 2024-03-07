@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingHorizontal="@dimen/actionbar_horizontal_padding"
+    android:paddingVertical="@dimen/screen_container_padding">
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tv_personal_info"
+        style="@style/Theme.EZazi.Text.Stages"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/screen_container_padding"
+        android:drawableTop="@drawable/ic_personal_info"
+        android:drawablePadding="@dimen/tab_margin_from_text"
+        android:text="@string/personal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/line_1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:id="@+id/line_1"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/layout_stages_line_height"
+        android:layout_gravity="center"
+        android:layout_marginTop="@dimen/dotted_line_top_margin"
+        android:background="@drawable/ic_dashed_line"
+        app:layout_constraintEnd_toStartOf="@id/tv_address_info"
+        app:layout_constraintStart_toEndOf="@id/tv_personal_info"
+        app:layout_constraintTop_toTopOf="@id/tv_personal_info" />
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tv_address_info"
+        style="@style/Theme.EZazi.Text.Stages"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:drawableTop="@drawable/ic_address_info"
+        android:drawablePadding="@dimen/tab_margin_from_text"
+        android:text="@string/address"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/line_2"
+        app:layout_constraintStart_toEndOf="@id/line_1"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:id="@+id/line_2"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/layout_stages_line_height"
+        android:layout_gravity="center"
+        android:layout_marginTop="@dimen/dotted_line_top_margin"
+        android:background="@drawable/ic_dashed_line"
+        app:layout_constraintEnd_toStartOf="@id/tv_other_info"
+        app:layout_constraintStart_toEndOf="@id/tv_address_info"
+        app:layout_constraintTop_toTopOf="@id/tv_address_info" />
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tv_other_info"
+        style="@style/Theme.EZazi.Text.Stages"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/screen_container_padding"
+        android:drawableTop="@drawable/ic_other_info"
+        android:drawablePadding="@dimen/tab_margin_from_text"
+        android:minEms="3"
+        android:text="@string/other"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/line_2"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

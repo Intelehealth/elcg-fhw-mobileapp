@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
+
+        <View
+            android:id="@+id/container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginHorizontal="@dimen/screen_padding"
+            android:background="@drawable/container_bg" />
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/incoming_surface_view_frame"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginHorizontal="@dimen/screen_container_padding"
+            android:layout_marginTop="@dimen/screen_container_padding"
+            android:layout_marginBottom="@dimen/rtc_margin_action_view"
+            app:cardBackgroundColor="@color/colorIncomingCallBg"
+            app:cardCornerRadius="@dimen/container_corner_radius"
+            app:layout_constraintBottom_toTopOf="@id/callActionView"
+            app:layout_constraintEnd_toEndOf="@id/container"
+            app:layout_constraintStart_toStartOf="@id/container"
+            app:layout_constraintTop_toTopOf="@id/container">
+
+            <io.livekit.android.renderer.SurfaceViewRenderer
+                android:id="@+id/incoming_surface_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <FrameLayout
+                android:id="@+id/frameRemoteVideoOverlay"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                app:cardBackgroundColor="@color/colorIncomingCallBg">
+
+                <TextView
+                    android:id="@+id/remoteUserTextIcon"
+                    android:layout_width="@dimen/rtc_partner_profile_size"
+                    android:layout_height="@dimen/rtc_partner_profile_size"
+                    android:layout_gravity="center"
+                    android:background="@drawable/rounded_icon_white_bg"
+                    android:gravity="center"
+                    android:textColor="?colorPrimary"
+                    android:textSize="@dimen/std_36sp"
+                    android:textStyle="bold" />
+
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/tvRemoteUsername"
+                style="@style/Theme.EZazi.Text.SubHeading"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|start"
+                android:layout_margin="16dp"
+                android:textColor="@color/white" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/ivRemoteSpeakerStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|end"
+                android:layout_margin="@dimen/screen_container_padding"
+                android:background="@drawable/rounded_icon_white_bg"
+                app:srcCompat="@drawable/selector_active_speaker" />
+
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/self_surface_view_frame"
+            android:layout_width="@dimen/rtc_self_view_width"
+            android:layout_height="@dimen/rtc_self_view_height"
+            android:layout_margin="@dimen/screen_container_padding"
+            app:cardBackgroundColor="@color/colorIncomingCallBg"
+            app:cardCornerRadius="@dimen/container_corner_radius"
+            app:cardElevation="@dimen/std_8dp"
+            app:cardPreventCornerOverlap="false"
+            app:layout_constraintBottom_toBottomOf="@id/incoming_surface_view_frame"
+            app:layout_constraintEnd_toEndOf="@id/incoming_surface_view_frame">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/colorIncomingCallBg">
+
+                <io.livekit.android.renderer.TextureViewRenderer
+                    android:id="@+id/self_surface_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <FrameLayout
+                    android:id="@+id/frameLocalVideoOverlay"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:visibility="gone"
+                    app:cardBackgroundColor="@color/colorIncomingCallBg"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <TextView
+                        android:id="@+id/localUserTextIcon"
+                        android:layout_width="@dimen/std_48dp"
+                        android:layout_height="@dimen/std_48dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/rounded_icon_white_bg"
+                        android:gravity="center"
+                        android:textColor="?colorPrimary"
+                        android:textSize="@dimen/std_24sp"
+                        android:textStyle="bold" />
+                </FrameLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top|start"
+                    android:layout_margin="@dimen/screen_container_padding"
+                    android:text="@string/you"
+                    android:textColor="#fff"
+                    android:translationZ="2dp"
+                    android:visibility="visible"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:id="@+id/ivLocalSpeakerStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_gravity="top|end"
+                    android:layout_margin="@dimen/screen_container_padding"
+                    android:background="@drawable/rounded_icon_white_bg"
+                    android:translationZ="2dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:srcCompat="@drawable/selector_active_speaker" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.cardview.widget.CardView>
+
+        <TextView
+            android:id="@+id/tvCallDuration"
+            style="@style/Theme.EZazi.Text.SubHeading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/screen_container_padding"
+            app:layout_constraintBottom_toTopOf="@id/callActionView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:text="00:00" />
+
+        <include
+            android:id="@+id/callActionView"
+            layout="@layout/video_call_action_view"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/actionbar_vertical_padding"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@id/container"
+            app:layout_constraintStart_toStartOf="@id/container" />
+
+
+        <TextView
+            android:id="@+id/status_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:elevation="@dimen/std_8dp"
+            android:text="@string/connecting"
+            android:textColor="@android:color/white"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="@id/incoming_surface_view_frame"
+            app:layout_constraintEnd_toEndOf="@id/container"
+            app:layout_constraintStart_toStartOf="@id/container"
+            app:layout_constraintTop_toTopOf="@id/container" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

@@ -1,0 +1,2194 @@
+package org.intelehealth.ezazi.activities.addNewPatient;
+
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Point;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.InputFilter;
+import android.text.TextUtils;
+import android.text.TextWatcher;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.widget.AutoCompleteTextView;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+import androidx.core.widget.NestedScrollView;
+import androidx.fragment.app.Fragment;
+
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
+import com.google.gson.Gson;
+
+import org.intelehealth.ezazi.R;
+import org.intelehealth.ezazi.activities.patientDetailActivity.PatientDetailActivity;
+import org.intelehealth.ezazi.app.AppConstants;
+import org.intelehealth.ezazi.database.dao.ImagesDAO;
+import org.intelehealth.ezazi.database.dao.ImagesPushDAO;
+import org.intelehealth.ezazi.database.dao.PatientsDAO;
+import org.intelehealth.ezazi.database.dao.ProviderDAO;
+import org.intelehealth.ezazi.database.dao.SyncDAO;
+import org.intelehealth.ezazi.models.Patient;
+import org.intelehealth.ezazi.models.dto.PatientAttributesDTO;
+import org.intelehealth.ezazi.models.dto.PatientAttributesModel;
+import org.intelehealth.ezazi.models.dto.PatientDTO;
+import org.intelehealth.ezazi.models.dto.ProviderDTO;
+import org.intelehealth.ezazi.ui.dialog.CalendarDialog;
+import org.intelehealth.ezazi.ui.dialog.MultiChoiceDialogFragment;
+import org.intelehealth.ezazi.ui.dialog.SingleChoiceDialogFragment;
+import org.intelehealth.ezazi.ui.dialog.ThemeTimePickerDialog;
+import org.intelehealth.ezazi.ui.dialog.adapter.RiskFactorMultiChoiceAdapter;
+import org.intelehealth.ezazi.ui.dialog.model.SingChoiceItem;
+import org.intelehealth.ezazi.ui.validation.FirstLetterUpperCaseInputFilter;
+import org.intelehealth.ezazi.utilities.FileUtils;
+import org.intelehealth.ezazi.utilities.Logger;
+import org.intelehealth.ezazi.utilities.NetworkConnection;
+import org.intelehealth.ezazi.utilities.SessionManager;
+import org.intelehealth.ezazi.utilities.StringUtils;
+import org.intelehealth.ezazi.utilities.UuidGenerator;
+import org.intelehealth.ezazi.utilities.exception.DAOException;
+import org.intelehealth.klivekit.utils.DateTimeUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.Serializable;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.UUID;
+
+public class PatientOtherInfoFragment extends Fragment {
+    private static final String TAG = "PatientPersonalInfoFrag";
+
+    public static PatientOtherInfoFragment getInstance() {
+        return new PatientOtherInfoFragment();
+    }
+
+    View view;
+    private AutoCompleteTextView mRiskFactorsTextView, mPrimaryDoctorTextView, mSecondaryDoctorTextView;
+    Context mContext;
+    TextInputEditText mAdmissionDateTextView, mAdmissionTimeTextView,
+            mTotalBirthEditText, mTotalMiscarriageEditText, mActiveLaborDiagnosedDateTextView,
+            mActiveLaborDiagnosedTimeTextView, mMembraneRupturedDateTextView, mMembraneRupturedTimeTextView, etBedNumber, etHospitalOther;
+    MaterialButton btnBack, btnNext;
+    TextView optionHospital, optionMaternity, optionOther;
+    Intent i_privacy;
+    private String mAdmissionDateString = "", mAdmissionTimeString = "";
+    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH);
+    private String patientUuid = "";
+    // strings
+    private String mTotalBirthCount = "0", mTotalMiscarriageCount = "0";
+    private String mLaborOnsetString = "";
+    private String mHospitalMaternityString = "";
+    private String mActiveLaborDiagnosedDate = "", mActiveLaborDiagnosedTime = "";
+    private String mMembraneRupturedDate = "", mMembraneRupturedTime = "";
+    private String mRiskFactorsString = "", mPrimaryDoctorUUIDString = "", mSecondaryDoctorUUIDString = "";
+    private List<String> mSelectedRiskFactorList = new ArrayList<String>();
+
+    private String mAlternateNumberString = "", mWifeDaughterOfString = "";
+    private String mOthersString = "";
+    //    private String[] mDoctorNames;
+    String privacy_value;
+    private boolean mIsEditMode = false;
+    private List<ProviderDTO> mProviderDoctorList = new ArrayList<ProviderDTO>();
+    //    private List<String> mDoctorUUIDs = new ArrayList<>();
+    String patientID_edit;
+    Patient patient1 = new Patient();
+    private boolean hasLicense = false;
+    SessionManager sessionManager = null;
+    UuidGenerator uuidGenerator = new UuidGenerator();
+    String uuid = "";
+    PatientDTO patientDTO = new PatientDTO();
+    CheckBox mUnknownMembraneRupturedCheckBox;
+    ImagesDAO imagesDAO = new ImagesDAO();
+    boolean patient_detail = false;
+    String patientUuidUpdate = "";
+    boolean fromSummary = false;
+    private PatientAddressInfoFragment secondScreen;
+    boolean fromThirdScreen = false, fromSecondScreen = false;
+    //    ImageView ivPersonal, ivAddress, ivOther;
+    TextView tvSpontaneous, tvInduced;
+    int MY_REQUEST_CODE = 5555;
+    int dob_indexValue = 15;
+    PatientsDAO patientsDAO = new PatientsDAO();
+    //    TextView tvPersonalInfo, tvAddressInfo, tvOtherInfo;
+//    TextView tvPersonalInfo, tvAddressInfo, tvOtherInfo;
+    private TextView tvErrorAdmissionDate, tvErrorAdmissionTime, tvErrorTotalBirth, tvErrorTotalMiscarriage, tvErrorLabourOnset, tvErrorSacRupturedDate, tvErrorSacRupturedTime, tvErrorPrimaryDoctor, tvErrorSecondaryDoctor, tvErrorBedNumber, tvErrorLabourDiagnosedDate, tvErrorLabourDiagnosedTime, tvErrorRiskFactor, tvErrorHospital, tvErrorHospitalOther;
+    private MaterialCardView cardAdmissionDate, cardAdmissionTime, cardTotalBirth,
+            cardTotalMiscarraige, cardSacRupturedDate, cardSacRupturedTime,
+            cardPrimaryDoctor, cardSecondaryDoctor, cardBedNumber,
+            cardDiagnosedDate, cardDiagnosedTime, dropdownRiskFactors, cardOtherRisk, cardHospitalOther;
+    private LinearLayout layoutErrorLabourOnset, layoutSacRuptured, cardOptions;
+    private boolean isUnknownChecked;
+    private PatientAttributesModel patientAttributesModel;
+    private List<ErrorManagerModel> errorDetailsList;
+    private NestedScrollView scrollviewOtherInfo;
+    private EditText etHighRisk;
+    private TextView tvErrorHighRisk;
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        view = inflater.inflate(R.layout.fragment_patient_other_info, container, false);
+        mContext = getActivity();
+        sessionManager = new SessionManager(mContext);
+        initUI();
+        return view;
+    }
+
+    private void initUI() {
+//        ivPersonal = getActivity().findViewById(R.id.iv_personal_info);
+//        ivAddress = getActivity().findViewById(R.id.iv_address_info);
+//        ivOther = getActivity().findViewById(R.id.iv_other_info);
+//        tvPersonalInfo = getActivity().findViewById(R.id.tv_personal_info);
+//        tvAddressInfo = getActivity().findViewById(R.id.tv_address_info);
+//        tvOtherInfo = getActivity().findViewById(R.id.tv_other_info);
+
+        mAdmissionDateTextView = view.findViewById(R.id.et_admission_date);
+        mAdmissionTimeTextView = view.findViewById(R.id.et_admission_time);
+        mTotalBirthEditText = view.findViewById(R.id.et_total_birth);
+        mTotalMiscarriageEditText = view.findViewById(R.id.et_total_miscarriage);
+        tvSpontaneous = view.findViewById(R.id.et_spontaneous);
+        tvInduced = view.findViewById(R.id.et_induced);
+        mActiveLaborDiagnosedDateTextView = view.findViewById(R.id.et_labor_diagnosed_date);
+        mActiveLaborDiagnosedTimeTextView = view.findViewById(R.id.et_labor_diagnosed_time);
+        mMembraneRupturedDateTextView = view.findViewById(R.id.et_sac_ruptured_date);
+        mMembraneRupturedTimeTextView = view.findViewById(R.id.et_sac_ruptured_time);
+        optionHospital = view.findViewById(R.id.option_hospital);
+        optionMaternity = view.findViewById(R.id.option_maternity);
+        optionOther = view.findViewById(R.id.option_other);
+        mPrimaryDoctorTextView = view.findViewById(R.id.autotv_primary_doctor);
+        mSecondaryDoctorTextView = view.findViewById(R.id.autotv_secondary_doctor);
+        etBedNumber = view.findViewById(R.id.et_bed_number);
+        btnBack = view.findViewById(R.id.btn_back_address);
+        btnNext = view.findViewById(R.id.btn_next_address);
+        mUnknownMembraneRupturedCheckBox = view.findViewById(R.id.mUnknownMembraneRupturedCheckBox);
+        mRiskFactorsTextView = view.findViewById(R.id.autotv_risk_factors);
+        dropdownRiskFactors = view.findViewById(R.id.dropdown_risk_factors);
+        etHighRisk = view.findViewById(R.id.etOtherRiskFactor);
+        tvErrorHighRisk = view.findViewById(R.id.tv_error_risk_factor_other);
+        cardOtherRisk = view.findViewById(R.id.cardOtherRiskFactor);
+        etHospitalOther = view.findViewById(R.id.et_hospital_other);
+        scrollviewOtherInfo = view.findViewById(R.id.scroll_other_info);
+
+        etHospitalOther.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
+
+        handleValidations();
+
+
+        handleOptionsForMaternity();
+
+        /*new*/
+        ProviderDAO providerDAO = new ProviderDAO();
+        try {
+            mProviderDoctorList = providerDAO.getDoctorList();
+        } catch (DAOException e) {
+            e.printStackTrace();
+        }
+        handleAllClickListeners();
+        Intent intent = getActivity().getIntent();
+        if (intent != null) {
+            if (intent.hasExtra("patientUuid")) {
+                mIsEditMode = true;
+                // this.setTitle(R.string.update_patient_identification);
+                patientID_edit = intent.getStringExtra("patientUuid");
+                patient1.setUuid(patientID_edit);
+                setscreen(patientID_edit);
+                updateUI(patient1);
+            }
+        }
+
+        secondScreen = new PatientAddressInfoFragment();
+        if (getArguments() != null) {
+            Log.d(TAG, "initUI: other");
+            patientDTO = (PatientDTO) getArguments().getSerializable("patientDTO");
+            fromSecondScreen = getArguments().getBoolean("fromSecondScreen");
+            patient_detail = getArguments().getBoolean("patient_detail");
+            mAlternateNumberString = getArguments().getString("mAlternateNumberString");
+            fromSummary = getArguments().getBoolean("fromSummary");
+            patientUuidUpdate = getArguments().getString("patientUuidUpdate");
+            patientAttributesModel = (PatientAttributesModel) getArguments().getSerializable("patientAttributes");
+
+            //set data to the UI. when user came from address tab
+            if (fromSecondScreen && patientAttributesModel != null) updateUIForUserFromAddressTab();
+
+            if (patient_detail) {
+                //    patientDTO.setUuid(patientID_edit);
+            } else {
+                // do nothing...
+            }
+
+        }
+
+    }
+
+    private void updateUIForUserFromAddressTab() {   //set data to the UI -> from address tab
+        mAdmissionDateTextView.setText(patientAttributesModel.getAdmissionDate());
+        mAdmissionTimeTextView.setText(patientAttributesModel.getAdmissionTime());
+        mTotalBirthEditText.setText(patientAttributesModel.getTotalBirthCount());
+        mTotalMiscarriageEditText.setText(patientAttributesModel.getTotalMiscarriageCount());
+        mActiveLaborDiagnosedDateTextView.setText(patientAttributesModel.getActiveLabourDiagnosedDate());
+        mActiveLaborDiagnosedTimeTextView.setText(patientAttributesModel.getActiveLabourDiagnosedTime());
+        mMembraneRupturedDateTextView.setText(patientAttributesModel.getSacRupturedDate());
+        mMembraneRupturedTimeTextView.setText(patientAttributesModel.getSacRupturedTime());
+        mRiskFactorsTextView.setText(patientAttributesModel.getRiskFactors());
+        mPrimaryDoctorTextView.setText(patientAttributesModel.getPrimaryDoctor());
+        mSecondaryDoctorTextView.setText(patientAttributesModel.getSecondaryDoctor());
+        etBedNumber.setText(patientAttributesModel.getBedNumber());
+        mAdmissionDateString = patientAttributesModel.getAdmissionDate();
+        mAdmissionTimeString = patientAttributesModel.getAdmissionTime();
+        mTotalBirthCount = patientAttributesModel.getTotalBirthCount();
+        mTotalMiscarriageCount = patientAttributesModel.getTotalMiscarriageCount();
+        mActiveLaborDiagnosedDate = patientAttributesModel.getActiveLabourDiagnosedDate();
+        mActiveLaborDiagnosedTime = patientAttributesModel.getActiveLabourDiagnosedTime();
+        mMembraneRupturedDate = patientAttributesModel.getSacRupturedDate();
+        mMembraneRupturedTime = patientAttributesModel.getSacRupturedTime();
+        mMembraneRupturedTime = patientAttributesModel.getSacRupturedTime();
+        mRiskFactorsString = patientAttributesModel.getRiskFactors();
+        mLaborOnsetString = patientAttributesModel.getLabourOnset();
+        mHospitalMaternityString = patientAttributesModel.getHospitalMaternity();
+        isUnknownChecked = patientAttributesModel.isMembraneCheckboxChecked();
+        etHospitalOther.setText(patientAttributesModel.getOtherHospitalString());
+        hideAllErrorFields();
+
+        if (isUnknownChecked) {
+            mUnknownMembraneRupturedCheckBox.setChecked(true);
+        } else {
+            mUnknownMembraneRupturedCheckBox.setChecked(false);
+
+        }
+        //for hospital maternity
+        Log.d(TAG, "updateUIForUserFromAddressTab: mHospitalMaternityString : " + mHospitalMaternityString);
+        getHospitalMaternityValue(mHospitalMaternityString);
+        //for labour onset
+        getLabourOnsetValue(mLaborOnsetString);
+        if (!mHospitalMaternityString.isEmpty() && mHospitalMaternityString.equalsIgnoreCase("other")) {
+            etHospitalOther.setText(patientAttributesModel.getOtherHospitalString());
+        }
+
+    }
+
+    private void hideAllErrorFields() {
+        tvErrorAdmissionDate.setVisibility(View.GONE);
+        tvErrorAdmissionTime.setVisibility(View.GONE);
+        tvErrorSacRupturedDate.setVisibility(View.GONE);
+        tvErrorSacRupturedTime.setVisibility(View.GONE);
+        tvErrorLabourDiagnosedDate.setVisibility(View.GONE);
+        tvErrorLabourDiagnosedTime.setVisibility(View.GONE);
+        tvErrorHospital.setVisibility(View.GONE);
+        tvErrorBedNumber.setVisibility(View.GONE);
+        tvErrorPrimaryDoctor.setVisibility(View.GONE);
+        tvErrorSecondaryDoctor.setVisibility(View.GONE);
+        tvErrorLabourOnset.setVisibility(View.GONE);
+        tvErrorRiskFactor.setVisibility(View.GONE);
+        tvErrorRiskFactor.setVisibility(View.GONE);
+        tvErrorHospitalOther.setVisibility(View.GONE);
+    }
+
+    private void handleValidations() {
+
+        //initialize error fields
+        tvErrorAdmissionDate = view.findViewById(R.id.tv_admission_date_error);
+        tvErrorAdmissionTime = view.findViewById(R.id.tv_admission_time_error);
+        tvErrorTotalBirth = view.findViewById(R.id.tv_parity_date_error);
+        tvErrorTotalMiscarriage = view.findViewById(R.id.tv_parity_time_error);
+        tvErrorLabourOnset = view.findViewById(R.id.tv_error_labour_onset);
+        tvErrorSacRupturedDate = view.findViewById(R.id.tv_sac_ruptured_date_error);
+        tvErrorSacRupturedTime = view.findViewById(R.id.tv_sac_ruptured_time_error);
+        tvErrorPrimaryDoctor = view.findViewById(R.id.tv_error_primary_doctor);
+        tvErrorSecondaryDoctor = view.findViewById(R.id.tv_error_secondary_doctor);
+        tvErrorBedNumber = view.findViewById(R.id.tv_error_bed_number);
+        tvErrorLabourDiagnosedDate = view.findViewById(R.id.tv_labour_diagnosed_date_error);
+        tvErrorLabourDiagnosedTime = view.findViewById(R.id.tv_labour_diagnosed_time_error);
+        tvErrorRiskFactor = view.findViewById(R.id.tv_error_risk_factor);
+        tvErrorHospital = view.findViewById(R.id.tv_error_hospital);
+        tvErrorHospitalOther = view.findViewById(R.id.tv_error_hospital_other);
+
+
+        cardAdmissionDate = view.findViewById(R.id.card_date_admission);
+        cardAdmissionTime = view.findViewById(R.id.card_time_admission);
+        cardTotalBirth = view.findViewById(R.id.card_total_birth);
+        cardTotalMiscarraige = view.findViewById(R.id.card_total_miscarraige);
+        cardSacRupturedDate = view.findViewById(R.id.card_sac_ruptured_date);
+        cardSacRupturedTime = view.findViewById(R.id.card_sac_ruptured_time);
+        cardPrimaryDoctor = view.findViewById(R.id.dropdown_primary_doctor);
+        cardSecondaryDoctor = view.findViewById(R.id.dropdown_secondary_doctor);
+        cardBedNumber = view.findViewById(R.id.card_bed_no);
+        cardDiagnosedDate = view.findViewById(R.id.card_diagnosed_date);
+        cardDiagnosedTime = view.findViewById(R.id.card_diagnosed_time);
+        layoutErrorLabourOnset = view.findViewById(R.id.card_labour_onset);
+        cardOptions = view.findViewById(R.id.card_options);
+        cardHospitalOther = view.findViewById(R.id.card_hospital_other);
+
+
+        mAdmissionDateTextView.addTextChangedListener(new MyTextWatcher(mAdmissionDateTextView));
+        mAdmissionTimeTextView.addTextChangedListener(new MyTextWatcher(mAdmissionTimeTextView));
+        mTotalBirthEditText.addTextChangedListener(new MyTextWatcher(mTotalBirthEditText));
+        mTotalMiscarriageEditText.addTextChangedListener(new MyTextWatcher(mTotalMiscarriageEditText));
+        mActiveLaborDiagnosedDateTextView.addTextChangedListener(new MyTextWatcher(mActiveLaborDiagnosedDateTextView));
+        mActiveLaborDiagnosedTimeTextView.addTextChangedListener(new MyTextWatcher(mActiveLaborDiagnosedTimeTextView));
+        mMembraneRupturedDateTextView.addTextChangedListener(new MyTextWatcher(mMembraneRupturedDateTextView));
+        mMembraneRupturedTimeTextView.addTextChangedListener(new MyTextWatcher(mMembraneRupturedTimeTextView));
+        mRiskFactorsTextView.addTextChangedListener(new MyTextWatcher(mRiskFactorsTextView));
+        etHighRisk.addTextChangedListener(new MyTextWatcher(etHighRisk));
+        mPrimaryDoctorTextView.addTextChangedListener(new MyTextWatcher(mPrimaryDoctorTextView));
+        mSecondaryDoctorTextView.addTextChangedListener(new MyTextWatcher(mSecondaryDoctorTextView));
+//        etBedNumber.addTextChangedListener(new MyTextWatcher(etBedNumber));
+
+        etHospitalOther.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                tvErrorHospital.setVisibility(View.GONE);
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                tvErrorHospital.setVisibility(View.GONE);
+
+                if (s.length() < 0) {
+                    tvErrorHospital.setVisibility(View.GONE);
+                    tvErrorHospitalOther.setVisibility(View.VISIBLE);
+
+                    tvErrorHospitalOther.setText(getString(R.string.enter_hospital_other_error));
+                    cardHospitalOther.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
+                } else {
+                    tvErrorHospital.setVisibility(View.GONE);
+                    tvErrorHospitalOther.setVisibility(View.GONE);
+                    cardHospitalOther.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                tvErrorHospital.setVisibility(View.GONE);
+
+            }
+        });
+
+    }
+
+    private void handleOptionsForMaternity() {
+        mHospitalMaternityString = "";
+        //mLaborOnsetString = "Spontaneous";
+        ///mHospitalMaternityString = "Hospital";
+        //maternity/hospital selectors
+        optionHospital.setOnClickListener(v -> {
+            optionHospital.setBackground(getResources().getDrawable(R.drawable.button_primary_rounded));
+            optionMaternity.setBackground(getResources().getDrawable(R.drawable.button_bg_rounded_corners));
+            optionOther.setBackground(getResources().getDrawable(R.drawable.button_bg_rounded_corners));
+            optionHospital.setTextColor(getResources().getColor(R.color.white));
+            optionMaternity.setTextColor(getResources().getColor(R.color.darkGray));
+            optionOther.setTextColor(getResources().getColor(R.color.darkGray));
+            mHospitalMaternityString = optionHospital.getText().toString();
+            if (mHospitalMaternityString.equalsIgnoreCase("hospital")) {
+                cardHospitalOther.setVisibility(View.GONE);
+                tvErrorHospital.setVisibility(View.GONE);
+                tvErrorHospitalOther.setVisibility(View.GONE);
+
+                etHospitalOther.setText("");
+
+            }
+        });
+        optionMaternity.setOnClickListener(v -> {
+            optionHospital.setBackground(getResources().getDrawable(R.drawable.button_bg_rounded_corners));
+            optionMaternity.setBackground(getResources().getDrawable(R.drawable.button_primary_rounded));
+            optionOther.setBackground(getResources().getDrawable(R.drawable.button_bg_rounded_corners));
+            optionHospital.setTextColor(getResources().getColor(R.color.darkGray));
+            optionMaternity.setTextColor(getResources().getColor(R.color.white));
+            optionOther.setTextColor(getResources().getColor(R.color.darkGray));
+            mHospitalMaternityString = optionMaternity.getText().toString();
+            if (mHospitalMaternityString.equalsIgnoreCase("maternity")) {
+                cardHospitalOther.setVisibility(View.GONE);
+                tvErrorHospital.setVisibility(View.GONE);
+                tvErrorHospitalOther.setVisibility(View.GONE);
+                etHospitalOther.setText("");
+
+            }
+        });
+        optionOther.setOnClickListener(v -> {
+            optionHospital.setBackground(getResources().getDrawable(R.drawable.button_bg_rounded_corners));
+            optionMaternity.setBackground(getResources().getDrawable(R.drawable.button_bg_rounded_corners));
+            optionOther.setBackground(getResources().getDrawable(R.drawable.button_primary_rounded));
+            optionHospital.setTextColor(getResources().getColor(R.color.darkGray));
+            optionMaternity.setTextColor(getResources().getColor(R.color.darkGray));
+            optionOther.setTextColor(getResources().getColor(R.color.white));
+            mHospitalMaternityString = optionOther.getText().toString();
+
+            if (!mHospitalMaternityString.isEmpty() && mHospitalMaternityString.equalsIgnoreCase("other")) {
+                etHospitalOther.setVisibility(View.VISIBLE);
+                cardHospitalOther.setVisibility(View.VISIBLE);
+                tvErrorHospital.setVisibility(View.GONE);
+                tvErrorHospitalOther.setVisibility(View.GONE);
+
+                //cardOptions.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
+            } else {
+                cardHospitalOther.setVisibility(View.GONE);
+                etHospitalOther.setVisibility(View.GONE);
+                tvErrorHospital.setVisibility(View.GONE);
+                tvErrorHospitalOther.setVisibility(View.GONE);
+
+                //cardOptions.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+            }
+
+
+        });
+
+        tvSpontaneous.setOnClickListener(v -> {
+            tvSpontaneous.setBackground(getResources().getDrawable(R.drawable.button_primary_rounded));
+            tvInduced.setBackground(getResources().getDrawable(R.drawable.button_bg_rounded_corners));
+            tvSpontaneous.setTextColor(getResources().getColor(R.color.white));
+            tvInduced.setTextColor(getResources().getColor(R.color.darkGray));
+            mLaborOnsetString = tvSpontaneous.getText().toString();
+            tvErrorLabourOnset.setVisibility(View.GONE);
+        });
+        tvInduced.setOnClickListener(v -> {
+            tvSpontaneous.setBackground(getResources().getDrawable(R.drawable.button_bg_rounded_corners));
+            tvInduced.setBackground(getResources().getDrawable(R.drawable.button_primary_rounded));
+            tvSpontaneous.setTextColor(getResources().getColor(R.color.darkGray));
+            tvInduced.setTextColor(getResources().getColor(R.color.white));
+            mLaborOnsetString = tvInduced.getText().toString();
+            tvErrorLabourOnset.setVisibility(View.GONE);
+
+        });
+
+     /*   mUnknownMembraneRupturedCheckBox.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (((CompoundButton) view).isChecked()) {
+                    mUnknownMembraneRupturedCheckBox.setButtonDrawable(getResources().getDrawable(R.drawable.cb_selected));
+
+                } else {
+                    mUnknownMembraneRupturedCheckBox.setButtonDrawable(getResources().getDrawable(R.drawable.ic_checkbox));
+                }
+            }
+        });*/
+    }
+
+    private void handleAllClickListeners() {
+
+        TextInputLayout etLayoutAdmissionDate, etLayoutAdmissionTime, etLabourDiagnosedDate, etLabourDiagnosedTime, etLayoutSacRupturedDate, etLayoutSacRupturedTime, etLayoutRiskFactors, etLayoutPrimaryDoctor, etLayoutSecondaryDoctor;
+        etLayoutAdmissionDate = view.findViewById(R.id.etLayout_admission_date);
+        etLayoutAdmissionTime = view.findViewById(R.id.etLayout_admission_time);
+        etLabourDiagnosedDate = view.findViewById(R.id.etLayout_labor_diagnosed_date);
+        etLabourDiagnosedTime = view.findViewById(R.id.etLayout_labor_diagnosed_time);
+        etLayoutSacRupturedDate = view.findViewById(R.id.etLayout_sac_ruptured_date);
+        etLayoutSacRupturedTime = view.findViewById(R.id.etLayout_sac_ruptured_time);
+        etLayoutRiskFactors = view.findViewById(R.id.etLayout_risk_factors);
+        etLayoutPrimaryDoctor = view.findViewById(R.id.etLayout_primary_doctor);
+        etLayoutSecondaryDoctor = view.findViewById(R.id.etLayout_secondary_doctor);
+        layoutSacRuptured = view.findViewById(R.id.card_sac_ruptured);
+
+
+        etLayoutAdmissionDate.setEndIconOnClickListener(v -> {
+            selectDateForAll("admissionDate");
+
+        });
+        mAdmissionDateTextView.setOnClickListener(v -> {
+            selectDateForAll("admissionDate");
+
+        });
+
+        etLayoutAdmissionTime.setEndIconOnClickListener(v -> {
+            selectTimeForAllParameters("admissionTimeString");
+        });
+        mAdmissionTimeTextView.setOnClickListener(v -> {
+            selectTimeForAllParameters("admissionTimeString");
+        });
+
+        mUnknownMembraneRupturedCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                Log.d(TAG, "onCheckedChanged: isChecked : " + isChecked);
+                if (isChecked) {
+                    isUnknownChecked = true;
+                    //setenabled false  -- pending as per figma
+                    mMembraneRupturedDateTextView.setEnabled(false);
+                    mMembraneRupturedTimeTextView.setEnabled(false);
+                    layoutSacRuptured.setVisibility(View.GONE);
+                    mMembraneRupturedDateTextView.setText("");
+                    mMembraneRupturedTimeTextView.setText("");
+                    tvErrorSacRupturedDate.setVisibility(View.GONE);
+                    tvErrorSacRupturedTime.setVisibility(View.GONE);
+
+                } else {
+                    isUnknownChecked = false;
+                    layoutSacRuptured.setVisibility(View.VISIBLE);
+                    mMembraneRupturedDateTextView.setEnabled(true);
+                    mMembraneRupturedTimeTextView.setEnabled(true);
+                    cardSacRupturedDate.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+                    cardSacRupturedTime.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+                    if (errorDetailsList != null && errorDetailsList.size() > 0) {
+                        for (int i = 0; i < errorDetailsList.size(); i++) {
+                            ErrorManagerModel errorManagerModel = errorDetailsList.get(i);
+                            if (errorManagerModel.getView().equals(mMembraneRupturedDateTextView)) {
+                                cardSacRupturedDate.setStrokeColor(ContextCompat.getColor(mContext, R.color.red));
+                                cardSacRupturedTime.setStrokeColor(ContextCompat.getColor(mContext, R.color.red));
+                                tvErrorSacRupturedDate.setVisibility(View.VISIBLE);
+                                tvErrorSacRupturedTime.setVisibility(View.VISIBLE);
+                            }
+                        }
+                    }
+
+
+                }
+            }
+        });
+
+        etLabourDiagnosedDate.setEndIconOnClickListener(v -> {
+            //labourDiagnosedDate
+            selectDateForAll("labourDiagnosedDate");
+
+        });
+        mActiveLaborDiagnosedDateTextView.setOnClickListener(v -> {
+            selectDateForAll("labourDiagnosedDate");
+
+        });
+
+        etLabourDiagnosedTime.setEndIconOnClickListener(v -> {
+            //laborOnsetString
+            selectTimeForAllParameters("laborOnsetString");
+        });
+        mActiveLaborDiagnosedTimeTextView.setOnClickListener(v -> {
+            selectTimeForAllParameters("laborOnsetString");
+        });
+
+        etLayoutSacRupturedDate.setEndIconOnClickListener(v -> {
+            //sacRupturedDate
+            selectDateForAll("sacRupturedDate");
+        });
+        mMembraneRupturedDateTextView.setOnClickListener(v -> {
+            selectDateForAll("sacRupturedDate");
+
+        });
+        etLayoutSacRupturedTime.setEndIconOnClickListener(v -> {
+            selectTimeForAllParameters("membraneRupturedTime");
+
+        });
+        mMembraneRupturedTimeTextView.setOnClickListener(v -> {
+            selectTimeForAllParameters("membraneRupturedTime");
+
+        });
+        etLayoutRiskFactors.setEndIconOnClickListener(v -> showRiskFactorSelectionDialog());
+        mRiskFactorsTextView.setOnClickListener(v -> showRiskFactorSelectionDialog());
+        etLayoutPrimaryDoctor.setEndIconOnClickListener(v -> selectPrimaryDoctor());
+        mPrimaryDoctorTextView.setOnClickListener(v -> selectPrimaryDoctor());
+
+        etLayoutSecondaryDoctor.setEndIconOnClickListener(v -> {
+            selectSecondaryDoctor();
+        });
+        mSecondaryDoctorTextView.setOnClickListener(v -> {
+            selectSecondaryDoctor();
+        });
+
+        i_privacy = getActivity().getIntent();
+        privacy_value = i_privacy.getStringExtra("privacy"); //privacy_accept value retrieved from previous act.
+
+
+        //Initialize the local database to store patient information
+
+      /*  Intent intent = getActivity().getIntent(); // The intent was passed to the activity
+        if (intent != null) {
+            if (intent.hasExtra("patientUuid")) {
+                mIsEditMode = true;
+                // this.setTitle(R.string.update_patient_identification);
+                patientID_edit = intent.getStringExtra("patientUuid");
+                patient1.setUuid(patientID_edit);
+                //temp commit
+                // setscreen(patientID_edit);
+                //  updateUI(patient1);
+            }
+        }*/
+//        if (sessionManager.valueContains("licensekey"))
+        if (!sessionManager.getLicenseKey().isEmpty()) hasLicense = true;
+        //Check for license key and load the correct config file
+        try {
+            JSONObject obj = null;
+            if (hasLicense) {
+                obj = new JSONObject(Objects.requireNonNullElse(FileUtils.readFileRoot(AppConstants.CONFIG_FILE_NAME, mContext), String.valueOf(FileUtils.encodeJSON(mContext, AppConstants.CONFIG_FILE_NAME)))); //Load the config file
+            } else {
+                obj = new JSONObject(String.valueOf(FileUtils.encodeJSON(mContext, AppConstants.CONFIG_FILE_NAME)));
+            }
+
+            //Display the fields on the Add Patient screen as per the config file
+
+        } catch (JSONException e) {
+            FirebaseCrashlytics.getInstance().recordException(e);
+//            Issue #627
+//            added the catch exception to check the config and throwing back to setup activity
+            Toast.makeText(mContext, "JsonException" + e, Toast.LENGTH_LONG).show();
+            // temp commit -  showAlertDialogButtonClicked(e.toString());
+        }
+
+        /*temp commit
+        if (null == patientID_edit || patientID_edit.isEmpty()) {
+            generateUuid();
+
+        }*/
+    }
+
+    private void showRiskFactorSelectionDialog() {
+        MultiChoiceDialogFragment<String> dialog1 = new MultiChoiceDialogFragment.Builder<String>(mContext).title(R.string.select_risk_factors).positiveButtonLabel(R.string.save_button).build();
+        dialog1.isSearchable(true);
+        final String[] itemsArray = getResources().getStringArray(R.array.risk_factors);
+//                final String[] itemsArray = {"None", "under age 20", "Women over age 35", "Diabetes", "Obesity", "Underweight", "High blood pressure", "PCOS", "Kidney disease", "Thyroid disease", "Asthma", "Uterine fibroids"};
+        List<String> items = Arrays.asList(itemsArray);
+
+        dialog1.setAdapter(new RiskFactorMultiChoiceAdapter(mContext, new ArrayList<>(items)));
+        dialog1.setListener(selectedItems -> {
+            if (selectedItems.size() > 0) {
+                View otherRiskFactor = view.findViewById(R.id.llViewOtherRiskFactor);
+                StringBuilder stringBuilder = new StringBuilder();
+                otherRiskFactor.setVisibility(View.GONE);
+                for (int i = 0; i < selectedItems.size(); i++) {
+                    if (!stringBuilder.toString().isEmpty()) stringBuilder.append(", ");
+                    stringBuilder.append(selectedItems.get(i));
+                    if (selectedItems.get(i).equals(getString(R.string.other_risk))) {
+                        otherRiskFactor.setVisibility(View.VISIBLE);
+                    }
+                }
+                mRiskFactorsString = stringBuilder.toString();
+                mRiskFactorsTextView.setText(mRiskFactorsString);
+            }
+
+        });
+
+        assert getFragmentManager() != null;
+        dialog1.show(getChildFragmentManager(), MultiChoiceDialogFragment.class.getCanonicalName());
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+    }
+
+    public void generateUuid() {
+
+        patientUuid = uuidGenerator.UuidGenerator();
+
+    }
+
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+//        ivPersonal.setImageDrawable(getResources().getDrawable(R.drawable.ic_personal_info_done));
+//        ivAddress.setImageDrawable(getResources().getDrawable(R.drawable.ic_address_done));
+//        ivOther.setImageDrawable(getResources().getDrawable(R.drawable.ic_other_info_active));
+//        tvPersonalInfo.setTextColor(getResources().getColor(R.color.colorPrimary));
+//        tvAddressInfo.setTextColor(getResources().getColor(R.color.colorPrimary));
+//        tvOtherInfo.setTextColor(getResources().getColor(R.color.colorPrimary));
+
+
+        btnBack.setOnClickListener(v -> {
+            onBackInsertIntopatientDTO();
+        });
+
+        btnNext.setOnClickListener(v -> {
+//                Intent intent = new Intent(getActivity(), PatientDetailActivity2.class);
+//                startActivity(intent);
+            onPatientCreateClicked();
+        });
+
+
+    }
+
+    private void setScrollToFocusedItem() {
+        if (requireView().findFocus() != null) {
+            View focused = requireView().findFocus();
+            Point scroll = getLocationOnScreen(scrollviewOtherInfo);
+            Log.e(TAG, "setScrollToFocusedItem: scroll " + scroll.x + ", " + scroll.y + "");
+            Point point = getLocationOnScreen(requireView().findFocus());
+            Log.e(TAG, "setScrollToFocusedItem: focused " + point.x + ", " + point.y + "");
+            int coordinate = point.y - scroll.y;
+            Log.e(TAG, "setScrollToFocusedItem: point.y - scroll.y =>" + coordinate);
+            if (coordinate <= 0) scrollviewOtherInfo.smoothScrollTo(0, 0);
+            else if (scroll.y > coordinate) coordinate = point.y;
+            scrollviewOtherInfo.smoothScrollTo(0, coordinate);
+//            if (focused.getId() == R.id.et_admission_date || focused.getId() == R.id.et_admission_time) {
+//                scrollviewOtherInfo.smoothScrollTo(0, 0);
+//            } else {
+//                scrollviewOtherInfo.smoothScrollTo(0, point.y);
+//            }
+        }
+    }
+
+    public static Point getLocationOnScreen(View view) {
+        int[] location = new int[2];
+        view.getLocationOnScreen(location);
+        return new Point(location[0], location[1]);
+    }
+
+    @SuppressLint("UseCompatLoadingForDrawables")
+    public void onPatientCreateClicked() {
+        if (!etHospitalOther.getText().toString().isEmpty()) {
+            mHospitalMaternityString = "other";
+        }
+        if (!areValidFields()) {
+            setScrollToFocusedItem();
+            return;
+        }        //code for adding to the database
+
+        Log.e(TAG, "onPatientCreateClicked: validation completed");
+        mTotalBirthCount = mTotalBirthEditText.getText().toString().trim();
+        mTotalMiscarriageCount = mTotalMiscarriageEditText.getText().toString().trim();
+        if (mHospitalMaternityString.trim().equalsIgnoreCase("other")) {
+            Log.d(TAG, "onPatientCreateClicked: in other");
+            mHospitalMaternityString = etHospitalOther.getText().toString();
+            cardHospitalOther.setVisibility(View.VISIBLE);
+            etHospitalOther.setVisibility(View.VISIBLE);
+            tvErrorHospital.setVisibility(View.GONE);
+            tvErrorHospitalOther.setVisibility(View.GONE);
+
+        }
+        Log.d(TAG, "onPatientCreateClicked:mHospitalMaternityString :  " + mHospitalMaternityString);
+
+        PatientsDAO patientsDAO = new PatientsDAO();
+        PatientAttributesDTO patientAttributesDTO = new PatientAttributesDTO();
+        List<PatientAttributesDTO> patientAttributesDTOList = new ArrayList<>();
+
+
+        //wrong uuid
+
+        if (fromSummary && patientUuidUpdate != null && !patientUuidUpdate.isEmpty()) {
+            uuid = patientUuidUpdate;
+        } else {
+            uuid = UUID.randomUUID().toString();
+
+        }
+
+        patientDTO.setUuid(uuid);
+        patientDTO.setCreatorUuid(sessionManager.getCreatorID());
+        Gson gson = new Gson();
+
+        boolean cancel = false;
+        View focusView = null;
+        //mLaborOnsetString = "Spontaneous";
+        ///mHospitalMaternityString = "Hospital";
+
+        /*end*/
+        if (cancel) {
+            focusView.requestFocus();
+        } else {
+
+
+            ///  1 patientDTO.setCountry(StringUtils.getValue(mCountry.getSelectedItem().toString()));
+//            patientDTO.setCountry(StringUtils.getValue(mSwitch_hi_en_te_Country(mCountry.getSelectedItem().toString(),sessionManager.getAppLanguage())));
+//
+//            patientDTO.setCountry(StringUtils.getValue(mCountry.getSelectedItem().toString()));
+            ///  2  patientDTO.setPatientPhoto(mCurrentPhotoPath);
+//          patientDTO.setEconomic(StringUtils.getValue(m));
+            //// 3 patientDTO.setStateprovince(StringUtils.getValue(mState.getSelectedItem().toString()));
+//            patientDTO.setStateprovince(StringUtils.getValue(mSwitch_hi_en_te_State(mState.getSelectedItem().toString(),sessionManager.getAppLanguage())));
+
+            /*patientAttributesDTO = new PatientAttributesDTO();
+            patientAttributesDTO.setUuid(UUID.randomUUID().toString());
+            patientAttributesDTO.setPatientuuid(uuid);
+            patientAttributesDTO.setPersonAttributeTypeUuid(patientsDAO.getUuidForAttribute("caste"));
+            patientAttributesDTO.setValue(StringUtils.getProvided(mCaste));
+            patientAttributesDTOList.add(patientAttributesDTO);*/
+
+
+            //Admission_Date
+            patientAttributesDTO = new PatientAttributesDTO();
+            patientAttributesDTO.setUuid(UUID.randomUUID().toString());
+            patientAttributesDTO.setPatientuuid(uuid);
+            patientAttributesDTO.setPersonAttributeTypeUuid(patientsDAO.getUuidForAttribute(PatientAttributesDTO.Columns.ADMISSION_DATE.value));
+            patientAttributesDTO.setValue(StringUtils.getValue(mAdmissionDateString));
+            patientAttributesDTOList.add(patientAttributesDTO);
+
+            //Admission_Time
+            patientAttributesDTO = new PatientAttributesDTO();
+            patientAttributesDTO.setUuid(UUID.randomUUID().toString());
+            patientAttributesDTO.setPatientuuid(uuid);
+            patientAttributesDTO.setPersonAttributeTypeUuid(patientsDAO.getUuidForAttribute(PatientAttributesDTO.Columns.ADMISSION_TIME.value));
+            patientAttributesDTO.setValue(StringUtils.getValue(mAdmissionTimeString));
+            patientAttributesDTOList.add(patientAttributesDTO);
+
+            //Parity
+            patientAttributesDTO = new PatientAttributesDTO();
+            patientAttributesDTO.setUuid(UUID.randomUUID().toString());
+            patientAttributesDTO.setPatientuuid(uuid);
+            patientAttributesDTO.setPersonAttributeTypeUuid(patientsDAO.getUuidForAttribute(PatientAttributesDTO.Columns.PARITY.value));
+            patientAttributesDTO.setValue(StringUtils.getValue(mTotalBirthCount + "," + mTotalMiscarriageCount));
+            patientAttributesDTOList.add(patientAttributesDTO);
+
+            //Labor Onset
+            patientAttributesDTO = new PatientAttributesDTO();
+            patientAttributesDTO.setUuid(UUID.randomUUID().toString());
+            patientAttributesDTO.setPatientuuid(uuid);
+            patientAttributesDTO.setPersonAttributeTypeUuid(patientsDAO.getUuidForAttribute(PatientAttributesDTO.Columns.LABOR_ONSET.value));
+            patientAttributesDTO.setValue(StringUtils.getValue(mLaborOnsetString));
+            patientAttributesDTOList.add(patientAttributesDTO);
+
+            //Active Labor Diagnosed
+            patientAttributesDTO = new PatientAttributesDTO();
+            patientAttributesDTO.setUuid(UUID.randomUUID().toString());
+            patientAttributesDTO.setPatientuuid(uuid);
+            patientAttributesDTO.setPersonAttributeTypeUuid(patientsDAO.getUuidForAttribute(PatientAttributesDTO.Columns.ACTIVE_LABOR_DIAGNOSED.value));
+            patientAttributesDTO.setValue(StringUtils.getValue(mActiveLaborDiagnosedDate + " " + mActiveLaborDiagnosedTime));
+            patientAttributesDTOList.add(patientAttributesDTO);
+
+            //Membrane Ruptured Timestamp
+            patientAttributesDTO = new PatientAttributesDTO();
+            patientAttributesDTO.setUuid(UUID.randomUUID().toString());
+            patientAttributesDTO.setPatientuuid(uuid);
+            patientAttributesDTO.setPersonAttributeTypeUuid(patientsDAO.getUuidForAttribute(PatientAttributesDTO.Columns.MEMBRANE_RUPTURED_TIMESTAMP.value));
+            patientAttributesDTO.setValue(mUnknownMembraneRupturedCheckBox.isChecked() ? "U" : StringUtils.getValue(mMembraneRupturedDate + " " + mMembraneRupturedTime));
+            patientAttributesDTOList.add(patientAttributesDTO);
+
+            //Risk factors
+            Log.e(TAG, "onPatientCreateClicked: Risk factor before => " + mRiskFactorsString);
+            if (mRiskFactorsString.contains(getString(R.string.other_risk))) {
+                mRiskFactorsString = mRiskFactorsString.replace(getString(R.string.other_risk), etHighRisk.getText().toString());
+                Log.e(TAG, "onPatientCreateClicked: Risk factor after => " + mRiskFactorsString);
+            }
+
+            patientAttributesDTO = new PatientAttributesDTO();
+            patientAttributesDTO.setUuid(UUID.randomUUID().toString());
+            patientAttributesDTO.setPatientuuid(uuid);
+            patientAttributesDTO.setPersonAttributeTypeUuid(patientsDAO.getUuidForAttribute(PatientAttributesDTO.Columns.RISK_FACTORS.value));
+            patientAttributesDTO.setValue(StringUtils.getValue(mRiskFactorsString));
+            patientAttributesDTOList.add(patientAttributesDTO);
+
+            Log.d(TAG, "onPatientCreateClicked: mHospitalMaternityString : " + mHospitalMaternityString);
+            //Hospital_Maternity
+            patientAttributesDTO = new PatientAttributesDTO();
+            patientAttributesDTO.setUuid(UUID.randomUUID().toString());
+            patientAttributesDTO.setPatientuuid(uuid);
+            patientAttributesDTO.setPersonAttributeTypeUuid(patientsDAO.getUuidForAttribute(PatientAttributesDTO.Columns.HOSPITAL_MATERNITY.value));
+            patientAttributesDTO.setValue(StringUtils.getValue(mHospitalMaternityString));
+            patientAttributesDTOList.add(patientAttributesDTO);
+
+            //PrimaryDoctor
+            patientAttributesDTO = new PatientAttributesDTO();
+            patientAttributesDTO.setUuid(UUID.randomUUID().toString());
+            patientAttributesDTO.setPatientuuid(uuid);
+            patientAttributesDTO.setPersonAttributeTypeUuid(patientsDAO.getUuidForAttribute(PatientAttributesDTO.Columns.PRIMARY_DOCTOR.value));
+            patientAttributesDTO.setValue(StringUtils.getValue(mPrimaryDoctorUUIDString) + "@#@" + mPrimaryDoctorTextView.getText());
+            patientAttributesDTOList.add(patientAttributesDTO);
+
+            //SecondaryDoctor
+            if (mSecondaryDoctorTextView.getText().length() > 0) {
+                patientAttributesDTO = new PatientAttributesDTO();
+                patientAttributesDTO.setUuid(UUID.randomUUID().toString());
+                patientAttributesDTO.setPatientuuid(uuid);
+                patientAttributesDTO.setPersonAttributeTypeUuid(patientsDAO.getUuidForAttribute(PatientAttributesDTO.Columns.SECONDARY_DOCTOR.value));
+                patientAttributesDTO.setValue(StringUtils.getValue(mSecondaryDoctorUUIDString) + "@#@" + mSecondaryDoctorTextView.getText());
+                patientAttributesDTOList.add(patientAttributesDTO);
+            }
+
+            Log.d(TAG, "onPatientCreateClicked: country : " + patientDTO.getCountry());
+            Log.d(TAG, "onPatientCreateClicked: state : " + patientDTO.getStateprovince());
+
+            //Ezazi Registration Number
+            int number = (int) (Math.random() * (99999999 - 100 + 1) + 100);
+            patientAttributesDTO = new PatientAttributesDTO();
+            patientAttributesDTO.setUuid(UUID.randomUUID().toString());
+            patientAttributesDTO.setPatientuuid(uuid);
+            patientAttributesDTO.setPersonAttributeTypeUuid(patientsDAO.getUuidForAttribute(PatientAttributesDTO.Columns.REGISTRATION_NUMBER.value));
+            patientAttributesDTO.setValue(patientDTO.getCountry().substring(0, 2) + "/" + patientDTO.getStateprovince().substring(0, 2) + "/" + patientDTO.getCityvillage().substring(0, 2) + "/" + String.valueOf(number));
+            patientAttributesDTOList.add(patientAttributesDTO);
+
+            //Bed number  -new flow
+            patientAttributesDTO = new PatientAttributesDTO();
+            patientAttributesDTO.setUuid(UUID.randomUUID().toString());
+            patientAttributesDTO.setPatientuuid(uuid);
+            patientAttributesDTO.setPersonAttributeTypeUuid(patientsDAO.getUuidForAttribute(PatientAttributesDTO.Columns.BED_NUMBER.value));
+            if (!TextUtils.isEmpty(etBedNumber.getText().toString())) {
+                patientAttributesDTO.setValue(StringUtils.getValue(etBedNumber.getText().toString()));
+            } else patientAttributesDTO.setValue(StringUtils.getValue(AppConstants.NOT_APPLICABLE));
+            patientAttributesDTOList.add(patientAttributesDTO);
+
+            /*new*/
+            //AlternateNo
+            patientAttributesDTO = new PatientAttributesDTO();
+            patientAttributesDTO.setUuid(UUID.randomUUID().toString());
+            patientAttributesDTO.setPatientuuid(uuid);
+            patientAttributesDTO.setPersonAttributeTypeUuid(patientsDAO.getUuidForAttribute(PatientAttributesDTO.Columns.ALTERNATE_NO.value));
+            patientAttributesDTO.setValue(StringUtils.getValue(mAlternateNumberString));
+            patientAttributesDTOList.add(patientAttributesDTO);
+            /*end*/
+
+            /*patientAttributesDTO = new PatientAttributesDTO();
+            patientAttributesDTO.setUuid(UUID.randomUUID().toString());
+            patientAttributesDTO.setPatientuuid(uuid);
+            patientAttributesDTO.setPersonAttributeTypeUuid(patientsDAO.getUuidForAttribute("Mother's Name"));
+            patientAttributesDTO.setValue(StringUtils.getValue(mRelationship.getText().toString()));
+            patientAttributesDTOList.add(patientAttributesDTO);*/
+
+            /*patientAttributesDTO = new PatientAttributesDTO();
+            patientAttributesDTO.setUuid(UUID.randomUUID().toString());
+            patientAttributesDTO.setPatientuuid(uuid);
+            patientAttributesDTO.setPersonAttributeTypeUuid(patientsDAO.getUuidForAttribute("occupation"));
+            patientAttributesDTO.setValue(StringUtils.getValue(mOccupation.getText().toString()));
+            patientAttributesDTOList.add(patientAttributesDTO);*/
+
+            /*patientAttributesDTO = new PatientAttributesDTO();
+            patientAttributesDTO.setUuid(UUID.randomUUID().toString());
+            patientAttributesDTO.setPatientuuid(uuid);
+            patientAttributesDTO.setPersonAttributeTypeUuid(patientsDAO.getUuidForAttribute("Economic Status"));
+            patientAttributesDTO.setValue(StringUtils.getProvided(mEconomicStatus));
+            patientAttributesDTOList.add(patientAttributesDTO);
+
+            patientAttributesDTO = new PatientAttributesDTO();
+            patientAttributesDTO.setUuid(UUID.randomUUID().toString());
+            patientAttributesDTO.setPatientuuid(uuid);
+            patientAttributesDTO.setPersonAttributeTypeUuid(patientsDAO.getUuidForAttribute("Education Level"));
+            patientAttributesDTO.setValue(StringUtils.getProvided(mEducation));
+            patientAttributesDTOList.add(patientAttributesDTO);
+*/
+            patientAttributesDTO = new PatientAttributesDTO();
+            patientAttributesDTO.setUuid(UUID.randomUUID().toString());
+            patientAttributesDTO.setPatientuuid(uuid);
+            patientAttributesDTO.setPersonAttributeTypeUuid(patientsDAO.getUuidForAttribute(PatientAttributesDTO.Columns.PROFILE_IMG_TIMESTAMP.value));
+            patientAttributesDTO.setValue(AppConstants.dateAndTimeUtils.currentDateTime());
+
+            //House Hold Registration
+//            if (sessionManager.getHouseholdUuid().equals("")){
+//
+//                String HouseHold_UUID = UUID.randomUUID().toString();
+//                sessionManager.setHouseholdUuid(HouseHold_UUID);
+//
+//                patientAttributesDTO = new PatientAttributesDTO();
+//                patientAttributesDTO.setUuid(UUID.randomUUID().toString());
+//                patientAttributesDTO.setPatientuuid(uuid);
+//                patientAttributesDTO.setPersonAttributeTypeUuid
+//                        (patientsDAO.getUuidForAttribute("householdID"));
+//                patientAttributesDTO.setValue(HouseHold_UUID);
+//
+//            } else {
+//
+//                String HouseHold_UUID = sessionManager.getHouseholdUuid();
+//                patientAttributesDTO = new PatientAttributesDTO();
+//                patientAttributesDTO.setUuid(UUID.randomUUID().toString());
+//                patientAttributesDTO.setPatientuuid(uuid);
+//                patientAttributesDTO.setPersonAttributeTypeUuid
+//                        (patientsDAO.getUuidForAttribute("householdID"));
+//                patientAttributesDTO.setValue(HouseHold_UUID);
+//
+//            }
+
+            patientAttributesDTOList.add(patientAttributesDTO);
+            Logger.logD(TAG, "buPatientAttrite list size" + patientAttributesDTOList.size());
+            patientDTO.setPatientAttributesDTOList(patientAttributesDTOList);
+            patientDTO.setSyncd(false);
+            Logger.logD("patient json : ", "Json : " + gson.toJson(patientDTO, PatientDTO.class));
+
+        }
+
+        try {
+
+            //updatePatientDetails
+            Log.d(TAG, "onPatientCreateClicked: fromSummary : " + fromSummary);
+            Log.d(TAG, "onPatientCreateClicked: uuid : " + uuid);
+
+            if (fromSummary) {
+                boolean isPatientUpdated = patientsDAO.updatePatientToDBNew(patientDTO, uuid, patientAttributesDTOList);
+                boolean isPatientImageUpdated = imagesDAO.updatePatientProfileImages(patientDTO.getPatientPhoto(), uuid);
+
+                if (NetworkConnection.isOnline(getActivity().getApplication())) {
+                    SyncDAO syncDAO = new SyncDAO();
+                    ImagesPushDAO imagesPushDAO = new ImagesPushDAO();
+                    boolean ispush = syncDAO.pushDataApi();
+                    boolean isPushImage = imagesPushDAO.patientProfileImagesPush();
+
+//                if (ispush)
+//                    AppConstants.notificationUtils.DownloadDone(getString(R.string.patient_data_upload), "" + patientdto.getFirst_name() + "" + patientdto.getLast_name() + "'s data upload complete.", 2, getApplication());
+//                else
+//                    AppConstants.notificationUtils.DownloadDone(getString(R.string.patient_data_upload), "" + patientdto.getFirst_name() + "" + patientdto.getLast_name() + "'s data not uploaded.", 2, getApplication());
+
+//                if (isPushImage)
+//                    AppConstants.notificationUtils.DownloadDone(getString(R.string.patient_data_upload), "" + patientdto.getFirst_name() + "" + patientdto.getLast_name() + "'s Image upload complete.", 4, getApplication());
+//                else
+//                    AppConstants.notificationUtils.DownloadDone(getString(R.string.patient_data_upload), "" + patientdto.getFirst_name() + "" + patientdto.getLast_name() + "'s Image not complete.", 4, getApplication());
+
+                }
+                if (isPatientUpdated && isPatientImageUpdated) {
+                    Log.d(TAG, "99onPatientCreateClicked:update uuid : " + uuid);
+                    Logger.logD(TAG, "updated");
+                    Intent i = new Intent(getActivity().getApplication(), PatientDetailActivity.class);
+                    i.putExtra("patientUuid", uuid);
+                    i.putExtra("patientName", patientDTO.getFirstname() + " " + patientDTO.getLastname());
+                    i.putExtra("tag", "newPatient");
+                    i.putExtra("hasPrescription", "false");
+//                    i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    getActivity().startActivity(i);
+                    getActivity().finish();
+                }
+            } else {
+                patientDTO.setCreatedAt(DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
+                boolean isPatientInserted = patientsDAO.insertPatientToDB(patientDTO, uuid);
+                boolean isPatientImageInserted = imagesDAO.insertPatientProfileImages(patientDTO.getPatientPhoto(), uuid);
+                if (NetworkConnection.isOnline(mContext)) {
+                    SyncDAO syncDAO = new SyncDAO();
+                    ImagesPushDAO imagesPushDAO = new ImagesPushDAO();
+                    boolean push = syncDAO.pushDataApi();
+                    boolean pushImage = imagesPushDAO.patientProfileImagesPush();
+//                if (push)
+//                    AppConstants.notificationUtils.DownloadDone(getString(R.string.patient_data_upload), "" + patientDTO.getFirstname() + "" + patientDTO.getLastname() + "'s data upload complete.", 2, getApplication());
+//                else
+//                    AppConstants.notificationUtils.DownloadDone(getString(R.string.patient_data_upload), "" + patientDTO.getFirstname() + "" + patientDTO.getLastname() + "'s data not uploaded.", 2, getApplication());
+
+//                if (pushImage)
+//                    AppConstants.notificationUtils.DownloadDone(getString(R.string.patient_data_upload), "" + patientDTO.getFirstname() + "" + patientDTO.getLastname() + "'s Image upload complete.", 4, getApplication());
+//                else
+//                    AppConstants.notificationUtils.DownloadDone(getString(R.string.patient_data_upload), "" + patientDTO.getFirstname() + "" + patientDTO.getLastname() + "'s Image not complete.", 4, getApplication());
+
+
+//
+                }
+//            else {
+//                AppConstants.notificationUtils.showNotifications(getString(R.string.patient_data_failed), getString(R.string.check_your_connectivity), 2, IdentificationActivity.this);
+//            }
+                // if (isPatientInserted && isPatientImageInserted) {
+
+                if (isPatientInserted) {
+                    Logger.logD(TAG, "inserted");
+                    Log.d(TAG, "99onPatientCreateClicked:add uuid : " + uuid);
+
+                    Intent i = new Intent(mContext, PatientDetailActivity.class);
+                    i.putExtra("patientUuid", uuid);
+                    i.putExtra("patientName", patientDTO.getFirstname() + " " + patientDTO.getLastname());
+                    i.putExtra("tag", "newPatient");
+                    i.putExtra("privacy", privacy_value);
+                    i.putExtra("hasPrescription", "false");
+                    Log.d(TAG, "Privacy Value on (Identification): " + privacy_value); //privacy value transferred to PatientDetail activity.
+//                    i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    setSelectedDob(requireContext(), "");
+                    mContext.startActivity(i);
+                    getActivity().finish();
+                } else {
+                    Toast.makeText(mContext, "Error of adding the data", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+
+        } catch (DAOException e) {
+            FirebaseCrashlytics.getInstance().recordException(e);
+        }
+
+    }
+
+    public void setSelectedDob(Context context, String dob) {
+        SharedPreferences pref = context.getApplicationContext().getSharedPreferences("dobPatient", 0);
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putString("dobPatient", dob);
+        editor.apply();
+    }
+
+    private void setFocus(View view) {
+        if (requireView().findFocus() == null) {
+            view.requestFocus();
+        }
+    }
+
+    private boolean areValidFields() {
+        errorDetailsList = new ArrayList<>();
+        if (requireView().findFocus() != null)
+            requireView().clearFocus();
+
+        if (TextUtils.isEmpty(mAdmissionDateTextView.getText().toString())) {
+            mAdmissionDateTextView.requestFocus();
+           /* mAdmissionDateTextView.requestFocus();
+            tvErrorAdmissionDate.setVisibility(View.VISIBLE);
+            tvErrorAdmissionDate.setText(getString(R.string.select_admission_date));
+            cardAdmissionDate.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));*/
+            errorDetailsList.add(new ErrorManagerModel(mAdmissionDateTextView, tvErrorAdmissionDate, getString(R.string.select_admission_date), cardAdmissionDate));
+
+        } else {
+            tvErrorAdmissionDate.setVisibility(View.GONE);
+            cardAdmissionDate.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+        }
+        if (TextUtils.isEmpty(mAdmissionTimeTextView.getText().toString())) {
+            tvErrorAdmissionDate.setVisibility(View.GONE);
+            setFocus(mAdmissionTimeTextView);
+          /*  mAdmissionTimeTextView.requestFocus();
+            tvErrorAdmissionTime.setVisibility(View.VISIBLE);
+            tvErrorAdmissionTime.setText(getString(R.string.select_admission_time));
+            cardAdmissionTime.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));*/
+            errorDetailsList.add(new ErrorManagerModel(mAdmissionTimeTextView, tvErrorAdmissionTime, getString(R.string.select_admission_time), cardAdmissionTime));
+
+        } else {
+            tvErrorAdmissionDate.setVisibility(View.GONE);
+            tvErrorAdmissionTime.setVisibility(View.GONE);
+            cardAdmissionTime.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+
+        }
+
+        if (TextUtils.isEmpty(mTotalBirthEditText.getText().toString())) {
+            tvErrorTotalMiscarriage.setVisibility(View.GONE);
+            cardTotalMiscarraige.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+            setFocus(mTotalBirthEditText);
+        /*    mTotalBirthEditText.requestFocus();
+            tvErrorTotalBirth.setVisibility(View.VISIBLE);
+            tvErrorTotalBirth.setText(getString(R.string.total_birth_count_val_txt));
+            cardTotalBirth.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
+*/
+            errorDetailsList.add(new ErrorManagerModel(mTotalBirthEditText, tvErrorTotalBirth, getString(R.string.total_birth_count_val_txt), cardTotalBirth));
+
+        } else if (Integer.parseInt(mTotalBirthEditText.getText().toString()) > 15) {
+            tvErrorTotalMiscarriage.setVisibility(View.GONE);
+            cardTotalMiscarraige.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+            setFocus(mTotalBirthEditText);
+/*
+            mTotalBirthEditText.requestFocus();
+            tvErrorTotalBirth.setVisibility(View.VISIBLE);
+            tvErrorTotalBirth.setText(getString(R.string.total_birth_count_limit));
+            cardTotalBirth.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));*/
+            errorDetailsList.add(new ErrorManagerModel(mTotalBirthEditText, tvErrorTotalBirth, getString(R.string.total_birth_count_limit), cardTotalBirth));
+
+        } else {
+            tvErrorTotalBirth.setVisibility(View.GONE);
+            tvErrorTotalMiscarriage.setVisibility(View.GONE);
+            cardTotalBirth.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+        }
+        if (TextUtils.isEmpty(mTotalMiscarriageEditText.getText().toString())) {
+            tvErrorTotalBirth.setVisibility(View.GONE);
+            cardTotalBirth.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+            setFocus(mTotalMiscarriageEditText);
+          /*  mTotalMiscarriageEditText.requestFocus();
+            tvErrorTotalMiscarriage.setVisibility(View.VISIBLE);
+            tvErrorTotalMiscarriage.setText(getString(R.string.total_miscarriage_count_val_txt));
+            cardTotalMiscarraige.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));*/
+            errorDetailsList.add(new ErrorManagerModel(mTotalMiscarriageEditText, tvErrorTotalMiscarriage, getString(R.string.total_miscarriage_count_val_txt), cardTotalMiscarraige));
+
+        } else if (Integer.parseInt(mTotalMiscarriageEditText.getText().toString()) > 8) {
+            tvErrorTotalBirth.setVisibility(View.GONE);
+            cardTotalBirth.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+            setFocus(mTotalMiscarriageEditText);
+           /* mTotalMiscarriageEditText.requestFocus();
+            tvErrorTotalMiscarriage.setVisibility(View.VISIBLE);
+            tvErrorTotalMiscarriage.setText(getString(R.string.miscarriage_count_limit));
+            cardTotalMiscarraige.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));*/
+            errorDetailsList.add(new ErrorManagerModel(mTotalMiscarriageEditText, tvErrorTotalMiscarriage, getString(R.string.miscarriage_count_limit), cardTotalMiscarraige));
+
+        } else {
+            tvErrorTotalBirth.setVisibility(View.GONE);
+            tvErrorTotalMiscarriage.setVisibility(View.GONE);
+            cardTotalMiscarraige.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+        }
+
+        if (mLaborOnsetString.isEmpty()) {
+            tvSpontaneous.requestFocus();
+            tvInduced.requestFocus();
+            setFocus(tvSpontaneous);
+            tvErrorLabourOnset.setVisibility(View.VISIBLE);
+            tvErrorLabourOnset.setText(getString(R.string.labor_onset_val_txt));
+            tvSpontaneous.setBackground(ContextCompat.getDrawable(mContext, R.drawable.error_bg_et));
+            tvInduced.setBackground(ContextCompat.getDrawable(mContext, R.drawable.error_bg_et));
+            // errorDetailsList.add(new ErrorManagerModel(mLaborOnsetString, tvErrorTotalMiscarriage, getString(R.string.total_miscarriage_count_val_txt), cardTotalMiscarraige));
+
+        } else {
+            tvErrorLabourOnset.setVisibility(View.GONE);
+            getLabourOnsetValue(mLaborOnsetString);
+        }
+        if (TextUtils.isEmpty(mActiveLaborDiagnosedDateTextView.getText().toString())) {
+            setFocus(mActiveLaborDiagnosedDateTextView);
+            /*    mActiveLaborDiagnosedDateTextView.requestFocus();
+
+             tvErrorLabourDiagnosedDate.setVisibility(View.VISIBLE);
+            tvErrorLabourDiagnosedDate.setText(getString(R.string.active_labor_diagnosed_date_val_txt));
+            cardDiagnosedDate.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));*/
+            errorDetailsList.add(new ErrorManagerModel(mActiveLaborDiagnosedDateTextView, tvErrorLabourDiagnosedDate, getString(R.string.active_labor_diagnosed_date_val_txt), cardDiagnosedDate));
+
+        } else {
+            tvErrorLabourDiagnosedDate.setVisibility(View.GONE);
+            cardDiagnosedDate.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+        }
+        if (TextUtils.isEmpty(mActiveLaborDiagnosedTimeTextView.getText().toString())) {
+            tvErrorLabourDiagnosedDate.setVisibility(View.GONE);
+            setFocus(mActiveLaborDiagnosedTimeTextView);
+         /*   mActiveLaborDiagnosedTimeTextView.requestFocus();
+            tvErrorLabourDiagnosedTime.setVisibility(View.VISIBLE);
+            tvErrorLabourDiagnosedTime.setText(getString(R.string.active_labor_diagnosed_time_val_txt));
+            cardDiagnosedTime.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));*/
+            errorDetailsList.add(new ErrorManagerModel(mActiveLaborDiagnosedTimeTextView, tvErrorLabourDiagnosedTime, getString(R.string.active_labor_diagnosed_time_val_txt), cardDiagnosedTime));
+
+        } else {
+            tvErrorLabourDiagnosedDate.setVisibility(View.GONE);
+            tvErrorLabourDiagnosedTime.setVisibility(View.GONE);
+            cardDiagnosedTime.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+        }
+        if (!isUnknownChecked) {
+            if (TextUtils.isEmpty(mMembraneRupturedDateTextView.getText().toString())) {
+                setFocus(mMembraneRupturedDateTextView);
+             /*   mMembraneRupturedDateTextView.requestFocus();
+
+                tvErrorSacRupturedDate.setVisibility(View.VISIBLE);
+                tvErrorSacRupturedDate.setText(getString(R.string.select_sac_ruptured_date));
+                cardSacRupturedDate.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));*/
+                errorDetailsList.add(new ErrorManagerModel(mMembraneRupturedDateTextView, tvErrorSacRupturedDate, getString(R.string.select_sac_ruptured_date), cardSacRupturedDate));
+
+
+            } else {
+                tvErrorSacRupturedDate.setVisibility(View.GONE);
+                cardSacRupturedDate.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+            }
+        }
+        if (!isUnknownChecked) {
+            if (TextUtils.isEmpty(mMembraneRupturedTimeTextView.getText().toString())) {
+                tvErrorSacRupturedDate.setVisibility(View.GONE);
+                setFocus(mMembraneRupturedTimeTextView);
+                tvErrorSacRupturedTime.setVisibility(View.VISIBLE);
+                tvErrorSacRupturedTime.setText(getString(R.string.select_sac_ruptured_time));
+                cardSacRupturedTime.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
+                // errorDetailsList.add(new ErrorManagerModel(mMembraneRupturedTimeTextView, tvErrorSacRupturedTime, getString(R.string.select_sac_ruptured_time), cardSacRupturedTime));
+
+            } else {
+                tvErrorSacRupturedDate.setVisibility(View.GONE);
+                tvErrorSacRupturedTime.setVisibility(View.GONE);
+                cardSacRupturedTime.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+            }
+
+        }
+
+        View otherRiskFactor = view.findViewById(R.id.llViewOtherRiskFactor);
+        if (TextUtils.isEmpty(mRiskFactorsTextView.getText().toString())) {
+            setFocus(mRiskFactorsTextView);
+            errorDetailsList.add(new ErrorManagerModel(mRiskFactorsTextView, tvErrorRiskFactor, getString(R.string.please_select_risk_factor), dropdownRiskFactors));
+        } else if (otherRiskFactor.getVisibility() == View.VISIBLE && TextUtils.isEmpty(etHighRisk.getText().toString())) {
+            setFocus(etHighRisk);
+            errorDetailsList.add(new ErrorManagerModel(etHighRisk, tvErrorHighRisk, getString(R.string.error_other_risk), cardOtherRisk));
+        } else {
+            tvErrorRiskFactor.setVisibility(View.GONE);
+            dropdownRiskFactors.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+        }
+
+        Log.d(TAG, "areValidFields: mHospitalMaternityString : " + mHospitalMaternityString);
+        if (mHospitalMaternityString.isEmpty()) {
+            tvErrorHospital.setVisibility(View.VISIBLE);
+            tvErrorHospitalOther.setVisibility(View.GONE);
+            setFocus(optionHospital);
+            tvErrorHospital.setText(getString(R.string.hospital_matermnity_val_txt));
+            //optionHospital.setBackground(ContextCompat.getDrawable(mContext, R.drawable.error_bg_et));
+            //optionMaternity.setBackground(ContextCompat.getDrawable(mContext, R.drawable.error_bg_et));
+            // optionOther.setBackground(ContextCompat.getDrawable(mContext, R.drawable.error_bg_et));
+            //  errorDetailsList.add(new ErrorManagerModel(mHospitalMaternityString, tvErrorHospital, getString(R.string.hospital_matermnity_val_txt), dropdownRiskFactors));
+
+            errorDetailsList.add(new ErrorManagerModel(etHospitalOther, tvErrorHospital, getString(R.string.hospital_matermnity_val_txt), null));
+
+        } else if (mHospitalMaternityString.equalsIgnoreCase("hospital") || mHospitalMaternityString.equalsIgnoreCase("maternity")) {
+            etHospitalOther.setVisibility(View.GONE);
+            tvErrorHospital.setVisibility(View.GONE);
+            cardHospitalOther.setVisibility(View.GONE);
+            tvErrorHospitalOther.setVisibility(View.GONE);
+
+
+        } else {
+            tvErrorHospital.setVisibility(View.GONE);
+            //mHospitalMaternityString = etHospitalOther.getText().toString();
+            cardHospitalOther.setVisibility(View.VISIBLE);
+            etHospitalOther.setVisibility(View.VISIBLE);
+            if (TextUtils.isEmpty(etHospitalOther.getText().toString())) {
+                tvErrorHospital.setVisibility(View.GONE);
+                tvErrorHospitalOther.setVisibility(View.VISIBLE);
+                tvErrorHospitalOther.setText(getString(R.string.enter_hospital_other_error));
+                cardHospitalOther.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
+                errorDetailsList.add(new ErrorManagerModel(etHospitalOther, tvErrorHospitalOther, getString(R.string.enter_hospital_other_error), cardHospitalOther));
+                setFocus(cardHospitalOther);
+            } else {
+                mHospitalMaternityString = etHospitalOther.getText().toString();
+                cardHospitalOther.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+                tvErrorHospital.setVisibility(View.GONE);
+                tvErrorHospitalOther.setVisibility(View.GONE);
+
+            }
+            //cardOptions.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+        }
+
+
+        if (TextUtils.isEmpty(mPrimaryDoctorTextView.getText().toString())) {
+            setFocus(mPrimaryDoctorTextView);
+         /*   mPrimaryDoctorTextView.requestFocus();
+
+            tvErrorPrimaryDoctor.setVisibility(View.VISIBLE);
+            tvErrorPrimaryDoctor.setText(getString(R.string.select_primary_doctor));
+            cardPrimaryDoctor.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));*/
+            errorDetailsList.add(new ErrorManagerModel(mPrimaryDoctorTextView, tvErrorPrimaryDoctor, getString(R.string.select_primary_doctor), cardPrimaryDoctor));
+
+        } else {
+            tvErrorPrimaryDoctor.setVisibility(View.GONE);
+            cardPrimaryDoctor.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+        }
+        if (TextUtils.isEmpty(mSecondaryDoctorTextView.getText().toString())) {
+            setFocus(mSecondaryDoctorTextView);
+         /*   mSecondaryDoctorTextView.requestFocus();
+
+            tvErrorSecondaryDoctor.setVisibility(View.VISIBLE);
+            tvErrorSecondaryDoctor.setText(getString(R.string.select_secondary_doctor));
+            cardSecondaryDoctor.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));*/
+            errorDetailsList.add(new ErrorManagerModel(mSecondaryDoctorTextView, tvErrorSecondaryDoctor, getString(R.string.select_secondary_doctor), cardSecondaryDoctor));
+
+        } else {
+            tvErrorSecondaryDoctor.setVisibility(View.GONE);
+            cardSecondaryDoctor.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+        }
+//        if (TextUtils.isEmpty(etBedNumber.getText().toString())) {
+//            setFocus(etBedNumber);
+//          /*  etBedNumber.requestFocus();
+//
+//            tvErrorBedNumber.setVisibility(View.VISIBLE);
+//            tvErrorBedNumber.setText(getString(R.string.enter_bed_no));
+//            cardBedNumber.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));*/
+//            errorDetailsList.add(new ErrorManagerModel(etBedNumber, tvErrorBedNumber, getString(R.string.enter_bed_no), cardBedNumber));
+//
+//        } else {
+//            tvErrorBedNumber.setVisibility(View.GONE);
+//            cardBedNumber.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+//        }
+
+        Log.e(TAG, "areValidFields: size of error =>" + errorDetailsList.size());
+        if (errorDetailsList.size() > 0) {
+            for (int i = 0; i < errorDetailsList.size(); i++) {
+                ErrorManagerModel errorModel = errorDetailsList.get(i);
+//                if (i == 0) {
+//                    errorModel.view.requestFocus();
+//                }
+
+                errorModel.tvError.setVisibility(View.VISIBLE);
+                errorModel.tvError.setText(errorModel.getErrorMessage());
+                if (errorModel.cardView != null) {
+                    errorModel.cardView.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
+                }
+            }
+            return false;
+        } else {
+            return true;
+        }
+
+    }
+//    private PatientAttributesDTO createPatientAttribute(String attrTypeUuid, String value) {
+//        PatientAttributesDTO patientAttributesDTO = new PatientAttributesDTO();
+//        patientAttributesDTO.setUuid(UUID.randomUUID().toString());
+//        patientAttributesDTO.setPatientuuid(uuid);
+//        patientAttributesDTO.setPersonAttributeTypeUuid(attrTypeUuid);
+//        patientAttributesDTO.setValue(value);
+//
+//        return patientAttributesDTO;
+//    }
+
+    private void onBackInsertIntopatientDTO() {
+
+
+        PatientAttributesModel patientAttributesModel = getPatientAttributes();
+        Bundle bundle = new Bundle();
+        bundle.putSerializable("patientDTO", (Serializable) patientDTO);
+        bundle.putBoolean("fromThirdScreen", true);
+        bundle.putBoolean("patient_detail", patient_detail);
+        bundle.putBoolean("editDetails", true);
+        bundle.putString("mAlternateNumberString", mAlternateNumberString);
+        bundle.putBoolean("fromSummary", fromSummary);
+        bundle.putString("patientUuidUpdate", patientUuidUpdate);
+        bundle.putSerializable("patientAttributes", (Serializable) patientAttributesModel);
+
+        secondScreen.setArguments(bundle); // passing data to Fragment
+
+        requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.frame_add_patient, secondScreen).commit();
+        ((AddNewPatientActivity) requireActivity()).changeCurrentPage(AddNewPatientActivity.PAGE_ADDRESS);
+    }
+
+    private PatientAttributesModel getPatientAttributes() {
+        PatientAttributesModel patientAttributesModel = new PatientAttributesModel();
+        mTotalBirthCount = mTotalBirthEditText.getText().toString();
+        mTotalMiscarriageCount = mTotalMiscarriageEditText.getText().toString();
+
+        patientAttributesModel.setAdmissionDate(mAdmissionDateString);
+        patientAttributesModel.setActiveLabourDiagnosedDate(mActiveLaborDiagnosedDate);
+
+        patientAttributesModel.setAdmissionTime(mAdmissionTimeString);
+        patientAttributesModel.setActiveLabourDiagnosedTime(mActiveLaborDiagnosedTime);
+
+        patientAttributesModel.setTotalBirthCount(mTotalBirthCount);
+        patientAttributesModel.setTotalMiscarriageCount(mTotalMiscarriageCount);
+        patientAttributesModel.setLabourOnset(mLaborOnsetString);
+        Log.d(TAG, "getPatientAttributes:mHospitalMaternityString :  " + mHospitalMaternityString);
+
+        patientAttributesModel.setHospitalMaternity(mHospitalMaternityString);
+        patientAttributesModel.setPrimaryDoctor(mPrimaryDoctorTextView.getText().toString());
+        if (mSecondaryDoctorTextView.getText().length() > 0) {
+            patientAttributesModel.setSecondaryDoctor(mSecondaryDoctorTextView.getText().toString());
+        }
+
+        patientAttributesModel.setRiskFactors(mRiskFactorsString);
+        if (!TextUtils.isEmpty(etBedNumber.getText().toString())) {
+            patientAttributesModel.setBedNumber(etBedNumber.getText().toString());
+        } else patientAttributesModel.setBedNumber(AppConstants.NOT_APPLICABLE);
+        patientAttributesModel.setMembraneCheckboxChecked(mUnknownMembraneRupturedCheckBox.isChecked());
+        if (mUnknownMembraneRupturedCheckBox.isChecked()) {
+            mMembraneRupturedDate = "";
+            mMembraneRupturedTime = "";
+            mMembraneRupturedDateTextView.setText("");
+            mMembraneRupturedTimeTextView.setText("");
+
+        }
+        patientAttributesModel.setSacRupturedDate(mMembraneRupturedDate);
+        patientAttributesModel.setSacRupturedTime(mMembraneRupturedTime);
+        patientAttributesModel.setOtherHospitalString(etHospitalOther.getText().toString());
+
+
+        return patientAttributesModel;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+     /*   //selectedDate  -  30/5/2023
+        if (data != null) {
+            Bundle bundle = data.getExtras();
+            String selectedDate = bundle.getString("selectedDate");
+            String whichDate = bundle.getString("whichDate");
+            Log.d(TAG, "onActivityResult: selectedDate : " + selectedDate);
+
+            if (!whichDate.isEmpty()) {
+                if (whichDate.equals("admissionDate")) {
+                    mAdmissionDateString = selectedDate;
+                    mAdmissionDateTextView.setText(selectedDate);
+                *//*String dateToshow1 = DateAndTimeUtils.getDateWithDayAndMonthFromDDMMFormat(mAdmissionDateString);
+                if (!mAdmissionDateString.isEmpty()) {
+                    String[] splitedDate = mAdmissionDateString.split("/");
+                   mAdmissionDateTextView.setText(dateToshow1 + ", " + splitedDate[2]);
+                    *//*
+                } else if (whichDate.equals("labourDiagnosedDate")) {
+                    mActiveLaborDiagnosedDate = selectedDate;
+                    mActiveLaborDiagnosedDateTextView.setText(selectedDate);
+                } else if (whichDate.equals("sacRupturedDate")) {
+                    mMembraneRupturedDate = selectedDate;
+                    mMembraneRupturedDateTextView.setText(selectedDate);
+                }
+            }
+        }*/
+    }
+
+    private void selectPrimaryDoctor() {
+        List<ProviderDTO> providerDoctorList = new ArrayList<>();
+        for (int i = 0; i < mProviderDoctorList.size(); i++) {
+            if (!mSecondaryDoctorUUIDString.equals(mProviderDoctorList.get(i).getUserUuid())) {
+                providerDoctorList.add(mProviderDoctorList.get(i));
+            }
+        }
+        Log.d(TAG, "onClick:providerDoctorList : " + providerDoctorList.size());
+        int selectedId = 0;
+        ArrayList<SingChoiceItem> choiceItems = new ArrayList<>();
+        for (int i = 0; i < providerDoctorList.size(); i++) {
+            SingChoiceItem item = new SingChoiceItem();
+            item.setItem(providerDoctorList.get(i).getGivenName() + " " + providerDoctorList.get(i).getFamilyName());
+            item.setItemId(providerDoctorList.get(i).getUserUuid());
+            item.setItemIndex(i);
+            choiceItems.add(item);
+            if (mPrimaryDoctorUUIDString.equals(providerDoctorList.get(i).getUserUuid()))
+                selectedId = i;
+        }
+
+        SingleChoiceDialogFragment dialog = new SingleChoiceDialogFragment
+                .Builder(mContext)
+                .title(R.string.select_primary_doctor)
+                .positiveButtonLabel(R.string.save_button)
+                .content(choiceItems).build();
+        dialog.isSearchable(true);
+        dialog.setListener(item -> {
+            Log.d(TAG, "selectPrimaryDoctor: value : " + item.getItem());
+            mPrimaryDoctorUUIDString = item.getItemId();
+            mPrimaryDoctorTextView.setText(item.getItem());
+        });
+
+        dialog.show(getChildFragmentManager(), dialog.getClass().getCanonicalName());
+    }
+
+    private void selectSecondaryDoctor() {
+        if (mPrimaryDoctorUUIDString.isEmpty()) {
+            Toast.makeText(mContext, "Please select the primary doctor", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        List<ProviderDTO> providerDoctorList = new ArrayList<>();
+        for (int i = 0; i < mProviderDoctorList.size(); i++) {
+            if (!mPrimaryDoctorUUIDString.equals(mProviderDoctorList.get(i).getUserUuid())) {
+                providerDoctorList.add(mProviderDoctorList.get(i));
+            }
+        }
+        ArrayList<SingChoiceItem> choiceItems = new ArrayList<>();
+        SingChoiceItem itemNA = new SingChoiceItem();
+        itemNA.setItem(AppConstants.NOT_APPLICABLE_FULL_TEXT);
+        itemNA.setItemId(AppConstants.NOT_APPLICABLE);
+        itemNA.setItemIndex(0);
+        choiceItems.add(itemNA);
+        for (int i = 0; i < providerDoctorList.size(); i++) {
+            SingChoiceItem item = new SingChoiceItem();
+            item.setItem(providerDoctorList.get(i).getGivenName() + " " + providerDoctorList.get(i).getFamilyName());
+            item.setItemId(providerDoctorList.get(i).getUserUuid());
+            item.setItemIndex(i + 1);
+            item.setSelected(mSecondaryDoctorUUIDString.equals(providerDoctorList.get(i).getUserUuid()));
+            choiceItems.add(item);
+        }
+
+        SingleChoiceDialogFragment dialog = new SingleChoiceDialogFragment
+                .Builder(mContext)
+                .title(R.string.select_secondary_doctor)
+                .positiveButtonLabel(R.string.save_button)
+                .content(choiceItems).build();
+
+        dialog.isSearchable(true);
+        dialog.setListener(item -> {
+            Log.d(TAG, "selectSecondaryDoctor: position : " + item.getItemIndex());
+            Log.d(TAG, "selectSecondaryDoctor: value : " + item.getItem());
+            mSecondaryDoctorUUIDString = item.getItemId();
+            mSecondaryDoctorTextView.setText(item.getItem());
+        });
+
+        dialog.show(getChildFragmentManager(), dialog.getClass().getCanonicalName());
+    }
+
+    private void selectTimeForAllParameters(String forWhichParameter) {
+        ThemeTimePickerDialog dialog = new ThemeTimePickerDialog.Builder(mContext).title(R.string.current_time).positiveButtonLabel(R.string.ok).build();
+        dialog.setListener((hours, minutes, amPm, value) -> {
+            Log.d("ThemeTimePickerDialog", "value : " + value);
+            boolean isPM = (hours >= 12);
+            String timeString = String.format("%02d:%02d %s", hours, minutes, amPm);
+            Log.d(TAG, "selectTime: timeString : " + timeString);
+
+//            timeString = value;
+            if (forWhichParameter.equals("admissionTimeString")) {
+                mAdmissionTimeString = timeString;
+                mAdmissionTimeTextView.setText(timeString);
+            } else if (forWhichParameter.equals("laborOnsetString")) {
+                mActiveLaborDiagnosedTime = timeString;
+                mActiveLaborDiagnosedTimeTextView.setText(timeString);
+            } else if (forWhichParameter.equals("membraneRupturedTime")) {
+                mMembraneRupturedTime = timeString;
+                mMembraneRupturedTimeTextView.setText(timeString);
+            }
+        });
+        dialog.show(getChildFragmentManager(), "ThemeTimePickerDialog");
+    }
+
+    private void setscreen(String patientUID) {
+        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
+
+        String patientSelection = "uuid=?";
+        String[] patientArgs = {patientUID};
+        String[] patientColumns = {"uuid", "first_name", "middle_name", "last_name", "date_of_birth", "address1", "address2", "city_village", "state_province", "postal_code", "country", "phone_number", "gender", "sdw", "occupation", "patient_photo", "economic_status", "education_status", "caste"};
+        Cursor idCursor = db.query("tbl_patient", patientColumns, patientSelection, patientArgs, null, null, null);
+        if (idCursor.moveToFirst()) {
+            do {
+                patient1.setUuid(idCursor.getString(idCursor.getColumnIndexOrThrow("uuid")));
+                patient1.setFirst_name(idCursor.getString(idCursor.getColumnIndexOrThrow("first_name")));
+                patient1.setMiddle_name(idCursor.getString(idCursor.getColumnIndexOrThrow("middle_name")));
+                patient1.setLast_name(idCursor.getString(idCursor.getColumnIndexOrThrow("last_name")));
+                patient1.setDate_of_birth(idCursor.getString(idCursor.getColumnIndexOrThrow("date_of_birth")));
+                patient1.setAddress1(idCursor.getString(idCursor.getColumnIndexOrThrow("address1")));
+                patient1.setAddress2(idCursor.getString(idCursor.getColumnIndexOrThrow("address2")));
+                patient1.setCity_village(idCursor.getString(idCursor.getColumnIndexOrThrow("city_village")));
+                patient1.setState_province(idCursor.getString(idCursor.getColumnIndexOrThrow("state_province")));
+                patient1.setPostal_code(idCursor.getString(idCursor.getColumnIndexOrThrow("postal_code")));
+                patient1.setCountry(idCursor.getString(idCursor.getColumnIndexOrThrow("country")));
+                patient1.setPhone_number(idCursor.getString(idCursor.getColumnIndexOrThrow("phone_number")));
+                patient1.setGender(idCursor.getString(idCursor.getColumnIndexOrThrow("gender")));
+                patient1.setSdw(idCursor.getString(idCursor.getColumnIndexOrThrow("sdw")));
+                patient1.setOccupation(idCursor.getString(idCursor.getColumnIndexOrThrow("occupation")));
+                patient1.setPatient_photo(idCursor.getString(idCursor.getColumnIndexOrThrow("patient_photo")));
+
+            } while (idCursor.moveToNext());
+            idCursor.close();
+        }
+        String patientSelection1 = "patientuuid = ?";
+        String[] patientArgs1 = {patientUID};
+        String[] patientColumns1 = {"value", "person_attribute_type_uuid"};
+        final Cursor idCursor1 = db.query("tbl_patient_attribute", patientColumns1, patientSelection1, patientArgs1, null, null, null);
+        String name = "";
+        if (idCursor1.moveToFirst()) {
+            do {
+                try {
+                    name = patientsDAO.getAttributesName(idCursor1.getString(idCursor1.getColumnIndexOrThrow("person_attribute_type_uuid")));
+                } catch (DAOException e) {
+                    FirebaseCrashlytics.getInstance().recordException(e);
+                }
+
+                if (name.equalsIgnoreCase("caste")) {
+                    patient1.setCaste(idCursor1.getString(idCursor1.getColumnIndexOrThrow("value")));
+                }
+                if (name.equalsIgnoreCase("Telephone Number")) {
+                    patient1.setPhone_number(idCursor1.getString(idCursor1.getColumnIndexOrThrow("value")));
+                }
+                if (name.equalsIgnoreCase("Education Level")) {
+                    patient1.setEducation_level(idCursor1.getString(idCursor1.getColumnIndexOrThrow("value")));
+                }
+                if (name.equalsIgnoreCase("Economic Status")) {
+                    patient1.setEconomic_status(idCursor1.getString(idCursor1.getColumnIndexOrThrow("value")));
+                }
+                if (name.equalsIgnoreCase("occupation")) {
+                    patient1.setOccupation(idCursor1.getString(idCursor1.getColumnIndexOrThrow("value")));
+                }
+                if (name.equalsIgnoreCase("Son/wife/daughter")) {
+                    patient1.setSdw(idCursor1.getString(idCursor1.getColumnIndexOrThrow("value")));
+                }
+                /*new*/
+                if (name.equalsIgnoreCase("AlternateNo")) {
+                    patient1.setAlternateNo(idCursor1.getString(idCursor1.getColumnIndexOrThrow("value")));
+                }
+                if (name.equalsIgnoreCase("Wife_Daughter_Of")) {
+                    patient1.setWifeDaughterOf(idCursor1.getString(idCursor1.getColumnIndexOrThrow("value")));
+                }
+                if (name.equalsIgnoreCase("Admission_Date")) {
+                    patient1.setAdmissionDate(idCursor1.getString(idCursor1.getColumnIndexOrThrow("value")));
+                }
+                if (name.equalsIgnoreCase("Admission_Time")) {
+                    patient1.setAdmissionTime(idCursor1.getString(idCursor1.getColumnIndexOrThrow("value")));
+                }
+
+
+                if (name.equalsIgnoreCase("Parity")) {
+                    patient1.setParity(idCursor1.getString(idCursor1.getColumnIndexOrThrow("value")));
+                }
+                if (name.equalsIgnoreCase("Labor Onset")) {
+                    patient1.setLaborOnset(idCursor1.getString(idCursor1.getColumnIndexOrThrow("value")));
+                }
+                if (name.equalsIgnoreCase("Active Labor Diagnosed")) {
+                    patient1.setActiveLaborDiagnosed(idCursor1.getString(idCursor1.getColumnIndexOrThrow("value")));
+                }
+                if (name.equalsIgnoreCase("Membrane Ruptured Timestamp")) {
+                    patient1.setMembraneRupturedTimestamp(idCursor1.getString(idCursor1.getColumnIndexOrThrow("value")));
+                }
+                if (name.equalsIgnoreCase("Risk factors")) {
+                    patient1.setRiskFactors(idCursor1.getString(idCursor1.getColumnIndexOrThrow("value")));
+                }
+                if (name.equalsIgnoreCase("Hospital_Maternity")) {
+                    patient1.setHospitalMaternity(idCursor1.getString(idCursor1.getColumnIndexOrThrow("value")));
+                }
+                if (name.equalsIgnoreCase("PrimaryDoctor")) {
+                    patient1.setPrimaryDoctor(idCursor1.getString(idCursor1.getColumnIndexOrThrow("value")));
+                }
+
+                if (name.equalsIgnoreCase("SecondaryDoctor")) {
+                    patient1.setSecondaryDoctor(idCursor1.getString(idCursor1.getColumnIndexOrThrow("value")));
+                }
+
+                if (name.equalsIgnoreCase("Ezazi Registration Number")) {
+                    patient1.seteZaziRegNumber(idCursor1.getString(idCursor1.getColumnIndexOrThrow("value")));
+                }
+                /*end*/
+
+            } while (idCursor1.moveToNext());
+        }
+        idCursor1.close();
+
+    }
+
+    private void updateUI(Patient patient) {
+
+        //Admission_Date
+        if (patient.getAdmissionDate() != null) {
+            mAdmissionDateString = patient.getAdmissionDate();
+            mAdmissionDateTextView.setText(mAdmissionDateString);
+        }
+        //Admission_Time
+        if (patient.getAdmissionTime() != null) {
+            mAdmissionTimeString = patient.getAdmissionTime();
+            mAdmissionTimeTextView.setText(mAdmissionTimeString);
+        }
+
+        // parity
+        if (patient.getParity() != null) {
+            mTotalBirthCount = patient.getParity().split(",")[0];
+            mTotalMiscarriageCount = patient.getParity().split(",")[1];
+            mTotalBirthEditText.setText(mTotalBirthCount);
+            mTotalMiscarriageEditText.setText(mTotalMiscarriageCount);
+        }
+
+        //Labor Onset
+        if (patient.getLaborOnset() != null) {
+            mLaborOnsetString = patient.getLaborOnset();
+
+            getLabourOnsetValue(mLaborOnsetString);
+        }
+        //When was active labor diagnosed?
+        if (patient.getActiveLaborDiagnosed() != null) {
+            mActiveLaborDiagnosedDate = patient.getActiveLaborDiagnosed().split(" ")[0];
+            mActiveLaborDiagnosedTime = patient.getActiveLaborDiagnosed().split(" ")[1];
+            mActiveLaborDiagnosedDateTextView.setText(mActiveLaborDiagnosedDate);
+            mActiveLaborDiagnosedTimeTextView.setText(mActiveLaborDiagnosedTime);
+        }
+
+        //When was the membrane ruptured?
+        if (patient.getMembraneRupturedTimestamp() != null) {
+            if (patient.getMembraneRupturedTimestamp().equalsIgnoreCase("U")) {
+                mUnknownMembraneRupturedCheckBox.setChecked(true);
+            } else {
+                mUnknownMembraneRupturedCheckBox.setChecked(false);
+                mMembraneRupturedDate = patient.getMembraneRupturedTimestamp().split(" ")[0];
+                mMembraneRupturedTime = patient.getMembraneRupturedTimestamp().split(" ")[1];
+                mMembraneRupturedDateTextView.setText(mMembraneRupturedDate);
+                mMembraneRupturedTimeTextView.setText(mMembraneRupturedTime);
+            }
+        }
+        //Risk factors
+        if (patient.getRiskFactors() != null) {
+            mRiskFactorsString = patient.getRiskFactors();
+            mRiskFactorsTextView.setText(mRiskFactorsString);
+        }
+
+        //Hospital/Maternity?
+        if (patient.getHospitalMaternity() != null) {
+            //mOthersEditText.setVisibility(View.GONE);
+            mHospitalMaternityString = patient.getHospitalMaternity();
+
+            getHospitalMaternityValue(mHospitalMaternityString);
+        }
+
+        //primaryDoctor
+        Log.v(TAG, "getPrimaryDoctor" + patient.getPrimaryDoctor());
+        Log.v(TAG, "getPrimaryDoctor" + patient.getPrimaryDoctor());
+        if (patient.getPrimaryDoctor() != null) {
+            mPrimaryDoctorUUIDString = patient.getPrimaryDoctor().split("@#@")[0];
+            mPrimaryDoctorTextView.setText(patient.getPrimaryDoctor().split("@#@")[1]);
+        }
+
+        //secondaryDoctor
+        if (patient.getPrimaryDoctor() != null && patient.getSecondaryDoctor() != null) {
+            mSecondaryDoctorUUIDString = patient.getSecondaryDoctor().split("@#@")[0];
+            mSecondaryDoctorTextView.setText(patient.getSecondaryDoctor().split("@#@")[1]);
+        }
+
+        //Bed number
+        //new flow
+        try {
+            etBedNumber.setText(getBedNumber(patient.getUuid()));
+        } catch (DAOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void getHospitalMaternityValue(String mHospitalMaternityString) {
+        Log.d(TAG, "getHospitalMaternityValue:mHospitalMaternityString ::: " + mHospitalMaternityString);
+        if (mHospitalMaternityString.equalsIgnoreCase("Hospital")) {
+            optionHospital.setBackground(getResources().getDrawable(R.drawable.button_primary_rounded));
+            optionMaternity.setBackground(getResources().getDrawable(R.drawable.button_bg_rounded_corners));
+            optionOther.setBackground(getResources().getDrawable(R.drawable.button_bg_rounded_corners));
+            optionHospital.setTextColor(getResources().getColor(R.color.white));
+            optionMaternity.setTextColor(getResources().getColor(R.color.gray));
+            optionOther.setTextColor(getResources().getColor(R.color.gray));
+            cardHospitalOther.setVisibility(View.GONE);
+            etHospitalOther.setVisibility(View.GONE);
+        } else if (mHospitalMaternityString.equalsIgnoreCase("Maternity")) {
+            optionHospital.setBackground(getResources().getDrawable(R.drawable.button_bg_rounded_corners));
+            optionMaternity.setBackground(getResources().getDrawable(R.drawable.button_primary_rounded));
+            optionOther.setBackground(getResources().getDrawable(R.drawable.button_bg_rounded_corners));
+            optionHospital.setTextColor(getResources().getColor(R.color.gray));
+            optionMaternity.setTextColor(getResources().getColor(R.color.white));
+            optionOther.setTextColor(getResources().getColor(R.color.gray));
+            cardHospitalOther.setVisibility(View.GONE);
+            etHospitalOther.setVisibility(View.GONE);
+        } else {
+            optionHospital.setBackground(getResources().getDrawable(R.drawable.button_bg_rounded_corners));
+            optionMaternity.setBackground(getResources().getDrawable(R.drawable.button_bg_rounded_corners));
+            optionOther.setBackground(getResources().getDrawable(R.drawable.button_primary_rounded));
+            optionHospital.setTextColor(getResources().getColor(R.color.gray));
+            optionMaternity.setTextColor(getResources().getColor(R.color.gray));
+            optionOther.setTextColor(getResources().getColor(R.color.white));
+            cardHospitalOther = view.findViewById(R.id.card_hospital_other);
+
+            cardHospitalOther.setVisibility(View.VISIBLE);
+            etHospitalOther.setVisibility(View.VISIBLE);
+            //check
+            etHospitalOther.setText(mHospitalMaternityString);
+
+        }
+    }
+
+    private void getLabourOnsetValue(String mLaborOnsetString) {
+
+        if (mLaborOnsetString.equalsIgnoreCase("Spontaneous")) {
+            tvSpontaneous.setBackground(getResources().getDrawable(R.drawable.button_primary_rounded));
+            tvInduced.setBackground(getResources().getDrawable(R.drawable.button_bg_rounded_corners));
+            tvSpontaneous.setTextColor(getResources().getColor(R.color.white));
+            tvInduced.setTextColor(getResources().getColor(R.color.gray));
+            mLaborOnsetString = tvSpontaneous.getText().toString();
+        } else if (mLaborOnsetString.equalsIgnoreCase("Induced")) {
+            tvSpontaneous.setBackground(getResources().getDrawable(R.drawable.button_bg_rounded_corners));
+            tvInduced.setBackground(getResources().getDrawable(R.drawable.button_primary_rounded));
+            tvSpontaneous.setTextColor(getResources().getColor(R.color.gray));
+            tvInduced.setTextColor(getResources().getColor(R.color.white));
+            mLaborOnsetString = tvInduced.getText().toString();
+        }
+    }
+
+
+    class MyTextWatcher implements TextWatcher {
+        EditText editText;
+
+        MyTextWatcher(EditText editText) {
+            this.editText = editText;
+        }
+
+        @Override
+        public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+        }
+
+        @Override
+        public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+        }
+
+        @Override
+        public void afterTextChanged(Editable editable) {
+            String val = editable.toString().trim();
+            if (val.length() > 0) {
+                if (this.editText.getId() == R.id.et_admission_date) {
+                    if (val.isEmpty()) {
+                        tvErrorAdmissionDate.setVisibility(View.VISIBLE);
+                        tvErrorAdmissionDate.setText(getString(R.string.select_admission_date));
+                        cardAdmissionDate.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
+
+                    } else {
+                        tvErrorAdmissionDate.setVisibility(View.GONE);
+                        cardAdmissionDate.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+                        if (!mAdmissionTimeTextView.getText().toString().isEmpty() && !mAdmissionDateTextView.getText().toString().isEmpty()) {
+                            tvErrorAdmissionDate.setVisibility(View.GONE);
+                            tvErrorAdmissionTime.setVisibility(View.GONE);
+                        }
+                    }
+                } else if (this.editText.getId() == R.id.et_admission_time) {
+                    if (val.isEmpty()) {
+                        // tvErrorAdmissionDate.setVisibility(View.GONE);
+                        tvErrorAdmissionTime.setVisibility(View.VISIBLE);
+                        tvErrorAdmissionTime.setText(getString(R.string.select_admission_time));
+                        cardAdmissionTime.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
+
+                    } else {
+                        tvErrorAdmissionTime.setVisibility(View.GONE);
+                        // tvErrorAdmissionDate.setVisibility(View.GONE);
+                        if (!mAdmissionTimeTextView.getText().toString().isEmpty() && !mAdmissionDateTextView.getText().toString().isEmpty()) {
+                            tvErrorAdmissionDate.setVisibility(View.GONE);
+                            tvErrorAdmissionTime.setVisibility(View.GONE);
+
+                        }
+
+                        cardAdmissionTime.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+
+                    }
+                } else if (this.editText.getId() == R.id.et_total_birth) {
+                    if (val.isEmpty()) {
+                        tvErrorTotalBirth.setVisibility(View.VISIBLE);
+                        tvErrorTotalBirth.setText(getString(R.string.total_birth_count_val_txt));
+                        cardTotalBirth.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
+                        //cardTotalMiscarraige.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+
+                    } else if (Integer.parseInt(val) > 15) {
+                        // tvErrorTotalMiscarriage.setVisibility(View.GONE);
+                        tvErrorTotalBirth.setVisibility(View.VISIBLE);
+                        tvErrorTotalBirth.setText(getString(R.string.total_birth_count_limit));
+                        cardTotalBirth.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
+                        //cardTotalMiscarraige.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+
+                    } else {
+                        // tvErrorTotalMiscarriage.setVisibility(View.GONE);
+                        tvErrorTotalBirth.setVisibility(View.GONE);
+                        cardTotalBirth.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+                        //cardTotalMiscarraige.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+
+                        if (!mTotalBirthEditText.getText().toString().isEmpty() && !mTotalMiscarriageEditText.getText().toString().isEmpty()) {
+                            tvErrorTotalBirth.setVisibility(View.GONE);
+                            tvErrorTotalMiscarriage.setVisibility(View.GONE);
+                        }
+                    }
+                } else if (this.editText.getId() == R.id.et_total_miscarriage) {
+                    if (val.isEmpty()) {
+                        //tvErrorTotalBirth.setVisibility(View.GONE);
+                        tvErrorTotalMiscarriage.setVisibility(View.VISIBLE);
+                        tvErrorTotalMiscarriage.setText(getString(R.string.total_miscarriage_count_val_txt));
+                        cardTotalMiscarraige.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
+                        //cardTotalBirth.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+
+                    } else if (Integer.parseInt(val) > 8) {
+                        //tvErrorTotalBirth.setVisibility(View.GONE);
+                        tvErrorTotalMiscarriage.setVisibility(View.VISIBLE);
+                        tvErrorTotalMiscarriage.setText(getString(R.string.miscarriage_count_limit));
+                        cardTotalMiscarraige.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
+                        //cardTotalBirth.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+
+                    } else {
+
+                        // tvErrorTotalBirth.setVisibility(View.GONE);
+                        tvErrorTotalMiscarriage.setVisibility(View.GONE);
+                        cardTotalMiscarraige.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+                        // cardTotalBirth.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+                        if (!mTotalBirthEditText.getText().toString().isEmpty() && !mTotalMiscarriageEditText.getText().toString().isEmpty()) {
+                            tvErrorTotalBirth.setVisibility(View.GONE);
+                            tvErrorTotalMiscarriage.setVisibility(View.GONE);
+                        }
+                    }
+                } else if ((this.editText.getId() == R.id.et_spontaneous) || (this.editText.getId() == R.id.et_induced)) {//labour onset
+                    if (val.isEmpty()) {
+
+                        tvErrorLabourOnset.setVisibility(View.VISIBLE);
+                        tvErrorLabourOnset.setText(getString(R.string.labor_onset_val_txt));
+                        tvSpontaneous.setBackground(ContextCompat.getDrawable(mContext, R.drawable.error_bg_et));
+                        tvInduced.setBackground(ContextCompat.getDrawable(mContext, R.drawable.error_bg_et));
+
+                    } else {
+                        tvErrorLabourOnset.setVisibility(View.GONE);
+                        tvSpontaneous.setBackground(ContextCompat.getDrawable(mContext, R.drawable.button_bg_rounded_corners));
+                        tvInduced.setBackground(ContextCompat.getDrawable(mContext, R.drawable.button_bg_rounded_corners));
+
+                    }
+                } else if (this.editText.getId() == R.id.et_labor_diagnosed_date) {
+                    if (val.isEmpty()) {
+
+                        tvErrorLabourDiagnosedDate.setVisibility(View.VISIBLE);
+                        tvErrorLabourDiagnosedDate.setText(getString(R.string.active_labor_diagnosed_date_val_txt));
+                        cardDiagnosedDate.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
+                    } else {
+                        tvErrorLabourDiagnosedDate.setVisibility(View.GONE);
+                        cardDiagnosedDate.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+                        if (!mActiveLaborDiagnosedDateTextView.getText().toString().isEmpty() && !mActiveLaborDiagnosedTimeTextView.getText().toString().isEmpty()) {
+                            tvErrorLabourDiagnosedDate.setVisibility(View.GONE);
+                            tvErrorLabourDiagnosedTime.setVisibility(View.GONE);
+                        }
+                    }
+                } else if (this.editText.getId() == R.id.et_labor_diagnosed_time) {
+                    if (val.isEmpty()) {
+                        //tvErrorLabourDiagnosedDate.setVisibility(View.GONE);
+                        tvErrorLabourDiagnosedTime.setVisibility(View.VISIBLE);
+                        tvErrorLabourDiagnosedTime.setText(getString(R.string.active_labor_diagnosed_time_val_txt));
+                        cardDiagnosedTime.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
+
+                    } else {
+                        tvErrorLabourDiagnosedTime.setVisibility(View.GONE);
+                        //  tvErrorLabourDiagnosedDate.setVisibility(View.GONE);
+
+                        cardDiagnosedTime.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+                        if (!mActiveLaborDiagnosedDateTextView.getText().toString().isEmpty() && !mActiveLaborDiagnosedTimeTextView.getText().toString().isEmpty()) {
+                            tvErrorLabourDiagnosedDate.setVisibility(View.GONE);
+                            tvErrorLabourDiagnosedTime.setVisibility(View.GONE);
+                        }
+                    }
+                } else if (this.editText.getId() == R.id.et_sac_ruptured_date) {
+                    if (!isUnknownChecked) {
+                        if (val.isEmpty()) {
+                            tvErrorSacRupturedDate.setVisibility(View.VISIBLE);
+                            tvErrorSacRupturedDate.setText(getString(R.string.select_sac_ruptured_date));
+                            cardSacRupturedDate.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
+                        } else {
+                            tvErrorSacRupturedDate.setVisibility(View.GONE);
+                            cardSacRupturedDate.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+                            if (!mMembraneRupturedDateTextView.getText().toString().isEmpty() && !mMembraneRupturedTimeTextView.getText().toString().isEmpty()) {
+                                tvErrorSacRupturedDate.setVisibility(View.GONE);
+                                tvErrorSacRupturedTime.setVisibility(View.GONE);
+                            }
+                        }
+                    }
+                } else if (this.editText.getId() == R.id.et_sac_ruptured_time) {
+                    if (!isUnknownChecked) {
+                        if (val.isEmpty()) {
+                            //tvErrorSacRupturedDate.setVisibility(View.GONE);
+                            tvErrorSacRupturedTime.setVisibility(View.VISIBLE);
+                            tvErrorSacRupturedTime.setText(getString(R.string.select_sac_ruptured_time));
+                            cardSacRupturedTime.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
+
+                        } else {
+                            // tvErrorSacRupturedDate.setVisibility(View.GONE);
+                            tvErrorSacRupturedTime.setVisibility(View.GONE);
+                            cardSacRupturedTime.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+                            if (!mMembraneRupturedDateTextView.getText().toString().isEmpty() && !mMembraneRupturedTimeTextView.getText().toString().isEmpty()) {
+                                tvErrorSacRupturedDate.setVisibility(View.GONE);
+                                tvErrorSacRupturedTime.setVisibility(View.GONE);
+                            }
+
+                        }
+                    }
+
+                } else if (this.editText.getId() == R.id.autotv_risk_factors) {
+                    if (val.isEmpty()) {
+
+                        tvErrorRiskFactor.setVisibility(View.VISIBLE);
+                        tvErrorRiskFactor.setText(getString(R.string.please_select_risk_factor));
+                        dropdownRiskFactors.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
+                    } else {
+                        tvErrorRiskFactor.setVisibility(View.GONE);
+                        dropdownRiskFactors.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+
+                    }
+                } else if (editText.getId() == R.id.etOtherRiskFactor) {
+                    tvErrorHighRisk.setVisibility(View.GONE);
+                    val = etHighRisk.getText().toString();
+                    if (val.isEmpty()) {
+                        tvErrorHighRisk.setVisibility(View.VISIBLE);
+                        tvErrorHighRisk.setText(getString(R.string.error_other_risk));
+                        cardOtherRisk.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
+                    } else {
+                        tvErrorHighRisk.setVisibility(View.GONE);
+                        cardOtherRisk.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+                    }
+                }
+                /*else if (mHospitalMaternityString.isEmpty()) {
+                    tvErrorHospital.setVisibility(View.VISIBLE);
+                    tvErrorHospital.setText(getString(R.string.hospital_matermnity_val_txt));
+
+                } */
+                else if (this.editText.getId() == R.id.autotv_primary_doctor) {
+                    if (val.isEmpty()) {
+
+                        tvErrorPrimaryDoctor.setVisibility(View.VISIBLE);
+                        tvErrorPrimaryDoctor.setText(getString(R.string.select_primary_doctor));
+                        cardPrimaryDoctor.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
+                    } else {
+                        tvErrorPrimaryDoctor.setVisibility(View.GONE);
+                        cardPrimaryDoctor.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+
+                    }
+                } else if (this.editText.getId() == R.id.autotv_secondary_doctor) {
+                    if (val.isEmpty()) {
+
+                        tvErrorSecondaryDoctor.setVisibility(View.VISIBLE);
+                        tvErrorSecondaryDoctor.setText(getString(R.string.secondary_doctor));
+                        cardSecondaryDoctor.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
+                    } else {
+                        tvErrorSecondaryDoctor.setVisibility(View.GONE);
+                        cardSecondaryDoctor.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+
+                    }
+                } else if (this.editText.getId() == R.id.et_bed_number) {
+                    if (val.isEmpty()) {
+
+                        tvErrorBedNumber.setVisibility(View.VISIBLE);
+                        tvErrorBedNumber.setText(getString(R.string.enter_bed_no));
+                        cardBedNumber.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
+                    } else {
+                        tvErrorBedNumber.setVisibility(View.GONE);
+                        cardBedNumber.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+
+                    }
+                } else if (mHospitalMaternityString.equalsIgnoreCase("other")) {
+                    tvErrorHospital.setVisibility(View.GONE);
+                    tvErrorHospitalOther.setVisibility(View.GONE);
+                    val = etHospitalOther.getText().toString();
+                    if (val.isEmpty()) {
+                        tvErrorHospital.setVisibility(View.GONE);
+                        tvErrorHospitalOther.setVisibility(View.VISIBLE);
+
+                        tvErrorHospitalOther.setText(getString(R.string.enter_hospital_other_error));
+                        cardHospitalOther.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
+                    } else {
+                        tvErrorHospital.setVisibility(View.GONE);
+                        tvErrorHospitalOther.setVisibility(View.GONE);
+                        cardHospitalOther.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+
+                    }
+                }
+            }
+
+        }
+    }
+
+    private String getBedNumber(String patientuuid) throws DAOException {
+        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
+
+        String bedNumber = null;
+        Cursor idCursor = db.rawQuery("SELECT value  FROM tbl_patient_attribute where patientuuid = ? AND person_attribute_type_uuid='d0786817-68d9-4226-b311-3de68d534b9e' ", new String[]{patientuuid});
+        try {
+            if (idCursor.getCount() != 0) {
+                while (idCursor.moveToNext()) {
+
+                    bedNumber = idCursor.getString(idCursor.getColumnIndexOrThrow("value"));
+
+                }
+            }
+        } catch (SQLException s) {
+            FirebaseCrashlytics.getInstance().recordException(s);
+        }
+        idCursor.close();
+
+        return bedNumber;
+    }
+
+    private void updatePatientDetails(Patient patientdto, String uuid, List<PatientAttributesDTO> patientAttributesDTOList) {
+        try {
+            Logger.logD(TAG, "update ");
+            boolean isPatientUpdated = patientsDAO.updatePatientToDB(patientdto, uuid, patientAttributesDTOList);
+            boolean isPatientImageUpdated = imagesDAO.updatePatientProfileImages(patientdto.getPatient_photo(), uuid);
+
+            if (NetworkConnection.isOnline(getActivity().getApplication())) {
+                SyncDAO syncDAO = new SyncDAO();
+                ImagesPushDAO imagesPushDAO = new ImagesPushDAO();
+                boolean ispush = syncDAO.pushDataApi();
+                boolean isPushImage = imagesPushDAO.patientProfileImagesPush();
+
+//                if (ispush)
+//                    AppConstants.notificationUtils.DownloadDone(getString(R.string.patient_data_upload), "" + patientdto.getFirst_name() + "" + patientdto.getLast_name() + "'s data upload complete.", 2, getApplication());
+//                else
+//                    AppConstants.notificationUtils.DownloadDone(getString(R.string.patient_data_upload), "" + patientdto.getFirst_name() + "" + patientdto.getLast_name() + "'s data not uploaded.", 2, getApplication());
+
+//                if (isPushImage)
+//                    AppConstants.notificationUtils.DownloadDone(getString(R.string.patient_data_upload), "" + patientdto.getFirst_name() + "" + patientdto.getLast_name() + "'s Image upload complete.", 4, getApplication());
+//                else
+//                    AppConstants.notificationUtils.DownloadDone(getString(R.string.patient_data_upload), "" + patientdto.getFirst_name() + "" + patientdto.getLast_name() + "'s Image not complete.", 4, getApplication());
+
+            }
+            if (isPatientUpdated && isPatientImageUpdated) {
+                Logger.logD(TAG, "updated");
+                Intent i = new Intent(getActivity().getApplication(), PatientDetailActivity.class);
+                i.putExtra("patientUuid", uuid);
+                i.putExtra("patientName", patientdto.getFirst_name() + " " + patientdto.getLast_name());
+                i.putExtra("tag", "newPatient");
+                i.putExtra("hasPrescription", "false");
+//                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                getActivity().getApplication().startActivity(i);
+                getActivity().finish();
+            }
+        } catch (DAOException e) {
+            FirebaseCrashlytics.getInstance().recordException(e);
+        }
+    }
+
+    private void selectDateForAll(String whichDate) {
+        boolean isTable = getResources().getBoolean(R.bool.isTabletSize);
+        int maxHeight = getResources().getDimensionPixelOffset(R.dimen.std_430dp);
+        CalendarDialog dialog = new CalendarDialog.Builder(mContext)
+                .title("")
+                .positiveButtonLabel(R.string.ok)
+                .maxHeight(!isTable ? maxHeight : 0)
+                .build();
+
+        dialog.setListener((day, month, year, value) -> {
+            Log.e(TAG, "Date = >" + value);
+            String selectedDate = value;
+            if (!whichDate.isEmpty()) {
+                if (whichDate.equals("admissionDate")) {
+                    mAdmissionDateString = selectedDate;
+                    mAdmissionDateTextView.setText(selectedDate);
+                } else if (whichDate.equals("labourDiagnosedDate")) {
+                    mActiveLaborDiagnosedDate = selectedDate;
+                    mActiveLaborDiagnosedDateTextView.setText(selectedDate);
+                } else if (whichDate.equals("sacRupturedDate")) {
+                    mMembraneRupturedDate = selectedDate;
+                    mMembraneRupturedDateTextView.setText(selectedDate);
+                }
+            }
+        });
+        dialog.show(requireFragmentManager(), "DatePicker");
+    }
+
+}
