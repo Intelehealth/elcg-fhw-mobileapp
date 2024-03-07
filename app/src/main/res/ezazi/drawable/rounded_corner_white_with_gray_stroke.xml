@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/white" />
+    <corners android:radius="@dimen/container_corner_radius" />
+    <stroke
+        android:width="@dimen/input_stroke_size"
+        android:color="@color/input_focus_color" />
+    <padding
+        android:bottom="@dimen/screen_container_padding"
+        android:left="@dimen/screen_container_padding"
+        android:right="@dimen/screen_container_padding"
+        android:top="@dimen/screen_container_padding" />
+</shape>
