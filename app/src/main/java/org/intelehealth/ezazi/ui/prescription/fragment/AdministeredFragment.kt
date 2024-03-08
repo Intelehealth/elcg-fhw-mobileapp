@@ -2,6 +2,7 @@ package org.intelehealth.ezazi.ui.prescription.fragment
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -16,7 +17,7 @@ import androidx.navigation.fragment.findNavController
 import org.intelehealth.ezazi.R
 import org.intelehealth.ezazi.databinding.FragmentAdministeredBinding
 import org.intelehealth.ezazi.models.dto.ObsDTO
-import org.intelehealth.ezazi.partogram.model.Medicine
+import org.intelehealth.ezazi.partogram.PartogramConstants
 import org.intelehealth.ezazi.ui.prescription.adapter.PrescriptionAdapter
 import org.intelehealth.ezazi.ui.prescription.data.MedicineSingleton
 import org.intelehealth.ezazi.ui.prescription.fragment.PrescriptionFragment.PrescriptionType.*
@@ -32,14 +33,14 @@ import java.util.LinkedList
  * Mob   : +919727206702
  **/
 class AdministeredFragment : Fragment(R.layout.fragment_administered), MenuProvider,
-    BaseViewHolder.ViewHolderClickListener {
+        BaseViewHolder.ViewHolderClickListener {
     private lateinit var adapter: PrescriptionAdapter
     private lateinit var binding: FragmentAdministeredBinding
     private lateinit var titleChangeListener: TitleChangeListener
 
     private val viewMode: PrescriptionViewModel by lazy {
         ViewModelProvider(
-            requireActivity(), ViewModelProvider.Factory.from(PrescriptionViewModel.initializer)
+                requireActivity(), ViewModelProvider.Factory.from(PrescriptionViewModel.initializer)
         )[PrescriptionViewModel::class.java]
     }
 
@@ -52,7 +53,7 @@ class AdministeredFragment : Fragment(R.layout.fragment_administered), MenuProvi
         val menuHost: MenuHost = requireActivity()
         menuHost.addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
         if (::titleChangeListener.isInitialized) titleChangeListener.changeScreenTitle(
-            getScreenTitle()
+                getScreenTitle()
         )
     }
 
@@ -88,13 +89,23 @@ class AdministeredFragment : Fragment(R.layout.fragment_administered), MenuProvi
             it?.let {
                 binding.tvEmptyListMessage.isVisible = it.isEmpty()
                 adapter.updateItems(it)
-                changeSaveButtonEnableState(it.size > 0)
-            } ?: changeSaveButtonEnableState(false)
+                changeSaveButtonEnableState(it.size)
+                //changeSaveButtonEnableState(it.size > 0)
+            } //?: changeSaveButtonEnableState(false)
         }
     }
 
-    private fun changeSaveButtonEnableState(enable: Boolean) {
-        binding.btnSaveMedicines.isEnabled = enable
+    private fun changeSaveButtonEnableState(listSize: Int) {
+        viewMode.prescriptionArg?.let {
+            if (it.accessMode != PartogramConstants.AccessMode.READ) {
+                if (listSize > 0)
+                    binding.btnSaveMedicines.isEnabled = true
+                binding.btnAddMoreMedicine.isEnabled = true
+            } else {
+                binding.btnSaveMedicines.isEnabled = false
+                binding.btnAddMoreMedicine.isEnabled = false
+            }
+        }
     }
 
     private fun setupItemListView() {
@@ -194,7 +205,7 @@ class AdministeredFragment : Fragment(R.layout.fragment_administered), MenuProvi
     private fun hideAddButton() {
         viewMode.prescriptionArg?.let {
             binding.btnAddMoreMedicine.isVisible =
-                it.prescriptionType != OXYTOCIN && it.prescriptionType != IV_FLUID
+                    it.prescriptionType != OXYTOCIN && it.prescriptionType != IV_FLUID
         }
     }
 

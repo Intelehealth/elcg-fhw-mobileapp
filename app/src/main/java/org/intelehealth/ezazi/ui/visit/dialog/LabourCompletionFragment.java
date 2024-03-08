@@ -23,6 +23,8 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.database.dao.ObsDAO;
+import org.intelehealth.ezazi.database.dao.VisitAttributeListDAO;
+import org.intelehealth.ezazi.database.dao.VisitsDAO;
 import org.intelehealth.ezazi.databinding.LabourCompleteAndMotherDeceasedDialogBinding;
 import org.intelehealth.ezazi.models.dto.ObsDTO;
 import org.intelehealth.ezazi.ui.validation.FirstLetterUpperCaseInputFilter;
@@ -286,6 +288,7 @@ public class LabourCompletionFragment extends Fragment {
                 if (birthOutcomeStatus && motherDeceasedStatus) {
                     binding.btnLabourSubmit.setText("Visit Completing Please wait...");
                     binding.btnLabourSubmit.setEnabled(false);
+                    updateVisitDecisionPendingFlag();
                     ((VisitLabourActivity) requireActivity()).checkInternetAndUploadVisitEncounter();
                     Toast.makeText(requireContext(), getString(R.string.data_added_successfully), Toast.LENGTH_SHORT).show();
                 } else {
@@ -361,4 +364,26 @@ public class LabourCompletionFragment extends Fragment {
         }
         return true;
     }
+
+    private void updateVisitDecisionPendingFlag() {
+        Log.d(TAG, "updateVisitDecisionPendingFlag: visituuid : " + visitId);
+        if (visitId != null && !visitId.isEmpty()) {
+            if (new VisitAttributeListDAO().isSameOutcomePendingValueExist(visitId, "false"))
+                return;
+            long updated = new VisitAttributeListDAO().updateVisitAttribute(visitId, UuidDictionary.DECISION_PENDING, "false");
+            if (updated > 0) {
+                try {
+                    //isDecisionPending = false; //reset flag
+                    // layoutPendingFlag.setVisibility(View.GONE);
+                    VisitsDAO visitsDAO = new VisitsDAO();
+                    visitsDAO.updateVisitSync(visitId, "false");
+                    //Intent intent = new Intent(AppConstants.VISIT_DECISION_PENDING_ACTION);
+                    //IntelehealthApplication.getAppContext().sendBroadcast(intent);
+                } catch (DAOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    }
+
 }

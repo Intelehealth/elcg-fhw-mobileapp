@@ -428,7 +428,7 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
                 mVisitUuid,
                 type,
                 true,
-                PartogramConstants.AccessMode.WRITE);
+                accessMode);
     }
 
     private void showRadioOptionBoxForIVFluid(View tempView, ParamInfo info, TextView selected, String title) {
