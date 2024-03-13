@@ -24,7 +24,9 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"
+        android:minSdkVersion="34" />
 
     <uses-feature
         android:name="android.hardware.camera"
@@ -189,7 +191,7 @@
             android:configChanges="orientation|keyboardHidden|screenSize|uiMode"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"
-            android:windowSoftInputMode="adjustPan"/>
+            android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".activities.setupActivity.SetupActivity"
             android:configChanges="uiMode|keyboard|orientation|screenSize|smallestScreenSize|screenLayout"
