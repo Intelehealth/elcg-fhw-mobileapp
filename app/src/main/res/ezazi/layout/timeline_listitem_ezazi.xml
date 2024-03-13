@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="@dimen/screen_container_padding">
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.3"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tvStage"
+        style="@style/Theme.EZazi.Text.Stage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="@dimen/screen_padding"
+        android:text="@string/stage_1"
+        app:layout_constraintStart_toEndOf="@id/guideline"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:id="@+id/viewElcgEncounterConnectorLine1"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/stage_stroke_width"
+        android:background="@color/colorStageStroke"
+        app:layout_constraintBottom_toBottomOf="@id/cardElcgEncounter2"
+        app:layout_constraintEnd_toStartOf="@id/cardElcgEncounter2"
+        app:layout_constraintStart_toEndOf="@id/guideline"
+        app:layout_constraintTop_toTopOf="@id/cardElcgEncounter2" />
+
+    <View
+        android:id="@+id/vl_1"
+        android:layout_width="@dimen/stage_stroke_width"
+        android:layout_height="0dp"
+        android:layout_marginEnd="@dimen/screen_container_padding"
+        android:background="@color/colorStageStroke"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/guideline"
+        app:layout_constraintStart_toStartOf="@id/guideline"
+        app:layout_constraintTop_toBottomOf="@id/tvStage" />
+
+    <View
+        android:id="@+id/viewIndicatorElcgEncounter1"
+        android:layout_width="@dimen/screen_container_padding"
+        android:layout_height="@dimen/screen_container_padding"
+        android:background="@drawable/stage_circle_bg"
+        app:layout_constraintBottom_toBottomOf="@id/cardElcgEncounter2"
+        app:layout_constraintEnd_toEndOf="@id/vl_1"
+        app:layout_constraintStart_toStartOf="@id/vl_1"
+        app:layout_constraintTop_toTopOf="@id/cardElcgEncounter2" />
+
+    <TextView
+        android:id="@+id/txtEncounterDate"
+        style="@style/Theme.EZazi.Caption"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@id/tvElcgEncounter1Time"
+        app:layout_constraintEnd_toStartOf="@id/guideline"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/cardElcgEncounter2"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="23 Oct 2023" />
+
+    <TextView
+        android:id="@+id/tvElcgEncounter1Time"
+        style="@style/Theme.EZazi.Heading1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="06:00 PM"
+        android:textSize="@dimen/stage_text_size"
+        app:layout_constraintBottom_toBottomOf="@id/cardElcgEncounter2"
+        app:layout_constraintEnd_toStartOf="@id/guideline"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/txtEncounterDate" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/cardElcgEncounter2"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/screen_container_padding"
+        android:layout_marginBottom="@dimen/screen_container_padding"
+        android:background="@drawable/timeline_card_bg"
+        android:padding="@dimen/screen_container_padding"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvStage"
+        app:layout_constraintWidth_percent="0.65">
+
+        <TextView
+            android:id="@+id/summary_note_textview"
+            style="@style/Theme.EZazi.Caption"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/tap_here_to_capture_obs"
+            android:textColor="@color/darkGray"
+            android:textSize="@dimen/body"
+            app:layout_constraintEnd_toStartOf="@id/ivEdit"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/ivEdit"
+            style="@style/Theme.EZazi.Button.Icon.Edit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@android:color/transparent"
+            app:icon="@drawable/ic_edit"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/summary_textview"
+            style="@style/Theme.EZazi.Text.Timeline.Status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/summary_note_textview"
+            android:layout_marginTop="@dimen/between_text_margin"
+            android:gravity="center"
+            android:text="@string/pending_obs"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/summary_note_textview" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

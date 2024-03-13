@@ -1,0 +1,12 @@
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tvDropDownItem"
+    style="@style/LabelStyle"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="@dimen/list_container_padding"
+    android:layout_marginBottom="@dimen/list_container_padding"
+    android:background="@drawable/dropdown_item_selector"
+    android:padding="@dimen/std_8dp"
+    android:singleLine="true"
+    android:text="@string/title_setup"
+    android:textSize="@dimen/input_inner_size" />

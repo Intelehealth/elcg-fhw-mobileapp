@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout>
+
+    <data>
+
+        <import type="android.view.View" />
+
+        <variable
+            name="value"
+            type="org.intelehealth.ezazi.ui.dialog.model.SingChoiceItem" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingVertical="@dimen/list_container_padding">
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/tvChoice"
+            style="@style/Theme.EZazi.Text.Dialog.Content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/selector_dialog_list_item"
+            android:padding="@dimen/small_btn_horizontal_padding"
+            android:text="@{value.item}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Yes" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/tvSecondaryName"
+            style="@style/Theme.EZazi.Caption"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/small_btn_horizontal_padding"
+            android:text="@{value.secondaryName}"
+            android:textColor="@color/gray_3"
+            android:visibility="@{value.secondaryName != null ? View.VISIBLE : View.GONE}"
+            app:layout_constraintBottom_toBottomOf="@id/tvChoice"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/tvChoice"
+            tools:text="Secondary" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

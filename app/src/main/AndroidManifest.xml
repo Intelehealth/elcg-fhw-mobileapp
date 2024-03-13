@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- To auto-complete the email text field in the login form with the user's emails -->
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.READ_PROFILE" /> <!-- <uses-permission android:name="android.permission.READ_CONTACTS" /> -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS" />
+    <uses-permission android:name="android.permission.MANAGE_ACCOUNTS" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> <!-- <uses-permission android:name="android.permission.SEND_SMS" /> -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"
+        android:minSdkVersion="34" />
+
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="true" /> <!-- added support to lenova tab 2 -->
+    <uses-feature
+        android:name="android.hardware.camera.autofocus"
+        android:required="false" />
+
+    <application
+        android:name=".app.IntelehealthApplication"
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:largeHeap="true"
+        android:networkSecurityConfig="@xml/network_security_configuration"
+        android:requestLegacyExternalStorage="true"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true"
+        tools:ignore="UnusedAttribute, LockedOrientationActivity"
+        tools:replace="allowBackup">
+        <activity
+            android:name=".activities.addNewPatient.PatientSummaryActivity"
+            android:exported="false"
+            android:screenOrientation="portrait">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
+            android:name=".activities.addNewPatient.AddNewPatientActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustPan">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
+            android:name=".activities.epartogramActivity.EpartogramViewActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:exported="false"
+            android:label="@string/title_activity_epartogram"
+            android:screenOrientation="landscape"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".partogram.PartogramDataCaptureActivity"
+            android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name=".activities.visitSummaryActivity.TimelineVisitSummaryActivity"
+            android:exported="false"
+            android:label="@string/title_activity_visit_summary"
+            android:parentActivityName=".activities.homeActivity.HomeActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".ui.prescription.activity.AdministeredActivity"
+            android:exported="false"
+            android:label="@string/administer"
+            android:parentActivityName=".activities.visitSummaryActivity.TimelineVisitSummaryActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustPan" />
+
+        <receiver
+            android:name=".utilities.RTCMessageReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="org.intelehealth.app.RTC_MESSAGING_EVENT" />
+            </intent-filter>
+        </receiver>
+
+        <activity
+            android:name=".activities.privacyNoticeActivity.PrivacyNoticeActivity"
+            android:configChanges="uiMode"
+            android:label="@string/title_activity_privacy_notice"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".activities.patientDetailActivity.PatientDetailActivity"
+            android:configChanges="uiMode"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".activities.cameraActivity.CameraActivity"
+            android:configChanges="uiMode"
+            android:label="@string/title_activity_camera"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".activities.searchPatientActivity.SearchPatientActivity"
+            android:configChanges="uiMode"
+            android:exported="true"
+            android:label="@string/title_search_patient"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustNothing|adjustPan">
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.org.searchable"
+                android:resource="@xml/searchable" />
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.intelehealth.ezazi.activities.homeActivity.HomeActivity" />
+        </activity>
+        <activity
+            android:name=".activities.settingsActivity.SettingsActivity"
+            android:configChanges="orientation|keyboardHidden|uiMode"
+            android:label="@string/title_activity_settings"
+            android:parentActivityName=".activities.homeActivity.HomeActivity"
+            android:screenOrientation="portrait">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.intelehealth.ezazi.activities.homeActivity.HomeActivity" />
+        </activity>
+        <activity
+            android:name=".activities.loginActivity.LoginActivity"
+            android:configChanges="uiMode|keyboard|orientation|screenSize|smallestScreenSize|screenLayout"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name=".activities.homeActivity.HomeActivity"
+            android:configChanges="uiMode"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustPan|adjustResize">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.intelehealth.ezazi.activities.homeActivity.HomeActivity" />
+
+            <intent-filter>
+                <action android:name="FCM_PLUGIN_HOME_ACTIVITY" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".ui.visit.activity.VisitStatusActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize|uiMode"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".ui.password.activity.ForgotPasswordActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize|uiMode"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name=".activities.setupActivity.SetupActivity"
+            android:configChanges="uiMode|keyboard|orientation|screenSize|smallestScreenSize|screenLayout"
+            android:label="@string/title_activity_setup"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name=".ui.rtc.activity.EzaziChatActivity"
+            android:configChanges="uiMode"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ui.rtc.activity.EzaziVideoCallActivity"
+            android:configChanges="uiMode"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".ui.visit.activity.VisitLabourActivity"
+            android:configChanges="uiMode"
+            android:exported="true"
+            android:label="@string/complete_visit"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".activities.splash_activity.SplashActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize|uiMode"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".ui.prescription.activity.PrescriptionActivity"
+            android:configChanges="uiMode"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar" />
+
+        <service
+            android:name=".utilities.OpenMRSAccountAuthenticatorService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.accounts.AccountAuthenticator" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.accounts.AccountAuthenticator"
+                android:resource="@xml/authenticator" />
+        </service>
+        <service android:name=".services.DownloadService" />
+        <service android:name=".services.MyIntentService" />
+        <service android:name=".services.LastSyncIntentService" />
+        <service android:name=".services.UpdateDownloadPrescriptionService" /> <!-- Firebase Services -->
+        <service
+            android:name=".services.firebase_services.MyFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+        <meta-data
+            android:name="firebase_crashlytics_collection_enabled"
+            android:value="true" />
+
+        <receiver
+            android:name=".services.firebase_services.CallRTCNotifyReceiver"
+            android:exported="false">
+            <intent-filter android:priority="100">
+                <action
+                    android:name="org.intelehealth.app.RTC_MESSAGE_EVENT"
+                    android:enabled="true" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name=".services.firebase_services.RestartServiceReceiver"
+            android:exported="false">
+            <intent-filter android:priority="99">
+                <action
+                    android:name="org.intelehealth.app.RTC_SERVICE_START"
+                    android:enabled="true" />
+            </intent-filter>
+            <intent-filter android:priority="99">
+                <action
+                    android:name="android.intent.action.BOOT_COMPLETED"
+                    android:enabled="true" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".services.firebase_services.CallListenerBackgroundService"
+            android:enabled="true"
+            android:exported="true"
+            android:foregroundServiceType="dataSync" />
+
+        <receiver android:name=".utilities.NotificationReceiver" />
+    </application>
+
+</manifest>

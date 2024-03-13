@@ -1,0 +1,168 @@
+<resources>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+    <dimen name="text_margin">16dp</dimen>
+    <dimen name="fab_margin">16dp</dimen>
+    <dimen name="app_bar_height">180dp</dimen>
+
+    //Main Activity, Home screen
+    <dimen name="home_screen_button_height">50dp</dimen>
+    <dimen name="home_screen_button_width">50dp</dimen>
+
+    //Identification Screen
+    <dimen name="padding_identification_screen">10dp</dimen>
+    <dimen name="id_screen_text_size">18dp</dimen>
+
+
+    //Complaint Select Screen
+    <dimen name="padding_complaint_select">16dp</dimen>
+    <dimen name="text_size_category">25sp</dimen>
+    <dimen name="text_size_complaint">20sp</dimen>
+
+
+    //Physical Exam Screen
+    <dimen name="physical_node_title">20sp</dimen>
+
+    //Visit Summary Screen
+    <dimen name="padding_visit_summary_screen">10dp</dimen>
+    <dimen name="padding_card">16dp</dimen>
+    <dimen name="padding_card_action">8dp</dimen>
+    <dimen name="padding_card_title_text">8dp</dimen>
+    <dimen name="card_corner_radius">0dp</dimen>
+    <dimen name="card_title_text_size">28sp</dimen>
+    <dimen name="card_content_text_size">18sp</dimen>
+    <dimen name="card_content_sub_text_size">16sp</dimen>
+    <dimen name="card_content_normal_text_size">14sp</dimen>
+    <dimen name="edit_icon_height">28dp</dimen>
+    <dimen name="edit_icon_width">28dp</dimen>
+    <dimen name="appbar_padding_top">8dp</dimen>
+
+    <dimen name="physical_exam_img_max_height">125dp</dimen>
+
+    <dimen name="text_18sp">18sp</dimen>
+    <dimen name="text_24sp">24sp</dimen>
+
+    <!--New Design-->
+
+    <dimen name="static_margin">156dip</dimen>
+
+    <dimen name="content_horizontal_padding_1">16dip</dimen>
+    <dimen name="content_horizontal_padding">20dip</dimen>
+    <dimen name="content_vertical_padding">20dip</dimen>
+    <dimen name="body_element_vertical_margin">16dip</dimen>
+    <dimen name="body_element_horizontal_margin">16dip</dimen>
+    <dimen name="footer_action_bar_height">52dip</dimen>
+
+    <dimen name="edit_box_min_height">40dip</dimen>
+    <dimen name="edit_box_content_padding">8dp</dimen>
+
+    <dimen name="drawable_padding">16dip</dimen>
+    <dimen name="common_padding">8dip</dimen>
+
+    <dimen name="button_min_height">40dip</dimen>
+    <dimen name="button_min_width">100dip</dimen>
+
+    <dimen name="header_text_size">14sp</dimen>
+    <dimen name="header_text_size_1">14sp</dimen>
+    <dimen name="content_text_size">13sp</dimen>
+
+    <!--    Timeline -->
+    <dimen name="card_margin_end">10dp</dimen>
+    <dimen name="horizontalLine_Width">40dp</dimen>
+    <dimen name="timeTextview_margin_start">40dp</dimen>
+
+    <dimen name="timeTextview_min_width">68dip</dimen>
+
+    <!--  Added by Mithun Vaghela  -->
+
+    <dimen name="std_28sp">28sp</dimen>
+    <dimen name="std_6sp">6sp</dimen>
+    <dimen name="std_84dp">84dp</dimen>
+    <dimen name="std_16dp">16dp</dimen>
+    <dimen name="std_27dp">27dp</dimen>
+    <dimen name="std_8dp">8dp</dimen>
+    <dimen name="std_6dp">6dp</dimen>
+    <dimen name="std_4dp">4dp</dimen>
+    <dimen name="std_20sp">20sp</dimen>
+    <dimen name="std_20dp">20dp</dimen>
+    <dimen name="std_22sp">22sp</dimen>
+    <dimen name="std_22dp">22dp</dimen>
+    <dimen name="std_21sp">21sp</dimen>
+    <dimen name="std_21dp">21dp</dimen>
+    <dimen name="std_24sp">24sp</dimen>
+    <dimen name="std_26sp">26sp</dimen>
+    <dimen name="std_24dp">24dp</dimen>
+    <dimen name="std_14sp">14sp</dimen>
+    <dimen name="std_14dp">14dp</dimen>
+    <dimen name="std_16sp">16sp</dimen>
+    <dimen name="std_18sp">18sp</dimen>
+    <dimen name="std_18dp">18dp</dimen>
+    <dimen name="std_12sp">12sp</dimen>
+    <dimen name="std_12dp">12dp</dimen>
+    <dimen name="std_25sp">25sp</dimen>
+    <dimen name="std_25dp">25dp</dimen>
+    <dimen name="std_36sp">36sp</dimen>
+    <dimen name="std_150dp">150dp</dimen>
+    <dimen name="std_154dp">154dp</dimen>
+    <dimen name="std_142dp">142dp</dimen>
+    <dimen name="std_75dp">75dp</dimen>
+    <dimen name="std_56dp">56dp</dimen>
+    <dimen name="std_65dp">65dp</dimen>
+    <dimen name="std_50dp">50dp</dimen>
+    <dimen name="std_48dp">48dp</dimen>
+    <dimen name="std_47dp">47dp</dimen>
+    <dimen name="std_40dp">40dp</dimen>
+    <dimen name="std_29dp">29dp</dimen>
+    <dimen name="std_36dp">36dp</dimen>
+    <dimen name="std_32dp">32dp</dimen>
+    <dimen name="std_34dp">34dp</dimen>
+    <dimen name="std_60dp">60dp</dimen>
+    <dimen name="std_55dp">55dp</dimen>
+    <dimen name="std_100dp">100dp</dimen>
+    <dimen name="std_10dp">10dp</dimen>
+    <dimen name="std_10sp">10sp</dimen>
+    <dimen name="std_143dp">143dp</dimen>
+    <dimen name="std_35sp">35sp</dimen>
+    <dimen name="std_23sp">23sp</dimen>
+    <dimen name="std_164dp">164dp</dimen>
+    <dimen name="std_82dp">82dp</dimen>
+    <dimen name="std_80dp">80dp</dimen>
+    <dimen name="std_92dp">92dp</dimen>
+    <dimen name="std_72dp">72dp</dimen>
+    <dimen name="std_77dp">77dp</dimen>
+    <dimen name="std_64dp">64dp</dimen>
+    <dimen name="std_32sp">32sp</dimen>
+    <dimen name="std_70dp">70dp</dimen>
+    <dimen name="std_2dp">2dp</dimen>
+    <dimen name="std_26dp">26dp</dimen>
+    <dimen name="std_130dp">130dp</dimen>
+    <dimen name="std_30sp">30sp</dimen>
+    <dimen name="input_stroke_size">0.5dp</dimen>
+    <dimen name="input_box_corner_radius_12dp">@dimen/std_8dp</dimen>
+    <dimen name="input_box_corner_radius">@dimen/std_8dp</dimen>
+    <dimen name="std_28dp">28dp</dimen>
+
+    <dimen name="splash_bottom_dark_bg_width">400</dimen>
+    <dimen name="splash_bottom_dark_bg_height">224dp</dimen>
+    <dimen name="splash_bottom_light_bg_width">400</dimen>
+    <dimen name="splash_bottom_light_bg_height">282dp</dimen>
+    <dimen name="splash_bottom_text_margin">42dp</dimen>
+    <dimen name="splash_bottom_text_size">@dimen/std_14sp</dimen>
+    <dimen name="input_height">56dp</dimen>
+    <dimen name="std_69dp">69dp</dimen>
+    <dimen name="std_31dp">31dp</dimen>
+    <dimen name="std_120dp">120dp</dimen>
+    <dimen name="std_660dp">660dp</dimen>
+    <dimen name="std_814dp">814dp</dimen>
+    <dimen name="std_330dp">330dp</dimen>
+    <dimen name="std_407dp">407dp</dimen>
+    <dimen name="std_430dp">430dp</dimen>
+    <dimen name="std_380dp">380dp</dimen>
+    <dimen name="std_400dp">400dp</dimen>
+    <dimen name="std_720dp">720dp</dimen>
+    <dimen name="stage_stroke_size">0.5dp</dimen>
+    <dimen name="std_13dp">13dp</dimen>
+    <dimen name="common_padding_medication">2dp</dimen>
+
+</resources>

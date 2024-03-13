@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/list_container_padding">
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cvPatientItem"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardBackgroundColor="@color/white"
+        app:cardCornerRadius="@dimen/input_box_corner_radius"
+        app:cardElevation="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/searchlinear"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/selector_list_item"
+            android:paddingTop="@dimen/screen_container_padding">
+
+
+            <LinearLayout
+                android:id="@+id/llPatientDetails"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/screen_container_padding"
+                android:orientation="vertical"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <TextView
+                    android:id="@+id/tvPatientName"
+                    style="@style/Theme.EZazi.Heading1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    tools:text="Patient Name" />
+
+                <TextView
+                    android:id="@+id/tvPatientId"
+                    style="@style/Theme.EZazi.Body"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/std_4dp"
+                    tools:text="10LAM-3" />
+
+                <TextView
+                    android:id="@+id/tvBedNumber"
+                    style="@style/Theme.EZazi.Body"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/std_4dp"
+                    android:text="Bed No: 2A"
+                    tools:text="Bed No: 2A" />
+
+                <TextView
+                    android:id="@+id/tvPatientAge"
+                    style="@style/Theme.EZazi.Body"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/std_4dp"
+                    tools:text="Age: 24 years" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvNoOfAlert"
+                style="@style/Theme.EZazi.Body"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:layout_marginStart="@dimen/screen_container_padding"
+                android:layout_marginTop="@dimen/std_4dp"
+                android:text="No of Alert: 4"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/llPatientDetails"
+                tools:text="No of Alert: 4" />
+
+            <TextView
+                android:id="@+id/tvStageName"
+                style="@style/Theme.EZazi.Heading2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/screen_container_padding"
+                android:gravity="end"
+                android:padding="@dimen/screen_container_padding"
+                android:text="Stage-1"
+                app:layout_constraintBottom_toBottomOf="@id/tvNoOfAlert"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/llPatientDetails" />
+
+            <TextView
+                android:id="@+id/tvPatientRegOn"
+                style="@style/Theme.EZazi.Caption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginTop="@dimen/std_4dp"
+                android:gravity="end"
+                android:background="@color/blinkCardColor"
+                android:paddingHorizontal="@dimen/screen_container_padding"
+                android:paddingVertical="@dimen/list_container_padding"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvNoOfAlert"
+                tools:text="Registered: " />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.cardview.widget.CardView>
+</androidx.constraintlayout.widget.ConstraintLayout>
