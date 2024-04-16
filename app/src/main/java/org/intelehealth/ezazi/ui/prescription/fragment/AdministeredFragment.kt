@@ -1,12 +1,17 @@
 package org.intelehealth.ezazi.ui.prescription.fragment
 
 import android.content.Context
+import android.database.sqlite.SQLiteDatabase
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import android.widget.Toast
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
@@ -14,15 +19,21 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import com.github.ajalt.timberkt.Timber
+import com.google.gson.Gson
 import org.intelehealth.ezazi.R
+import org.intelehealth.ezazi.app.AppConstants
 import org.intelehealth.ezazi.databinding.FragmentAdministeredBinding
 import org.intelehealth.ezazi.models.dto.ObsDTO
 import org.intelehealth.ezazi.partogram.PartogramConstants
 import org.intelehealth.ezazi.ui.prescription.adapter.PrescriptionAdapter
 import org.intelehealth.ezazi.ui.prescription.data.MedicineSingleton
+import org.intelehealth.ezazi.ui.prescription.data.PrescriptionRepository
 import org.intelehealth.ezazi.ui.prescription.fragment.PrescriptionFragment.PrescriptionType.*
 import org.intelehealth.ezazi.ui.prescription.listener.TitleChangeListener
+import org.intelehealth.ezazi.ui.prescription.model.PrescriptionArg
 import org.intelehealth.ezazi.ui.prescription.viewmodel.PrescriptionViewModel
+import org.intelehealth.klivekit.chat.model.ItemHeader
 import org.intelehealth.klivekit.chat.ui.adapter.viewholder.BaseViewHolder
 import org.intelehealth.klivekit.utils.extensions.setupLinearView
 import java.util.LinkedList
@@ -32,16 +43,13 @@ import java.util.LinkedList
  * Email : mithun@intelehealth.org
  * Mob   : +919727206702
  **/
-class AdministeredFragment : Fragment(R.layout.fragment_administered), MenuProvider,
-        BaseViewHolder.ViewHolderClickListener {
+class AdministeredFragment : Fragment(R.layout.fragment_administered), MenuProvider, BaseViewHolder.ViewHolderClickListener {
     private lateinit var adapter: PrescriptionAdapter
     private lateinit var binding: FragmentAdministeredBinding
     private lateinit var titleChangeListener: TitleChangeListener
 
     private val viewMode: PrescriptionViewModel by lazy {
-        ViewModelProvider(
-                requireActivity(), ViewModelProvider.Factory.from(PrescriptionViewModel.initializer)
-        )[PrescriptionViewModel::class.java]
+        ViewModelProvider(requireActivity(), ViewModelProvider.Factory.from(PrescriptionViewModel.initializer))[PrescriptionViewModel::class.java]
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -52,9 +60,7 @@ class AdministeredFragment : Fragment(R.layout.fragment_administered), MenuProvi
         setActionClickListener()
         val menuHost: MenuHost = requireActivity()
         menuHost.addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
-        if (::titleChangeListener.isInitialized) titleChangeListener.changeScreenTitle(
-                getScreenTitle()
-        )
+        if (::titleChangeListener.isInitialized) titleChangeListener.changeScreenTitle(getScreenTitle())
     }
 
     private fun setActionClickListener() {
@@ -98,8 +104,7 @@ class AdministeredFragment : Fragment(R.layout.fragment_administered), MenuProvi
     private fun changeSaveButtonEnableState(listSize: Int) {
         viewMode.prescriptionArg?.let {
             if (it.accessMode != PartogramConstants.AccessMode.READ) {
-                if (listSize > 0)
-                    binding.btnSaveMedicines.isEnabled = true
+                if (listSize > 0) binding.btnSaveMedicines.isEnabled = true
                 binding.btnAddMoreMedicine.isEnabled = true
             } else {
                 binding.btnSaveMedicines.isEnabled = false
@@ -114,25 +119,34 @@ class AdministeredFragment : Fragment(R.layout.fragment_administered), MenuProvi
         binding.rvMedicines.setupLinearView(adapter)
     }
 
-    override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-        menuInflater.inflate(R.menu.prescription_menu, menu)
+    override fun onCreateMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.prescription_menu, menu)
+        super.onCreateOptionsMenu(menu, inflater)
+        menu.findItem(R.id.action_view_prescription)?.apply {
+            showToastIfNoPrescription(this)
+
+        }
     }
+
 
     override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
         if (menuItem.itemId == R.id.action_view_prescription) {
             viewMode.prescriptionArg?.let {
-                findNavController().navigate(R.id.fragmentPrescription, Bundle().apply {
-                    putParcelable(PrescriptionFragment.EXT_PRESCRIPTION_ARG, it)
-                }, null)
-//                findNavController().currentDestination?.let { navDestination ->
-//                    if (navDestination.id == R.id.fragmentAdministered) {
-//                        AdministeredFragmentDirections.actionViewPrescription(it).apply {
-//                            findNavController().navigate(this)
-//
-//                        }
-//                    }
-//                }
-            }
+                manageData(it)
+            }/* viewMode.prescriptionArg?.let {
+                 findNavController().navigate(R.id.fragmentPrescription, Bundle().apply {
+                     putParcelable(PrescriptionFragment.EXT_PRESCRIPTION_ARG, it)
+                 }, null)
+ //                findNavController().currentDestination?.let { navDestination ->
+ //                    if (navDestination.id == R.id.fragmentAdministered) {
+ //                        AdministeredFragmentDirections.actionViewPrescription(it).apply {
+ //                            findNavController().navigate(this)
+ //
+ //                        }
+ //                    }
+ //                }
+             }*/
+
         }
         return true
     }
@@ -204,8 +218,7 @@ class AdministeredFragment : Fragment(R.layout.fragment_administered), MenuProvi
 
     private fun hideAddButton() {
         viewMode.prescriptionArg?.let {
-            binding.btnAddMoreMedicine.isVisible =
-                    it.prescriptionType != OXYTOCIN && it.prescriptionType != IV_FLUID
+            binding.btnAddMoreMedicine.isVisible = it.prescriptionType != OXYTOCIN && it.prescriptionType != IV_FLUID
         }
     }
 
@@ -213,4 +226,38 @@ class AdministeredFragment : Fragment(R.layout.fragment_administered), MenuProvi
         super.onAttach(context)
         if (context is TitleChangeListener) titleChangeListener = context
     }
+
+    private fun manageData(args: PrescriptionArg) {
+        viewMode.getPrescriptions(args.visitId, args.prescriptionType).observe(viewLifecycleOwner) {
+            viewMode.handleResponse(it) { items ->
+                Timber.d { "Prescriptions => ${Gson().toJson(items)}" }
+                if (items.isNotEmpty()) {
+                    findNavController().navigate(R.id.fragmentPrescription, Bundle().apply {
+                        putParcelable(PrescriptionFragment.EXT_PRESCRIPTION_ARG, args)
+                    }, null)
+                } else Toast.makeText(requireContext(), getString(R.string.no_prescription_available), Toast.LENGTH_SHORT).show()
+
+            }
+        }
+    }
+
+    private fun showToastIfNoPrescription(menuItem: MenuItem) {
+        val drawableId = if (hasPrescriptions()) {
+            R.drawable.ic_vector_prescription_menu
+        } else {
+            R.drawable.ic_vector_prescription_menu_empty
+        }
+        menuItem.setIcon(drawableId)
+        requireActivity().invalidateOptionsMenu()
+    }
+
+    private fun hasPrescriptions(): Boolean {
+        return viewMode.prescriptionArg?.let {
+            val db: SQLiteDatabase = AppConstants.inteleHealthDatabaseHelper.readableDatabase
+            val repository = PrescriptionRepository(db)
+            val prescriptions: List<ItemHeader> = repository.fetchPrescription(it.visitId, it.prescriptionType)
+            prescriptions.isNotEmpty()
+        } ?: false
+    }
+
 }
