@@ -1,16 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:fitsSystemWindows="true"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
-    <include layout="@layout/simple_appbar" />
+    <include
+        android:id="@+id/layout_appbar_partogram"
+        layout="@layout/simple_appbar" />
 
     <include
         layout="@layout/content_observation_data_collection"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_above="@+id/includeBottomActionView"
+        android:layout_below="@+id/layout_appbar_partogram"
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior" />
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+    <include
+        android:id="@+id/includeBottomActionView"
+        layout="@layout/observation_bottom_action_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true" />
+</RelativeLayout>
