@@ -210,7 +210,9 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
         Manager.getInstance().setBaseUrl(sessionManager.getServerUrl());
         // save fcm reg. token for chat (Video)
         try {
-            FirebaseUtils.saveToken(this, providerDAO.getUserUuid(sessionManager.getProviderID()), IntelehealthApplication.getInstance().refreshedFCMTokenID, sessionManager.getAppLanguage());
+            FirebaseUtils.saveToken(this, providerDAO.getUserUuid(sessionManager.getProviderID()),
+                    IntelehealthApplication.getInstance().refreshedFCMTokenID, sessionManager.getAppLanguage(),
+                    sessionManager.getJwtAuthToken());
         } catch (DAOException e) {
             throw new RuntimeException(e);
         }
@@ -753,7 +755,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
 
         // Check if the activity was opened from a notification click
         if (getIntent() != null) {
-            Log.d(TAG, "onCreate: shiftChangeNotification in if");
+            Log.d(TAG, "onCreate: shiftChangeNotification in if : " + new Gson().toJson(getIntent()));
 
         }
         if (getIntent() != null && getIntent().hasExtra("shiftChangeNotification")) {
@@ -1503,6 +1505,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
     protected void onResume() {
         super.onResume();
         saveToken();
+
         //registerReceiver(reMyreceive, filter);
 //        checkAppVer();  //auto-update feature.
 //        lastSyncTextView.setText(getString(R.string.last_synced) + " \n" + sessionManager.getLastSyncDateTime());
@@ -1533,6 +1536,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
 
         showBadge();
         requestPermission();
+
         if (mActivePatientAdapter != null)
             mActivePatientAdapter.notifyDataSetChanged();
     }

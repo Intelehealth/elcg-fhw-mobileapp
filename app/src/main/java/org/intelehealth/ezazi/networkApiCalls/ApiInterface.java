@@ -19,6 +19,8 @@ import org.intelehealth.ezazi.ui.password.model.ChangePasswordRequestModel;
 import org.intelehealth.ezazi.ui.password.model.PasswordResponseModel;
 import org.intelehealth.ezazi.ui.password.model.RequestOTPModel;
 import org.intelehealth.ezazi.ui.password.model.VerifyOtpRequestModel;
+import org.intelehealth.ezazi.utilities.jwtauth.AuthJWTBody;
+import org.intelehealth.ezazi.utilities.jwtauth.AuthJWTResponse;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -121,5 +123,11 @@ public interface ApiInterface {
             @Query("name") String doctorUuid,
             @Query("roomId") String patientUuid,
             @Query("nurseName") String nurseUuid
+    );
+    @Headers({"Accept: application/json"})
+    @POST
+    Observable<AuthJWTResponse> AUTH_LOGIN_JWT_API(
+            @Url String url,
+            @Body AuthJWTBody authJWTBody
     );
 }
