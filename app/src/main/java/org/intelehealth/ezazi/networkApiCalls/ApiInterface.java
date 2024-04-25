@@ -45,8 +45,6 @@ import retrofit2.http.Url;
 public interface ApiInterface {
 
 
-
-
     @GET("location?tag=Login%20Location")
     Observable<Results<Location>> LOCATION_OBSERVABLE(@Query("v") String representation);
 
@@ -100,14 +98,18 @@ public interface ApiInterface {
 
 
     @GET
-    Call<OxytocinResponseModel> GET_OXYTOCIN_UNIT(@Url String url);
+    Call<OxytocinResponseModel> GET_OXYTOCIN_UNIT(@Url String url,
+                                                  @Header("Authorization") String authHeader);
 
+    @Headers({"Accept: application/json"})
     @POST("/api/auth/requestOtp")
     Call<ApiResponse<PasswordResponseModel>> requestOTP(@Body RequestOTPModel requestOTPModel);
 
+    @Headers({"Accept: application/json"})
     @POST("/api/auth/verifyOtp")
     Call<ApiResponse<PasswordResponseModel>> verifyOtp(@Body VerifyOtpRequestModel verifyOtpRequestModel);
 
+    @Headers({"Accept: application/json"})
     @POST("/api/auth/resetPassword/{userUuid}")
     Call<ApiResponse<PasswordResponseModel>> resetPassword(@Path("userUuid") String userUuid,
                                                            @Body ChangePasswordRequestModel changePasswordRequestModel);
@@ -124,9 +126,10 @@ public interface ApiInterface {
             @Query("roomId") String patientUuid,
             @Query("nurseName") String nurseUuid
     );
+
     @Headers({"Accept: application/json"})
     @POST
-    Observable<AuthJWTResponse> AUTH_LOGIN_JWT_API(
+    Observable<AuthJWTResponse> getJWTToken(
             @Url String url,
             @Body AuthJWTBody authJWTBody
     );

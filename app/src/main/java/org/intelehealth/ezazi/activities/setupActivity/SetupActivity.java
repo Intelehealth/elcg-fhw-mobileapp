@@ -343,7 +343,7 @@ public class SetupActivity extends AppCompatActivity {
             // as in ezazi we dont want to show locations dropdown so adding as static value.
             location.setDisplay(selectedLocation);
             location.setUuid("eb374eaf-430e-465e-81df-fe94c2c515be");
-           // TestSetup(urlString, email, password, location);//previous flow
+            // TestSetup(urlString, email, password, location);//previous flow
             getJWTToken(urlString, email, password, location);
 
             Log.d(TAG, "attempting setup");
@@ -622,7 +622,7 @@ public class SetupActivity extends AppCompatActivity {
 
     private void fetchOxytocinValueFromAPI() {
         String url = urlModifiers.getOxytocinUrl();
-        Call<OxytocinResponseModel> call = AppConstants.apiInterface.GET_OXYTOCIN_UNIT(url);
+        Call<OxytocinResponseModel> call = AppConstants.apiInterface.GET_OXYTOCIN_UNIT(url, sessionManager.getJwtAuthToken());
         call.enqueue(new Callback<OxytocinResponseModel>() {
             @Override
             public void onResponse(Call<OxytocinResponseModel> call, Response<OxytocinResponseModel> response) {
@@ -823,6 +823,7 @@ public class SetupActivity extends AppCompatActivity {
             throw new RuntimeException(e);
         }
     }
+
     private void getJWTToken(String urlString, String username, String password, Location location) {
         ProgressDialog progress;
         progress = new ProgressDialog(SetupActivity.this, R.style.AlertDialogStyle);
@@ -831,10 +832,10 @@ public class SetupActivity extends AppCompatActivity {
 
         progress.show();
         //String finalURL = "https://" + urlString.concat(":3030/auth/login");
-        String finalURL =  urlString.concat(":3030/auth/login");
+        String finalURL = urlString.concat(":3030/auth/login");
 
         AuthJWTBody authBody = new AuthJWTBody(username, password, true);
-        Observable<AuthJWTResponse> authJWTResponseObservable = AppConstants.apiInterface.AUTH_LOGIN_JWT_API(finalURL, authBody);
+        Observable<AuthJWTResponse> authJWTResponseObservable = AppConstants.apiInterface.getJWTToken(finalURL, authBody);
 
         authJWTResponseObservable
                 .subscribeOn(Schedulers.io())
@@ -871,6 +872,7 @@ public class SetupActivity extends AppCompatActivity {
                     }
                 });
     }
+
     private void triggerIncorrectPasswordFlow(ProgressDialog progress) {
         progress.dismiss();
         ConfirmationDialogFragment dialog = new ConfirmationDialogFragment.Builder(this)
@@ -885,6 +887,7 @@ public class SetupActivity extends AppCompatActivity {
         //DialogUtils.showerrorDialog(SetupActivity.this, getResources().getString(R.string.error_login_str), getString(R.string.error_incorrect_password), "ok");
         resetViews();
     }
+
     private void resetViews() {
         mEmailView.requestFocus();
         mPasswordView.requestFocus();

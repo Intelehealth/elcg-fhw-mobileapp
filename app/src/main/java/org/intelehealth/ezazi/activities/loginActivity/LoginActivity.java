@@ -530,7 +530,7 @@ public class LoginActivity extends AppCompatActivity {
 cpd.show();
         Log.d(TAG, "getJWTToken: finalURL: "+finalURL);
         AuthJWTBody authBody = new AuthJWTBody(username, password, true);
-        Observable<AuthJWTResponse> authJWTResponseObservable = AppConstants.apiInterface.AUTH_LOGIN_JWT_API(finalURL, authBody);
+        Observable<AuthJWTResponse> authJWTResponseObservable = AppConstants.apiInterface.getJWTToken(finalURL, authBody);
 
         authJWTResponseObservable
                 .subscribeOn(Schedulers.io())
