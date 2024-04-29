@@ -101,15 +101,12 @@ public interface ApiInterface {
     Call<OxytocinResponseModel> GET_OXYTOCIN_UNIT(@Url String url,
                                                   @Header("Authorization") String authHeader);
 
-    @Headers({"Accept: application/json"})
     @POST("/api/auth/requestOtp")
     Call<ApiResponse<PasswordResponseModel>> requestOTP(@Body RequestOTPModel requestOTPModel);
 
-    @Headers({"Accept: application/json"})
     @POST("/api/auth/verifyOtp")
     Call<ApiResponse<PasswordResponseModel>> verifyOtp(@Body VerifyOtpRequestModel verifyOtpRequestModel);
 
-    @Headers({"Accept: application/json"})
     @POST("/api/auth/resetPassword/{userUuid}")
     Call<ApiResponse<PasswordResponseModel>> resetPassword(@Path("userUuid") String userUuid,
                                                            @Body ChangePasswordRequestModel changePasswordRequestModel);
