@@ -195,6 +195,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
     private List<VisitDTO> visitDTOList;
     /*eZazi End*/
 
+
     public static PendingIntent getPendingIntent(Context context, ShiftChangeData data) {
         Intent shiftChangeIntent = new Intent(context, HomeActivity.class);
         shiftChangeIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
