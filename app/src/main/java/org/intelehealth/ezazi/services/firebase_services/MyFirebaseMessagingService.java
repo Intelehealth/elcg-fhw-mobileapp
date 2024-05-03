@@ -269,7 +269,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // save fcm reg. token for chat (Video)
         try {
             FirebaseUtils.saveToken(this, providerDAO.getUserUuid(sessionManager.getProviderID()),
-                    IntelehealthApplication.getInstance().refreshedFCMTokenID, sessionManager.getAppLanguage());
+                    IntelehealthApplication.getInstance().refreshedFCMTokenID, sessionManager.getAppLanguage(),
+                    sessionManager.getJwtAuthToken());
         } catch (DAOException e) {
             throw new RuntimeException(e);
         }

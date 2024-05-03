@@ -5,6 +5,7 @@ import static com.codeglo.coyamore.data.PreferenceHelper.RTC_DATA;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 import com.google.gson.Gson;
 
@@ -60,6 +61,7 @@ public class SessionManager {
     private static final String IS_FIRST_TIME_LAUNCH = "IS_FIRST_TIME_LAUNCH";
     private static final String OXYTOCIN_VALUE = "OXYTOCIN_VALUE";
     private static final String ELCG_HTML_CONTENT = "ELCG_HTML_CONTENT";
+    private static final String JWT_AUTH_TOKEN = "JWT_AUTH_TOKEN";
 
     // LogCat tag
     private static String TAG = SessionManager.class.getSimpleName();
@@ -501,11 +503,22 @@ public class SessionManager {
     }
 
     public void setLCGContent(String content) {
-        editor.putString(ELCG_HTML_CONTENT , content);
+        editor.putString(ELCG_HTML_CONTENT, content);
         editor.commit();
     }
 
     public String getLCGContent() {
         return pref.getString(ELCG_HTML_CONTENT, "");
     }
+
+    public void setJwtAuthToken(String token) {
+        Log.d(TAG, "setJwtAuthToken: token : " + token);
+        editor.putString(JWT_AUTH_TOKEN, token);
+        editor.commit();
+    }
+
+    public String getJwtAuthToken() {
+        return pref.getString(JWT_AUTH_TOKEN, "");
+    }
+
 }

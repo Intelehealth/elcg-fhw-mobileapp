@@ -5,7 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/bottom_menu_bg"
-    android:minHeight="@dimen/bottom_menu_min_height"
     android:paddingStart="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/actionbar_vertical_padding"
     android:paddingEnd="@dimen/activity_horizontal_margin"
