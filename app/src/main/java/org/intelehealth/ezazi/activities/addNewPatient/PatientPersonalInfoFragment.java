@@ -67,6 +67,7 @@ import org.intelehealth.ezazi.models.dto.PatientDTO;
 import org.intelehealth.ezazi.models.dto.ProviderDTO;
 import org.intelehealth.ezazi.ui.dialog.CalendarDialog;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
+import org.intelehealth.ezazi.ui.validation.AlphabetInputFilter;
 import org.intelehealth.ezazi.ui.validation.FirstLetterUpperCaseInputFilter;
 import org.intelehealth.ezazi.utilities.DateAndTimeUtils;
 import org.intelehealth.ezazi.utilities.FileUtils;
@@ -249,9 +250,6 @@ public class PatientPersonalInfoFragment extends Fragment {
         mMiddleName.setFilters(new InputFilter[]{new InputFilter.LengthFilter(25), inputFilter_Name}); //maxlength 25
         mLastName.setFilters(new InputFilter[]{new InputFilter.LengthFilter(25), inputFilter_Name}); //maxlength 25
 */
-        mFirstName.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
-        mMiddleName.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
-        mLastName.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
 
         mFirstName.addTextChangedListener(new MyTextWatcher(mFirstName));
         mLastName.addTextChangedListener(new MyTextWatcher(mLastName));
@@ -259,6 +257,14 @@ public class PatientPersonalInfoFragment extends Fragment {
         mAge.addTextChangedListener(new MyTextWatcher(mAge));
         mMobileNumber.addTextChangedListener(new MyTextWatcher(mMobileNumber));
         mAlternateNumber.addTextChangedListener(new MyTextWatcher(mAlternateNumber));
+        AlphabetInputFilter alphabetInputFilter = new AlphabetInputFilter();
+        mFirstName.setFilters(new InputFilter[]{alphabetInputFilter});
+        mMiddleName.setFilters(new InputFilter[]{alphabetInputFilter});
+        mLastName.setFilters(new InputFilter[]{alphabetInputFilter});
+        //mFirstName.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
+       // mMiddleName.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
+        //mLastName.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
+
 
         setDetailsAsPerConfigFile();
         updatePatientDetailsFromSummary();

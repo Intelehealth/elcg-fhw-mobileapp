@@ -9,6 +9,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
+import android.database.sqlite.SQLiteDatabase;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -28,10 +30,12 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.StringRes;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -60,6 +64,8 @@ import org.intelehealth.ezazi.ui.dialog.CustomViewDialogFragment;
 import org.intelehealth.ezazi.ui.dialog.SingleChoiceDialogFragment;
 import org.intelehealth.ezazi.ui.dialog.model.SingChoiceItem;
 import org.intelehealth.ezazi.ui.prescription.activity.PrescriptionActivity;
+import org.intelehealth.ezazi.ui.prescription.data.PrescriptionRepository;
+import org.intelehealth.ezazi.ui.prescription.fragment.PrescriptionFragment;
 import org.intelehealth.ezazi.ui.rtc.activity.EzaziChatActivity;
 import org.intelehealth.ezazi.ui.rtc.activity.EzaziVideoCallActivity;
 import org.intelehealth.ezazi.ui.rtc.call.CallInitializer;
@@ -77,6 +83,7 @@ import org.intelehealth.ezazi.utilities.NotificationUtils;
 import org.intelehealth.ezazi.utilities.SessionManager;
 import org.intelehealth.ezazi.utilities.UuidDictionary;
 import org.intelehealth.ezazi.utilities.exception.DAOException;
+import org.intelehealth.klivekit.chat.model.ItemHeader;
 import org.intelehealth.klivekit.model.RtcArgs;
 import org.intelehealth.klivekit.socket.SocketManager;
 import org.intelehealth.klivekit.utils.DateTimeUtils;
@@ -87,6 +94,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -119,6 +127,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
     private boolean isDecisionPending;
     private String fromScreen;
     private ConstraintLayout layoutPendingFlag;
+    private List<ItemHeader> prescriptions;
     private final BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -200,10 +209,22 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         fabv.setOnClickListener(view -> {
             showDoctorSelectionDialog(false);
         });
-        fabPrescription.setOnClickListener(view -> PrescriptionActivity.startPrescriptionActivity(
+        /*fabPrescription.setOnClickListener(view -> PrescriptionActivity.startPrescriptionActivity(
                 TimelineVisitSummaryActivity.this,
                 visitUuid)
-        );
+        );*/
+        fabPrescription.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if (prescriptions != null && !prescriptions.isEmpty()) {
+                    PrescriptionActivity.startPrescriptionActivity(TimelineVisitSummaryActivity.this, visitUuid);
+                } else {
+                    // No data found
+                    Toast.makeText(context, getString(R.string.no_prescription_available), Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     @Override
@@ -395,6 +416,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
                 triggerAlarm_Stage1_every30mins(); // Notification to show every 30min.
             }
 
+            showToastIfNoPrescription();
             fetchAllEncountersFromVisitForTimelineScreen(visitUuid); // fetch all records...
         }
 
@@ -474,6 +496,20 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         //manageVisibilityOfPendingFlag();
 
 
+    }
+
+    private void showToastIfNoPrescription() {
+        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
+        PrescriptionRepository repository = new PrescriptionRepository(db);
+        prescriptions = repository.fetchPrescription(visitUuid, PrescriptionFragment.PrescriptionType.FULL);
+        if (prescriptions != null && !prescriptions.isEmpty()) {
+            Drawable drawable = ContextCompat.getDrawable(this, R.drawable.ic_vector_prescription);
+            fabPrescription.setCompoundDrawablesRelativeWithIntrinsicBounds(drawable, null, null, null);
+
+        } else {
+            Drawable drawable = ContextCompat.getDrawable(this, R.drawable.ic_vector_empty_prescription);
+            fabPrescription.setCompoundDrawablesRelativeWithIntrinsicBounds(drawable, null, null, null);
+        }
     }
 
     private void manageVisibilityOfPendingFlag() {

@@ -25,6 +25,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
+import com.codeglo.coyamore.data.PreferenceHelper;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
@@ -54,6 +55,8 @@ import org.intelehealth.ezazi.utilities.SessionManager;
 import org.intelehealth.ezazi.utilities.StringEncryption;
 import org.intelehealth.ezazi.utilities.TextThemeUtils;
 import org.intelehealth.ezazi.utilities.UrlModifiers;
+import org.intelehealth.ezazi.utilities.jwtauth.AuthJWTBody;
+import org.intelehealth.ezazi.utilities.jwtauth.AuthJWTResponse;
 import org.intelehealth.ezazi.widget.materialprogressbar.CustomProgressDialog;
 
 import org.intelehealth.ezazi.activities.homeActivity.HomeActivity;
@@ -263,7 +266,8 @@ public class LoginActivity extends AppCompatActivity {
         if (NetworkConnection.isOnline(this)) {
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
-            UserLoginTask(email, password);
+            //UserLoginTask(email, password);//previous flow
+            getJWTToken(email, password);
         } else {
             //offlineLogin.login(email, password);
             offlineLogin.offline_login(email, password);
@@ -366,6 +370,7 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onNext(LoginModel loginModel) {
+                cpd.dismiss();
                 int responsCode = loginModel.hashCode();
                 Boolean authencated = loginModel.getAuthenticated();
                 Gson gson = new Gson();
@@ -519,4 +524,59 @@ public class LoginActivity extends AppCompatActivity {
         return salt;
 
     }
+    private void getJWTToken(String username, String password) {
+       // String finalURL = "https://" + sessionManager.getServerUrl().concat(":3030/auth/login");
+        String finalURL =  sessionManager.getServerUrl().concat(":3030/auth/login");
+cpd.show();
+        Log.d(TAG, "getJWTToken: finalURL: "+finalURL);
+        AuthJWTBody authBody = new AuthJWTBody(username, password, true);
+        Observable<AuthJWTResponse> authJWTResponseObservable = AppConstants.apiInterface.getJWTToken(finalURL, authBody);
+
+        authJWTResponseObservable
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(AuthJWTResponse authJWTResponse) {
+                        // in case of error password
+                        if (!authJWTResponse.getStatus()) {
+                            triggerIncorrectCredentialsFlow();
+                            return;
+                        }
+
+                        sessionManager.setJwtAuthToken(authJWTResponse.getToken());
+                        PreferenceHelper helper = new PreferenceHelper(getApplicationContext());
+                        helper.save(PreferenceHelper.AUTH_TOKEN, authJWTResponse.getToken());
+                        UserLoginTask(username, password);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        cpd.dismiss();
+                        resetViews();
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+    }
+    private void resetViews() {
+        cpd.dismiss();
+        mEmailSignInButton.setText(getString(R.string.action_sign_in));
+        mEmailSignInButton.setEnabled(true);
+    }
+    private void triggerIncorrectCredentialsFlow() {
+        cpd.dismiss();
+        Toast.makeText(LoginActivity.this, getString(R.string.error_incorrect_password), Toast.LENGTH_SHORT).show();
+        resetViews();
+
+    }
+
 }

@@ -40,6 +40,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Cache;
 import com.android.volley.Network;
 import com.android.volley.Request;
@@ -53,6 +54,7 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.codeglo.coyamore.data.PreferenceHelper;
 import com.github.ajalt.timberkt.Timber;
 import com.google.gson.Gson;
 
@@ -84,7 +86,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import io.socket.emitter.Emitter;
@@ -109,6 +113,7 @@ public class ChatActivity extends AppCompatActivity {
     protected LinearLayout mEmptyLinearLayout, mLoadingLinearLayout;
     protected EditText mMessageEditText;
     protected TextView mEmptyTextView;
+    private String authToken;
 
 
     protected void setupActionBar() {
@@ -260,6 +265,7 @@ public class ChatActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(getContentResourceId());
+        getAuthenticationToken();
         mImagePathRoot = getExternalFilesDir(Environment.DIRECTORY_PICTURES) + File.separator;
         if (getIntent().hasExtra("patientUuid")) {
             mPatientUUid = getIntent().getStringExtra("patientUuid");
@@ -379,7 +385,14 @@ public class ChatActivity extends AppCompatActivity {
                 Log.v(TAG, "getAllMessages - onErrorResponse - " + error.getMessage());
                 mEmptyTextView.setText(getString(R.string.you_have_no_messages_start_sending_messages_now));
             }
-        });
+        }) {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> params = new HashMap<>();
+                params.put("Authorization", "Bearer " + authToken);
+                return params;
+            }
+        };
         mRequestQueue.add(jsonObjectRequest);
     }
 
@@ -514,7 +527,14 @@ public class ChatActivity extends AppCompatActivity {
                     Log.v(TAG, "postMessages - onErrorResponse - " + error.getMessage());
                     mLoadingLinearLayout.setVisibility(View.GONE);
                 }
-            });
+            }) {
+                @Override
+                public Map<String, String> getHeaders() throws AuthFailureError {
+                    Map<String, String> params = new HashMap<>();
+                    params.put("Authorization", "Bearer " + authToken);
+                    return params;
+                }
+            };
             mRequestQueue.add(objectRequest);
         } catch (JSONException e) {
             throw new RuntimeException(e);
@@ -530,7 +550,14 @@ public class ChatActivity extends AppCompatActivity {
 //            getAllMessages(true);
 //            SocketManager.getInstance().emit(SocketManager.EVENT_IS_READ, null);
 //                if (mSocket != null) mSocket.emit("isread");
-        }, error -> Log.v(TAG, "setReadStatus - onErrorResponse - " + error.getMessage()));
+        }, error -> Log.v(TAG, "setReadStatus - onErrorResponse - " + error.getMessage())) {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> params = new HashMap<>();
+                params.put("Authorization", "Bearer " + authToken);
+                return params;
+            }
+        };
         mRequestQueue.add(jsonObjectRequest);
     }
 
@@ -906,5 +933,10 @@ public class ChatActivity extends AppCompatActivity {
         args.setNurseId(mFromUUId);
         args.setRoomId(mPatientUUid);
         return args;
+    }
+
+    private void getAuthenticationToken() {
+        PreferenceHelper helper = new PreferenceHelper(getApplicationContext());
+        authToken = helper.get(PreferenceHelper.AUTH_TOKEN);
     }
 }

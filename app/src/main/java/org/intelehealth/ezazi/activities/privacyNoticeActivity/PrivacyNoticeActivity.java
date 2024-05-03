@@ -80,9 +80,10 @@ public class PrivacyNoticeActivity extends BaseActionBarActivity implements View
             }
 
             String privacy_string = obj.getString("privacyNoticeText");
-            privacy_textview.setText(privacy_string);
-            final SpannableString span_string = new SpannableString(privacy_string);
+            //privacy_textview.setText(privacy_string);
+            SpannableString span_string = new SpannableString(privacy_string);
             Linkify.addLinks(span_string, Linkify.ALL);
+            privacy_textview.setMovementMethod(android.text.method.LinkMovementMethod.getInstance());
             privacy_textview.setText(span_string);
 //            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 //                privacy_textview.setJustificationMode(LineBreaker.JUSTIFICATION_MODE_INTER_WORD);

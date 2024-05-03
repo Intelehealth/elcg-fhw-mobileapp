@@ -3,6 +3,7 @@ package org.intelehealth.klivekit.utils;
 import android.content.Context;
 import android.util.Log;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -14,12 +15,15 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class FirebaseUtils {
     private static final String TAG = FirebaseUtils.class.getName();
 
-    public static void saveToken(Context context, String userUUID, String fcmToken, String lang) {
-        Log.d(TAG, "saveToken: fcmToken :: "+fcmToken);
-        Log.d(TAG, "saveToken: userUUID check1:: "+userUUID);
+    public static void saveToken(Context context, String userUUID, String fcmToken, String lang, String authToken) {
+        Log.d(TAG, "kksaveToken: fcmToken :: " + fcmToken);
+        Log.d(TAG, "kksaveToken: userUUID check1:: " + userUUID);
 
         RequestQueue requestQueue = Volley.newRequestQueue(context);
 
@@ -35,20 +39,30 @@ public class FirebaseUtils {
             inputJsonObject.put("locale", lang);
 
             String url = Constants.SAVE_FCM_TOKEN_URL;
+            Log.d(TAG, "kksaveToken: url :: " + url);
+
             Log.v(TAG, url);
             Log.v(TAG, inputJsonObject.toString());
             JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.PUT, url, inputJsonObject, new Response.Listener<JSONObject>() {
                 @Override
                 public void onResponse(JSONObject response) {
-                    Log.v(TAG, "saveToken -response - " + response.toString());
+                    Log.v(TAG, "kksaveToken -response - " + response.toString());
                 }
             }, new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError error) {
-                    Log.v(TAG, "saveToken - onErrorResponse - " + error.getMessage());
+                    Log.v(TAG, "kksaveToken - onErrorResponse - " + error.getMessage());
 
                 }
-            });
+            }) {
+                @Override
+                public Map<String, String> getHeaders() throws AuthFailureError {
+                    Map<String, String> headers = new HashMap<>();
+                    Log.d(TAG, "getHeaders:authToken :  "+authToken);
+                    headers.put("Authorization", "Bearer " + authToken);
+                    return headers;
+                }
+            };
             jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(
                     7 * 1000,
                     3,
