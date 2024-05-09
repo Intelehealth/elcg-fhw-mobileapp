@@ -1,6 +1,7 @@
 package org.intelehealth.ezazi.ui.visit.dialog;
 
 import android.content.Context;
+import android.text.InputFilter;
 import android.util.Log;
 import android.widget.TextView;
 
@@ -12,6 +13,7 @@ import org.intelehealth.ezazi.database.dao.ObsDAO;
 import org.intelehealth.ezazi.databinding.DialogReferHospitalEzaziBinding;
 import org.intelehealth.ezazi.models.dto.ObsDTO;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
+import org.intelehealth.ezazi.ui.validation.FirstLetterUpperCaseInputFilter;
 import org.intelehealth.ezazi.utilities.UuidDictionary;
 import org.intelehealth.ezazi.utilities.exception.DAOException;
 
@@ -69,12 +71,16 @@ public class ReferTypeHelper extends VisitCompletionHelper {
 
     public void referOtherHospitalDialog(String value, String conceptId) {
         DialogReferHospitalEzaziBinding binding = DialogReferHospitalEzaziBinding.inflate(inflater, null, false);
+        binding.referHospitalName.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
+        binding.referDoctorName.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
+        binding.referNote.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
 
         showCustomViewDialog(R.string.refer_section, R.string.yes, R.string.no, binding.getRoot(), () -> {
             boolean isInserted = false;
             String hospitalName = binding.referHospitalName.getText().toString();
             String doctorName = binding.referDoctorName.getText().toString();
             String note = binding.referNote.getText().toString();
+
 
             // call visitcompleteenc and add obs for refer type and referal values entered...
             try {

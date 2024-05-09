@@ -43,6 +43,7 @@ import java.util.concurrent.TimeUnit;
  */
 
 public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.TimelineViewHolder> {
+    private static final String TAG = "TimelineAdapter";
     Context context;
     private String patientUuid, patientName, visitUuid;
     ArrayList<EncounterDTO> encounterDTOList;
@@ -140,8 +141,8 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
 //                    }
 //                    // Date timeDateType = time.contains("T") && time.contains("+") ? longTimeFormat.parse(time) : longTimeFormat_.parse(time);//commented because of crash
 //
-                Calendar calendar = Calendar.getInstance();
-                calendar.setTimeZone(TimeZone.getDefault());
+                // Calendar calendar = Calendar.getInstance();
+              /*  calendar.setTimeZone(TimeZone.getDefault());
                 calendar.setTime(timeDateType);
                 encounterTimeCalendar.setTime(timeDateType);
 
@@ -167,8 +168,21 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
                 } else {
                     // do nothing
                 }
-
-                if (calendar.after(Calendar.getInstance())) { // ie. eg: 7:20 is after of current (6:30) eg.
+*/
+                //if (calendar.after(Calendar.getInstance())) { // ie. eg: 7:20 is after of current (6:30) eg.
+                if (!isNewEncounterCreated && position == 0 && !isDecisionPending) {
+                    Log.d(TAG, "encounter onBindViewHolder: in pending if");
+                    holder.cardview.setClickable(true);
+                    holder.cardview.setTag(PartogramConstants.AccessMode.WRITE);
+                    holder.cardview.setEnabled(true);
+                    holder.cardview.setActivated(false);
+                    holder.circle.setActivated(false);
+                    holder.circle.setEnabled(true);
+                    int content = getContentRes(encounterDTOList.get(position).getEncounterType(), status);
+                    holder.summaryNoteTextview.setText(context.getResources().getText(content));
+                    holder.summary_textview.setText(context.getResources().getText(R.string.pending_obs));
+                    holder.ivEdit.setVisibility(View.GONE);
+                } else if (isNewEncounterCreated && position == 0 && !isDecisionPending) {
                     holder.cardview.setClickable(true);
                     holder.cardview.setTag(PartogramConstants.AccessMode.WRITE);
                     holder.cardview.setEnabled(true);
@@ -180,6 +194,9 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
                     holder.summary_textview.setText(context.getResources().getText(R.string.pending_obs));
                     holder.ivEdit.setVisibility(View.GONE);
                 } else {
+
+                    Log.d(TAG, "encounter onBindViewHolder: in pending else");
+
                     holder.cardview.setClickable(false);
                     holder.cardview.setEnabled(false);
 
@@ -188,6 +205,7 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
                          If no obs created than create Missed Enc obs for this disabled encounter. */
                     status = obsDAO.checkObsAndCreateMissedObs(encounterDTOList.get(position).getUuid(), sessionManager.getCreatorID());
                     if (status == EncounterDTO.Status.MISSED) {
+                        Log.d(TAG, "encounter onBindViewHolder: in pending else MISSED");
                         holder.cardview.setEnabled(false);
                         holder.cardview.setActivated(false);
                         holder.circle.setActivated(false);
@@ -198,6 +216,8 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
                         holder.summary_textview.setEnabled(false);
                         holder.ivEdit.setVisibility(View.GONE);
                     } else if (status == EncounterDTO.Status.SUBMITTED) {
+                        Log.d(TAG, "encounter onBindViewHolder: in pending else SUBMITTED");
+
                         holder.cardview.setEnabled(true);
                         holder.cardview.setTag(PartogramConstants.AccessMode.EDIT);
                         holder.cardview.setActivated(true);
@@ -233,7 +253,7 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
                     long seconds = TimeUnit.MILLISECONDS.toSeconds(diff);
                     long minutes = TimeUnit.MILLISECONDS.toMinutes(diff);
                     Log.v("timeline", "minutes : " + minutes);
-                    Log.d("TAG", "onBindViewHolder: kkisDecisionPending : "+isDecisionPending);
+                    Log.d("TAG", "onBindViewHolder: kkisDecisionPending : " + isDecisionPending);
 
                     if (!isNewEncounterCreated && position == 0 && !isDecisionPending) {
                         holder.cardview.setTag(PartogramConstants.AccessMode.EDIT);

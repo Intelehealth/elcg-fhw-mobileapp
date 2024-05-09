@@ -2,10 +2,9 @@ package org.intelehealth.ezazi.ui.validation
 
 import android.text.InputFilter
 import android.text.Spanned
-import android.util.Log
 
-class AlphabetInputFilter : InputFilter {
-    private val regex = Regex("^[a-zA-Z ]*$")
+class FirstLetterUpperCaseInputFilter: InputFilter {
+    private val regex = Regex("^[a-zA-Z0-9\\p{Punct} ]*$")
 
     override fun filter(
             source: CharSequence,
@@ -19,7 +18,6 @@ class AlphabetInputFilter : InputFilter {
 
         // Filter to keep only valid characters
         val filtered = input.filter { regex.matches(it.toString()) }
-
         if (dstart == 0 && filtered.isNotEmpty()) {
             // Capitalize the first character if it's at the beginning of the text
             val firstChar = filtered[0].uppercase()

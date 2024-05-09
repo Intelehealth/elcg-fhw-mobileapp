@@ -25,7 +25,6 @@ import org.intelehealth.ezazi.ui.validation.FirstLetterUpperCaseInputFilter
 import org.intelehealth.ezazi.utilities.SessionManager
 import org.intelehealth.ezazi.utilities.exception.DAOException
 import org.intelehealth.klivekit.utils.DateTimeUtils
-import java.util.Arrays
 
 /**
  * Created by Vaghela Mithun R. on 22-02-2024 - 18:11.

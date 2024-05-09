@@ -38,6 +38,7 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.telephony.TelephonyManager;
+import android.text.InputFilter;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -46,6 +47,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -98,6 +100,7 @@ import org.intelehealth.ezazi.ui.dialog.model.SingChoiceItem;
 import org.intelehealth.ezazi.ui.rtc.activity.EzaziChatActivity;
 import org.intelehealth.ezazi.ui.rtc.activity.EzaziVideoCallActivity;
 import org.intelehealth.ezazi.ui.shared.BaseActivity;
+import org.intelehealth.ezazi.ui.validation.FirstLetterUpperCaseInputFilter;
 import org.intelehealth.ezazi.ui.visit.VisitQueryResultBinder;
 import org.intelehealth.ezazi.ui.visit.activity.VisitStatusActivity;
 import org.intelehealth.ezazi.ui.visit.data.VisitRepository;
@@ -437,6 +440,8 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
 //        etvSearchVisit = findViewById(R.id.etvSearchVisit);
         SearchView searchView = findViewById(R.id.searchView);
         searchView.setOnQueryTextListener(this);
+        EditText searchEditText = searchView.findViewById(androidx.appcompat.R.id.search_src_text);
+        searchEditText.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
 //        ivFilterAction = findViewById(R.id.ivFilterAction);
 //        ivFilterAction.setOnClickListener(new View.OnClickListener() {
 //            @Override

@@ -1,5 +1,7 @@
 package org.intelehealth.ezazi.partogram.adapter;
 
+import static org.intelehealth.ezazi.app.AppConstants.INPUT_MAX_LENGTH;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.text.Editable;
@@ -50,6 +52,7 @@ import org.intelehealth.ezazi.ui.prescription.fragment.PrescriptionFragment;
 import org.intelehealth.ezazi.ui.prescription.listener.MedicineChangeListener;
 import org.intelehealth.ezazi.ui.prescription.model.PrescriptionArg;
 import org.intelehealth.ezazi.ui.shared.TextChangeListener;
+import org.intelehealth.ezazi.ui.validation.FirstLetterUpperCaseInputFilter;
 import org.intelehealth.ezazi.utilities.UuidDictionary;
 import org.intelehealth.klivekit.chat.model.ItemHeader;
 import org.intelehealth.klivekit.utils.DateTimeUtils;
@@ -256,11 +259,13 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
             String conceptId = mItemList.get(position).getParamInfoList().get(positionChild).getConceptUUID();
             // Supervisor Doctor concept id matching to apply only for it
             if (conceptId.equals("7a9cb7bc-9ab9-4ff0-ae82-7a1bd2cca93e")) {
-                dataEditText.setFilters(new InputFilter[]{(source, start, end, dest, dstart, dend) -> {
+                dataEditText.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
+
+               /* dataEditText.setFilters(new InputFilter[]{(source, start, end, dest, dstart, dend) -> {
                     if (source.toString().matches("[a-zA-Z 0-9]+")) {
                         return source;
                     } else return "";
-                }});
+                }});*/
             } else if (conceptId.equals("9d316d82-538f-11e6-9cfe-86f436325720")) {
                 dataEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(200)});
             }
@@ -558,8 +563,10 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         binding.setItems(info.getOptions());
         TextView selected = view.findViewById(R.id.tvSelectedValue);
         TextView ivTypeValue = view.findViewById(R.id.tvData);
-        binding.etOtherFluid.setFilters(new InputFilter[]{new InputFilter.LengthFilter(20)});
-        binding.etOtherFluid.setInputType(InputType.TYPE_CLASS_TEXT);
+        //binding.etOtherFluid.setFilters(new InputFilter[]{new InputFilter.LengthFilter(20)});
+        //binding.etOtherFluid.setInputType(InputType.TYPE_CLASS_TEXT);
+        binding.etOtherFluid.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter(),
+                new InputFilter.LengthFilter(20)});
 
         binding.etOtherFluid.addTextChangedListener(new TextWatcher() {
             @Override
