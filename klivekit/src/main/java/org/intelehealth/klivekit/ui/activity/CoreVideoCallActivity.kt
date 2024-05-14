@@ -44,6 +44,7 @@ import java.util.Calendar
 abstract class CoreVideoCallActivity : AppCompatActivity() {
 
     protected lateinit var args: RtcArgs
+    private var isCallDeclinedBySelf = false
 
     protected val videoCallViewModel: VideoCallViewModel by viewModelByFactory {
         args = IntentCompat.getParcelableExtra(intent, RTC_ARGS, RtcArgs::class.java)
@@ -132,9 +133,10 @@ abstract class CoreVideoCallActivity : AppCompatActivity() {
         socketViewModel.eventCallCancelByDoctor.observeOnce(this) {
             if (it) {
                 Timber.e { "Remain time up mil ${videoCallViewModel.remainTimeupMilliseconds}" }
-                if (args.isIncomingCall && args.isOnGoingCall)
+                if (args.isOnGoingCall)
                     sayBye("Call ended by ${args.doctorName}")
-                else sayBye("Call canceled by ${args.doctorName}")
+                else if (args.isIncomingCall && !isCallDeclinedBySelf)
+                    sayBye("Call canceled by ${args.doctorName}")
             }
         }
         videoCallViewModel.remoteCallDisconnectedReason.observe(this) {
@@ -259,6 +261,7 @@ abstract class CoreVideoCallActivity : AppCompatActivity() {
     }
 
     open fun onCallDecline() {
+        isCallDeclinedBySelf = true
         Timber.d { "Call declined by you" }
         videoCallViewModel.stopCallTimeoutTimer()
     }
