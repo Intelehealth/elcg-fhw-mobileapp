@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.IntentCompat
+import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import com.codeglo.coyamore.data.PreferenceHelper
 import com.codeglo.coyamore.data.PreferenceHelper.Companion.RTC_DATA
@@ -29,6 +30,7 @@ import org.intelehealth.klivekit.ui.viewmodel.SocketViewModel
 import org.intelehealth.klivekit.ui.viewmodel.VideoCallViewModel
 import org.intelehealth.klivekit.utils.AudioType
 import org.intelehealth.klivekit.utils.RTC_ARGS
+import org.intelehealth.klivekit.utils.extensions.observeOnce
 import org.intelehealth.klivekit.utils.extensions.showToast
 import org.intelehealth.klivekit.utils.extensions.viewModelByFactory
 import java.util.Calendar
@@ -127,10 +129,12 @@ abstract class CoreVideoCallActivity : AppCompatActivity() {
         videoCallViewModel.remoteParticipantDisconnected.observe(this) { if (it) sayBye("${args.doctorName} left the call") }
         videoCallViewModel.cameraPosition.observe(this) { onCameraPositionChanged(it) }
         socketViewModel.eventCallRejectByDoctor.observe(this) { if (it) sayBye("Call rejected by ${args.doctorName}") }
-        socketViewModel.eventCallCancelByDoctor.observe(this) {
+        socketViewModel.eventCallCancelByDoctor.observeOnce(this) {
             if (it) {
                 Timber.e { "Remain time up mil ${videoCallViewModel.remainTimeupMilliseconds}" }
-                sayBye("Call canceled by ${args.doctorName}")
+                if (args.isIncomingCall && args.isOnGoingCall)
+                    sayBye("Call ended by ${args.doctorName}")
+                else sayBye("Call canceled by ${args.doctorName}")
             }
         }
         videoCallViewModel.remoteCallDisconnectedReason.observe(this) {
@@ -251,6 +255,7 @@ abstract class CoreVideoCallActivity : AppCompatActivity() {
     open fun onCallAccept() {
         Timber.d { "Call accepted by you" }
         videoCallViewModel.stopCallTimeoutTimer()
+        args.isOnGoingCall = true
     }
 
     open fun onCallDecline() {
