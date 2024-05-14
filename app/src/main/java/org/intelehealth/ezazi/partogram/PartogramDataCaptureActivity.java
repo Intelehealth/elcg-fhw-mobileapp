@@ -320,7 +320,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
         ObsDAO obsDAO = new ObsDAO();
 
         // validation
-        Log.v("PartogramData", new Gson().toJson(mItemList));
+        Log.v("PartogramDatadddd", new Gson().toJson(mItemList));
         List<ObsDTO> obsDTOList = new ArrayList<>();
         String systolicBp = null;
         String diastolicBp = null;
@@ -341,6 +341,8 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
         for (int i = 0; i < mItemList.size(); i++) {
             for (int j = 0; j < mItemList.get(i).getParamInfoList().size(); j++) {
                 ParamInfo info = mItemList.get(i).getParamInfoList().get(j);
+
+                Log.v("PartogramDataddddkk", new Gson().toJson(info));
 
                 if (!info.getParamName().equalsIgnoreCase("Initial")) {
 
@@ -415,8 +417,6 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                         isValidIVFluid = info.isValidJson();
                         String uuid = obsDAO.getObsuuid(mEncounterUUID, info.getConceptUUID());
                         ObsDTO obs = buildOxytocinIvFluidData(uuid, info);
-
-                        Log.d(TAG, "saveObs: oxytocin: " + info.getMedication().toJson());
                         if (isValidIVFluid) {
                             boolean isExist = obsDAO.isIvFluidByHWExistInDb(mEncounterUUID, info.getMedication().toJson());
                             if (!isExist) {
@@ -809,6 +809,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
 */
 
     private ObsDTO buildOxytocinIvFluidData(String uuid, ParamInfo info) {
+        Log.d(TAG, "buildOxytocinIvFluidData: info : "+new Gson().toJson(info));
         ObsDTO obs = new ObsDTO();
         obs.setUuid(uuid);
         obs.setConceptuuid(info.getConceptUUID());

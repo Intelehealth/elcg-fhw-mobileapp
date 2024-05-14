@@ -806,11 +806,13 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
                     int value = Integer.parseInt(s.toString());
                     if (value < 5) {
                         showInfusionRateError(editText.getContext());
+                        saveInfusionRateValue(info, s.toString());
                     } else if (value <= 60) {
                         saveInfusionRateValue(info, s.toString());
                     } else {
                         editText.setText("");
                         showInfusionRateError(editText.getContext());
+                        saveInfusionRateValue(info, s.toString());
                     }
                 } else {
                     saveInfusionRateValue(info, null);
