@@ -337,12 +337,14 @@ abstract class CoreVideoCallActivity : AppCompatActivity() {
     }
 
     open fun endCall() {
-        sayBye("Call ended by you", "app")
+        sayBye("", "app")
     }
 
     open fun sayBye(message: String, arg: String? = null) {
         Timber.e { "$message ${Calendar.getInstance().time}" }
-        showToast(message)
+        if(message.isNotEmpty()) {
+            showToast(message)
+        }
         arg?.let {
             socketViewModel.emit("bye", args)
         }
