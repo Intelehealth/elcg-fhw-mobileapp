@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.LocaleList;
 import android.os.StrictMode;
+import android.text.InputFilter;
 import android.text.SpannableString;
 import android.text.TextUtils;
 import android.text.util.Linkify;
@@ -56,6 +57,7 @@ import org.intelehealth.ezazi.services.firebase_services.TokenRefreshUtils;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
 import org.intelehealth.ezazi.ui.password.activity.ForgotPasswordActivity;
 import org.intelehealth.ezazi.ui.shared.InputChangeValidationListener;
+import org.intelehealth.ezazi.ui.validation.AlphabetsInputFilter;
 import org.intelehealth.ezazi.utilities.Base64Utils;
 import org.intelehealth.ezazi.utilities.Logger;
 import org.intelehealth.ezazi.utilities.SessionManager;
@@ -183,6 +185,11 @@ public class SetupActivity extends AppCompatActivity {
         TextThemeUtils.applyUnderline(forgotPassword);
 
         mDropdownLocation = findViewById(R.id.spinner_location);
+
+        AlphabetsInputFilter alphabetsInputFilter = new AlphabetsInputFilter();
+        mEmailView.setFilters(new InputFilter[]{alphabetsInputFilter});
+        mPasswordView.setFilters(new InputFilter[]{alphabetsInputFilter});
+
 
         if (!setupUrl.trim().isEmpty() || !setupUrl.trim().equalsIgnoreCase("")) {
 

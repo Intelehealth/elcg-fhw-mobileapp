@@ -13,9 +13,11 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.provider.SearchRecentSuggestions;
+import android.text.InputFilter;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -45,6 +47,7 @@ import org.intelehealth.ezazi.models.dto.PatientAttributesDTO;
 import org.intelehealth.ezazi.models.dto.PatientDTO;
 import org.intelehealth.ezazi.ui.patient.PatientDataBinder;
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
+import org.intelehealth.ezazi.ui.validation.FirstLetterUpperCaseInputFilter;
 import org.intelehealth.ezazi.utilities.ConfigUtils;
 import org.intelehealth.ezazi.utilities.Logger;
 import org.intelehealth.ezazi.utilities.SessionManager;
@@ -92,6 +95,8 @@ public class SearchPatientActivity extends BaseActionBarActivity implements Sear
         //toolbar views
         searchView = findViewById(R.id.searchView);
         searchView.setOnQueryTextListener(this);
+        EditText searchEditText = searchView.findViewById(androidx.appcompat.R.id.search_src_text);
+        searchEditText.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
 //        toolbarET = findViewById(R.id.etvSearchVisit);
 //        toolbarClear = findViewById(R.id.toolbar_clear);
 //        toolbarSearch = findViewById(R.id.toolbar_search);

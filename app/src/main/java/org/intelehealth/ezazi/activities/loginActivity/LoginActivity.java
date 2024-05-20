@@ -13,6 +13,7 @@ import android.os.StrictMode;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.text.InputFilter;
 import android.text.SpannableString;
 import android.text.TextUtils;
 import android.text.util.Linkify;
@@ -48,6 +49,7 @@ import org.intelehealth.ezazi.models.loginProviderModel.LoginProviderModel;
 import org.intelehealth.ezazi.ui.shared.InputChangeValidationListener;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
 import org.intelehealth.ezazi.ui.password.activity.ForgotPasswordActivity;
+import org.intelehealth.ezazi.ui.validation.AlphabetsInputFilter;
 import org.intelehealth.ezazi.utilities.Base64Utils;
 import org.intelehealth.ezazi.utilities.Logger;
 import org.intelehealth.ezazi.utilities.OfflineLogin;
@@ -151,6 +153,10 @@ public class LoginActivity extends AppCompatActivity {
         mUsernameView = findViewById(R.id.et_email);
         // populateAutoComplete(); TODO: create our own autocomplete code
         mPasswordView = findViewById(R.id.et_password);
+        AlphabetsInputFilter alphabetsInputFilter = new AlphabetsInputFilter();
+        mUsernameView.setFilters(new InputFilter[]{alphabetsInputFilter});
+        mPasswordView.setFilters(new InputFilter[]{alphabetsInputFilter});
+
 //      mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
 //            @Override
 //            public boolean onEditorAction(TextView v, int id, KeyEvent event) {
