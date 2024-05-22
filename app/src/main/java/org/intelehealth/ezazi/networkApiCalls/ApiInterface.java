@@ -19,6 +19,8 @@ import org.intelehealth.ezazi.ui.password.model.ChangePasswordRequestModel;
 import org.intelehealth.ezazi.ui.password.model.PasswordResponseModel;
 import org.intelehealth.ezazi.ui.password.model.RequestOTPModel;
 import org.intelehealth.ezazi.ui.password.model.VerifyOtpRequestModel;
+import org.intelehealth.ezazi.utilities.jwtauth.AuthJWTBody;
+import org.intelehealth.ezazi.utilities.jwtauth.AuthJWTResponse;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -41,8 +43,6 @@ import retrofit2.http.Query;
 import retrofit2.http.Url;
 
 public interface ApiInterface {
-
-
 
 
     @GET("location?tag=Login%20Location")
@@ -98,7 +98,8 @@ public interface ApiInterface {
 
 
     @GET
-    Call<OxytocinResponseModel> GET_OXYTOCIN_UNIT(@Url String url);
+    Call<OxytocinResponseModel> GET_OXYTOCIN_UNIT(@Url String url,
+                                                  @Header("Authorization") String authHeader);
 
     @POST("/api/auth/requestOtp")
     Call<ApiResponse<PasswordResponseModel>> requestOTP(@Body RequestOTPModel requestOTPModel);
@@ -121,5 +122,12 @@ public interface ApiInterface {
             @Query("name") String doctorUuid,
             @Query("roomId") String patientUuid,
             @Query("nurseName") String nurseUuid
+    );
+
+    @Headers({"Accept: application/json"})
+    @POST
+    Observable<AuthJWTResponse> getJWTToken(
+            @Url String url,
+            @Body AuthJWTBody authJWTBody
     );
 }

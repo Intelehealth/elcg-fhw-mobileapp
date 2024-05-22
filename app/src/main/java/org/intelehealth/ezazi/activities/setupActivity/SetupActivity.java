@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.LocaleList;
 import android.os.StrictMode;
+import android.text.InputFilter;
 import android.text.SpannableString;
 import android.text.TextUtils;
 import android.text.util.Linkify;
@@ -31,6 +32,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 
+import com.codeglo.coyamore.data.PreferenceHelper;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -55,6 +57,7 @@ import org.intelehealth.ezazi.services.firebase_services.TokenRefreshUtils;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
 import org.intelehealth.ezazi.ui.password.activity.ForgotPasswordActivity;
 import org.intelehealth.ezazi.ui.shared.InputChangeValidationListener;
+import org.intelehealth.ezazi.ui.validation.AlphabetsInputFilter;
 import org.intelehealth.ezazi.utilities.Base64Utils;
 import org.intelehealth.ezazi.utilities.Logger;
 import org.intelehealth.ezazi.utilities.SessionManager;
@@ -62,6 +65,8 @@ import org.intelehealth.ezazi.utilities.StringEncryption;
 import org.intelehealth.ezazi.utilities.TextThemeUtils;
 import org.intelehealth.ezazi.utilities.UrlModifiers;
 import org.intelehealth.ezazi.utilities.exception.DAOException;
+import org.intelehealth.ezazi.utilities.jwtauth.AuthJWTBody;
+import org.intelehealth.ezazi.utilities.jwtauth.AuthJWTResponse;
 import org.intelehealth.ezazi.widget.materialprogressbar.CustomProgressDialog;
 import org.intelehealth.klivekit.utils.FirebaseUtils;
 import org.intelehealth.klivekit.utils.Manager;
@@ -180,6 +185,11 @@ public class SetupActivity extends AppCompatActivity {
         TextThemeUtils.applyUnderline(forgotPassword);
 
         mDropdownLocation = findViewById(R.id.spinner_location);
+
+        AlphabetsInputFilter alphabetsInputFilter = new AlphabetsInputFilter();
+        mEmailView.setFilters(new InputFilter[]{alphabetsInputFilter});
+        mPasswordView.setFilters(new InputFilter[]{alphabetsInputFilter});
+
 
         if (!setupUrl.trim().isEmpty() || !setupUrl.trim().equalsIgnoreCase("")) {
 
@@ -340,7 +350,9 @@ public class SetupActivity extends AppCompatActivity {
             // as in ezazi we dont want to show locations dropdown so adding as static value.
             location.setDisplay(selectedLocation);
             location.setUuid("eb374eaf-430e-465e-81df-fe94c2c515be");
-            TestSetup(urlString, email, password, location);
+            // TestSetup(urlString, email, password, location);//previous flow
+            getJWTToken(urlString, email, password, location);
+
             Log.d(TAG, "attempting setup");
         }
     }
@@ -447,20 +459,19 @@ public class SetupActivity extends AppCompatActivity {
         return true;
     }
 
-    public void TestSetup(String CLEAN_URL, String USERNAME, String PASSWORD, Location location) {
+    public void TestSetup(String CLEAN_URL, String USERNAME, String PASSWORD, Location location, ProgressDialog progress) {
         Log.i(TAG, "location:: " + location.getDisplay());
-        ProgressDialog progress;
 
         String urlString = urlModifiers.loginUrl(CLEAN_URL);
         Logger.logD(TAG, "usernaem and password" + USERNAME + PASSWORD);
         encoded = base64Utils.encoded(USERNAME, PASSWORD);
         sessionManager.setEncoded(encoded);
-
+        /*ProgressDialog progress;
         progress = new ProgressDialog(SetupActivity.this, R.style.AlertDialogStyle);
         ;//SetupActivity.this);
         progress.setTitle(getString(R.string.please_wait_progress));
         progress.setMessage(getString(R.string.logging_in));
-        progress.show();
+        progress.show();*/
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
         Observable<LoginModel> loginModelObservable = AppConstants.apiInterface.LOGIN_MODEL_OBSERVABLE(urlString, "Basic " + encoded);
@@ -618,7 +629,7 @@ public class SetupActivity extends AppCompatActivity {
 
     private void fetchOxytocinValueFromAPI() {
         String url = urlModifiers.getOxytocinUrl();
-        Call<OxytocinResponseModel> call = AppConstants.apiInterface.GET_OXYTOCIN_UNIT(url);
+        Call<OxytocinResponseModel> call = AppConstants.apiInterface.GET_OXYTOCIN_UNIT(url, sessionManager.getJwtAuthToken());
         call.enqueue(new Callback<OxytocinResponseModel>() {
             @Override
             public void onResponse(Call<OxytocinResponseModel> call, Response<OxytocinResponseModel> response) {
@@ -813,10 +824,81 @@ public class SetupActivity extends AppCompatActivity {
         Manager.getInstance().setBaseUrl("https://" + sessionManager.getServerUrl());
         // save fcm reg. token for chat (Video)
         try {
-            FirebaseUtils.saveToken(this, providerDAO.getUserUuid(sessionManager.getProviderID()), IntelehealthApplication.getInstance().refreshedFCMTokenID, sessionManager.getAppLanguage());
+            FirebaseUtils.saveToken(this, providerDAO.getUserUuid(sessionManager.getProviderID()),
+                    IntelehealthApplication.getInstance().refreshedFCMTokenID, sessionManager.getAppLanguage(), sessionManager.getJwtAuthToken());
         } catch (DAOException e) {
             throw new RuntimeException(e);
         }
     }
 
+    private void getJWTToken(String urlString, String username, String password, Location location) {
+        ProgressDialog progress;
+        progress = new ProgressDialog(SetupActivity.this, R.style.AlertDialogStyle);
+        progress.setTitle(getString(R.string.please_wait_progress));
+        progress.setMessage(getString(R.string.logging_in));
+
+        progress.show();
+        //String finalURL = "https://" + urlString.concat(":3030/auth/login");
+        String finalURL = urlString.concat(":3030/auth/login");
+
+        AuthJWTBody authBody = new AuthJWTBody(username, password, true);
+        Observable<AuthJWTResponse> authJWTResponseObservable = AppConstants.apiInterface.getJWTToken(finalURL, authBody);
+
+        authJWTResponseObservable
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(AuthJWTResponse authJWTResponse) {
+                        // in case of error password
+                        if (!authJWTResponse.getStatus()) {
+                            triggerIncorrectPasswordFlow(progress);
+                            return;
+                        }
+
+                        sessionManager.setJwtAuthToken(authJWTResponse.getToken());
+                        PreferenceHelper helper = new PreferenceHelper(getApplicationContext());
+                        helper.save(PreferenceHelper.AUTH_TOKEN, authJWTResponse.getToken());
+                        TestSetup(urlString, username, password, location, progress);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        progress.dismiss();
+                        resetViews();
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+    }
+
+    private void triggerIncorrectPasswordFlow(ProgressDialog progress) {
+        progress.dismiss();
+        ConfirmationDialogFragment dialog = new ConfirmationDialogFragment.Builder(this)
+                .title(R.string.error_login_str)
+                .positiveButtonLabel(R.string.ok)
+                .hideNegativeButton(true)
+                .content(getString(R.string.error_incorrect_password))
+                .build();
+
+        dialog.setListener(() -> dialog.dismiss());
+        dialog.show(getSupportFragmentManager(), dialog.getClass().getCanonicalName());
+        //DialogUtils.showerrorDialog(SetupActivity.this, getResources().getString(R.string.error_login_str), getString(R.string.error_incorrect_password), "ok");
+        resetViews();
+    }
+
+    private void resetViews() {
+        mEmailView.requestFocus();
+        mPasswordView.requestFocus();
+        mLoginButton.setText(getString(R.string.action_sign_in));
+        mLoginButton.setEnabled(true);
+    }
 }

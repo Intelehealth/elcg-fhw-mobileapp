@@ -18,9 +18,7 @@ import org.intelehealth.ezazi.ui.prescription.viewmodel.PrescriptionViewModel
 import org.intelehealth.ezazi.ui.shared.TextChangeListener
 import org.intelehealth.ezazi.ui.validation.FirstLetterUpperCaseInputFilter
 import org.intelehealth.ezazi.utilities.SessionManager
-import org.intelehealth.ezazi.utilities.StringUtils
 import org.intelehealth.klivekit.utils.DateTimeUtils
-import kotlin.math.roundToInt
 
 /**
  * Created by Vaghela Mithun R. on 22-02-2024 - 18:11.

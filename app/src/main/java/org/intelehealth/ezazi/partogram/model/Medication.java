@@ -110,7 +110,13 @@ public class Medication implements Serializable, ItemHeader {
     }
 
     private boolean isValidInfusion() {
-        return infusionRate != null && infusionRate.length() > 0 && infusionStatus != null && infusionStatus.length() > 0;
+        Log.d("TAG", "kaveriisValidInfusion: infusionRate : " + infusionRate);
+        boolean result = false;
+        if (infusionRate != null && infusionRate.length() > 0 && infusionStatus != null && infusionStatus.length() > 0) {
+            int infusionRateValue = Integer.parseInt(infusionRate);
+            result = infusionRateValue >= 5 && infusionRateValue <= 60;
+        }
+        return result;
     }
 
     public String toJson() {

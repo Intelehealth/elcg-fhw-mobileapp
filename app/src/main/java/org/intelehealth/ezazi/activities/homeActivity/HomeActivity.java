@@ -38,6 +38,7 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.telephony.TelephonyManager;
+import android.text.InputFilter;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -46,6 +47,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -98,6 +100,7 @@ import org.intelehealth.ezazi.ui.dialog.model.SingChoiceItem;
 import org.intelehealth.ezazi.ui.rtc.activity.EzaziChatActivity;
 import org.intelehealth.ezazi.ui.rtc.activity.EzaziVideoCallActivity;
 import org.intelehealth.ezazi.ui.shared.BaseActivity;
+import org.intelehealth.ezazi.ui.validation.FirstLetterUpperCaseInputFilter;
 import org.intelehealth.ezazi.ui.visit.VisitQueryResultBinder;
 import org.intelehealth.ezazi.ui.visit.activity.VisitStatusActivity;
 import org.intelehealth.ezazi.ui.visit.data.VisitRepository;
@@ -195,6 +198,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
     private List<VisitDTO> visitDTOList;
     /*eZazi End*/
 
+
     public static PendingIntent getPendingIntent(Context context, ShiftChangeData data) {
         Intent shiftChangeIntent = new Intent(context, HomeActivity.class);
         shiftChangeIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -210,7 +214,9 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
         Manager.getInstance().setBaseUrl(sessionManager.getServerUrl());
         // save fcm reg. token for chat (Video)
         try {
-            FirebaseUtils.saveToken(this, providerDAO.getUserUuid(sessionManager.getProviderID()), IntelehealthApplication.getInstance().refreshedFCMTokenID, sessionManager.getAppLanguage());
+            FirebaseUtils.saveToken(this, providerDAO.getUserUuid(sessionManager.getProviderID()),
+                    IntelehealthApplication.getInstance().refreshedFCMTokenID, sessionManager.getAppLanguage(),
+                    sessionManager.getJwtAuthToken());
         } catch (DAOException e) {
             throw new RuntimeException(e);
         }
@@ -434,6 +440,8 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
 //        etvSearchVisit = findViewById(R.id.etvSearchVisit);
         SearchView searchView = findViewById(R.id.searchView);
         searchView.setOnQueryTextListener(this);
+        EditText searchEditText = searchView.findViewById(androidx.appcompat.R.id.search_src_text);
+        searchEditText.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
 //        ivFilterAction = findViewById(R.id.ivFilterAction);
 //        ivFilterAction.setOnClickListener(new View.OnClickListener() {
 //            @Override
@@ -753,7 +761,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
 
         // Check if the activity was opened from a notification click
         if (getIntent() != null) {
-            Log.d(TAG, "onCreate: shiftChangeNotification in if");
+            Log.d(TAG, "onCreate: shiftChangeNotification in if : " + new Gson().toJson(getIntent()));
 
         }
         if (getIntent() != null && getIntent().hasExtra("shiftChangeNotification")) {
@@ -1503,6 +1511,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
     protected void onResume() {
         super.onResume();
         saveToken();
+
         //registerReceiver(reMyreceive, filter);
 //        checkAppVer();  //auto-update feature.
 //        lastSyncTextView.setText(getString(R.string.last_synced) + " \n" + sessionManager.getLastSyncDateTime());
@@ -1533,6 +1542,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
 
         showBadge();
         requestPermission();
+
         if (mActivePatientAdapter != null)
             mActivePatientAdapter.notifyDataSetChanged();
     }

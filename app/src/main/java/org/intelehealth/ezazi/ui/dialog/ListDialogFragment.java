@@ -1,6 +1,8 @@
 package org.intelehealth.ezazi.ui.dialog;
 
+import android.text.InputFilter;
 import android.view.View;
+import android.widget.EditText;
 
 import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -8,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import org.intelehealth.ezazi.databinding.DialogListViewBinding;
 import org.intelehealth.ezazi.ui.search.SearchableAdapter;
+import org.intelehealth.ezazi.ui.validation.FirstLetterUpperCaseInputFilter;
 
 /**
  * Created by Vaghela Mithun R. on 15-05-2023 - 16:14.
@@ -28,6 +31,8 @@ abstract class ListDialogFragment<T> extends BaseDialogFragment<T> implements Se
             listViewBinding.recyclerView.setAdapter(getAdapter());
         listViewBinding.searchView.setOnQueryTextListener(ListDialogFragment.this);
         listViewBinding.setHasSearch(hasSearch);
+        EditText searchEditText = (EditText) listViewBinding.searchView.findViewById(androidx.appcompat.R.id.search_src_text);
+        searchEditText.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
         return listViewBinding.getRoot();
     }
 
