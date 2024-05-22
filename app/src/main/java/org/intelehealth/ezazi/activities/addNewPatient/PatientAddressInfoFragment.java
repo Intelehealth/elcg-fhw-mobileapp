@@ -154,8 +154,9 @@ public class PatientAddressInfoFragment extends Fragment {
         etCityVillage = view.findViewById(R.id.et_city_village);
         scrollviewAddressInfo = view.findViewById(R.id.scroll_address_info);
 
-        etCityVillage.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
         etAddress1.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
+        etCityVillage.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
+       // etAddress1.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
         etAddress2.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
 
 

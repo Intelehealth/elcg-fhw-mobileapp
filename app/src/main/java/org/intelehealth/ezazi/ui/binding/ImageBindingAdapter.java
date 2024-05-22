@@ -8,6 +8,7 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 
 import androidx.databinding.BindingAdapter;
@@ -33,6 +34,36 @@ public class ImageBindingAdapter {
         Timber.tag("ImageBindingAdapter").d("bindImage::url =>%s", imgUrl);
         Timber.tag("ImageBindingAdapter").d("bindImage::image not null =>%s", imageView != null);
         if (imageView != null && imgContent != null && !imgContent.isEmpty()) {
+            ViewTreeObserver vto = imageView.getViewTreeObserver();
+            vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    int viewHeight = imageView.getHeight();
+                    if (viewHeight > 0) {
+                        imageView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                        String firstCharacter = imgContent.substring(0, 1);
+                        Resources resources = imageView.getContext().getResources();
+                        int textSize = resources.getDimensionPixelOffset(R.dimen.std_30sp);
+                        Bitmap textBitmap = textAsBitmap(firstCharacter, textSize, Color.BLACK, viewHeight);
+                        if (imgUrl != null && !imgUrl.isEmpty()) {
+                            RequestBuilder<Drawable> requestBuilder = Glide.with(imageView.getContext()).asDrawable().sizeMultiplier(0.25f);
+                            Glide.with(imageView.getContext())
+                                    .load(new File(imgUrl))
+                                    .thumbnail(requestBuilder)
+                                    .centerCrop()
+                                    .error(textBitmap)
+                                    .placeholder(new BitmapDrawable(resources, textBitmap))
+                                    .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
+                                    .into(imageView);
+                        } else {
+                            imageView.setImageBitmap(textBitmap);
+                        }
+                    }
+                }
+            });
+        }
+/*
+        if (imageView != null && imgContent != null && !imgContent.isEmpty()) {
             //added this check temporarily
             String latter = imgContent.substring(0, 1);
             Resources resources = imageView.getContext().getResources();
@@ -51,6 +82,7 @@ public class ImageBindingAdapter {
                         .into(imageView);
             } else imageView.setImageBitmap(textBitmap);
         }
+*/
     }
 
     public static Bitmap textAsBitmap(String text, float textSize, int textColor, int size) {

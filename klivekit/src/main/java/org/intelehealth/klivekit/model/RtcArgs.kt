@@ -44,6 +44,7 @@ data class RtcArgs(
     var providerID: String? = "",
     var tag: String? = "",
     var assignorNurseName: String? = "",
-    ) : Parcelable {
+    var isOnGoingCall: Boolean = false
+) : Parcelable {
     fun toJson(): String = Gson().toJson(this)
 }

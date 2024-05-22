@@ -67,8 +67,7 @@ import org.intelehealth.ezazi.models.dto.PatientDTO;
 import org.intelehealth.ezazi.models.dto.ProviderDTO;
 import org.intelehealth.ezazi.ui.dialog.CalendarDialog;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
-import org.intelehealth.ezazi.ui.validation.AlphabetInputFilter;
-import org.intelehealth.ezazi.ui.validation.FirstLetterUpperCaseInputFilter;
+import org.intelehealth.ezazi.ui.validation.UpperCaseAlphabetsInputFilter;
 import org.intelehealth.ezazi.utilities.DateAndTimeUtils;
 import org.intelehealth.ezazi.utilities.FileUtils;
 import org.intelehealth.ezazi.utilities.SessionManager;
@@ -257,7 +256,7 @@ public class PatientPersonalInfoFragment extends Fragment {
         mAge.addTextChangedListener(new MyTextWatcher(mAge));
         mMobileNumber.addTextChangedListener(new MyTextWatcher(mMobileNumber));
         mAlternateNumber.addTextChangedListener(new MyTextWatcher(mAlternateNumber));
-        AlphabetInputFilter alphabetInputFilter = new AlphabetInputFilter();
+        UpperCaseAlphabetsInputFilter alphabetInputFilter = new UpperCaseAlphabetsInputFilter();
         mFirstName.setFilters(new InputFilter[]{alphabetInputFilter});
         mMiddleName.setFilters(new InputFilter[]{alphabetInputFilter});
         mLastName.setFilters(new InputFilter[]{alphabetInputFilter});

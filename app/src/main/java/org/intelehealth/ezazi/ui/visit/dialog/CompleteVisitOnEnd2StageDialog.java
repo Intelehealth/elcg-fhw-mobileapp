@@ -3,43 +3,25 @@ package org.intelehealth.ezazi.ui.visit.dialog;
 import static org.intelehealth.ezazi.app.AppConstants.INPUT_MAX_LENGTH;
 
 import android.content.Context;
-import android.content.Intent;
 import android.text.InputFilter;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.StringRes;
 import androidx.appcompat.app.AppCompatActivity;
 
 import org.intelehealth.ezazi.R;
-import org.intelehealth.ezazi.activities.homeActivity.HomeActivity;
-import org.intelehealth.ezazi.app.AppConstants;
-import org.intelehealth.ezazi.database.dao.EncounterDAO;
 import org.intelehealth.ezazi.database.dao.ObsDAO;
-import org.intelehealth.ezazi.database.dao.VisitsDAO;
 import org.intelehealth.ezazi.databinding.BirthOutcomeDialogBinding;
-import org.intelehealth.ezazi.databinding.DialogReferHospitalEzaziBinding;
-import org.intelehealth.ezazi.databinding.MotherDeceasedDialogBinding;
-import org.intelehealth.ezazi.models.dto.ObsDTO;
-import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
-import org.intelehealth.ezazi.ui.dialog.CustomViewDialogFragment;
 import org.intelehealth.ezazi.ui.validation.FirstLetterUpperCaseInputFilter;
 import org.intelehealth.ezazi.ui.visit.model.CompletedVisitStatus;
-import org.intelehealth.ezazi.utilities.SessionManager;
 import org.intelehealth.ezazi.utilities.Utils;
 import org.intelehealth.ezazi.utilities.UuidDictionary;
 import org.intelehealth.ezazi.utilities.exception.DAOException;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 /**
  * Created by Vaghela Mithun R. on 17-08-2023 - 12:36.
@@ -98,7 +80,7 @@ public class CompleteVisitOnEnd2StageDialog extends ReferTypeHelper implements V
             }
         });
 
-        showCustomViewDialog(R.string.additional_information, R.string.next,
+        showCustomViewDialog(R.string.additional_information, R.string.yes,
                 R.string.cancel, binding.getRoot(), this::manageBirthOutcomeSelection);
     }
 
