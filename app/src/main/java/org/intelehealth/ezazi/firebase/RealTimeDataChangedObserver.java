@@ -20,6 +20,7 @@ import com.google.gson.Gson;
 
 import org.intelehealth.ezazi.BuildConfig;
 import org.intelehealth.ezazi.app.AppConstants;
+import org.intelehealth.ezazi.app.IntelehealthApplication;
 import org.intelehealth.ezazi.services.firebase_services.CallRTCNotifyReceiver;
 import org.intelehealth.ezazi.services.firebase_services.FirebaseRealTimeDBUtils;
 import org.intelehealth.ezazi.utilities.SessionManager;
@@ -69,6 +70,7 @@ public class RealTimeDataChangedObserver {
         intent.putExtras(bundle);
         intent.putExtra(RtcUtilsKt.RTC_ARGS, rtcArgs);
         intent.setAction(CallRTCNotifyReceiver.ACTION);
+        intent.setPackage(IntelehealthApplication.getInstance().getPackageName());
         context.sendBroadcast(intent);
 //        }
     }
