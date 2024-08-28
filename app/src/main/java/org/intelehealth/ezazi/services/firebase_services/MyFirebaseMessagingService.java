@@ -171,6 +171,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                             if (isAppInForeground()) {
                                 Intent shiftedPatientBroadcast = new Intent(AppConstants.getShiftedPatientReceiver());
                                 shiftedPatientBroadcast.putExtra(SHIFTED_DATA, shiftChangeData);
+                                shiftedPatientBroadcast.setPackage(IntelehealthApplication.getInstance().getPackageName());
                                 sendBroadcast(shiftedPatientBroadcast);
                             } else {
                                 new AppNotification.Builder(this)
