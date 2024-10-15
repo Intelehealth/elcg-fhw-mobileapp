@@ -161,6 +161,7 @@ public class CardGenerationEngine {
     private static void isNewEncounterCreated() {
         Intent intent = new Intent(AppConstants.CURRENT_ENC_EDIT_INTENT_ACTION);
         intent.putExtra("newEncounter", true);
+        intent.setPackage(IntelehealthApplication.getInstance().getPackageName());
         IntelehealthApplication.getAppContext().sendBroadcast(intent);
     }
 
@@ -235,6 +236,8 @@ public class CardGenerationEngine {
 
     private static void alertToCollectHistoryData() {
         Intent intent = new Intent(AppConstants.NEW_CARD_INTENT_ACTION);
+        intent.setPackage(IntelehealthApplication.getInstance().getPackageName());
+        intent.setPackage(IntelehealthApplication.getInstance().getPackageName());
         IntelehealthApplication.getAppContext().sendBroadcast(intent);
         sendNotification("Alert!", "Time to collect the History data!", null);
         playSound();
@@ -263,6 +266,7 @@ public class CardGenerationEngine {
                 VisitsDAO visitsDAO = new VisitsDAO();
                 visitsDAO.updateVisitSync(visitId, "false");
                 Intent intent = new Intent(AppConstants.VISIT_DECISION_PENDING_ACTION);
+                intent.setPackage(IntelehealthApplication.getInstance().getPackageName());
                 IntelehealthApplication.getAppContext().sendBroadcast(intent);
             } catch (DAOException e) {
                 throw new RuntimeException(e);
