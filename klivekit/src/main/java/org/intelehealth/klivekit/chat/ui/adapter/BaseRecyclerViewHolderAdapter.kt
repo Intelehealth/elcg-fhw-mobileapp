@@ -12,8 +12,7 @@ import org.intelehealth.klivekit.chat.ui.adapter.viewholder.BaseViewHolder
  * Mob   : +919727206702
  **/
 abstract class BaseRecyclerViewHolderAdapter<I, VH : ViewHolder>(
-    protected val context: Context,
-    protected var items: MutableList<I>
+    protected val context: Context, protected var items: MutableList<I>
 ) : RecyclerView.Adapter<VH>() {
     protected val inflater: LayoutInflater = LayoutInflater.from(context)
     var viewHolderClickListener: BaseViewHolder.ViewHolderClickListener? = null
@@ -40,8 +39,10 @@ abstract class BaseRecyclerViewHolderAdapter<I, VH : ViewHolder>(
     }
 
     fun updateItems(newItems: MutableList<I>) {
-        items = newItems;
-        notifyItemRangeChanged(0, items.size)
+        notifyItemRangeRemoved(0, itemCount)
+        items.clear()
+        items.addAll(newItems)
+        notifyItemRangeInserted(0, items.size)
     }
 
     fun getItem(position: Int) = items.get(position)
@@ -51,6 +52,11 @@ abstract class BaseRecyclerViewHolderAdapter<I, VH : ViewHolder>(
         notifyItemChanged(position)
     }
 
-    fun getList(): List<I> = items;
+    fun getList(): List<I> = items
+
+    fun clear() {
+        items.clear()
+        notifyItemRangeChanged(0, itemCount)
+    }
 
 }

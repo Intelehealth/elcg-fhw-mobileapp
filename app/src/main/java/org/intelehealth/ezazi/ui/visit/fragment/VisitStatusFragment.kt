@@ -54,7 +54,9 @@ abstract class VisitStatusFragment : Fragment(R.layout.fragment_commen_listview)
             binding.prescriptionProgressBar.isVisible = false
             if (visits.isNotEmpty()) {
                 binding.tvCallLogEmptyMessage.isVisible = false
-                adapter.updateItems(visits.toMutableList())
+                binding.rvPrescription.postDelayed({
+                    adapter.updateItems(visits.toMutableList())
+                }, 100)
             }
         }
     }

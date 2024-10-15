@@ -71,6 +71,7 @@ public class CallListenerBackgroundService extends Service {
         instance = null;
         Intent intent = new Intent(CallListenerBackgroundService.this, RestartServiceReceiver.class);
         intent.setAction("org.intelehealth.app.RTC_SERVICE_START");
+        intent.setPackage(IntelehealthApplication.getInstance().getPackageName());
         sendBroadcast(intent);
         cancelCounterJob();
     }
