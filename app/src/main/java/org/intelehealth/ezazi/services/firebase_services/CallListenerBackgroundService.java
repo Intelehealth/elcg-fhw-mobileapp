@@ -98,6 +98,7 @@ public class CallListenerBackgroundService extends Service {
                 .setContentIntent(pendingIntent)
                 .setShowWhen(false)
                 .setNotificationSilent()
+                .setOngoing(true)
                 //.setTicker(getText(R.string.ticker_text))
                 .build();
 
