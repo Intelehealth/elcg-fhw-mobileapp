@@ -712,5 +712,31 @@ public class EncounterDAO {
         db.endTransaction();
         return isPresent;
     }
+    public List<EncounterDTO> getAllEncountersByVisitUuid(String visitUuid) {
+        List<EncounterDTO> list = new ArrayList<>();
+
+        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
+
+        String query = "SELECT uuid, encounter_type_uuid, encounter_time " +
+                "FROM tbl_encounter " +
+                "WHERE visituuid = ? " +
+                "AND voided IN ('0', 'false', 'FALSE') " +
+                "ORDER BY encounter_time DESC";
+
+        Cursor cursor = db.rawQuery(query, new String[]{visitUuid});
+
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                EncounterDTO dto = new EncounterDTO();
+                dto.setUuid(cursor.getString(cursor.getColumnIndexOrThrow("uuid")));
+                dto.setEncounterTypeUuid(cursor.getString(cursor.getColumnIndexOrThrow("encounter_type_uuid")));
+                dto.setEncounterTime(cursor.getString(cursor.getColumnIndexOrThrow("encounter_time")));
+                list.add(dto);
+            } while (cursor.moveToNext());
+            cursor.close();
+        }
+
+        return list;
+    }
 
 }

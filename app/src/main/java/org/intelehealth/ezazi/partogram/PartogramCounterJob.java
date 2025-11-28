@@ -25,6 +25,8 @@ public class PartogramCounterJob extends CountDownTimer {
         SimpleDateFormat dtf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss", Locale.getDefault());
         String currentTime = dtf.format(new Date());
         Log.v("PartogramCounterJob", "onTick - " + currentTime);
+        Log.v("TEST", "Counter running: " + System.currentTimeMillis());
+
         CardGenerationEngine.scanForNewCardEligibility();
     }
 

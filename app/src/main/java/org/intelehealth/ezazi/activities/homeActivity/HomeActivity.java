@@ -86,6 +86,7 @@ import org.intelehealth.ezazi.models.dto.EncounterDTO;
 import org.intelehealth.ezazi.models.dto.ObsDTO;
 import org.intelehealth.ezazi.models.dto.ProviderDTO;
 import org.intelehealth.ezazi.models.dto.VisitDTO;
+import org.intelehealth.ezazi.partogram.PartogramConstants;
 import org.intelehealth.ezazi.services.firebase_services.CallListenerBackgroundService;
 import org.intelehealth.ezazi.services.firebase_services.DeviceInfoUtils;
 import org.intelehealth.ezazi.services.firebase_services.TokenRefreshUtils;
@@ -126,6 +127,7 @@ import java.text.ParseException;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -133,6 +135,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 import java.util.TimeZone;
 
 import io.reactivex.disposables.CompositeDisposable;
@@ -1008,16 +1011,94 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
 //                activePatientModels.get(j).setBedNo(bedNo);
 //                filteractivePatient.get(j).setBedNo(bedNo);
 
+                Set<String> RISK_CONCEPTS = new HashSet<>(Arrays.asList(
+                        PartogramConstants.Params.COMPANION.conceptId,
+                        PartogramConstants.Params.PAIN_RELIEF.conceptId,
+                        PartogramConstants.Params.ORAL_FLUID.conceptId,
+                        PartogramConstants.Params.POSTURE.conceptId,
+                        PartogramConstants.Params.BASELINE_FHR.conceptId,
+                        PartogramConstants.Params.FHR_DEC.conceptId,
+                        PartogramConstants.Params.AMNIOTIC_FLUID.conceptId,
+                        PartogramConstants.Params.FETAL_POSITION.conceptId,
+                        PartogramConstants.Params.CAPUT.conceptId,
+                        PartogramConstants.Params.MOULDING.conceptId,
+                        PartogramConstants.Params.PULSE.conceptId,
+                        PartogramConstants.Params.SYSTOLIC_BP.conceptId,
+                        PartogramConstants.Params.DIASTOLIC_BP.conceptId,
+                        PartogramConstants.Params.TEMPERATURE.conceptId,
+                        PartogramConstants.Params.URINE_PROTEIN.conceptId,
+                        PartogramConstants.Params.URINE_ACETONE.conceptId,
+                        PartogramConstants.Params.CONTRACTION_PER_10_MIN.conceptId,
+                        PartogramConstants.Params.DURATION_OF_CONTRACTION.conceptId
+                        ));
                 int red = 2, yellow = 1, green = 0;
                 int r_count = 0, y_count = 0, g_count = 0;
                 int count = 0;
 
                 // alert logic - start
                 String encounterUUID = activePatientModels.get(j).getLatestEncounterId();
-                if (encounterUUID != null && !encounterUUID.equalsIgnoreCase("")) {
-                    obsDTOList = obsDAO.obsCommentList(encounterUUID);
+                String encounterToUse = encounterUUID;
+                // 1) Load encounters of this visit ordered by time (latest → oldest)
+                List<EncounterDTO> encounterList =
+                        encounterDAO.getAllEncountersByVisitUuid(activePatientModels.get(j).getUuid());
+                Log.d(TAG, "loadVisits: encounterList : "+encounterList.size());
+               /* Collections.sort(encounterList, (e1, e2) ->
+                        e2.getEncounterTime().compareTo(e1.getEncounterTime())
+                );*/
+
+                // 2) Find first encounter that has obs
+                if (encounterList != null) {
+                    for (EncounterDTO enc : encounterList) {
+                        List<ObsDTO> obsList = obsDAO.obsCommentList(enc.getUuid());
+                        // 👉 ADD LOGGING HERE
+                        Log.d("ObsCheck",
+                                "Encounter " + enc.getUuid() +
+                                        " | Time: " + enc.getEncounterTime() +
+                                        " | Obs Count: " + (obsList != null ? obsList.size() : 0) + " | Encounter Type: " + enc.getEncounterTypeUuid());
+                        boolean hasValidComment = false;
+
+                        // If you want to print each comment:
+                        if (obsList != null && !obsList.isEmpty()) {
+                            for (ObsDTO o : obsList) {
+                                Log.d("ObsCheckDetail",
+                                        "   → Obs: " + o.getValue() +
+                                                " | Concept: " + o.getConceptuuid() + " | Comment: " + o.getComment());
+
+                                if (o.getConceptuuid() == null || !RISK_CONCEPTS.contains(o.getConceptuuid())) {
+                                    continue; // skip this obs
+                                }
+
+                                String comment = o.getComment();
+
+                                if (comment != null && !comment.trim().isEmpty()) {
+                                    hasValidComment = true;
+                                }
+                            }
+                        }
+                        if (hasValidComment) {
+                            encounterToUse = enc.getUuid();
+                            Log.d("ObsCheck", "Selected Encounter: " + encounterToUse);
+                            break;
+                        }
+                     /*   if (obsList != null && !obsList.isEmpty()) {
+                            encounterToUse = enc.getUuid();  // fallback here
+                            break;
+                        }*/
+                    }
+                }
+
+                // Now use encounterToUse for alert calculation
+                if (encounterToUse != null && !encounterToUse.isEmpty()) {
+                //if (encounterUUID != null && !encounterUUID.equalsIgnoreCase("")) {
+                    obsDTOList = obsDAO.obsCommentList(encounterToUse);
                     if (obsDTOList != null) {
                         for (int i = 0; i < obsDTOList.size(); i++) {
+                            ObsDTO obs = obsDTOList.get(i);
+
+                            // **NEW LINE — skip obs not used in risk calculation**
+                            if (obs.getConceptuuid() == null || !RISK_CONCEPTS.contains(obs.getConceptuuid())) {
+                                continue;
+                            }
                             if (obsDTOList.get(i).getComment() != null) {
                                 if (obsDTOList.get(i).getComment().trim().equalsIgnoreCase("R")) {
                                     r_count++;
@@ -1062,9 +1143,17 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
                             activePatientModels.get(j).setVisibilityOrder(4);
                         }
                     }
+                    Log.d("ALERT_COUNT",
+                            "VisitUUID: " + activePatientModels.get(j).getUuid() +
+                                    " | encounterUsed: " + encounterToUse +
+                                    " | R: " + r_count +
+                                    " | Y: " + y_count +
+                                    " | G: " + g_count +
+                                    " | Total: " + count +
+                                    " | VisibilityOrder: " + activePatientModels.get(j).getVisibilityOrder());
 
-                }
-
+               // }
+}
             }
 
             // #-- Alert logic -- end
