@@ -5,6 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
+    android:fitsSystemWindows="false"
+    android:windowSoftInputMode="adjustResize"
     tools:context=".activities.homeActivity.HomeActivity">
 
     <include
@@ -26,7 +28,7 @@
             android:id="@+id/homeToolbar"
             style="@style/Theme.EZazi.ActionBar.Padding"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:background="@android:color/transparent"
             app:navigationIcon="@drawable/ic_home_logo"
             app:popupTheme="@style/AppTheme.PopupOverlay">

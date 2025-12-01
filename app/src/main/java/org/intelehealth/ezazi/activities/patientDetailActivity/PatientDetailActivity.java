@@ -12,6 +12,7 @@ import static org.intelehealth.ezazi.utilities.StringUtils.en__or_dob;
 import static org.intelehealth.ezazi.utilities.StringUtils.en__ru_dob;
 import static org.intelehealth.ezazi.utilities.StringUtils.en__ta_dob;
 import static org.intelehealth.ezazi.utilities.StringUtils.en__te_dob;
+import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
 
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
@@ -145,6 +146,7 @@ public class PatientDetailActivity extends BaseActionBarActivity {
         setContentView(R.layout.activity_patient_summary);
         super.onCreate(savedInstanceState);
         setupActionBar();
+        enableProperPadding(PatientDetailActivity.this);
         sessionManager = new SessionManager(this);
         String language = sessionManager.getAppLanguage();
         //In case of crash still the org should hold the current lang fix.

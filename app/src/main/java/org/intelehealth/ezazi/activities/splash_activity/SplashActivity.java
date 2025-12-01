@@ -1,5 +1,7 @@
 package org.intelehealth.ezazi.activities.splash_activity;
 
+import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
+
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -8,11 +10,18 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.View;
+import android.view.ViewGroup;
 
+import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -46,6 +55,7 @@ public class SplashActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash_ezazi);
+        enableProperPadding(SplashActivity.this);
 //        Getting App language through the session manager
         sessionManager = new SessionManager(SplashActivity.this);
         //  startService(new Intent(getBaseContext(), OnClearFromRecentService.class));
@@ -60,6 +70,7 @@ public class SplashActivity extends AppCompatActivity {
         // refresh the fcm token
         TokenRefreshUtils.refreshToken(this);
         initFirebaseRemoteConfig();
+
     }
 
     private void initFirebaseRemoteConfig() {

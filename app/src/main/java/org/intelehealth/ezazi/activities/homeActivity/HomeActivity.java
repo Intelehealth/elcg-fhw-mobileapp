@@ -14,6 +14,7 @@ import static org.intelehealth.ezazi.utilities.StringUtils.en__ru_dob;
 import static org.intelehealth.ezazi.utilities.StringUtils.en__ta_dob;
 import static org.intelehealth.ezazi.utilities.StringUtils.en__te_dob;
 import static org.intelehealth.ezazi.utilities.StringUtils.getFullMonthName;
+import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.ENCOUNTER_VISIT_COMPLETE;
 
 import android.animation.ObjectAnimator;
@@ -71,6 +72,7 @@ import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.activities.activePatientsActivity.ActivePatientAdapter;
 import org.intelehealth.ezazi.activities.loginActivity.LoginActivity;
 import org.intelehealth.ezazi.activities.searchPatientActivity.SearchPatientActivity;
+import org.intelehealth.ezazi.activities.splash_activity.SplashActivity;
 import org.intelehealth.ezazi.activities.visitSummaryActivity.ShiftChangeData;
 import org.intelehealth.ezazi.app.AppConstants;
 import org.intelehealth.ezazi.app.IntelehealthApplication;
@@ -346,6 +348,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_ezazi);
+
         sessionManager = new SessionManager(this);
         Log.e(TAG, "onNext: setChwname" + sessionManager.getChwname());
         Log.e(TAG, "onNext: setCreatorID" + sessionManager.getCreatorID());
@@ -771,6 +774,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
             Log.d(TAG, "onCreate: shiftChangeNotification");
             sync();
         }
+        enableProperPadding(HomeActivity.this);
     }
 
     private void showPatientChoiceDialog(ArrayList<MultiChoiceItem> items) {

@@ -1,5 +1,7 @@
 package org.intelehealth.ezazi.activities.addNewPatient;
 
+import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
+
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
@@ -24,6 +26,7 @@ public class AddNewPatientActivity extends BaseActionBarActivity {
         super.onCreate(savedInstanceState);
         initUI();
         setupActionBar();
+        enableProperPadding(AddNewPatientActivity.this);
     }
 
     @Override

@@ -1,5 +1,7 @@
 package org.intelehealth.klivekit.chat.ui.activity;
 
+import static org.intelehealth.klivekit.utils.SupportUtils.enableProperPadding;
+
 import android.Manifest;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -349,7 +351,7 @@ public class ChatActivity extends AppCompatActivity {
         filterSend.addAction(AwsS3Utils.ACTION_FILE_UPLOAD_DONE);
         //registerReceiver(mBroadcastReceiver, filterSend);
         ContextCompat.registerReceiver(this, mBroadcastReceiver, filterSend, ContextCompat.RECEIVER_EXPORTED);
-
+        enableProperPadding(ChatActivity.this);
     }
 
     private BroadcastReceiver mBroadcastReceiver;
