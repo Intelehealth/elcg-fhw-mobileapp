@@ -1,5 +1,7 @@
 package org.intelehealth.ezazi.ui.visit.activity;
 
+import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -45,6 +47,7 @@ public class VisitLabourActivity extends BaseActivity {
         setContentView(binding.getRoot());
         binding.bottomSheetAppBar.toolbar.setTitle(R.string.stage_2_labour_complete);
         binding.bottomSheetAppBar.toolbar.setNavigationOnClickListener(v -> finish());
+        enableProperPadding(VisitLabourActivity.this);
     }
 
     @Override

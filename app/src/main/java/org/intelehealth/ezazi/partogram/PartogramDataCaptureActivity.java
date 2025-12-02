@@ -3,6 +3,7 @@ package org.intelehealth.ezazi.partogram;
 import static org.intelehealth.ezazi.partogram.PartogramConstants.STAGE_1;
 import static org.intelehealth.ezazi.partogram.PartogramConstants.STAGE_2;
 import static org.intelehealth.ezazi.partogram.PartogramConstants.TIMELINE_MODE;
+import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
 
 import android.content.Context;
 import android.content.Intent;
@@ -23,6 +24,7 @@ import com.google.gson.Gson;
 
 import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.activities.epartogramActivity.EpartogramViewActivity;
+import org.intelehealth.ezazi.activities.splash_activity.SplashActivity;
 import org.intelehealth.ezazi.app.AppConstants;
 import org.intelehealth.ezazi.app.IntelehealthApplication;
 import org.intelehealth.ezazi.database.dao.EncounterDAO;
@@ -85,9 +87,10 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        setContentView(R.layout.activity_partogram_data_capture_ezazi);
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_partogram_data_capture_ezazi);
         setupActionBar();
+        enableProperPadding(PartogramDataCaptureActivity.this);
         mSaveTextView = findViewById(R.id.btnSave);
         mEpartogramTextView = findViewById(R.id.btnView);
         mRecyclerView = findViewById(R.id.rvQuery);

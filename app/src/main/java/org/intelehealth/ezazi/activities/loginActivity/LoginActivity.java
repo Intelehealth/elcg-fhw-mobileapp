@@ -1,5 +1,7 @@
 package org.intelehealth.ezazi.activities.loginActivity;
 
+import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
+
 import android.content.Context;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -46,6 +48,7 @@ import org.intelehealth.ezazi.app.AppConstants;
 import org.intelehealth.ezazi.app.IntelehealthApplication;
 import org.intelehealth.ezazi.models.loginModel.LoginModel;
 import org.intelehealth.ezazi.models.loginProviderModel.LoginProviderModel;
+import org.intelehealth.ezazi.ui.rtc.activity.EzaziVideoCallActivity;
 import org.intelehealth.ezazi.ui.shared.InputChangeValidationListener;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
 import org.intelehealth.ezazi.ui.password.activity.ForgotPasswordActivity;
@@ -176,7 +179,7 @@ public class LoginActivity extends AppCompatActivity {
                 attemptLogin();
             }
         });
-
+        enableProperPadding(LoginActivity.this);
     }
 
     private void setLogo() {

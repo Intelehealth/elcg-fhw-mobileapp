@@ -1,6 +1,8 @@
 package org.intelehealth.ezazi.activities.visitSummaryActivity;
 
 
+import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
+
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -57,6 +59,7 @@ import org.intelehealth.ezazi.database.dao.VisitsDAO;
 import org.intelehealth.ezazi.databinding.DialogOutOfTimeEzaziBinding;
 import org.intelehealth.ezazi.models.dto.EncounterDTO;
 import org.intelehealth.ezazi.models.dto.VisitAttributeDTO;
+import org.intelehealth.ezazi.partogram.PartogramDataCaptureActivity;
 import org.intelehealth.ezazi.services.firebase_services.FirebaseRealTimeDBUtils;
 import org.intelehealth.ezazi.syncModule.SyncUtils;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
@@ -188,6 +191,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         setContentView(R.layout.activity_timeline_ezazi);
         super.onCreate(savedInstanceState);
         setupActionBar();
+        enableProperPadding(TimelineVisitSummaryActivity.this);
         encounterDAO = new EncounterDAO();
 
         initUI();

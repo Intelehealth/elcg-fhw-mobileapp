@@ -1,5 +1,7 @@
 package org.intelehealth.ezazi.activities.epartogramActivity;
 
+import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
+
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.annotation.SuppressLint;
@@ -66,6 +68,7 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
         setContentView(R.layout.activity_epartogram_ezazi);
         super.onCreate(savedInstanceState);
         setupActionBar();
+        enableProperPadding(EpartogramViewActivity.this);
         sessionManager = new SessionManager(this);
         webArchiveFileDir = FileUtils.getProjectCatchDir(this);
         Timber.tag(TAG).d("webArchive =>%s", webArchiveFileDir);

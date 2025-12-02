@@ -1,5 +1,7 @@
 package org.intelehealth.ezazi.ui.password.activity;
 
+import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -9,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.activities.homeActivity.HomeActivity;
+import org.intelehealth.ezazi.activities.loginActivity.LoginActivity;
 import org.intelehealth.ezazi.activities.setupActivity.SetupActivity;
 import org.intelehealth.ezazi.databinding.ActivityForgotPasswordBinding;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
@@ -29,7 +32,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         binding = ActivityForgotPasswordBinding.inflate(getLayoutInflater(), null, false);
         setContentView(binding.getRoot());
         setupToolbar();
-
+        enableProperPadding(ForgotPasswordActivity.this);
     }
 
     private void setupToolbar() {
