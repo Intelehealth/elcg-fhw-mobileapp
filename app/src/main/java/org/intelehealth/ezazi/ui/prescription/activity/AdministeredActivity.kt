@@ -21,6 +21,7 @@ import org.intelehealth.ezazi.ui.prescription.listener.TitleChangeListener
 import org.intelehealth.ezazi.ui.prescription.model.PrescriptionArg
 import org.intelehealth.ezazi.ui.prescription.viewmodel.PrescriptionViewModel
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity
+import org.intelehealth.ezazi.utilities.SupportUtils
 
 
 /**
@@ -43,6 +44,7 @@ class AdministeredActivity : BaseActionBarActivity(), TitleChangeListener {
         setContentView(binding.root)
         setupActionBar()
         setupAdministeredView()
+        SupportUtils.enableProperPadding(this@AdministeredActivity)
     }
 
     private fun setupAdministeredView() {

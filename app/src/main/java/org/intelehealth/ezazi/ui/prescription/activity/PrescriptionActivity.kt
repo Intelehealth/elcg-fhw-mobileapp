@@ -8,6 +8,8 @@ import org.intelehealth.ezazi.databinding.ActivityPrescriptionEzaziBinding
 import org.intelehealth.ezazi.ui.prescription.fragment.PrescriptionFragment
 import org.intelehealth.ezazi.ui.prescription.model.PrescriptionArg
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity
+import org.intelehealth.ezazi.ui.visit.activity.VisitStatusActivity
+import org.intelehealth.ezazi.utilities.SupportUtils
 
 /**
  * Created by Vaghela Mithun R. on 01-02-2024 - 00:26.
@@ -23,6 +25,7 @@ class PrescriptionActivity : BaseActionBarActivity() {
         super.onCreate(savedInstanceState)
         setupActionBar()
         setupPrescriptionView()
+        SupportUtils.enableProperPadding(this@PrescriptionActivity)
     }
 
     private fun setupPrescriptionView() {

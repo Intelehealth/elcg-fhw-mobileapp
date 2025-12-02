@@ -1,5 +1,7 @@
 package org.intelehealth.ezazi.activities.searchPatientActivity;
 
+import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
+
 import android.annotation.SuppressLint;
 import android.app.SearchManager;
 import android.content.BroadcastReceiver;
@@ -45,6 +47,7 @@ import org.intelehealth.ezazi.executor.TaskCompleteListener;
 import org.intelehealth.ezazi.executor.TaskExecutor;
 import org.intelehealth.ezazi.models.dto.PatientAttributesDTO;
 import org.intelehealth.ezazi.models.dto.PatientDTO;
+import org.intelehealth.ezazi.partogram.PartogramDataCaptureActivity;
 import org.intelehealth.ezazi.ui.patient.PatientDataBinder;
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
 import org.intelehealth.ezazi.ui.validation.FirstLetterUpperCaseInputFilter;
@@ -87,6 +90,7 @@ public class SearchPatientActivity extends BaseActionBarActivity implements Sear
         setContentView(R.layout.activity_search_patient_ezazi);
         super.onCreate(savedInstanceState);
         setupActionBar();
+        enableProperPadding(SearchPatientActivity.this);
         dataBinder = new PatientDataBinder();
         progressBar = findViewById(R.id.searchPatientProgress);
         // Get the intent, verify the action and get the query

@@ -308,13 +308,14 @@ public class ObsDAO {
         ObsDTO obsDTO = new ObsDTO();
         db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
 
-        Cursor idCursor = db.rawQuery("SELECT comment FROM tbl_obs where encounteruuid = ? AND voided='0'",
+        Cursor idCursor = db.rawQuery("SELECT comment, conceptuuid FROM tbl_obs where encounteruuid = ? AND voided='0'",
                 new String[]{encounteruuid});
 
         if (idCursor.getCount() != 0) {
             while (idCursor.moveToNext()) {
                 obsDTO = new ObsDTO();
                 obsDTO.setComment(idCursor.getString(idCursor.getColumnIndexOrThrow("comment")));
+                obsDTO.setConceptuuid(idCursor.getString(idCursor.getColumnIndexOrThrow("conceptuuid")));
                 obsDTOList.add(obsDTO);
             }
         }

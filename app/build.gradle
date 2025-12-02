@@ -20,14 +20,14 @@ static def getDateTime() {
 }
 
 android {
-    compileSdk 34
+    compileSdk 36
 
     defaultConfig {
         applicationId "org.intelehealth.ezazi"
-        minSdk 21
-        targetSdk 34
-        versionCode 9
-        versionName '2.9-beta'
+        minSdk 26
+        targetSdk 36
+        versionCode 16
+        versionName '2.10.2-beta'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         //Change this to true to enable multidex support for Kitkat
         multiDexEnabled true

@@ -2,6 +2,8 @@ package org.intelehealth.ezazi.activities.privacyNoticeActivity;
 
 import static android.text.Layout.JUSTIFICATION_MODE_INTER_WORD;
 
+import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
+
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.text.LineBreaker;
@@ -55,6 +57,7 @@ public class PrivacyNoticeActivity extends BaseActionBarActivity implements View
         setContentView(R.layout.activity_privacy_notice_ezazi);
         super.onCreate(savedInstanceState);
         setupActionBar();
+        enableProperPadding(PrivacyNoticeActivity.this);
         sessionManager = new SessionManager(this);
         privacy_textview = findViewById(R.id.privacy_text);
 //        privacy_textview.setAutoLinkMask(Linkify.ALL);
