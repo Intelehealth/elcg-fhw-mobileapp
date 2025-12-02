@@ -1,5 +1,8 @@
 package org.intelehealth.ezazi.activities.setupActivity;
 
+import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
+
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
@@ -22,15 +25,24 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Patterns;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.URLUtil;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.Toast;
 
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.codeglo.coyamore.data.PreferenceHelper;
 import com.google.android.material.button.MaterialButton;
@@ -144,13 +156,16 @@ public class SetupActivity extends AppCompatActivity {
     //    HashMap<String, String> hashMap1, hashMap2, hashMap3, hashMap4;
 //    boolean value = false;
     String base_url;
-//    Map.Entry<String, String> village_name;
+
+    //    Map.Entry<String, String> village_name;
 //    int state_count = 0, district_count = 0, sanch_count = 0, village_count = 0;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setup_ezazi);
+        enableProperPadding(SetupActivity.this);
         sessionManager = new SessionManager(SetupActivity.this);
 
         setupUrl = BuildConfig.SERVER_URL;
@@ -221,6 +236,7 @@ public class SetupActivity extends AppCompatActivity {
         }
 
         showProgressbar();
+
     }
 
     // Replaced by Mithun Vaghela
@@ -696,7 +712,8 @@ public class SetupActivity extends AppCompatActivity {
 //                        checkExistingMindMaps();
 //
 //                    } else {
-////                                Toast.makeText(SetupActivity.this, res.getMessage(), Toast.LENGTH_LONG).show();
+
+    /// /                                Toast.makeText(SetupActivity.this, res.getMessage(), Toast.LENGTH_LONG).show();
 //                        Toast.makeText(SetupActivity.this, getResources().getString(R.string.no_protocols_found), Toast.LENGTH_LONG).show();
 //                    }
 //                }
@@ -759,7 +776,6 @@ public class SetupActivity extends AppCompatActivity {
 //        Log.e("DOWNLOAD", "isSTARTED");
 //
 //    }
-
     @Override
     protected void attachBaseContext(Context newBase) {
         super.attachBaseContext(setLocale(newBase));
@@ -807,8 +823,9 @@ public class SetupActivity extends AppCompatActivity {
 //                    getMindmapDownloadURL("https://" + licenseUrl + ":3004/");
 //                } else {
 //                    dialog.dismiss();
-////                    r1.setChecked(true);
-////                    r2.setChecked(false);
+
+    /// /                    r1.setChecked(true);
+    /// /                    r2.setChecked(false);
 //                    sessionManager.setLicenseKey("");
 //                    Toast.makeText(context, getString(R.string.mindmap_internect_connection), Toast.LENGTH_SHORT).show();
 //                }
@@ -818,7 +835,6 @@ public class SetupActivity extends AppCompatActivity {
 //        //alertDialog.show();
 //        IntelehealthApplication.setAlertDialogCustomTheme(this, alertDialog);
 //    }
-
     private void saveToken() {
         ProviderDAO providerDAO = new ProviderDAO();
         Manager.getInstance().setBaseUrl("https://" + sessionManager.getServerUrl());

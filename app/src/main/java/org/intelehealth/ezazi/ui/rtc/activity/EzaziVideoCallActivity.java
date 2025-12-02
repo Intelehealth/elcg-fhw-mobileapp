@@ -1,5 +1,7 @@
 package org.intelehealth.ezazi.ui.rtc.activity;
 
+import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
+
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -88,6 +90,7 @@ public class EzaziVideoCallActivity extends CoreVideoCallActivity {
         }
 
         getOnBackPressedDispatcher().addCallback(this, onBackPressedCallback);
+        enableProperPadding(EzaziVideoCallActivity.this);
     }
 
     private void setupActionBar() {

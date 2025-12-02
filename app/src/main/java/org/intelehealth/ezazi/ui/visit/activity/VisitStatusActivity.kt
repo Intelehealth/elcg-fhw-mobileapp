@@ -1,17 +1,13 @@
 package org.intelehealth.ezazi.ui.visit.activity
 
 import android.os.Bundle
-import android.widget.FrameLayout
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentTransaction
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import org.intelehealth.ezazi.R
 import org.intelehealth.ezazi.databinding.ActivityVisitStatusBinding
 import org.intelehealth.ezazi.ui.shared.BaseActivity
 import org.intelehealth.ezazi.ui.visit.adapter.VisitTabPagerAdapter
-import org.intelehealth.ezazi.ui.visit.fragment.OutcomePendingVisitFragment
+import org.intelehealth.ezazi.utilities.SupportUtils
 
 /**
  * Created by Vaghela Mithun R. on 16-01-2024 - 00:39.
@@ -27,6 +23,7 @@ class VisitStatusActivity : BaseActivity() {
         setupActionBar()
 
         setupTabs()
+        SupportUtils.enableProperPadding(this@VisitStatusActivity)
     }
 
 

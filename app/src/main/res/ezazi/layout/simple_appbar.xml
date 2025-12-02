@@ -6,13 +6,15 @@
         android:layout_height="wrap_content"
         android:backgroundTint="@android:color/transparent"
         android:theme="@style/Theme.EZazi.AppBarOverlay"
+
+
         app:elevation="0dp">
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             style="@style/Theme.EZazi.ActionBar.Padding"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:background="@android:color/transparent"
             android:gravity="center_vertical"
             app:navigationIcon="@drawable/selector_actionbar_back"
