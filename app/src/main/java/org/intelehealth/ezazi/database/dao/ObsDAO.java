@@ -23,9 +23,12 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.intelehealth.ezazi.builder.QueryBuilder;
@@ -1104,5 +1107,69 @@ public class ObsDAO {
         return isExist;
     }
 
+    public List<ObsDTO> getLatestObsByVisitAndConcepts(
+            String visitUuid,
+            Set<String> riskConcepts
+    ) {
+
+        if (riskConcepts == null || riskConcepts.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<String, ObsDTO> resultMap = new LinkedHashMap<>();
+        db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
+
+        StringBuilder inClause = new StringBuilder();
+        for (int i = 0; i < riskConcepts.size(); i++) {
+            inClause.append("?");
+            if (i < riskConcepts.size() - 1) inClause.append(",");
+        }
+
+        String query =
+                "SELECT o.comment, o.conceptuuid, o.encounteruuid " +
+                        "FROM tbl_obs o " +
+                        "INNER JOIN tbl_encounter e ON o.encounteruuid = e.uuid " +
+                        "WHERE e.visituuid = ? " +
+                        "AND o.voided = '0' " +
+                        "AND e.voided IN ('0','false','FALSE') " +
+                        "AND o.conceptuuid IN (" + inClause + ") " +
+                        "ORDER BY e.encounter_time DESC";
+
+        List<String> argsList = new ArrayList<>();
+        argsList.add(visitUuid);
+        argsList.addAll(riskConcepts);
+
+        Cursor cursor = db.rawQuery(query, argsList.toArray(new String[0]));
+
+        try {
+            while (cursor.moveToNext()) {
+
+                String conceptUuid =
+                        cursor.getString(cursor.getColumnIndexOrThrow("conceptuuid"));
+
+                if (resultMap.containsKey(conceptUuid)) continue;
+
+                String comment =
+                        cursor.getString(cursor.getColumnIndexOrThrow("comment"));
+
+                if (comment == null || comment.trim().isEmpty()) continue;
+
+                ObsDTO obs = new ObsDTO();
+                obs.setConceptuuid(conceptUuid);
+                obs.setComment(comment);
+                obs.setEncounteruuid(
+                        cursor.getString(cursor.getColumnIndexOrThrow("encounteruuid"))
+                );
+
+                resultMap.put(conceptUuid, obs);
+
+                if (resultMap.size() == riskConcepts.size()) break;
+            }
+        } finally {
+            cursor.close();
+        }
+
+        return new ArrayList<>(resultMap.values());
+    }
 
 }
