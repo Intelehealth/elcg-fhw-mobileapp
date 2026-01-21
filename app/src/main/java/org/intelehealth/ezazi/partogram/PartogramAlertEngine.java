@@ -19,7 +19,7 @@ public class PartogramAlertEngine {
                 if (paramInfo.getCapturedValue().equalsIgnoreCase("Y")) {
                     alert = "G";
                 } else if (paramInfo.getCapturedValue().equalsIgnoreCase("N")) {
-                    alert = "R";
+                    alert = "Y";
                 }
             } else if (paramInfo.getParamName().equalsIgnoreCase("Oral fluid")) {
                 if (paramInfo.getCapturedValue().equalsIgnoreCase("Y")) {
@@ -39,7 +39,7 @@ public class PartogramAlertEngine {
             if (paramInfo.getParamName().equalsIgnoreCase("Baseline FHR")) {
                 int val = Integer.parseInt(paramInfo.getCapturedValue());
                 if (val >= 160) {
-                    alert = "Y";
+                    alert = "R";
                 } else if (val < 110) {
                     alert = "R";
                 } else {
@@ -65,23 +65,26 @@ public class PartogramAlertEngine {
                 if (paramInfo.getCapturedValue().equalsIgnoreCase("A")) {
                     alert = "G";
                 } else if (paramInfo.getCapturedValue().equalsIgnoreCase("P") || paramInfo.getCapturedValue().equalsIgnoreCase("T")) {
-                    alert = "Y";
+                    alert = "R";
                 }
 //                else if (paramInfo.getCapturedValue().equalsIgnoreCase("M+++") || paramInfo.getCapturedValue().equalsIgnoreCase("B")) {
 //                    alert = "R";
 //                }
             } else if (paramInfo.getParamName().equalsIgnoreCase("Caput")) {
-                if (paramInfo.getCapturedValue().equalsIgnoreCase("N") || paramInfo.getCapturedValue().equalsIgnoreCase("+") || paramInfo.getCapturedValue().equalsIgnoreCase("++")) {
+                if (paramInfo.getCapturedValue().equalsIgnoreCase("N") || paramInfo.getCapturedValue().equalsIgnoreCase("+")) {
                     alert = "G";
+                } else if (paramInfo.getCapturedValue().equalsIgnoreCase("++")) {
+                    alert = "Y";
                 } else if (paramInfo.getCapturedValue().equalsIgnoreCase("+++")) {
                     alert = "R";
                 }
             } else if (paramInfo.getParamName().equalsIgnoreCase("Moulding")) {
                 if (paramInfo.getCapturedValue().equalsIgnoreCase("N")
-                        || paramInfo.getCapturedValue().equalsIgnoreCase("+")
-                        || paramInfo.getCapturedValue().equalsIgnoreCase("++")) {
+                        || paramInfo.getCapturedValue().equalsIgnoreCase("+")) {
                     alert = "G";
-                } else if (paramInfo.getCapturedValue().equalsIgnoreCase("+++")) {
+                }  else if (paramInfo.getCapturedValue().equalsIgnoreCase("++")) {
+                    alert = "Y";
+                }else if (paramInfo.getCapturedValue().equalsIgnoreCase("+++")) {
                     alert = "R";
                 }
             }
@@ -89,7 +92,7 @@ public class PartogramAlertEngine {
             if (paramInfo.getParamName().equalsIgnoreCase("Pulse")) {
                 int val = Integer.parseInt(paramInfo.getCapturedValue());
                 if (val < 60) {
-                    alert = "Y";
+                    alert = "R";
                 } else if (val >= 120) {
                     alert = "R";
                 } else {
@@ -112,7 +115,7 @@ public class PartogramAlertEngine {
             } else if (paramInfo.getParamName().equalsIgnoreCase("Temperature(C)")) {
                 double val = Double.parseDouble(paramInfo.getCapturedValue());
                 if (val < 35) {
-                    alert = "Y";
+                    alert = "R";
                 } else if (val >= 37.5) {
                     alert = "R";
                 } else {
@@ -123,7 +126,7 @@ public class PartogramAlertEngine {
                         || paramInfo.getCapturedValue().equalsIgnoreCase("P4+")) {
                     alert = "R";
                 } else if (paramInfo.getCapturedValue().equalsIgnoreCase("P2+")) {
-                    alert = "Y";
+                    alert = "R";
                 } else alert = "G";
 //                if (paramInfo.getCapturedValue().equalsIgnoreCase("P-")
 //                        || paramInfo.getCapturedValue().equalsIgnoreCase("P")
@@ -140,7 +143,7 @@ public class PartogramAlertEngine {
                         || paramInfo.getCapturedValue().equalsIgnoreCase("A4+")) {
                     alert = "R";
                 } else if (paramInfo.getCapturedValue().equalsIgnoreCase("A2+")) {
-                    alert = "Y";
+                    alert = "R";
                 } else alert = "G";
 //                if (paramInfo.getCapturedValue().equalsIgnoreCase("A-") || paramInfo.getCapturedValue().equalsIgnoreCase("A")
 //                        || paramInfo.getCapturedValue().equalsIgnoreCase("A1")) {
@@ -154,19 +157,24 @@ public class PartogramAlertEngine {
         } else if (paramInfo.getParamSectionName().equalsIgnoreCase("Labour Progress")) {
             if (paramInfo.getParamName().equalsIgnoreCase("Contractions per 10 min")) {
                 int val = Integer.parseInt(paramInfo.getCapturedValue());
-                if (val > 5) {
+                if (val <= 2 || val > 5) {
+                    alert = "R";
+                } else {
+                    alert = "G";
+                }
+                /*if (val > 5) {
                     alert = "R";
                 } else if (val == 1 || val == 2) {
                     alert = "Y";
                 } else {
                     alert = "G";
-                }
+                }*/
             } else if (paramInfo.getParamName().equalsIgnoreCase("Duration of contractions")) {
                 int val = Integer.parseInt(paramInfo.getCapturedValue());
                 if (val > 60) {
                     alert = "R";
                 } else if (val < 20) {
-                    alert = "Y";
+                    alert = "R";
                 } else {
                     alert = "G";
                 }
