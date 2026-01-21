@@ -130,15 +130,17 @@ public class ActivePatientAdapter extends RecyclerView.Adapter<ActivePatientAdap
         }
 
         // alert -> start
-        int count = activePatientModel.getAlertFlagTotal();
-        holder.ivPriscription.setText(String.valueOf(count));
-        if (count > 22) { // red
+        int riskScore = activePatientModel.getAlertFlagTotal();
+        double count = activePatientModel.getAlertFlagTotal();
+
+        holder.ivPriscription.setText(String.valueOf(riskScore));
+        if (count > 3.5) { // red //prev - count > 22
             // holder.cardView_todaysVisit.setCardBackgroundColor(context.getResources().getColor(R.color.red_1));
             holder.ivPriscription.setBackground(ContextCompat.getDrawable(context, R.drawable.ic_high_alert));
             holder.ivPriscription.setTextColor(ContextCompat.getColor(context, R.color.colorHighAlert));
             int padding = context.getResources().getDimensionPixelSize(R.dimen.high_alert_top_padding);
             holder.ivPriscription.setPadding(0, padding, 0, 0);
-        } else if (count >= 15) { // yellow
+        } else if (count >= 1.0 && count <= 3.5) { // yellow  //prev - count >= 15
             // holder.cardView_todaysVisit.setCardBackgroundColor(context.getResources().getColor(R.color.darkYellow2));
             holder.ivPriscription.setBackground(ContextCompat.getDrawable(context, R.drawable.ic_yellow_alert));
             holder.ivPriscription.setTextColor(ContextCompat.getColor(context, R.color.colorMediumAlert));
