@@ -1,5 +1,6 @@
 package org.intelehealth.ezazi.activities.homeActivity;
 
+import static org.intelehealth.ezazi.activities.homeActivity.RiskConcepts.RISK_CONCEPTS;
 import static org.intelehealth.ezazi.app.AppConstants.EVENT_SHIFT_CHANGED;
 import static org.intelehealth.ezazi.app.AppConstants.SHIFTED_DATA;
 import static org.intelehealth.ezazi.utilities.StringUtils.en__as_dob;
@@ -60,6 +61,8 @@ import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.LifecycleCoroutineScope;
+import androidx.lifecycle.LifecycleOwnerKt;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -141,6 +144,9 @@ import java.util.Set;
 import java.util.TimeZone;
 
 import io.reactivex.disposables.CompositeDisposable;
+import kotlin.Unit;
+import kotlin.coroutines.Continuation;
+import kotlinx.coroutines.CoroutineScope;
 
 /**
  * Home Screen
@@ -973,7 +979,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
 
     }
 
-    private void loadVisits() {
+    private void loadVisitsOld() {
         if (sessionManager.isPullSyncFinished()) {
             getVisits();
             findViewById(R.id.tvEmpty).setVisibility(View.GONE);
@@ -2319,5 +2325,31 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
         search = query;
         return false;
     }
+    private void loadVisits() {
 
+        // Step 1: get visits
+        List<ActivePatientModel> visits = new VisitQueryResultBinder().executeActiveVisitsQuery(offset, limit);
+
+        // Step 2: coroutine scope
+        LifecycleCoroutineScope scope = LifecycleOwnerKt.getLifecycleScope(this);
+
+        VisitAlertBridge.processVisits(scope, visits, obsDAO, RiskConcepts.RISK_CONCEPTS, result -> {
+                    showOnHomeScreen(result);
+                    return Unit.INSTANCE;
+                }
+        );
+    }
+
+    private void showOnHomeScreen(List<ActivePatientModel> visits) {
+        Collections.sort(visits, (v1, v2) -> Integer.compare(
+                        v2.getVisibilityOrder(),
+                        v1.getVisibilityOrder())
+        );
+
+        mActivePatientAdapter = new ActivePatientAdapter(visits, new ArrayList<>(visits), this, listPatientUUID, sessionManager);
+        mActiveVisitsRecyclerView.setAdapter(mActivePatientAdapter);
+
+        setActiveCasesCount();
+        showDecisionPendingVisits();
+    }
 }
