@@ -130,7 +130,7 @@ public class ActivePatientAdapter extends RecyclerView.Adapter<ActivePatientAdap
         }
 
         // alert -> start
-        int riskScore = activePatientModel.getAlertFlagTotal();
+        double riskScore = activePatientModel.getAlertFlagTotal();
         double count = activePatientModel.getAlertFlagTotal();
 
         holder.ivPriscription.setText(String.valueOf(riskScore));

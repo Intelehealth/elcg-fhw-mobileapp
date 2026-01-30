@@ -1171,5 +1171,55 @@ public class ObsDAO {
 
         return new ArrayList<>(resultMap.values());
     }
+    public List<ObsDTO> getCervixObsByVisit(
+            String visitUuid,
+            String cervixConceptUuid
+    ) {
+
+        db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
+
+        String query =
+                "SELECT o.comment, o.conceptuuid, o.encounteruuid, e.encounter_time " +
+                        "FROM tbl_obs o " +
+                        "INNER JOIN tbl_encounter e ON o.encounteruuid = e.uuid " +
+                        "WHERE e.visituuid = ? " +
+                        "AND o.voided = '0' " +
+                        "AND e.voided IN ('0','false','FALSE') " +
+                        "AND o.conceptuuid = ? " +
+                        "ORDER BY e.encounter_time ASC"; // IMPORTANT
+
+        Cursor cursor = db.rawQuery(
+                query,
+                new String[]{visitUuid, cervixConceptUuid}
+        );
+
+        List<ObsDTO> list = new ArrayList<>();
+
+        try {
+            while (cursor.moveToNext()) {
+
+                String comment =
+                        cursor.getString(cursor.getColumnIndexOrThrow("comment"));
+
+                if (comment == null || comment.trim().isEmpty()) continue;
+
+                ObsDTO obs = new ObsDTO();
+                obs.setConceptuuid(cervixConceptUuid);
+                obs.setComment(comment);
+                obs.setEncounteruuid(
+                        cursor.getString(cursor.getColumnIndexOrThrow("encounteruuid"))
+                );
+                obs.setObsServerModifiedDate(
+                        cursor.getString(cursor.getColumnIndexOrThrow("encounter_time"))
+                );
+
+                list.add(obs);
+            }
+        } finally {
+            cursor.close();
+        }
+
+        return list;
+    }
 
 }

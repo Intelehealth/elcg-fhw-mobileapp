@@ -102,7 +102,7 @@ public class CardGenerationEngine {
                     FirebaseRealTimeDBUtils.logData(log);
 
                     if (latestEncounterName.toLowerCase().contains("stage1")) {
-                        if (minutes >= 30) {
+                        if (minutes >= 10) {
                             /* //out of time -decision pending*/
                             if (checkVisitEncounterReachToLimitForStage1(latestEncounterName)) {
                                 closeReachToLimitVisit(visitUid);
@@ -114,14 +114,14 @@ public class CardGenerationEngine {
                                     createNewEncounter(visitUid, nextEncounterTypeName);
                                 }
                             }
-                        } else if (minutes == 29) {
+                        } else if (minutes == 9) {
                             SyncUtils syncUtils = new SyncUtils();
                             syncUtils.syncBackground();
                         }
                     } else if (latestEncounterName.toLowerCase().contains("stage2")) {
                         //Log.d(TAG, "scanForNewCardEligibility: minutes : " + minutes);
 
-                        if (minutes >= 15) {
+                        if (minutes >= 7) {
                             //out of time -decision pending
                             if (checkVisitEncounterReachToLimit(latestEncounterName)) {
                                 closeReachToLimitVisit(visitUid);
@@ -133,7 +133,7 @@ public class CardGenerationEngine {
                                     createNewEncounter(visitUid, nextEncounterTypeName);
                                 }
                             }
-                        } else if (minutes == 14) {
+                        } else if (minutes == 6) {
                             SyncUtils syncUtils = new SyncUtils();
                             syncUtils.syncBackground();
                         }
