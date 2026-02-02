@@ -1,5 +1,6 @@
 package org.intelehealth.ezazi.activities.homeActivity.riskscores
 
+import android.util.Log
 import org.intelehealth.ezazi.models.dto.ObsDTO
 
 object CervixHistoryResolver {
@@ -8,18 +9,25 @@ object CervixHistoryResolver {
 
         if (cervixObs.isEmpty()) return null
 
-        // Sort by time (important!)
+        // Sort by time
         val sorted = cervixObs.sortedBy {
             it.obsServerModifiedDate.toMillis()
         }
 
         val latestObs = sorted.last()
-        val currentValue = latestObs.value.toIntOrNull() ?: return null
+        Log.d("TAG", "resolve: latestObs : "+latestObs)
+
+        val rawValue = latestObs.value ?: return null
+        Log.d("TAG", "resolve: rawValue : "+rawValue)
+
+        val currentValue = rawValue.toIntOrNull() ?: return null
+
+        // val currentValue = latestObs.value.toIntOrNull() ?: return null
 
         var startTimeMillis =
             latestObs.obsServerModifiedDate.toMillis()
 
-        // Walk backwards to find when this value started
+        // check backward to find when this value started
         for (i in sorted.size - 2 downTo 0) {
             if (sorted[i].value == latestObs.value) {
                 startTimeMillis =
@@ -31,7 +39,8 @@ object CervixHistoryResolver {
 
         return CervixState(
             value = currentValue,
-            startTimeMillis = startTimeMillis
+            startTimeMillis = startTimeMillis,
+            obsServerModifiedDate = latestObs.obsServerModifiedDate
         )
     }
 }
