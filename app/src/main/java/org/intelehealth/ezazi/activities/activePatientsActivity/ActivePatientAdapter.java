@@ -140,7 +140,7 @@ public class ActivePatientAdapter extends RecyclerView.Adapter<ActivePatientAdap
             holder.ivPriscription.setTextColor(ContextCompat.getColor(context, R.color.colorHighAlert));
             int padding = context.getResources().getDimensionPixelSize(R.dimen.high_alert_top_padding);
             holder.ivPriscription.setPadding(0, padding, 0, 0);
-        } else if (count >= 1.0 && count <= 3.5) { // yellow  //prev - count >= 15
+        } else if (count >= 0.5 && count <= 3.5) { // yellow  //prev - count >= 15
             // holder.cardView_todaysVisit.setCardBackgroundColor(context.getResources().getColor(R.color.darkYellow2));
             holder.ivPriscription.setBackground(ContextCompat.getDrawable(context, R.drawable.ic_yellow_alert));
             holder.ivPriscription.setTextColor(ContextCompat.getColor(context, R.color.colorMediumAlert));
