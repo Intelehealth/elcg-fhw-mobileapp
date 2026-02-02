@@ -772,10 +772,10 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
         //call sync
 
         // Check if the activity was opened from a notification click
-        if (getIntent() != null) {
+        /*if (getIntent() != null) {
             Log.d(TAG, "onCreate: shiftChangeNotification in if : " + new Gson().toJson(getIntent()));
 
-        }
+        }*/
         if (getIntent() != null && getIntent().hasExtra("shiftChangeNotification")) {
             Log.d(TAG, "onCreate: shiftChangeNotification");
             sync();
@@ -2320,7 +2320,9 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
 
     @Override
     public boolean onQueryTextChange(String charSequence) {
-        String query = charSequence.trim();
+        //String query = charSequence.trim();
+        if (mActivePatientAdapter == null) return false;
+        String query = charSequence == null ? "" : charSequence.trim();
         mActivePatientAdapter.getFilter().filter(query);
         search = query;
         return false;
