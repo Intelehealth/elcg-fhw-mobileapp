@@ -29,7 +29,7 @@ object RiskWeightConfig {
         //Caput
         RedKey(PartogramConstants.Params.CAPUT.conceptId, "+++ (Marked)") to 1.0,
         //Moulding
-        RedKey(PartogramConstants.Params.MOULDING.conceptId, "3+") to 1.0,
+        RedKey(PartogramConstants.Params.MOULDING.conceptId, "+++") to 1.0,
 
         // ---------------- Woman ----------------
         // Pulse
@@ -59,12 +59,12 @@ object RiskWeightConfig {
 
         // ---------------- Labour progress ----------------
         // Contractions per minute
-        RedKey(PartogramConstants.Params.URINE_ACETONE.conceptId, "<=2") to 1.0,
-        RedKey(PartogramConstants.Params.URINE_ACETONE.conceptId, ">5") to 1.0,
+        RedKey(PartogramConstants.Params.CONTRACTION_PER_10_MIN.conceptId, "<=2") to 1.0,
+        RedKey(PartogramConstants.Params.CONTRACTION_PER_10_MIN.conceptId, ">5") to 1.0,
 
         // Duration of contractions
-        RedKey(PartogramConstants.Params.URINE_ACETONE.conceptId, "<20") to 1.0,
-        RedKey(PartogramConstants.Params.URINE_ACETONE.conceptId, ">60") to 1.0,
+        RedKey(PartogramConstants.Params.DURATION_OF_CONTRACTION.conceptId, "<20") to 1.0,
+        RedKey(PartogramConstants.Params.DURATION_OF_CONTRACTION.conceptId, ">60") to 1.0,
 
         // Cervix plot delays
         ///RedKey(PartogramConstants.Params.CERVIX_PLOT.conceptId, "<6H") to 2.0

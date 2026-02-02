@@ -1126,7 +1126,7 @@ public class ObsDAO {
         }
 
         String query =
-                "SELECT o.comment, o.conceptuuid, o.encounteruuid " +
+                "SELECT o.comment, o.conceptuuid, o.encounteruuid, o.value " +
                         "FROM tbl_obs o " +
                         "INNER JOIN tbl_encounter e ON o.encounteruuid = e.uuid " +
                         "WHERE e.visituuid = ? " +
@@ -1154,12 +1154,14 @@ public class ObsDAO {
 
                 if (comment == null || comment.trim().isEmpty()) continue;
 
+                String value = cursor.getString(cursor.getColumnIndexOrThrow("value"));
+                if (resultMap.containsKey(value)) continue;
+
                 ObsDTO obs = new ObsDTO();
                 obs.setConceptuuid(conceptUuid);
                 obs.setComment(comment);
-                obs.setEncounteruuid(
-                        cursor.getString(cursor.getColumnIndexOrThrow("encounteruuid"))
-                );
+                obs.setValue(value);
+                obs.setEncounteruuid(cursor.getString(cursor.getColumnIndexOrThrow("encounteruuid")));
 
                 resultMap.put(conceptUuid, obs);
 
