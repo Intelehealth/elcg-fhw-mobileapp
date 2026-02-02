@@ -134,6 +134,10 @@
                         android:background="@drawable/ic_normal_alert"
                         android:gravity="center"
                         android:tag="0"
+                        android:paddingLeft="10dp"
+                        android:paddingRight="10dp"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="4dp"
                         android:text="25"
                         android:textSize="@dimen/alert_text_size" />
 

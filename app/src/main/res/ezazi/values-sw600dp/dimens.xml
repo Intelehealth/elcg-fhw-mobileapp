@@ -30,7 +30,7 @@
     <dimen name="small_btn_vertical_padding">@dimen/std_16dp</dimen>
     <dimen name="bottom_menu_text_size">@dimen/std_18sp</dimen>
     <dimen name="bottom_menu_icon_size">@dimen/std_40dp</dimen>
-    <dimen name="alert_icon_size">70dp</dimen>
+    <dimen name="alert_icon_size">90dp</dimen>
     <dimen name="design_bottom_navigation_height" tools:override="true">@dimen/std_84dp</dimen>
     <dimen name="heading1">@dimen/std_22sp</dimen>
     <dimen name="heading2">@dimen/std_20sp</dimen>
