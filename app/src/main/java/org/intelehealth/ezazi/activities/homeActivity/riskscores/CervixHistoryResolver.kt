@@ -1,6 +1,7 @@
 package org.intelehealth.ezazi.activities.homeActivity.riskscores
 
 import android.util.Log
+import com.google.gson.Gson
 import org.intelehealth.ezazi.models.dto.ObsDTO
 
 object CervixHistoryResolver {
@@ -11,14 +12,12 @@ object CervixHistoryResolver {
 
         // Sort by time
         val sorted = cervixObs.sortedBy {
-            it.obsServerModifiedDate.toMillis()
+            it.obsServerModifiedDate?.toMillis() ?: 0L
         }
 
         val latestObs = sorted.last()
-        Log.d("TAG", "resolve: latestObs : "+latestObs)
 
         val rawValue = latestObs.value ?: return null
-        Log.d("TAG", "resolve: rawValue : "+rawValue)
 
         val currentValue = rawValue.toIntOrNull() ?: return null
 

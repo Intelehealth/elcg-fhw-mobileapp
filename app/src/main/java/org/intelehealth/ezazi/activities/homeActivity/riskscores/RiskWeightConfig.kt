@@ -10,7 +10,7 @@ object RiskWeightConfig {
 
         // ---------------- Supportive care ----------------
         // Oral fluid: No / Declines = Red (1)
-        RedKey(PartogramConstants.Params.ORAL_FLUID.conceptId, "NO") to 1.0,
+        RedKey(PartogramConstants.Params.ORAL_FLUID.conceptId, "N") to 1.0,
 
         RedKey(PartogramConstants.Params.BASELINE_FHR.conceptId, "<110") to 1.0,
         RedKey(PartogramConstants.Params.BASELINE_FHR.conceptId, ">160") to 1.0,
@@ -27,7 +27,7 @@ object RiskWeightConfig {
         RedKey(PartogramConstants.Params.FETAL_POSITION.conceptId, "T") to 1.0,
 
         //Caput
-        RedKey(PartogramConstants.Params.CAPUT.conceptId, "+++ (Marked)") to 1.0,
+        RedKey(PartogramConstants.Params.CAPUT.conceptId, "+++") to 1.0,
         //Moulding
         RedKey(PartogramConstants.Params.MOULDING.conceptId, "+++") to 1.0,
 

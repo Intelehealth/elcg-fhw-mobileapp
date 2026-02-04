@@ -1,5 +1,6 @@
 package org.intelehealth.ezazi.activities.homeActivity
 
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.intelehealth.ezazi.activities.homeActivity.riskscores.AlertScoreCalculator
@@ -12,122 +13,53 @@ import org.intelehealth.ezazi.partogram.PartogramConstants
 
 object VisitAlertProcessor {
 
-        suspend fun processVisitsInBackground(
-            visits: List<ActivePatientModel>,
-            obsDAO: ObsDAO,
-            riskConcepts: Set<String>
-        ): List<ActivePatientModel> = withContext(Dispatchers.IO) {
-
-            visits.forEach { visit ->
-                val obsList = obsDAO.getLatestObsByVisitAndConcepts(visit.uuid, riskConcepts)
-
-                var totalScore = 0.0
-
-                obsList.forEach { obs ->
-                    totalScore += AlertScoreCalculator.calculate(obs, visit)
-                }
-
-                visit.alertFlagTotal = totalScore
-                visit.visibilityOrder = when {
-                    totalScore > 22 -> 3
-                    totalScore >= 15 -> 2
-                    else -> 1
-                }
-                val cervixObs = obsDAO.getCervixObsByVisit(visit.uuid, PartogramConstants.Params.CERVIX_PLOT.conceptId)
-                val cervixState = CervixHistoryResolver.resolve(cervixObs)
-
-                val cervixScore =
-                    cervixState?.let {
-                        CervixPlotEvaluator.calculateScore(listOf(it))
-                    } ?: 0.0
-
-                totalScore += cervixScore
-
-            }
-            visits
-        }
-    }
-
-    /*  suspend fun processVisitsInBackground(
-          visits: List<ActivePatientModel>,
-          obsDAO: ObsDAO,
-          riskConcepts: Set<String>
-      ): List<ActivePatientModel> = withContext(Dispatchers.IO) {
-
-          visits.forEach { visit ->
-
-              val obsList = obsDAO.getLatestObsByVisitAndConcepts(
-                  visit.uuid,
-                  riskConcepts
-              )
-
-              var totalScore = 0.0
-
-              obsList.forEach { obs ->
-
-                  val comment = obs.comment.trim().uppercase()
-                  val value = obs.value?.trim()?.uppercase() ?: return@forEach
-
-                  when (comment) {
-
-                      "G" -> Unit
-
-                      "Y" -> totalScore += RiskWeightConfig.YELLOW_WEIGHT
-
-                      "R" -> {
-                          val key = RedKey(obs.conceptuuid, value)
-                          totalScore += RiskWeightConfig.redWeights[key] ?: 0.0
-                      }
-                  }
-              }
-
-              visit.alertFlagTotal = totalScore
-
-              visit.visibilityOrder = when {
-                  totalScore > 22 -> 3
-                  totalScore >= 15 -> 2
-                  else -> 1
-              }
-          }
-
-          visits
-      }*/
-
-   /* suspend fun processVisitsInBackground(
+    suspend fun processVisitsInBackground(
         visits: List<ActivePatientModel>,
         obsDAO: ObsDAO,
         riskConcepts: Set<String>
     ): List<ActivePatientModel> = withContext(Dispatchers.IO) {
 
         visits.forEach { visit ->
+
             val obsList =
                 obsDAO.getLatestObsByVisitAndConcepts(
                     visit.uuid,
                     riskConcepts
                 )
 
-            var r = 0
-            var y = 0
-            var g = 0
+            var totalScore = 0.0
 
-            obsList.forEach { obs ->
-                when (obs.comment.trim().uppercase()) {
-                    "R" -> r++
-                    "Y" -> y++
-                    "G" -> g++
-                }
+            obsList.forEach { obs -> totalScore += AlertScoreCalculator.calculate(obs, visit)
             }
 
-            val total = (2 * r) + (1 * y)
+            val cervixObs =
+                obsDAO.getCervixObsByVisit(
+                    visit.uuid,
+                    PartogramConstants.Params.CERVIX_PLOT.conceptId
+                )
 
-            visit.alertFlagTotal = total
+            val cervixState =
+                CervixHistoryResolver.resolve(cervixObs)
+
+            val cervixScore =
+                cervixState?.let {
+                    CervixPlotEvaluator.calculateScore(listOf(it))
+                } ?: 0.0
+
+
+            totalScore += cervixScore
+
+            visit.alertFlagTotal = totalScore
+
             visit.visibilityOrder = when {
-                total > 22 -> 3   // Red
-                total >= 15 -> 2  // Yellow
-                else -> 1         // Green
+                totalScore > 22 -> 3
+                totalScore >= 15 -> 2
+                else -> 1
             }
         }
 
         visits
-    }*/
+    }
+}
+
 

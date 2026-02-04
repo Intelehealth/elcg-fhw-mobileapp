@@ -1181,7 +1181,7 @@ public class ObsDAO {
         db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
 
         String query =
-                "SELECT o.comment, o.conceptuuid, o.encounteruuid, e.encounter_time " +
+                "SELECT o.comment, o.conceptuuid, o.encounteruuid, e.encounter_time, o.value " +
                         "FROM tbl_obs o " +
                         "INNER JOIN tbl_encounter e ON o.encounteruuid = e.uuid " +
                         "WHERE e.visituuid = ? " +
@@ -1204,6 +1204,10 @@ public class ObsDAO {
                         cursor.getString(cursor.getColumnIndexOrThrow("comment"));
 
                 if (comment == null || comment.trim().isEmpty()) continue;
+                String value =
+                        cursor.getString(cursor.getColumnIndexOrThrow("value"));
+
+                if (value == null || value.trim().isEmpty()) continue;
 
                 ObsDTO obs = new ObsDTO();
                 obs.setConceptuuid(cervixConceptUuid);
@@ -1214,7 +1218,7 @@ public class ObsDAO {
                 obs.setObsServerModifiedDate(
                         cursor.getString(cursor.getColumnIndexOrThrow("encounter_time"))
                 );
-
+                obs.setValue(value);
                 list.add(obs);
             }
         } finally {
