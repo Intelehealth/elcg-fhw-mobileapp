@@ -3,12 +3,14 @@ package org.intelehealth.ezazi.database.dao;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.BIRTH_OUTCOME;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.END_2ND_STAGE_OTHER;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.LABOUR_OTHER;
+import static org.intelehealth.ezazi.utilities.UuidDictionary.LCG_SOS;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.MISSED_ENCOUNTER;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.ENCOUNTER_TYPE;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.MOTHER_DECEASED;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.MOTHER_DECEASED_FLAG;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.OUT_OF_TIME;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.REFER_TYPE;
+import static org.intelehealth.ezazi.utilities.UuidDictionary.SOS_STAGE_HOUR;
 
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -528,8 +530,8 @@ public class ObsDAO {
         EncounterDTO.Status status = EncounterDTO.Status.PENDING;
         db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
 
-        Cursor idCursor = db.rawQuery("SELECT * FROM tbl_obs where encounteruuid = ? AND voided='0' AND conceptuuid != ?",
-                new String[]{encounterUuid, ENCOUNTER_TYPE});
+        Cursor idCursor = db.rawQuery("SELECT * FROM tbl_obs where encounteruuid = ? AND voided='0' AND (conceptuuid != ? AND conceptuuid != ?) ",
+                new String[]{encounterUuid, ENCOUNTER_TYPE, SOS_STAGE_HOUR});
 
         if (idCursor.getCount() <= 0) {
             // that means there is no obs for this enc which means that this encounter is missed...
@@ -578,8 +580,8 @@ public class ObsDAO {
         EncounterDTO.Status status = EncounterDTO.Status.MISSED;
         db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
 
-        Cursor idCursor = db.rawQuery("SELECT * FROM tbl_obs where encounteruuid = ? AND voided='0' AND conceptuuid NOT IN (?, ?)",
-                new String[]{encounterUuid, MISSED_ENCOUNTER, ENCOUNTER_TYPE});
+        Cursor idCursor = db.rawQuery("SELECT * FROM tbl_obs where encounteruuid = ? AND voided='0' AND conceptuuid NOT IN (?, ?, ?)",
+                new String[]{encounterUuid, MISSED_ENCOUNTER, ENCOUNTER_TYPE, SOS_STAGE_HOUR});
 
 //        if (idCursor.getCount() <= 0) {
 //            // that means there is no obs for this enc which means that this encounter is missed... or not yet filled up.
@@ -657,8 +659,8 @@ public class ObsDAO {
         int isMissed = 0;
         db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
 
-        Cursor idCursor = db.rawQuery("SELECT * FROM tbl_obs where encounteruuid = ? AND voided='0' AND conceptuuid != ?",
-                new String[]{encounterUuid, UuidDictionary.ENCOUNTER_TYPE});
+        Cursor idCursor = db.rawQuery("SELECT * FROM tbl_obs where encounteruuid = ? AND voided='0' AND (conceptuuid != ? AND conceptuuid != ?)",
+                new String[]{encounterUuid, UuidDictionary.ENCOUNTER_TYPE, SOS_STAGE_HOUR});
 
         if (idCursor.getCount() <= 0) {
             /* This means against this enc there is no obs. Which means this obs is not filled yet. */
@@ -755,8 +757,8 @@ public class ObsDAO {
         db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
 
         Cursor idCursor = db.rawQuery("SELECT value FROM tbl_obs where encounteruuid = ? " +
-                        "AND voided='0' AND conceptuuid = ?",
-                new String[]{encounterUuid, ENCOUNTER_TYPE});
+                        "AND voided='0' AND (conceptuuid = ? OR conceptuuid = ?) ",
+                new String[]{encounterUuid, ENCOUNTER_TYPE, SOS_STAGE_HOUR});
 
         if (idCursor.getCount() > 0) {
             while (idCursor.moveToNext()) {
@@ -1227,5 +1229,17 @@ public class ObsDAO {
 
         return list;
     }
-
+    public String getLatestSosObsByEncounterUuid(String encounterUuid) {
+      String valueOfPreviousSosObsRecord = "";
+        db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
+        Cursor idCursor = db.rawQuery("SELECT * FROM tbl_obs where encounteruuid = ? AND conceptuuid = ? AND voided='0'",
+                new String[]{encounterUuid, SOS_STAGE_HOUR});
+        if (idCursor.getCount() != 0) {
+            while (idCursor.moveToNext()) {
+                valueOfPreviousSosObsRecord =idCursor.getString(idCursor.getColumnIndexOrThrow("comment"));
+            }
+        }
+        idCursor.close();
+        return valueOfPreviousSosObsRecord;
+    }
 }

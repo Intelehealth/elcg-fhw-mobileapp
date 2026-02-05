@@ -143,5 +143,7 @@ public class UuidDictionary {
     public static final String MEDICINE_PRESCRIBED = "ce75ed49-0eac-44f0-ac91-bcf9c5d1d700";//Medicine Prescribed
     public static final String OXYTOCIN_PRESCRIBED = "6eef8ae6-e6b3-46f1-a58c-393bd6d0e8c8";//Oxytocin U/l, Drops per min, Prescribed
     public static final String IV_FLUID_PRESCRIBED = "0c21f925-d225-48ce-9e98-bb1cc5638e04";//IV fluids Prescribed
+    public static final String LCG_SOS = "6ce3e2eb-35d4-4aa2-aa77-6d1d3b3f524a"; //Indicates that a SOS is raised & patient has been monitored in emergency situation outside regular cycles - encounter_type_id - 160
 
+    public static final String SOS_STAGE_HOUR = "2c3fb8df-b844-4e4c-8852-40917a98eef8"; //Concept to specify the stage and hour when the SOS was raised
 }
