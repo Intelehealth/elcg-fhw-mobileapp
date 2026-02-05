@@ -52,9 +52,17 @@ object VisitAlertProcessor {
             visit.alertFlagTotal = totalScore
 
             visit.visibilityOrder = when {
-                totalScore > 22 -> 3
-                totalScore >= 15 -> 2
+                totalScore > 3.5 -> 3
+                (totalScore in 0.5..3.5) -> 2
                 else -> 1
+            }
+            val encounterUUID = visit.latestEncounterId
+            if (!encounterUUID.isNullOrBlank()) {
+                val isSubmitted = obsDAO.checkObsExistsOrNot(encounterUUID)
+                if (isSubmitted == 1) { // not yet filled
+                    visit.obsExistsFlag = true
+                    visit.visibilityOrder = 4
+                }
             }
         }
 
