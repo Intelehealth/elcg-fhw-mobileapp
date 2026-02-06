@@ -75,7 +75,7 @@ public class IntelehealthApplication extends MultiDexApplication implements Appl
         sessionManager = new SessionManager(this);
         // keeping the base url in one singleton object for using in apprtc module
 
-        configureCrashReporting();
+        //configureCrashReporting();
 
         RxJavaPlugins.setErrorHandler(throwable -> {
              FirebaseCrashlytics.getInstance().recordException(throwable);

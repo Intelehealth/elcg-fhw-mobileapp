@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.intelehealth.ezazi.activities.visitSummaryActivity.EncounterTypeResolver;
 import org.intelehealth.ezazi.builder.QueryBuilder;
 import org.intelehealth.ezazi.models.dto.EncounterDTO;
 import org.intelehealth.ezazi.ui.visit.model.CompletedVisitStatus;
@@ -763,7 +764,9 @@ public class ObsDAO {
         if (idCursor.getCount() > 0) {
             while (idCursor.moveToNext()) {
                 String value = idCursor.getString(idCursor.getColumnIndexOrThrow("value"));
-                if (value.equals(EncounterDTO.Type.SOS.name())) type = EncounterDTO.Type.SOS;
+                //if (value.equals(EncounterDTO.Type.SOS.name())) type = EncounterDTO.Type.SOS;//old
+                EncounterTypeResolver resolver = new EncounterTypeResolver();
+                type = resolver.resolve(value);
             }
         }
         idCursor.close();
@@ -1236,7 +1239,7 @@ public class ObsDAO {
                 new String[]{encounterUuid, SOS_STAGE_HOUR});
         if (idCursor.getCount() != 0) {
             while (idCursor.moveToNext()) {
-                valueOfPreviousSosObsRecord =idCursor.getString(idCursor.getColumnIndexOrThrow("comment"));
+                valueOfPreviousSosObsRecord =idCursor.getString(idCursor.getColumnIndexOrThrow("value"));
             }
         }
         idCursor.close();

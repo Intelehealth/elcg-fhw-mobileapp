@@ -1204,6 +1204,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
             sosEncounter.setEncounterTypeUuid(UuidDictionary.LCG_SOS);
             sosEncounter.setVoided(encounterDTO.getVoided());
             sosEncounter.setPrivacynotice_value(encounterDTO.getPrivacynotice_value());
+            sosEncounter.setSyncd(false);
             encounterDAO.createSosEncountersToDB(sosEncounter);
 
             //2 Create sos - obs
@@ -1214,9 +1215,9 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
             obsDTO.setCreator(sessionManager.getCreatorID());
             obsDTO.setEncounteruuid(encounterUuid);
             obsDTO.setCreatorUuid(sessionManager.getCreatorID());
-            obsDTO.setValue(EncounterDTO.Type.SOS.name());
+            obsDTO.setValue(nextEncounterTypeName);
             obsDTO.setCreatedDate(DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
-            obsDTO.setComment(nextEncounterTypeName);
+            //obsDTO.setComment(nextEncounterTypeName);
             obsDAO.insertObs(obsDTO);
 
         } catch (DAOException e) {

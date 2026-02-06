@@ -338,7 +338,12 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
             Log.d(TAG, "nextIntent: encounterDTOList.get(getAbsoluteAdapterPosition()).getEncounterTypeName() : "+encounterDTOList.get(getAbsoluteAdapterPosition()).getEncounterTypeUuid());
             if(encounterDTOList.get(getAbsoluteAdapterPosition()).getEncounterTypeUuid().equals(UuidDictionary.LCG_SOS)){
                 type = HOURLY;
-                encounterType = EncounterDTO.Type.SOS.name();
+                //encounterType = EncounterDTO.Type.SOS.name();
+                EncounterTypeResolver resolver = new EncounterTypeResolver();
+                EncounterDTO.Type enumOfTypes = resolver.resolve(encounterType);
+                encounterType = enumOfTypes.name();
+                Log.v("nextIntent", "encounterType - " + encounterType);
+
             }else{
                 if(encounterName!=null && !encounterName.isEmpty()){
                     String[] name = encounterName.split("_");
