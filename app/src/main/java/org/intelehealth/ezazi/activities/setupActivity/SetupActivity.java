@@ -152,7 +152,7 @@ public class SetupActivity extends AppCompatActivity {
     CustomProgressDialog customProgressDialog;
 
     //    private BroadcastReceiver MyReceiver = null;
-    CoordinatorLayout coordinatorLayout;
+    //CoordinatorLayout coordinatorLayout;
     //    HashMap<String, String> hashMap1, hashMap2, hashMap3, hashMap4;
 //    boolean value = false;
     String base_url;
@@ -169,7 +169,7 @@ public class SetupActivity extends AppCompatActivity {
         sessionManager = new SessionManager(SetupActivity.this);
 
         setupUrl = BuildConfig.SERVER_URL;
-        coordinatorLayout = findViewById(R.id.coordinatorLayout);
+        //coordinatorLayout = findViewById(R.id.coordinatorLayout);
         TokenRefreshUtils.refreshToken(this);
         context = SetupActivity.this;
         customProgressDialog = new CustomProgressDialog(context);

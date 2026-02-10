@@ -4,7 +4,10 @@
     <dimen name="negative_vector_margin">-200dp</dimen>
     <dimen name="screen_title_size">@dimen/std_36sp</dimen>
     <dimen name="screen_padding">@dimen/std_50dp</dimen>
-    <dimen name="login_screen_padding">@dimen/std_135dp</dimen>
+<!--
+    Some view was not showing properly on the tab that's why updated padding 28 dp from 135 dp
+-->
+    <dimen name="login_screen_padding">@dimen/std_28dp</dimen>
     <dimen name="screen_container_padding">@dimen/std_20dp</dimen>
     <dimen name="list_container_padding">@dimen/std_8dp</dimen>
     <dimen name="input_height">86dp</dimen>
