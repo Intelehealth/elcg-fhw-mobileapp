@@ -15,16 +15,14 @@ object VisitAlertProcessor {
 
     suspend fun processVisitsInBackground(
         visits: List<ActivePatientModel>,
-        obsDAO: ObsDAO,
-        riskConcepts: Set<String>
     ): List<ActivePatientModel> = withContext(Dispatchers.IO) {
-
+        val obsDAO = ObsDAO()
         visits.forEach { visit ->
 
             val obsList =
                 obsDAO.getLatestObsByVisitAndConcepts(
                     visit.uuid,
-                    riskConcepts
+                    RiskConcepts.RISK_CONCEPTS
                 )
 
             var totalScore = 0.0

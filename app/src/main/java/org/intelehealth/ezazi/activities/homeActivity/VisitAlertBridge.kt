@@ -11,16 +11,12 @@ object VisitAlertBridge {
     fun processVisits(
         scope: CoroutineScope,
         visits: List<ActivePatientModel>,
-        obsDAO: ObsDAO,
-        riskConcepts: Set<String>,
         onResult: (@JvmSuppressWildcards List<ActivePatientModel>) -> Unit
     ) {
         scope.launch {
             val result =
                 VisitAlertProcessor.processVisitsInBackground(
-                    visits,
-                    obsDAO,
-                    riskConcepts
+                    visits
                 )
 
             onResult(result)
