@@ -17,6 +17,8 @@ import android.widget.Toast;
 
 import androidx.annotation.StringRes;
 import androidx.core.content.IntentCompat;
+import androidx.lifecycle.LifecycleCoroutineScope;
+import androidx.lifecycle.LifecycleOwnerKt;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -24,6 +26,7 @@ import com.google.gson.Gson;
 
 import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.activities.epartogramActivity.EpartogramViewActivity;
+import org.intelehealth.ezazi.activities.homeActivity.VisitAlertBridge;
 import org.intelehealth.ezazi.activities.splash_activity.SplashActivity;
 import org.intelehealth.ezazi.app.AppConstants;
 import org.intelehealth.ezazi.app.IntelehealthApplication;
@@ -32,6 +35,7 @@ import org.intelehealth.ezazi.database.dao.ObsDAO;
 import org.intelehealth.ezazi.database.dao.PatientsDAO;
 import org.intelehealth.ezazi.database.dao.VisitAttributeListDAO;
 import org.intelehealth.ezazi.database.dao.VisitsDAO;
+import org.intelehealth.ezazi.models.ActivePatientModel;
 import org.intelehealth.ezazi.models.dto.EncounterDTO;
 import org.intelehealth.ezazi.models.dto.ObsDTO;
 import org.intelehealth.ezazi.partogram.adapter.PartogramQueryListingAdapter;
@@ -60,6 +64,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+
+import kotlin.Unit;
 
 public class PartogramDataCaptureActivity extends BaseActionBarActivity {
     private static final String TAG = "PartogramDataCaptureAct";
@@ -512,6 +518,26 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                 }
                 new EncounterDAO().updateEncounterSync("false", mEncounterUUID);
 
+                //Changes for EZ-657 here
+                // 1 Calculate risk factor here
+                // 2 Update in visit attribute table
+
+                LifecycleCoroutineScope scope = LifecycleOwnerKt.getLifecycleScope(this);
+                ActivePatientModel activePatientModel = new ActivePatientModel();
+                activePatientModel.setUuid(mVisitUUID);
+                activePatientModel.setLatestEncounterId(mEncounterUUID);
+                List<ActivePatientModel> visits = new ArrayList<>();
+                visits.add(activePatientModel);
+                VisitAlertBridge.processVisits(scope, visits, result -> {
+                            //showOnHomeScreen(result);
+                            // activePatientModel.setAlertFlagTotal(res);
+                            Log.d(TAG, "saveObs: kaveri result : "+new Gson().toJson(result));
+                            if(result!=null){
+                                long updated = new VisitAttributeListDAO().upsertVisitAttribute(mVisitUUID, UuidDictionary.VISIT_RISK, String.valueOf(result.get(0).getAlertFlagTotal()));
+                            }
+                    return Unit.INSTANCE;
+                        }
+                );
 
                 new VisitsDAO().updateVisitSync(mVisitUUID, "false");
                 new VisitAttributeListDAO().markVisitAsRead(mVisitUUID);

@@ -115,7 +115,8 @@ public class VisitAttributeListDAO {
             if (visitDTO.getVisitAttributeTypeUuid().equalsIgnoreCase(VISIT_DR_SPECIALITY)
                     || visitDTO.getVisitAttributeTypeUuid().equalsIgnoreCase(VISIT_HOLDER)
                     || visitDTO.getVisitAttributeTypeUuid().equalsIgnoreCase(VISIT_READ_STATUS) ||
-                    visitDTO.getVisitAttributeTypeUuid().equalsIgnoreCase(UuidDictionary.DECISION_PENDING)) {
+                    visitDTO.getVisitAttributeTypeUuid().equalsIgnoreCase(UuidDictionary.DECISION_PENDING) ||
+                    visitDTO.getVisitAttributeTypeUuid().equalsIgnoreCase(UuidDictionary.VISIT_RISK)) {
                 createdRecordsCount = db.insertWithOnConflict("tbl_visit_attribute", null, values, SQLiteDatabase.CONFLICT_REPLACE);
             }
             if (createdRecordsCount != -1) {
@@ -308,4 +309,58 @@ public class VisitAttributeListDAO {
         idCursor.close();
         return isExist;
     }
+
+    public long upsertVisitAttribute(String visitId, String attributeId, String value) {
+
+        Log.d(TAG, "upsertVisitAttribute: visitId : " + visitId);
+        Log.d(TAG, "upsertVisitAttribute: attributeId : " + attributeId);
+        Log.d(TAG, "upsertVisitAttribute: value : " + value);
+
+        long result = -1;
+        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
+
+        ContentValues values = new ContentValues();
+        values.put("value", value);
+        values.put("voided", "0");
+        values.put("sync", "0");
+
+        String whereClause = "visit_uuid=? AND visit_attribute_type_uuid=?";
+
+        db.beginTransaction();
+        try {
+            //  UPDATE
+            int rows = db.update(
+                    "tbl_visit_attribute",
+                    values,
+                    whereClause,
+                    new String[]{visitId, attributeId}
+            );
+            Log.d(TAG, "upsertVisitAttribute:rows :  "+rows);
+            //  INSERT
+            if (rows == 0) {
+                values.put("uuid", UUID.randomUUID().toString());
+                values.put("visit_uuid", visitId);
+                values.put("visit_attribute_type_uuid", attributeId);
+                values.put("voided", "0");
+                values.put("sync", "0");
+
+                result = db.insert("tbl_visit_attribute", null, values);
+            } else {
+                result = rows;
+            }
+
+            db.setTransactionSuccessful();
+
+            Logger.logD("upsertVisitAttribute", "result = " + result);
+
+        } catch (SQLException e) {
+            Timber.tag(TAG).e(e);
+            Log.e(TAG, "upsertVisitAttribute error", e);
+        } finally {
+            db.endTransaction();
+        }
+
+        return result;
+    }
+
 }

@@ -1152,7 +1152,7 @@ public class ObsDAO {
                 String conceptUuid =
                         cursor.getString(cursor.getColumnIndexOrThrow("conceptuuid"));
 
-                //if (resultMap.containsKey(conceptUuid)) continue;
+                if (resultMap.containsKey(conceptUuid)) continue;
 
                 String comment =
                         cursor.getString(cursor.getColumnIndexOrThrow("comment"));
@@ -1160,7 +1160,7 @@ public class ObsDAO {
                 if (comment == null || comment.trim().isEmpty()) continue;
 
                 String value = cursor.getString(cursor.getColumnIndexOrThrow("value"));
-                if (resultMap.containsKey(value)) continue;
+                if (resultMap.containsKey(conceptUuid)) continue;
 
                 ObsDTO obs = new ObsDTO();
                 obs.setConceptuuid(conceptUuid);
