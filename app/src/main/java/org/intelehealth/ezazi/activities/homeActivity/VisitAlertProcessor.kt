@@ -49,7 +49,7 @@ object VisitAlertProcessor {
 
             visit.alertFlagTotal = totalScore
 
-            visit.visibilityOrder = when {
+            /*visit.visibilityOrder = when {
                 totalScore > 3.5 -> 3
                 (totalScore in 0.5..3.5) -> 2
                 else -> 1
@@ -61,7 +61,7 @@ object VisitAlertProcessor {
                     visit.obsExistsFlag = true
                     visit.visibilityOrder = 4
                 }
-            }
+            }*/
         }
 
         visits
