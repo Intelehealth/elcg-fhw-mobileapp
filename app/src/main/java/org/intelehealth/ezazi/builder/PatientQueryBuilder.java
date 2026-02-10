@@ -2,6 +2,7 @@ package org.intelehealth.ezazi.builder;
 
 import static org.intelehealth.ezazi.utilities.UuidDictionary.DECISION_PENDING;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.ENCOUNTER_VISIT_COMPLETE;
+import static org.intelehealth.ezazi.utilities.UuidDictionary.VISIT_RISK;
 
 import android.util.Log;
 
@@ -75,6 +76,8 @@ public class PatientQueryBuilder extends QueryBuilder {
                 "AND encounter_type_uuid != '" + ENCOUNTER_VISIT_COMPLETE + "' ORDER BY encounter_time DESC limit 1) " +
                 "as latestEncounterId,  (SELECT value FROM tbl_visit_attribute where " +
                 "visit_attribute_type_uuid ='" + DECISION_PENDING + "' AND visit_uuid = V.uuid) as outcomePending, " +
+                "(SELECT value FROM tbl_visit_attribute WHERE visit_attribute_type_uuid ='" + VISIT_RISK + "' " +
+                " AND visit_uuid = V.uuid) AS visitRisk, " +
                 getCurrentStageCase())
                 .from("tbl_visit  V")
                 .join("LEFT OUTER JOIN tbl_patient P ON P.uuid = V.patientuuid " +
