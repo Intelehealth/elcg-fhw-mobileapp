@@ -2331,15 +2331,13 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
 
         // Step 1: get visits
         List<ActivePatientModel> visits = new VisitQueryResultBinder().executeActiveVisitsQuery(offset, limit);
-
-        // Step 2: coroutine scope
-        LifecycleCoroutineScope scope = LifecycleOwnerKt.getLifecycleScope(this);
-
+        showOnHomeScreen(visits);
+      /*  LifecycleCoroutineScope scope = LifecycleOwnerKt.getLifecycleScope(this);
         VisitAlertBridge.processVisits(scope, visits, result -> {
                     showOnHomeScreen(result);
                     return Unit.INSTANCE;
                 }
-        );
+        );*/
     }
 
     private void showOnHomeScreen(List<ActivePatientModel> visits) {

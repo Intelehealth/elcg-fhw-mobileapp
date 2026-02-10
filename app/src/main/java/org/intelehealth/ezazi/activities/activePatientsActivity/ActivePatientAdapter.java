@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -132,6 +133,8 @@ public class ActivePatientAdapter extends RecyclerView.Adapter<ActivePatientAdap
         // alert -> start
         double riskScore = activePatientModel.getAlertFlagTotal();
         double count = activePatientModel.getAlertFlagTotal();
+        Log.d("TAG", "onBindViewHolder: riskScore : "+riskScore);
+        Log.d("TAG", "onBindViewHolder: count : "+count);
 
         holder.ivPriscription.setText(String.valueOf(riskScore));
         if (count > 3.5) { // red //prev - count > 22

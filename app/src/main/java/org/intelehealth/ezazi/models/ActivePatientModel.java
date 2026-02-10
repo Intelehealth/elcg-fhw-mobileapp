@@ -25,6 +25,9 @@ public class ActivePatientModel {
 
     private String bedNo;
 
+    public ActivePatientModel() {
+    }
+
     private String latestEncounterId;
 
 
