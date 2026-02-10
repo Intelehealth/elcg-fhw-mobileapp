@@ -146,4 +146,5 @@ public class UuidDictionary {
     public static final String LCG_SOS = "6ce3e2eb-35d4-4aa2-aa77-6d1d3b3f524a"; //Indicates that a SOS is raised & patient has been monitored in emergency situation outside regular cycles - encounter_type_id - 160
 
     public static final String SOS_STAGE_HOUR = "2c3fb8df-b844-4e4c-8852-40917a98eef8"; //Concept to specify the stage and hour when the SOS was raised
+    public static final String VISIT_RISK = "0e798578-96c1-450b-9927-52e45485b151";
 }
