@@ -73,20 +73,26 @@ public class EncounterDAO {
         values.put("sync", encounter.getSyncd());
         values.put("voided", encounter.getVoided());
         values.put("privacynotice_value", encounter.getPrivacynotice_value());
-        try {
+        String encounterTypeUuid = encounter.getEncounterTypeUuid();
+        if(encounterTypeUuid!=null && !encounterTypeUuid.isEmpty() && !encounterTypeUuid.equalsIgnoreCase(LCG_SOS)){
+            try {
 
-            if (isEncounterAlreadyAvailable(encounter.getVisituuid(), encounter.getEncounterTypeUuid())) {
-                db.update("tbl_encounter", values, "uuid = ?", new String[]{encounter.getUuid()});
-                return true;
-            } else {
-                //Log.d("VALUES:", "VALUES: " + values);
-                createdRecordsCount = db.insertWithOnConflict("tbl_encounter", null, values, SQLiteDatabase.CONFLICT_REPLACE);
+                if (isEncounterAlreadyAvailable(encounter.getVisituuid(), encounter.getEncounterTypeUuid())) {
+                    db.update("tbl_encounter", values, "uuid = ?", new String[]{encounter.getUuid()});
+                    return true;
+                } else {
+                    //Log.d("VALUES:", "VALUES: " + values);
+                    createdRecordsCount = db.insertWithOnConflict("tbl_encounter", null, values, SQLiteDatabase.CONFLICT_REPLACE);
+                }
+            } catch (SQLException e) {
+                isCreated = false;
+                throw new DAOException(e.getMessage(), e);
+            } finally {
             }
-        } catch (SQLException e) {
-            isCreated = false;
-            throw new DAOException(e.getMessage(), e);
-        } finally {
+        }else{
+            createdRecordsCount = db.insertWithOnConflict("tbl_encounter", null, values, SQLiteDatabase.CONFLICT_REPLACE);
         }
+
         return isCreated;
     }
 
