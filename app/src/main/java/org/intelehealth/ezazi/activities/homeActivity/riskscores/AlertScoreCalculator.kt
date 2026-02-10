@@ -59,9 +59,6 @@ object AlertScoreCalculator {
             PartogramConstants.Params.DIASTOLIC_BP.conceptId ->
                 if (value >= 90) 1.0 else 0.0
 
-            PartogramConstants.Params.BASELINE_FHR.conceptId ->
-                if (value < 110 || value >= 160) 1.0 else 0.0
-
             else -> 0.0
         }
     }

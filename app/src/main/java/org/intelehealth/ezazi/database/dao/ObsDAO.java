@@ -1152,7 +1152,7 @@ public class ObsDAO {
                 String conceptUuid =
                         cursor.getString(cursor.getColumnIndexOrThrow("conceptuuid"));
 
-                if (resultMap.containsKey(conceptUuid)) continue;
+                //if (resultMap.containsKey(conceptUuid)) continue;
 
                 String comment =
                         cursor.getString(cursor.getColumnIndexOrThrow("comment"));

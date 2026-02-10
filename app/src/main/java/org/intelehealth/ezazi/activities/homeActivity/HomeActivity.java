@@ -2335,7 +2335,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
         // Step 2: coroutine scope
         LifecycleCoroutineScope scope = LifecycleOwnerKt.getLifecycleScope(this);
 
-        VisitAlertBridge.processVisits(scope, visits, obsDAO, RiskConcepts.RISK_CONCEPTS, result -> {
+        VisitAlertBridge.processVisits(scope, visits, result -> {
                     showOnHomeScreen(result);
                     return Unit.INSTANCE;
                 }
