@@ -1138,7 +1138,7 @@ public class ObsDAO {
                         "AND o.voided = '0' " +
                         "AND e.voided IN ('0','false','FALSE') " +
                         "AND o.conceptuuid IN (" + inClause + ") " +
-                        "ORDER BY e.encounter_time DESC";
+                        "ORDER BY o.modified_date DESC";
 
         List<String> argsList = new ArrayList<>();
         argsList.add(visitUuid);
