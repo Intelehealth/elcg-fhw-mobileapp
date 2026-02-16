@@ -66,12 +66,14 @@ import org.intelehealth.ezazi.models.loginProviderModel.LoginProviderModel;
 import org.intelehealth.ezazi.networkApiCalls.ApiClient;
 import org.intelehealth.ezazi.networkApiCalls.ApiInterface;
 import org.intelehealth.ezazi.services.firebase_services.TokenRefreshUtils;
+import org.intelehealth.ezazi.ui.dialog.AppDialogUtils;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
 import org.intelehealth.ezazi.ui.password.activity.ForgotPasswordActivity;
 import org.intelehealth.ezazi.ui.shared.InputChangeValidationListener;
 import org.intelehealth.ezazi.ui.validation.AlphabetsInputFilter;
 import org.intelehealth.ezazi.utilities.Base64Utils;
 import org.intelehealth.ezazi.utilities.Logger;
+import org.intelehealth.ezazi.utilities.NetworkConnection;
 import org.intelehealth.ezazi.utilities.SessionManager;
 import org.intelehealth.ezazi.utilities.StringEncryption;
 import org.intelehealth.ezazi.utilities.TextThemeUtils;
@@ -192,7 +194,11 @@ public class SetupActivity extends AppCompatActivity {
         mLoginButton.setOnClickListener(v -> {
             InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             inputMethodManager.hideSoftInputFromWindow(mLoginButton.getWindowToken(), 0);
-            attemptLogin();
+            if (NetworkConnection.isOnline(SetupActivity.this)) {
+                attemptLogin();
+            }else{
+                showErrorOnNoInternet();
+            }
         });
 
         addValidationListener();
@@ -225,7 +231,11 @@ public class SetupActivity extends AppCompatActivity {
                     base_url = setupUrl + "/openmrs/ws/rest/v1/";
                     if (URLUtil.isValidUrl(BASE_URL) && !isLocationFetched)
 //                                value = getLocationFromServer(BASE_URL); //state wise locations...
+                    if (NetworkConnection.isOnline(SetupActivity.this)) {
                         getLocationFromServer(BASE_URL);
+                    }else{
+                        showErrorOnNoInternet();
+                    }
                     else
                         Toast.makeText(SetupActivity.this, getString(R.string.url_invalid), Toast.LENGTH_SHORT).show();
                 }
@@ -916,5 +926,18 @@ public class SetupActivity extends AppCompatActivity {
         mPasswordView.requestFocus();
         mLoginButton.setText(getString(R.string.action_sign_in));
         mLoginButton.setEnabled(true);
+    }
+
+    private void showErrorOnNoInternet() {
+        AppDialogUtils.showSingleButtonDialog(
+                this,
+                getString(R.string.no_internet_setup_screen_title),
+                getString(R.string.no_internet_setup_screen_body),
+                getString(R.string.ok),
+                () -> {
+                    //finish();
+                    return null;
+                }
+        );
     }
 }

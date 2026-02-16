@@ -49,6 +49,7 @@ import com.google.gson.Gson;
 import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.activities.epartogramActivity.EpartogramViewActivity;
 import org.intelehealth.ezazi.activities.homeActivity.HomeActivity;
+import org.intelehealth.ezazi.activities.setupActivity.SetupActivity;
 import org.intelehealth.ezazi.app.AppConstants;
 import org.intelehealth.ezazi.app.IntelehealthApplication;
 import org.intelehealth.ezazi.database.dao.EncounterDAO;
@@ -63,6 +64,7 @@ import org.intelehealth.ezazi.models.dto.VisitAttributeDTO;
 import org.intelehealth.ezazi.partogram.PartogramDataCaptureActivity;
 import org.intelehealth.ezazi.services.firebase_services.FirebaseRealTimeDBUtils;
 import org.intelehealth.ezazi.syncModule.SyncUtils;
+import org.intelehealth.ezazi.ui.dialog.AppDialogUtils;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
 import org.intelehealth.ezazi.ui.dialog.CustomViewDialogFragment;
 import org.intelehealth.ezazi.ui.dialog.SingleChoiceDialogFragment;
@@ -199,16 +201,21 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 
         initUI();
         fabSOS.setOnClickListener(view -> {
-            Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-            // Vibrate for 500 milliseconds
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                v.vibrate(VibrationEffect.createOneShot(1000, VibrationEffect.DEFAULT_AMPLITUDE));
-            } else {
-                //deprecated in API 26
-                v.vibrate(1000);
+            if(NetworkConnection.isOnline(TimelineVisitSummaryActivity.this)){
+                Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+                // Vibrate for 500 milliseconds
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    v.vibrate(VibrationEffect.createOneShot(1000, VibrationEffect.DEFAULT_AMPLITUDE));
+                } else {
+                    //deprecated in API 26
+                    v.vibrate(1000);
+                }
+
+                showEmergencyDialog();
+            }else{
+                showErrorOnNoInternet();
             }
 
-            showEmergencyDialog();
         });
         fabc.setOnClickListener(view -> {
             showDoctorSelectionDialog(true);
@@ -472,30 +479,35 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 
         // clicking on this open dialog to confirm and start stage 2 | If stage 2 already open then ends visit.
         endStageButton.setOnClickListener(v -> {
-            if (stageNo == 1) {
-                // showEndShiftDialog(); //old flow
-                FragmentManager fragmentManager = getSupportFragmentManager();
+            if(NetworkConnection.isOnline(TimelineVisitSummaryActivity.this)){
+                if (stageNo == 1) {
+                    // showEndShiftDialog(); //old flow
+                    FragmentManager fragmentManager = getSupportFragmentManager();
 
-                new CompleteVisitOnEndStage1Dialog(this, visitUuid, (isEndStage1) -> {
-                    if (isEndStage1) {
-                        //for end stage 1 option
-                        cancelStage1ConfirmationDialog();
-                    } else {
-                        //for all refer options and mother deceased
-                        showToastAndUploadVisitForStage1(true, getResources().getString(R.string.data_added_successfully));
-                    }
-                }).buildDialogSingleSelection(fragmentManager); //for single selection
-                //buildDialog();  //for custom dialog
-            } else if (stageNo == 2) {
-                // show dialog and add birth outcome also show extra options like: Refer to other hospital & Self Discharge
-                new CompleteVisitOnEnd2StageDialog(this, visitUuid, (hasLabour, hasMotherDeceased) -> {
-                    if (!hasLabour) {
-                        showToastAndUploadVisit(true, getResources().getString(R.string.data_added_successfully));
-                    } else {
-                        showLabourBottomSheetDialog(hasMotherDeceased);
-                    }
-                }).buildDialog();
+                    new CompleteVisitOnEndStage1Dialog(this, visitUuid, (isEndStage1) -> {
+                        if (isEndStage1) {
+                            //for end stage 1 option
+                            cancelStage1ConfirmationDialog();
+                        } else {
+                            //for all refer options and mother deceased
+                            showToastAndUploadVisitForStage1(true, getResources().getString(R.string.data_added_successfully));
+                        }
+                    }).buildDialogSingleSelection(fragmentManager); //for single selection
+                    //buildDialog();  //for custom dialog
+                } else if (stageNo == 2) {
+                    // show dialog and add birth outcome also show extra options like: Refer to other hospital & Self Discharge
+                    new CompleteVisitOnEnd2StageDialog(this, visitUuid, (hasLabour, hasMotherDeceased) -> {
+                        if (!hasLabour) {
+                            showToastAndUploadVisit(true, getResources().getString(R.string.data_added_successfully));
+                        } else {
+                            showLabourBottomSheetDialog(hasMotherDeceased);
+                        }
+                    }).buildDialog();
+                }
+            }else{
+                showErrorOnNoInternet();
             }
+
         });
 
         mCountDownTimer.cancel();
@@ -1232,5 +1244,15 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         fetchAllEncountersFromVisitForTimelineScreen(visitUuid);
     }
 
-
+    private void showErrorOnNoInternet() {
+        AppDialogUtils.showSingleButtonDialog(
+                this,
+                getString(R.string.no_internet_timeline_screen_title),
+                getString(R.string.no_internet_timeline_screen_body),
+                getString(R.string.ok),
+                () -> {
+                    return null;
+                }
+        );
+    }
 }

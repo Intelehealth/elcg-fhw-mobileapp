@@ -146,8 +146,14 @@
     <string name="hint_add_new_assessment">Enter your assessment here</string>
     <string name="no_prescription_available">No prescription available</string>
     <string name="error_login_str">Error Login</string>
-    <string name="no_internet_title">Service temporarily unavailable.</string>
+    <string name="no_internet_title">Service temporarily unavailable</string>
     <string name="no_internet_content">We’re experiencing difficulty loading the LCG. Please check back shortly or contact support if the issue persists.</string>
+    <string name="no_internet_home_screen_title">Internet connection lost!</string>
+    <string name="no_internet_home_screen_body">You can access patient records, but adding or updating information is not possible until you are back online.</string>
+    <string name="no_internet_timeline_screen_title">You are offline</string>
+    <string name="no_internet_timeline_screen_body">Connect to the internet to continue using the app.</string>
+    <string name="no_internet_setup_screen_title">No internet connection</string>
+    <string name="no_internet_setup_screen_body">Please check your connection and try again.</string>
 
 
 </resources>

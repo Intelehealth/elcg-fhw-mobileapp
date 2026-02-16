@@ -13,6 +13,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
@@ -26,6 +27,8 @@ import org.intelehealth.ezazi.models.dto.EncounterDTO;
 import org.intelehealth.ezazi.models.dto.ObsDTO;
 import org.intelehealth.ezazi.partogram.PartogramConstants;
 import org.intelehealth.ezazi.partogram.PartogramDataCaptureActivity;
+import org.intelehealth.ezazi.ui.dialog.AppDialogUtils;
+import org.intelehealth.ezazi.utilities.NetworkConnection;
 import org.intelehealth.ezazi.utilities.SessionManager;
 import org.intelehealth.ezazi.utilities.UuidDictionary;
 import org.intelehealth.klivekit.utils.DateTimeUtils;
@@ -316,14 +319,18 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
             ivEdit.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    nextIntent(PartogramConstants.AccessMode.EDIT);
+                    if(handleNoInternetCase()){
+                        nextIntent(PartogramConstants.AccessMode.EDIT);
+                    }
                 }
             });
             cardview.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    PartogramConstants.AccessMode mode = (PartogramConstants.AccessMode) view.getTag();
-                    nextIntent(mode);
+                    if(handleNoInternetCase()) {
+                        PartogramConstants.AccessMode mode = (PartogramConstants.AccessMode) view.getTag();
+                        nextIntent(mode);
+                    }
                 }
             });
         }
@@ -413,5 +420,22 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
         if (status == EncounterDTO.Status.PENDING) return R.string.tap_here_to_capture_obs;
         else if (status == EncounterDTO.Status.MISSED) return R.string.you_have_missed_obs;
         else return R.string.you_have_captured_obs;
+    }
+    private boolean handleNoInternetCase() {
+        boolean isInternetAvailable=true;
+        if (!NetworkConnection.isOnline(context)) {
+            isInternetAvailable = false;
+            AppDialogUtils.showSingleButtonDialog(
+                    (FragmentActivity)context,
+                    context.getString(R.string.no_internet_timeline_screen_title),
+                    context.getString(R.string.no_internet_timeline_screen_body),
+                    context.getString(R.string.ok),
+                    () -> {
+                        //finish();
+                        return null;
+                    }
+            );
+        }
+        return isInternetAvailable;
     }
 }

@@ -96,6 +96,7 @@ import org.intelehealth.ezazi.services.firebase_services.CallListenerBackgroundS
 import org.intelehealth.ezazi.services.firebase_services.DeviceInfoUtils;
 import org.intelehealth.ezazi.services.firebase_services.TokenRefreshUtils;
 import org.intelehealth.ezazi.syncModule.SyncUtils;
+import org.intelehealth.ezazi.ui.dialog.AppDialogUtils;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
 import org.intelehealth.ezazi.ui.dialog.MultiChoiceDialogFragment;
 import org.intelehealth.ezazi.ui.dialog.SingleChoiceDialogFragment;
@@ -112,6 +113,7 @@ import org.intelehealth.ezazi.ui.visit.activity.VisitStatusActivity;
 import org.intelehealth.ezazi.ui.visit.data.VisitRepository;
 import org.intelehealth.ezazi.utilities.FileUtils;
 import org.intelehealth.ezazi.utilities.Logger;
+import org.intelehealth.ezazi.utilities.NetworkConnection;
 import org.intelehealth.ezazi.utilities.NotificationUtils;
 import org.intelehealth.ezazi.utilities.OfflineLogin;
 import org.intelehealth.ezazi.utilities.SessionManager;
@@ -497,39 +499,40 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
         mEndShiftTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                try {
-                    String providerId = new SessionManager(IntelehealthApplication.getAppContext()).getProviderID();
-                    Logger.logV(TAG, "myCreatorUUID - " + providerId);
-                    visitDTOList = new VisitsDAO().getAllActiveVisitByProviderId(providerId);
-                    String[] patients = new String[visitDTOList.size()];
+                if (NetworkConnection.isOnline(context)) {
+                    try {
+                        String providerId = new SessionManager(IntelehealthApplication.getAppContext()).getProviderID();
+                        Logger.logV(TAG, "myCreatorUUID - " + providerId);
+                        visitDTOList = new VisitsDAO().getAllActiveVisitByProviderId(providerId);
+                        String[] patients = new String[visitDTOList.size()];
 
-                    ArrayList<MultiChoiceItem> items = new ArrayList<>();
-                    for (int i = 0; i < visitDTOList.size(); i++) {
-                        String visitUid = visitDTOList.get(i).getUuid();
-                        String creatorUuid = visitDTOList.get(i).getCreatoruuid();
-                        Logger.logV(TAG, "visitUid - " + visitUid);
-                        Logger.logV(TAG, "creatorUuid - " + creatorUuid);
-                        PatientsDAO patientsDAO = new PatientsDAO();
-                        FamilyMemberRes patientNameInfo = patientsDAO.getPatientNameInfo(visitDTOList.get(i).getPatientuuid());
-                        patientNameInfo.setVisitUuid(visitUid);
-                        items.add(patientNameInfo);
-                        String patientNameString = patientNameInfo.getOpenMRSID() + "\n" + patientNameInfo.getName();
-                        Logger.logV(TAG, "patientNameString - " + patientNameString);
-                        patients[i] = patientNameString;
-                    }
+                        ArrayList<MultiChoiceItem> items = new ArrayList<>();
+                        for (int i = 0; i < visitDTOList.size(); i++) {
+                            String visitUid = visitDTOList.get(i).getUuid();
+                            String creatorUuid = visitDTOList.get(i).getCreatoruuid();
+                            Logger.logV(TAG, "visitUid - " + visitUid);
+                            Logger.logV(TAG, "creatorUuid - " + creatorUuid);
+                            PatientsDAO patientsDAO = new PatientsDAO();
+                            FamilyMemberRes patientNameInfo = patientsDAO.getPatientNameInfo(visitDTOList.get(i).getPatientuuid());
+                            patientNameInfo.setVisitUuid(visitUid);
+                            items.add(patientNameInfo);
+                            String patientNameString = patientNameInfo.getOpenMRSID() + "\n" + patientNameInfo.getName();
+                            Logger.logV(TAG, "patientNameString - " + patientNameString);
+                            patients[i] = patientNameString;
+                        }
 //                    if (patients.length == 0) {
 //                        Toast.makeText(context, getString(R.string.no_more_visits_to_assign), Toast.LENGTH_SHORT).show();
 //                        showLogoutAlert();
 //                        return;
 //                    }
 
-                    if (items.size() == 0) {
-                        Toast.makeText(context, getString(R.string.no_more_visits_to_assign), Toast.LENGTH_SHORT).show();
-                        showLogoutAlert();
-                        return;
-                    }
+                        if (items.size() == 0) {
+                            Toast.makeText(context, getString(R.string.no_more_visits_to_assign), Toast.LENGTH_SHORT).show();
+                            showLogoutAlert();
+                            return;
+                        }
 
-                    showPatientChoiceDialog(items);
+                        showPatientChoiceDialog(items);
 
 //                    List<String> visitUUIDList = new ArrayList<>();
 //                    AlertDialog.Builder builder =
@@ -553,9 +556,13 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
 //                                }
 //                            });
 //                    builder.create().show();
-                } catch (DAOException e) {
-                    e.printStackTrace();
+                    } catch (DAOException e) {
+                        e.printStackTrace();
+                    }
+                }else{
+                    showErrorOnNoInternet();
                 }
+
             }
         });
 
@@ -781,6 +788,11 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
             sync();
         }
         enableProperPadding(HomeActivity.this);
+
+        if (!NetworkConnection.isOnline(context)) {
+            showErrorOnNoInternet();
+        }
+
     }
 
     private void showPatientChoiceDialog(ArrayList<MultiChoiceItem> items) {
@@ -855,7 +867,8 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
             Toast.makeText(context, getString(R.string.syncInProgress), Toast.LENGTH_LONG).show();
             syncUtils.syncForeground("home");
         } else {
-            Toast.makeText(context, context.getString(R.string.failed_synced), Toast.LENGTH_LONG).show();
+            showErrorOnNoInternetOnRefresh();
+            //Toast.makeText(context, context.getString(R.string.failed_synced), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -2351,5 +2364,29 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
 
         setActiveCasesCount();
         showDecisionPendingVisits();
+    }
+    private void showErrorOnNoInternet() {
+        AppDialogUtils.showSingleButtonDialog(
+                this,
+                getString(R.string.no_internet_home_screen_title),
+                getString(R.string.no_internet_home_screen_body),
+                getString(R.string.ok),
+                () -> {
+                    //finish();
+                    return null;
+                }
+        );
+    }
+    private void showErrorOnNoInternetOnRefresh() {
+        AppDialogUtils.showSingleButtonDialog(
+                this,
+                getString(R.string.no_internet_setup_screen_title),
+                getString(R.string.no_internet_setup_screen_body),
+                getString(R.string.ok),
+                () -> {
+                    //finish();
+                    return null;
+                }
+        );
     }
 }
