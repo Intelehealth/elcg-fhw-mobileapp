@@ -260,7 +260,7 @@ public class PatientsDAO {
     public List<Attribute> getPatientAttributes(String patientuuid) throws DAOException {
         List<Attribute> patientAttributesList = new ArrayList<>();
         SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
-        db.beginTransaction();
+        //db.beginTransaction();
         try {
             String query = "SELECT * from tbl_patient_attribute WHERE patientuuid= '" + patientuuid + "'";
             Cursor cursor = db.rawQuery(query, null, null);
@@ -275,11 +275,11 @@ public class PatientsDAO {
                 }
             }
             cursor.close();
-            db.setTransactionSuccessful();
+            //db.setTransactionSuccessful();
         } catch (SQLException e) {
             throw new DAOException(e.getMessage());
         } finally {
-            db.endTransaction();
+            //db.endTransaction();
 
         }
         return patientAttributesList;
@@ -522,7 +522,7 @@ public class PatientsDAO {
     public List<PatientDTO> unsyncedPatients() throws DAOException {
         List<PatientDTO> patientDTOList = new ArrayList<>();
         SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
-        db.beginTransaction();
+        //db.beginTransaction();
         try {
             Cursor idCursor = db.rawQuery("SELECT * FROM tbl_patient where (sync = ? OR sync=?) COLLATE NOCASE", new String[]{"0", "false"});
             PatientDTO patientDTO = new PatientDTO();
@@ -549,12 +549,12 @@ public class PatientsDAO {
                 }
             }
             idCursor.close();
-            db.setTransactionSuccessful();
+           // db.setTransactionSuccessful();
         } catch (SQLException e) {
             FirebaseCrashlytics.getInstance().recordException(e);
             throw new DAOException(e);
         } finally {
-            db.endTransaction();
+           // db.endTransaction();
 
         }
 

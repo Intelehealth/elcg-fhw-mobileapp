@@ -237,7 +237,7 @@ public class VisitsDAO {
     public List<VisitDTO> unsyncedVisits() {
         List<VisitDTO> visitDTOList = new ArrayList<>();
         SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
-        db.beginTransaction();
+        //db.beginTransaction();
         Cursor idCursor = db.rawQuery("SELECT * FROM tbl_visit where sync IN (?,?,?) COLLATE NOCASE", new String[]{"0", "false", "FALSE"});
         VisitDTO visitDTO = new VisitDTO();
         if (idCursor.getCount() != 0) {
@@ -276,8 +276,8 @@ public class VisitsDAO {
             }
         }
         idCursor.close();
-        db.setTransactionSuccessful();
-        db.endTransaction();
+       // db.setTransactionSuccessful();
+        //db.endTransaction();
 
 //        List<VisitAttribute_Speciality> list = new ArrayList<>();
 //        list = fetchVisitAttr_Speciality();
@@ -290,7 +290,7 @@ public class VisitsDAO {
     private List<VisitAttribute_Speciality> fetchVisitAttr_Speciality(String visit_uuid) {
         List<VisitAttribute_Speciality> list = new ArrayList<>();
         SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
-        db.beginTransaction();
+        //db.beginTransaction();
 
 //        Cursor cursor = db.rawQuery("SELECT * FROM tbl_visit_attribute WHERE sync=? AND visit_uuid=?",
 //                new String[] {"0", visit_uuid});
@@ -306,8 +306,8 @@ public class VisitsDAO {
             }
         }
         cursor.close();
-        db.setTransactionSuccessful();
-        db.endTransaction();
+        //db.setTransactionSuccessful();
+        //db.endTransaction();
 
         return list;
     }
@@ -439,7 +439,7 @@ public class VisitsDAO {
     public String patientUuidByViistUuid(String visituuid) {
         String patientUuidByViistUuid = "";
         SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
-        db.beginTransaction();
+        //db.beginTransaction();
         Cursor cursor = db.rawQuery("SELECT patientuuid FROM tbl_visit where uuid = ? ", new String[]{visituuid});
         if (cursor.getCount() != 0) {
             while (cursor.moveToNext()) {
@@ -447,8 +447,8 @@ public class VisitsDAO {
             }
         }
         cursor.close();
-        db.setTransactionSuccessful();
-        db.endTransaction();
+        //db.setTransactionSuccessful();
+        //db.endTransaction();
 
 
         return patientUuidByViistUuid;

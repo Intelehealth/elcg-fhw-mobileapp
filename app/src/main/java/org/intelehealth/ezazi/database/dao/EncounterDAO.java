@@ -245,7 +245,7 @@ public class EncounterDAO {
     public List<EncounterDTO> unsyncedEncounters() {
         List<EncounterDTO> encounterDTOList = new ArrayList<>();
         SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
-        db.beginTransaction();
+        //db.beginTransaction();
         //Distinct keyword is used to remove all duplicate records.
 /*
         Cursor idCursor = db.rawQuery("SELECT distinct a.uuid,a.visituuid,a.encounter_type_uuid,a.provider_uuid,a.encounter_time," +
@@ -275,8 +275,8 @@ public class EncounterDAO {
             }
         }
         idCursor.close();
-        db.setTransactionSuccessful();
-        db.endTransaction();
+        //db.setTransactionSuccessful();
+        //db.endTransaction();
 
         Gson gson = new Gson();
         Log.d("ENC_GSON: ", "ENC_GSON: " + gson.toJson(encounterDTOList));
