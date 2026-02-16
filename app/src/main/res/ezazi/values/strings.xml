@@ -146,5 +146,8 @@
     <string name="hint_add_new_assessment">Enter your assessment here</string>
     <string name="no_prescription_available">No prescription available</string>
     <string name="error_login_str">Error Login</string>
+    <string name="no_internet_title">Service temporarily unavailable.</string>
+    <string name="no_internet_content">We’re experiencing difficulty loading the LCG. Please check back shortly or contact support if the issue persists.</string>
+
 
 </resources>

@@ -122,7 +122,8 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
 //            webView.loadDataWithBaseURL(null, webArchiveFile, "text/html", "UTF-8", null);
         } else {
             webView.setVisibility(View.GONE);
-            Toast.makeText(this, getString(R.string.please_connect_to_internet), Toast.LENGTH_LONG).show();
+            //Toast.makeText(this, getString(R.string.please_connect_to_internet), Toast.LENGTH_LONG).show();
+            showPageLoadingErrorDialog();
         }
 
         Log.v("epartog", "webviewUrl: " + URL + visitUuid);
@@ -162,24 +163,38 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
         }
 
         @Override
-        public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+        public void onReceivedError(WebView view,
+                                    WebResourceRequest request,
+                                    WebResourceError error) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                Log.i("WEB_VIEW_TEST", "error code:" + error.getErrorCode());
+                if (request.isForMainFrame()) {
+                    Log.e(TAG, "Main frame error: " + error.getErrorCode());
+                    handleError();
+                }
             }
-            super.onReceivedError(view, request, error);
         }
 
         @Override
-        public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                Log.i("WEB_VIEW_TEST", "error code:" + errorResponse.getStatusCode());
+        public void onReceivedHttpError(WebView view,
+                                        WebResourceRequest request,
+                                        WebResourceResponse errorResponse) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                if (request.isForMainFrame()) {
+                    Log.e(TAG, "HTTP error: " + errorResponse.getStatusCode());
+
+                    if (errorResponse.getStatusCode() >= 400) {
+                        handleError();
+                    }
+                }
             }
-            super.onReceivedHttpError(view, request, errorResponse);
         }
 
         @Override
-        public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
-            super.onReceivedSslError(view, handler, error);
+        public void onReceivedSslError(WebView view,
+                                       SslErrorHandler handler,
+                                       SslError error) {
+            handler.cancel(); // Important
+            handleError();
         }
     };
 
@@ -190,15 +205,18 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
 
     private void showPageLoadingErrorDialog() {
         ConfirmationDialogFragment dialogFragment = new ConfirmationDialogFragment.Builder(this)
-                .content(getString(R.string.content_webview_page_loading_issue))
-                .positiveButtonLabel(R.string.retry_again)
-                .negativeButtonLabel(R.string.action_exit)
+                .title(R.string.no_internet_title)
+                .content(getString(R.string.no_internet_content))
+                .positiveButtonLabel(R.string.action_exit)
+                .hideNegativeButton(true)
                 .build();
 
         dialogFragment.setListener(new ConfirmationDialogFragment.OnConfirmationActionListener() {
             @Override
             public void onAccept() {
-                webView.reload();
+                //webView.reload();
+                ConfirmationDialogFragment.OnConfirmationActionListener.super.onDecline();
+                finish();
             }
 
             @Override

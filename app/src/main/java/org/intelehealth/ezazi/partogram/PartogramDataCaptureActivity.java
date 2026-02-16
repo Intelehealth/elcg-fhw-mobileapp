@@ -549,7 +549,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                     public void run() {
                          isSynced = syncUtils.syncForeground("visitSummary");
                     }
-                }, 300);
+                }, 400);
                 if (isSynced) {
                     Toast.makeText(this, "Data uploaded successfully!", Toast.LENGTH_SHORT).show();
                     // AppConstants.notificationUtils.DownloadDone(getString(R.string.visit_data_upload), getString(R.string.visit_uploaded_successfully), 3, PartogramDataCaptureActivity.this);
