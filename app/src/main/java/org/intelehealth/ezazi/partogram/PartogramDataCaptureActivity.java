@@ -534,7 +534,6 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                 VisitAlertBridge.processVisits(scope, visits, result -> {
                             //showOnHomeScreen(result);
                             // activePatientModel.setAlertFlagTotal(res);
-                            Log.d(TAG, "saveObs: kaveri result : "+new Gson().toJson(result));
                             if(result!=null){
                                 long updated = new VisitAttributeListDAO().upsertVisitAttribute(mVisitUUID, UuidDictionary.VISIT_RISK, String.valueOf(result.get(0).getAlertFlagTotal()));
                             }
