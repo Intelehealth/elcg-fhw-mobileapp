@@ -1138,7 +1138,7 @@ public class ObsDAO {
                         "AND o.voided = '0' " +
                         "AND e.voided IN ('0','false','FALSE') " +
                         "AND o.conceptuuid IN (" + inClause + ") " +
-                        "ORDER BY o.modified_date DESC";
+                        "ORDER BY o.created_date DESC";
 
         List<String> argsList = new ArrayList<>();
         argsList.add(visitUuid);
@@ -1169,6 +1169,10 @@ public class ObsDAO {
                 obs.setEncounteruuid(cursor.getString(cursor.getColumnIndexOrThrow("encounteruuid")));
 
                 resultMap.put(conceptUuid, obs);
+                Log.d(TAG, ""+new Gson().toJson(resultMap));
+                Log.d(TAG, "getLatestObsByVisitAndConcepts: resultMap size :  "+resultMap.size());
+                Log.d(TAG, "getLatestObsByVisitAndConcepts: riskConcepts  size:  "+riskConcepts.size());
+
 
                 if (resultMap.size() == riskConcepts.size()) break;
             }
@@ -1178,6 +1182,7 @@ public class ObsDAO {
 
         return new ArrayList<>(resultMap.values());
     }
+
     public List<ObsDTO> getCervixObsByVisit(
             String visitUuid,
             String cervixConceptUuid
@@ -1193,7 +1198,7 @@ public class ObsDAO {
                         "AND o.voided = '0' " +
                         "AND e.voided IN ('0','false','FALSE') " +
                         "AND o.conceptuuid = ? " +
-                        "ORDER BY e.encounter_time ASC"; // IMPORTANT
+                        "ORDER BY e.encounter_time ASC";
 
         Cursor cursor = db.rawQuery(
                 query,
@@ -1245,4 +1250,63 @@ public class ObsDAO {
         idCursor.close();
         return valueOfPreviousSosObsRecord;
     }
+
+    /*public List<ObsDTO> getLatestObsByVisitAndConcepts(
+            String visitUuid,
+            Set<String> riskConcepts
+    ) {
+
+        if (riskConcepts == null || riskConcepts.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
+
+        StringBuilder inClause = new StringBuilder();
+        for (int i = 0; i < riskConcepts.size(); i++) {
+            inClause.append("?");
+            if (i < riskConcepts.size() - 1) inClause.append(",");
+        }
+
+        String query =
+                "SELECT o.comment, o.conceptuuid, o.encounteruuid, o.value " +
+                        "FROM tbl_obs o " +
+                        "INNER JOIN tbl_encounter e ON o.encounteruuid = e.uuid " +
+                        "WHERE e.visituuid = ? " +
+                        "AND o.voided = '0' " +
+                        "AND e.voided IN ('0','false','FALSE') " +
+                        "AND o.conceptuuid IN (" + inClause + ") " +
+                        "AND o.modified_date = (" +
+                        "   SELECT MAX(o2.modified_date) " +
+                        "   FROM tbl_obs o2 " +
+                        "   INNER JOIN tbl_encounter e2 ON o2.encounteruuid = e2.uuid " +
+                        "   WHERE e2.visituuid = e.visituuid " +
+                        "   AND o2.conceptuuid = o.conceptuuid " +
+                        "   AND o2.voided = '0'" +
+                        ")";
+
+        List<String> argsList = new ArrayList<>();
+        argsList.add(visitUuid);
+        argsList.addAll(riskConcepts);
+
+        Cursor cursor = db.rawQuery(query, argsList.toArray(new String[0]));
+
+        List<ObsDTO> result = new ArrayList<>();
+
+        try {
+            while (cursor.moveToNext()) {
+                ObsDTO obs = new ObsDTO();
+                obs.setConceptuuid(cursor.getString(cursor.getColumnIndexOrThrow("conceptuuid")));
+                obs.setComment(cursor.getString(cursor.getColumnIndexOrThrow("comment")));
+                obs.setValue(cursor.getString(cursor.getColumnIndexOrThrow("value")));
+                obs.setEncounteruuid(cursor.getString(cursor.getColumnIndexOrThrow("encounteruuid")));
+                result.add(obs);
+            }
+        } finally {
+            cursor.close();
+        }
+
+        return result;
+    }
+*/
 }

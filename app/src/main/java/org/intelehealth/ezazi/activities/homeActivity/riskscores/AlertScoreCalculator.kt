@@ -14,7 +14,18 @@ object AlertScoreCalculator {
 
         return when (obs.comment.trim().uppercase()) {
             "G" -> 0.0
+
+            "Y" -> {
+                val yellowWeight = RiskWeightConfig.YELLOW_WEIGHT
+                Log.d(
+                    "RiskDebug",
+                    "Yellow weight calculated: conceptId=${obs.conceptuuid}, value='${obs.value}', weight=$yellowWeight, patient=${visit.first_name + visit.last_name}"
+                )
+                yellowWeight
+            }
+/*
             "Y" -> RiskWeightConfig.YELLOW_WEIGHT
+*/
             "R" -> calculateRedScore(obs,visit)
             else -> 0.0
         }
@@ -32,7 +43,7 @@ object AlertScoreCalculator {
             calculateCategoricalRed(conceptId, rawValue, obs.encounteruuid,visit)
         }
     }
-    private fun calculateNumericRed(
+    /*private fun calculateNumericRed(
         conceptId: String,
         value: Double
     ): Double {
@@ -61,7 +72,7 @@ object AlertScoreCalculator {
 
             else -> 0.0
         }
-    }
+    }*/
     /*private fun calculateCategoricalRed(
         conceptId: String,
         value: String
@@ -99,5 +110,42 @@ object AlertScoreCalculator {
         return weight ?: 0.0
     }
 
+    private fun calculateNumericRed(
+        conceptId: String,
+        value: Double
+    ): Double {
+        val redWeight = when (conceptId) {
+            PartogramConstants.Params.BASELINE_FHR.conceptId ->
+                if (value < 110 || value >= 160) 1.0 else 0.0
+
+            PartogramConstants.Params.CONTRACTION_PER_10_MIN.conceptId ->
+                if (value <= 2 || value > 5) 1.0 else 0.0
+
+            PartogramConstants.Params.DURATION_OF_CONTRACTION.conceptId ->
+                if (value < 20 || value > 60) 1.0 else 0.0
+
+            PartogramConstants.Params.PULSE.conceptId ->
+                if (value < 60 || value >= 120) 1.0 else 0.0
+
+            PartogramConstants.Params.TEMPERATURE.conceptId ->
+                if (value < 35 || value >= 37.5) 1.0 else 0.0
+
+            PartogramConstants.Params.SYSTOLIC_BP.conceptId ->
+                if (value < 80 || value >= 140) 1.0 else 0.0
+
+            PartogramConstants.Params.DIASTOLIC_BP.conceptId ->
+                if (value >= 90) 1.0 else 0.0
+
+            else -> 0.0
+        }
+
+        // Logging the concept and the calculated weight
+        Log.d(
+            "RiskDebug",
+            "NumericRed → conceptId: $conceptId, value: $value, redWeight: $redWeight"
+        )
+
+        return redWeight
+    }
 
 }

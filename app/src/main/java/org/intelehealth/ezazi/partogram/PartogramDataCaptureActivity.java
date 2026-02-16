@@ -8,6 +8,8 @@ import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MenuItem;
@@ -90,6 +92,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
     private static final int FIVE_HOURLY = 4;
     private String encounterName = "";
     private String encounterType = "";
+    private boolean isSynced = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -541,9 +544,13 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
 
                 new VisitsDAO().updateVisitSync(mVisitUUID, "false");
                 new VisitAttributeListDAO().markVisitAsRead(mVisitUUID);
-
                 SyncUtils syncUtils = new SyncUtils();
-                boolean isSynced = syncUtils.syncForeground("visitSummary");
+                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                         isSynced = syncUtils.syncForeground("visitSummary");
+                    }
+                }, 300);
                 if (isSynced) {
                     Toast.makeText(this, "Data uploaded successfully!", Toast.LENGTH_SHORT).show();
                     // AppConstants.notificationUtils.DownloadDone(getString(R.string.visit_data_upload), getString(R.string.visit_uploaded_successfully), 3, PartogramDataCaptureActivity.this);

@@ -1,6 +1,7 @@
 package org.intelehealth.ezazi.activities.homeActivity
 
 import android.util.Log
+import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.intelehealth.ezazi.activities.homeActivity.riskscores.AlertScoreCalculator
@@ -28,24 +29,23 @@ object VisitAlertProcessor {
             var totalScore = 0.0
 
             obsList.forEach { obs -> totalScore += AlertScoreCalculator.calculate(obs, visit)
+                Log.d("TAG", "processVisitsInBackground: obs : "+Gson().toJson(obs))
+
+                Log.d("TAG", "processVisitsInBackground: totalScore : "+totalScore)
             }
 
-            val cervixObs =
-                obsDAO.getCervixObsByVisit(
-                    visit.uuid,
-                    PartogramConstants.Params.CERVIX_PLOT.conceptId
-                )
+            val cervixObs = obsDAO.getCervixObsByVisit(visit.uuid, PartogramConstants.Params.CERVIX_PLOT.conceptId)
 
-            val cervixState =
-                CervixHistoryResolver.resolve(cervixObs)
+            val cervixState = CervixHistoryResolver.resolve(cervixObs)
 
-            val cervixScore =
-                cervixState?.let {
-                    CervixPlotEvaluator.calculateScore(listOf(it))
-                } ?: 0.0
+            val cervixScore = cervixState?.let { CervixPlotEvaluator.calculateScore(listOf(it)) } ?: 0.0
 
 
             totalScore += cervixScore
+            Log.d("TAG", "processVisitsInBackground: totalScore : "+totalScore)
+            Log.d("TAG", "processVisitsInBackground: cervixScore : "+cervixScore)
+            Log.d("TAG", "processVisitsInBackground: cervixScore : "+cervixScore)
+
 
             visit.alertFlagTotal = totalScore
 
