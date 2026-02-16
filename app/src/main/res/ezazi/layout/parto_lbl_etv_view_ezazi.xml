@@ -23,8 +23,10 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:text="Param name"
+                android:paddingEnd="@dimen/std_8dp"
                 android:textSize="@dimen/caption"
                 app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/etvData"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
