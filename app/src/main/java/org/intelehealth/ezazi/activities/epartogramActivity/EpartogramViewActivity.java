@@ -205,8 +205,8 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
 
     private void showPageLoadingErrorDialog() {
         ConfirmationDialogFragment dialogFragment = new ConfirmationDialogFragment.Builder(this)
-                .title(R.string.no_internet_title)
-                .content(getString(R.string.no_internet_content))
+                .title(R.string.no_internet_timeline_screen_title)
+                .content(getString(R.string.no_internet_timeline_screen_body))
                 .positiveButtonLabel(R.string.action_exit)
                 .hideNegativeButton(true)
                 .build();
@@ -231,7 +231,8 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
 
     private void showInternetRequireDialog() {
         ConfirmationDialogFragment dialogFragment = new ConfirmationDialogFragment.Builder(this)
-                .content(getString(R.string.content_elcg_internet_require))
+                .title(R.string.no_internet_timeline_screen_title)
+                .content(getString(R.string.no_internet_timeline_screen_body))
                 .positiveButtonLabel(R.string.ok)
                 .hideNegativeButton(true)
                 .build();
