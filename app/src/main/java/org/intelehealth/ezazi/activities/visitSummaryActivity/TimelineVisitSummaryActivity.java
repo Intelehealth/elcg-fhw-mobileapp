@@ -364,7 +364,11 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 //                boolean isTablet = getResources().getBoolean(R.bool.isTablet);
 //                if (isTablet) showEpartogram();
 //                else showRequireTabletView();
-                showEpartogram();
+                if(NetworkConnection.isOnline(TimelineVisitSummaryActivity.this)) {
+                    showEpartogram();
+                }else{
+                    showErrorOnNoInternet();
+                }
                 break;
             case android.R.id.home:
                 finish();
