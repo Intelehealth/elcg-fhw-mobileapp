@@ -56,6 +56,7 @@ import org.intelehealth.ezazi.ui.rtc.activity.EzaziVideoCallActivity;
 import org.intelehealth.ezazi.ui.rtc.call.CallInitializer;
 import org.intelehealth.ezazi.ui.visit.model.LabourInfo;
 import org.intelehealth.ezazi.utilities.DateAndTimeUtils;
+import org.intelehealth.ezazi.utilities.InternetDialogHelper;
 import org.intelehealth.ezazi.utilities.NetworkConnection;
 import org.intelehealth.ezazi.utilities.SessionManager;
 import org.intelehealth.ezazi.utilities.UuidDictionary;
@@ -205,7 +206,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
 //                Toast.makeText(context, R.string.this_option_available_tablet_device, Toast.LENGTH_SHORT).show();
 //            }
             } else{
-                showErrorOnNoInternet();
+               InternetDialogHelper.showNoInternetDialog(PartogramDataCaptureActivity.this);
             }
 
         });
@@ -214,7 +215,10 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
         btnChat.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showDoctorSelectionDialog(true);
+                boolean isInternetAvailable = InternetDialogHelper.checkInternetOrShow(PartogramDataCaptureActivity.this);
+                if(isInternetAvailable) {
+                    showDoctorSelectionDialog(true);
+                }
 //                EncounterDAO encounterDAO = new EncounterDAO();
 //                EncounterDTO encounterDTO = encounterDAO.getEncounterByVisitUUIDLimit1(mVisitUUID);
 //                RTCConnectionDAO rtcConnectionDAO = new RTCConnectionDAO();
@@ -243,7 +247,10 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
         btnVideoCall.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showDoctorSelectionDialog(false);
+                boolean isInternetAvailable = InternetDialogHelper.checkInternetOrShow(PartogramDataCaptureActivity.this);
+                if(isInternetAvailable){
+                    showDoctorSelectionDialog(false);
+                }
 //                EncounterDAO encounterDAO = new EncounterDAO();
 //                EncounterDTO encounterDTO = encounterDAO.getEncounterByVisitUUIDLimit1(mVisitUUID);
 ////                RTCConnectionDAO rtcConnectionDAO = new RTCConnectionDAO();
@@ -898,16 +905,5 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
         } else {
             Toast.makeText(this, "Unable to upload the data!", Toast.LENGTH_SHORT).show();
         }
-    }
-    private void showErrorOnNoInternet() {
-        AppDialogUtils.showSingleButtonDialog(
-                this,
-                getString(R.string.no_internet_timeline_screen_title),
-                getString(R.string.no_internet_timeline_screen_body),
-                getString(R.string.ok),
-                () -> {
-                    return null;
-                }
-        );
     }
 }

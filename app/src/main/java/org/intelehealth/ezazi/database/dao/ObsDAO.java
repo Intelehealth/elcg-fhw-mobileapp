@@ -11,6 +11,7 @@ import static org.intelehealth.ezazi.utilities.UuidDictionary.MOTHER_DECEASED_FL
 import static org.intelehealth.ezazi.utilities.UuidDictionary.OUT_OF_TIME;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.REFER_TYPE;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.SOS_STAGE_HOUR;
+import static org.intelehealth.ezazi.utilities.UuidDictionary.STAGE1_HOUR1_1;
 
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -1251,62 +1252,28 @@ public class ObsDAO {
         return valueOfPreviousSosObsRecord;
     }
 
-    /*public List<ObsDTO> getLatestObsByVisitAndConcepts(
-            String visitUuid,
-            Set<String> riskConcepts
-    ) {
-
-        if (riskConcepts == null || riskConcepts.isEmpty()) {
-            return Collections.emptyList();
-        }
+    public boolean getObsCountForVisit(String visitId) {
+        String query = "SELECT EXISTS ( " +
+                "SELECT 1 " +
+                "FROM tbl_encounter e " +
+                "INNER JOIN tbl_obs o " +
+                "ON o.encounteruuid = e.uuid " +
+                "AND o.voided = '0' " +
+                "WHERE e.visituuid = ? " +
+                ") AS has_obs";
 
         db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
+        Cursor cursor = db.rawQuery(query, new String[]{visitId});
+        boolean result = false;
 
-        StringBuilder inClause = new StringBuilder();
-        for (int i = 0; i < riskConcepts.size(); i++) {
-            inClause.append("?");
-            if (i < riskConcepts.size() - 1) inClause.append(",");
-        }
-
-        String query =
-                "SELECT o.comment, o.conceptuuid, o.encounteruuid, o.value " +
-                        "FROM tbl_obs o " +
-                        "INNER JOIN tbl_encounter e ON o.encounteruuid = e.uuid " +
-                        "WHERE e.visituuid = ? " +
-                        "AND o.voided = '0' " +
-                        "AND e.voided IN ('0','false','FALSE') " +
-                        "AND o.conceptuuid IN (" + inClause + ") " +
-                        "AND o.modified_date = (" +
-                        "   SELECT MAX(o2.modified_date) " +
-                        "   FROM tbl_obs o2 " +
-                        "   INNER JOIN tbl_encounter e2 ON o2.encounteruuid = e2.uuid " +
-                        "   WHERE e2.visituuid = e.visituuid " +
-                        "   AND o2.conceptuuid = o.conceptuuid " +
-                        "   AND o2.voided = '0'" +
-                        ")";
-
-        List<String> argsList = new ArrayList<>();
-        argsList.add(visitUuid);
-        argsList.addAll(riskConcepts);
-
-        Cursor cursor = db.rawQuery(query, argsList.toArray(new String[0]));
-
-        List<ObsDTO> result = new ArrayList<>();
-
-        try {
-            while (cursor.moveToNext()) {
-                ObsDTO obs = new ObsDTO();
-                obs.setConceptuuid(cursor.getString(cursor.getColumnIndexOrThrow("conceptuuid")));
-                obs.setComment(cursor.getString(cursor.getColumnIndexOrThrow("comment")));
-                obs.setValue(cursor.getString(cursor.getColumnIndexOrThrow("value")));
-                obs.setEncounteruuid(cursor.getString(cursor.getColumnIndexOrThrow("encounteruuid")));
-                result.add(obs);
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                result = cursor.getInt(0) == 1;
             }
-        } finally {
             cursor.close();
         }
 
         return result;
     }
-*/
+
 }

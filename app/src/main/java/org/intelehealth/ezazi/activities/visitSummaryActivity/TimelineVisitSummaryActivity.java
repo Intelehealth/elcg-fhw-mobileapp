@@ -365,7 +365,13 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 //                if (isTablet) showEpartogram();
 //                else showRequireTabletView();
                 if(NetworkConnection.isOnline(TimelineVisitSummaryActivity.this)) {
-                    showEpartogram();
+                    //show dialog for no data for elcg
+                    boolean doesVisitHasData = obsDAO.getObsCountForVisit(visitUuid);
+                    if(doesVisitHasData){
+                        showEpartogram();
+                    }else{
+                        showNoDataDialogForViewLcg();
+                    }
                 }else{
                     showErrorOnNoInternet();
                 }
@@ -1253,6 +1259,17 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
                 this,
                 getString(R.string.no_internet_timeline_screen_title),
                 getString(R.string.no_internet_timeline_screen_body),
+                getString(R.string.ok),
+                () -> {
+                    return null;
+                }
+        );
+    }
+    private void showNoDataDialogForViewLcg() {
+        AppDialogUtils.showSingleButtonDialog(
+                this,
+                getString(R.string.no_data_for_view_lcg_title),
+                getString(R.string.no_data_for_view_lcg_body),
                 getString(R.string.ok),
                 () -> {
                     return null;

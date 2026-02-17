@@ -154,6 +154,8 @@
     <string name="no_internet_timeline_screen_body">Connect to the internet to continue using the app.</string>
     <string name="no_internet_setup_screen_title">No internet connection</string>
     <string name="no_internet_setup_screen_body">Please check your connection and try again.</string>
+    <string name="no_data_for_view_lcg_title">Not Available!</string>
+    <string name="no_data_for_view_lcg_body">No observations found. Please record observations to view the LCG.</string>
 
 
 </resources>
