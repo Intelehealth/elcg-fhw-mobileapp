@@ -30,6 +30,7 @@ import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.activities.epartogramActivity.EpartogramViewActivity;
 import org.intelehealth.ezazi.activities.homeActivity.VisitAlertBridge;
 import org.intelehealth.ezazi.activities.splash_activity.SplashActivity;
+import org.intelehealth.ezazi.activities.visitSummaryActivity.TimelineVisitSummaryActivity;
 import org.intelehealth.ezazi.app.AppConstants;
 import org.intelehealth.ezazi.app.IntelehealthApplication;
 import org.intelehealth.ezazi.database.dao.EncounterDAO;
@@ -345,6 +346,9 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
 
 
     private void saveObs() throws DAOException {
+        boolean isInternetAvailable = InternetDialogHelper.checkInternetOrShow(PartogramDataCaptureActivity.this);
+        if(!isInternetAvailable)
+            return;
         ObsDAO obsDAO = new ObsDAO();
 
         // validation

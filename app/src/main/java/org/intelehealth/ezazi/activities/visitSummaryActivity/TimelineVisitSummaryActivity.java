@@ -82,6 +82,7 @@ import org.intelehealth.ezazi.ui.visit.dialog.CompleteVisitOnEnd2StageDialog;
 import org.intelehealth.ezazi.ui.visit.dialog.CompleteVisitOnEndStage1Dialog;
 import org.intelehealth.ezazi.ui.visit.model.CompletedVisitStatus;
 import org.intelehealth.ezazi.ui.visit.model.VisitOutcome;
+import org.intelehealth.ezazi.utilities.InternetDialogHelper;
 import org.intelehealth.ezazi.utilities.Logger;
 import org.intelehealth.ezazi.utilities.NetworkConnection;
 import org.intelehealth.ezazi.utilities.NotificationReceiver;
@@ -213,15 +214,21 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 
                 showEmergencyDialog();
             }else{
-                showErrorOnNoInternet();
+                InternetDialogHelper.showNoInternetDialog(TimelineVisitSummaryActivity.this);
             }
 
         });
         fabc.setOnClickListener(view -> {
-            showDoctorSelectionDialog(true);
+            boolean isInternetAvailable = InternetDialogHelper.checkInternetOrShow(TimelineVisitSummaryActivity.this);
+            if(isInternetAvailable) {
+                showDoctorSelectionDialog(true);
+            }
         });
         fabv.setOnClickListener(view -> {
-            showDoctorSelectionDialog(false);
+            boolean isInternetAvailable = InternetDialogHelper.checkInternetOrShow(TimelineVisitSummaryActivity.this);
+            if(isInternetAvailable) {
+                showDoctorSelectionDialog(false);
+            }
         });
         /*fabPrescription.setOnClickListener(view -> PrescriptionActivity.startPrescriptionActivity(
                 TimelineVisitSummaryActivity.this,
@@ -373,7 +380,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
                         showNoDataDialogForViewLcg();
                     }
                 }else{
-                    showErrorOnNoInternet();
+                    InternetDialogHelper.showNoInternetDialog(TimelineVisitSummaryActivity.this);
                 }
                 break;
             case android.R.id.home:
@@ -515,7 +522,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
                     }).buildDialog();
                 }
             }else{
-                showErrorOnNoInternet();
+                InternetDialogHelper.showNoInternetDialog(TimelineVisitSummaryActivity.this);
             }
 
         });
@@ -1254,7 +1261,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         fetchAllEncountersFromVisitForTimelineScreen(visitUuid);
     }
 
-    private void showErrorOnNoInternet() {
+  /*  private void showErrorOnNoInternet() {
         AppDialogUtils.showSingleButtonDialog(
                 this,
                 getString(R.string.no_internet_timeline_screen_title),
@@ -1264,7 +1271,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
                     return null;
                 }
         );
-    }
+    }*/
     private void showNoDataDialogForViewLcg() {
         AppDialogUtils.showSingleButtonDialog(
                 this,

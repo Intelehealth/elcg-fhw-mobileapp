@@ -327,10 +327,10 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
             cardview.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if(handleNoInternetCase()) {
+                    //if(handleNoInternetCase()) {
                         PartogramConstants.AccessMode mode = (PartogramConstants.AccessMode) view.getTag();
                         nextIntent(mode);
-                    }
+                   // }
                 }
             });
         }
