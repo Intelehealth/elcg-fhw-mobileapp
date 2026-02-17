@@ -139,7 +139,7 @@ public class ActivePatientAdapter extends RecyclerView.Adapter<ActivePatientAdap
         if (count > 3.5) { // red //prev - count > 22
             // holder.cardView_todaysVisit.setCardBackgroundColor(context.getResources().getColor(R.color.red_1));
             //added extra spaces to fit text inside of the bg icon
-            riskValue = "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0" + 16.0 + "0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0";
+            riskValue = "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0" + riskScore + "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0";
             holder.ivPriscription.setText(riskValue);
             holder.ivPriscription.setBackground(ContextCompat.getDrawable(context, R.drawable.ic_high_alert));
             holder.ivPriscription.setTextColor(ContextCompat.getColor(context, R.color.colorHighAlert));
@@ -151,6 +151,7 @@ public class ActivePatientAdapter extends RecyclerView.Adapter<ActivePatientAdap
             holder.ivPriscription.setBackground(ContextCompat.getDrawable(context, R.drawable.ic_yellow_alert));
             holder.ivPriscription.setTextColor(ContextCompat.getColor(context, R.color.colorMediumAlert));
             holder.ivPriscription.setPadding(0, 0, 0, 0);
+
         } else { // green
             // holder.cardView_todaysVisit.setCardBackgroundColor(context.getResources().getColor(R.color.green2));
             holder.ivPriscription.setBackground(ContextCompat.getDrawable(context, R.drawable.ic_normal_alert));
@@ -384,7 +385,8 @@ public class ActivePatientAdapter extends RecyclerView.Adapter<ActivePatientAdap
         private View rootView;
         private AppCompatTextView ivPriscription;
         private TextView tv_not_uploaded;
-        TextView tvAgeGender, tvStageNameTextView, tvBedNo;
+        TextView tvAgeGender, tvStageNameTextView;
+        AppCompatTextView tvBedNo;
         private CardView cardView_todaysVisit;
 
         public ActivePatientViewHolder(View itemView) {
