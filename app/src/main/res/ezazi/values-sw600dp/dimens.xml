@@ -46,7 +46,7 @@
     <dimen name="container_corner_radius">@dimen/std_20dp</dimen>
     <dimen name="alert_text_size">@dimen/std_32sp</dimen>
     <dimen name="between_label_and_input_margin">@dimen/std_21dp</dimen>
-    <dimen name="actionbar_vertical_padding">@dimen/std_34dp</dimen>
+    <dimen name="actionbar_vertical_padding">@dimen/std_8dp</dimen>
     <dimen name="actionbar_horizontal_padding">@dimen/std_70dp</dimen>
     <dimen name="back_button_size">@dimen/std_64dp</dimen>
     <dimen name="back_button_padding">@dimen/std_16dp</dimen>
