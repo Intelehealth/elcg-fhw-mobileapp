@@ -8,19 +8,41 @@
         android:paddingHorizontal="@dimen/login_screen_padding"
         android:paddingBottom="@dimen/login_screen_padding">
 
-        <include
-            android:id="@+id/forgotHeader"
-            layout="@layout/view_forgot_password_header" />
-
-        <include
-            android:id="@+id/contentOtpVerification"
-            layout="@layout/content_otp_verification"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+        <ScrollView
+            android:id="@+id/scrollView"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:fillViewport="true"
             app:layout_constraintBottom_toTopOf="@id/btnContinue"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/forgotHeader" />
+            app:layout_constraintTop_toTopOf="parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                >
+
+                <include
+                    android:id="@+id/forgotHeader"
+                    layout="@layout/view_forgot_password_header"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="4"
+                    android:layout_marginBottom="@dimen/std_36dp"/>
+
+                <include
+                    android:id="@+id/contentOtpVerification"
+                    layout="@layout/content_otp_verification"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/std_28dp"/>
+
+
+            </LinearLayout>
+
+        </ScrollView>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnContinue"
