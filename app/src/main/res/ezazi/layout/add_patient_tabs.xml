@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:paddingHorizontal="@dimen/actionbar_horizontal_padding"
-    android:paddingVertical="@dimen/screen_container_padding">
+    android:paddingVertical="@dimen/std_8dp">
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/tv_personal_info"

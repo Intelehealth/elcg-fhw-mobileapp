@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,8 +15,10 @@ import android.view.animation.Animation;
 import android.widget.Filter;
 import android.widget.TextView;
 
+import androidx.appcompat.widget.AppCompatTextView;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
+import androidx.core.widget.TextViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.intelehealth.ezazi.R;
@@ -48,8 +51,7 @@ public class ActivePatientAdapter extends RecyclerView.Adapter<ActivePatientAdap
     ArrayList<String> listPatientUUID;
     SessionManager sessionManager;
 
-    public ActivePatientAdapter(List<ActivePatientModel> activePatientModels, List<ActivePatientModel> filteractivePatient, Context context,
-                                ArrayList<String> _listPatientUUID, SessionManager sessionManager) {
+    public ActivePatientAdapter(List<ActivePatientModel> activePatientModels, List<ActivePatientModel> filteractivePatient, Context context, ArrayList<String> _listPatientUUID, SessionManager sessionManager) {
         this.activePatientModels = activePatientModels;
         this.context = context;
         this.listPatientUUID = _listPatientUUID;
@@ -87,13 +89,11 @@ public class ActivePatientAdapter extends RecyclerView.Adapter<ActivePatientAdap
 //        final ActivePatientModel filteractivePatient=filteractivePatient.get(position);
         String header;
         if (activePatientModel.getOpenmrs_id() != null) {
-            header = String.format("%s %s, %s", activePatientModel.getFirst_name(),
-                    activePatientModel.getLast_name(), activePatientModel.getOpenmrs_id());
+            header = String.format("%s %s, %s", activePatientModel.getFirst_name(), activePatientModel.getLast_name(), activePatientModel.getOpenmrs_id());
 
 //            holder.getTv_not_uploaded().setVisibility(View.GONE);
         } else {
-            header = String.format("%s %s", activePatientModel.getFirst_name(),
-                    activePatientModel.getLast_name());
+            header = String.format("%s %s", activePatientModel.getFirst_name(), activePatientModel.getLast_name());
 
 //            holder.getTv_not_uploaded().setVisibility(View.VISIBLE);
 //            holder.getTv_not_uploaded().setText(context.getResources().getString(R.string.visit_not_uploaded));
@@ -133,21 +133,26 @@ public class ActivePatientAdapter extends RecyclerView.Adapter<ActivePatientAdap
         // alert -> start
         double riskScore = activePatientModel.getAlertFlagTotal();
         double count = activePatientModel.getAlertFlagTotal();
-        Log.d("TAG", "onBindViewHolder: riskScore : "+riskScore);
-        Log.d("TAG", "onBindViewHolder: count : "+count);
 
-        holder.ivPriscription.setText(String.valueOf(riskScore));
+        //added extra spaces to fit text inside of the bg icon
+        String riskValue = "\u00A0\u00A0" + riskScore + "\u00A0\u00A0";
+        holder.ivPriscription.setText(riskValue);
         if (count > 3.5) { // red //prev - count > 22
             // holder.cardView_todaysVisit.setCardBackgroundColor(context.getResources().getColor(R.color.red_1));
+            //added extra spaces to fit text inside of the bg icon
+            riskValue = "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0" + riskScore + "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0";
+            holder.ivPriscription.setText(riskValue);
             holder.ivPriscription.setBackground(ContextCompat.getDrawable(context, R.drawable.ic_high_alert));
             holder.ivPriscription.setTextColor(ContextCompat.getColor(context, R.color.colorHighAlert));
             int padding = context.getResources().getDimensionPixelSize(R.dimen.high_alert_top_padding);
             holder.ivPriscription.setPadding(0, padding, 0, 0);
+
         } else if (count >= 0.5 && count <= 3.5) { // yellow  //prev - count >= 15
             // holder.cardView_todaysVisit.setCardBackgroundColor(context.getResources().getColor(R.color.darkYellow2));
             holder.ivPriscription.setBackground(ContextCompat.getDrawable(context, R.drawable.ic_yellow_alert));
             holder.ivPriscription.setTextColor(ContextCompat.getColor(context, R.color.colorMediumAlert));
             holder.ivPriscription.setPadding(0, 0, 0, 0);
+
         } else { // green
             // holder.cardView_todaysVisit.setCardBackgroundColor(context.getResources().getColor(R.color.green2));
             holder.ivPriscription.setBackground(ContextCompat.getDrawable(context, R.drawable.ic_normal_alert));
@@ -165,8 +170,7 @@ public class ActivePatientAdapter extends RecyclerView.Adapter<ActivePatientAdap
             holder.cardView_todaysVisit.setCardBackgroundColor(context.getResources().getColor(R.color.blinkCardColor));
         }
 
-        if (activePatientModel.getBirthOutcomeValue() != null &&
-                !activePatientModel.getBirthOutcomeValue().equalsIgnoreCase("")) {
+        if (activePatientModel.getBirthOutcomeValue() != null && !activePatientModel.getBirthOutcomeValue().equalsIgnoreCase("")) {
 //            holder.btnEndVisit.setVisibility(View.VISIBLE);
 //            holder.btnEndVisit.setText(activePatientModel.getBirthOutcomeValue());
         } else {
@@ -210,8 +214,7 @@ public class ActivePatientAdapter extends RecyclerView.Adapter<ActivePatientAdap
 
                 String patientSelection = "uuid = ?";
                 String[] patientArgs = {patientUuid};
-                String[] patientColumns = {"first_name", "middle_name", "last_name", "gender",
-                        "date_of_birth"};
+                String[] patientColumns = {"first_name", "middle_name", "last_name", "gender", "date_of_birth"};
                 SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
                 Cursor idCursor = db.query("tbl_patient", patientColumns, patientSelection, patientArgs, null, null, null);
                 String visit_id = "";
@@ -221,8 +224,7 @@ public class ActivePatientAdapter extends RecyclerView.Adapter<ActivePatientAdap
                 if (idCursor.moveToFirst()) {
                     do {
                         mGender = idCursor.getString(idCursor.getColumnIndexOrThrow("gender"));
-                        patientName = idCursor.getString(idCursor.getColumnIndexOrThrow("first_name")) + " " +
-                                idCursor.getString(idCursor.getColumnIndexOrThrow("last_name"));
+                        patientName = idCursor.getString(idCursor.getColumnIndexOrThrow("first_name")) + " " + idCursor.getString(idCursor.getColumnIndexOrThrow("last_name"));
                         dob = idCursor.getString((idCursor.getColumnIndexOrThrow("date_of_birth")));
                     } while (idCursor.moveToNext());
                 }
@@ -382,9 +384,10 @@ public class ActivePatientAdapter extends RecyclerView.Adapter<ActivePatientAdap
         private TextView bodyTextView;
         private TextView indicatorTextView;
         private View rootView;
-        private TextView ivPriscription;
+        private AppCompatTextView ivPriscription;
         private TextView tv_not_uploaded;
-        TextView tvAgeGender, tvStageNameTextView, tvBedNo;
+        TextView tvAgeGender, tvStageNameTextView;
+        AppCompatTextView tvBedNo;
         private CardView cardView_todaysVisit;
 
         public ActivePatientViewHolder(View itemView) {

@@ -17,6 +17,7 @@
         android:layout_margin="@dimen/list_container_padding"
         android:background="@drawable/selector_dialog_list_item"
         android:paddingStart="@dimen/screen_container_padding"
+        android:paddingEnd="@dimen/screen_container_padding"
         android:paddingTop="@dimen/screen_container_padding"
         android:paddingBottom="@dimen/screen_container_padding">
 
