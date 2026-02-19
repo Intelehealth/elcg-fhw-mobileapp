@@ -73,6 +73,7 @@ import com.google.gson.Gson;
 
 import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.activities.activePatientsActivity.ActivePatientAdapter;
+import org.intelehealth.ezazi.activities.homeActivity.riskscores.VisitAlertBridgeForRiskCalculations;
 import org.intelehealth.ezazi.activities.loginActivity.LoginActivity;
 import org.intelehealth.ezazi.activities.searchPatientActivity.SearchPatientActivity;
 import org.intelehealth.ezazi.activities.splash_activity.SplashActivity;
@@ -210,6 +211,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
 
     private List<VisitDTO> visitDTOList;
     /*eZazi End*/
+    private List<ActivePatientModel> visitsForRiskFactorCalculation;
 
 
     public static PendingIntent getPendingIntent(Context context, ShiftChangeData data) {
@@ -792,7 +794,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
         if (!NetworkConnection.isOnline(context)) {
             showErrorOnNoInternet();
         }
-
+        calculateRiskForAllVisits();
     }
 
     private void showPatientChoiceDialog(ArrayList<MultiChoiceItem> items) {
@@ -2389,4 +2391,37 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
                 }
         );
     }
+    public void calculateRiskForAllVisits() {
+        int offset = 0;
+        int batchSize = 100; // batch size
+
+        LifecycleCoroutineScope scope = LifecycleOwnerKt.getLifecycleScope(this);
+
+        do {
+            visitsForRiskFactorCalculation = new VisitQueryResultBinder().executeVisitsQueryForRiskCalculation(offset, batchSize);
+            if (visitsForRiskFactorCalculation !=null && !visitsForRiskFactorCalculation.isEmpty()) {
+                VisitAlertBridgeForRiskCalculations.processVisits(scope, visitsForRiskFactorCalculation, result -> {
+                    VisitsDAO visitsDAO = new VisitsDAO();
+                        try {
+                            for (ActivePatientModel visit : result) {
+                                visitsDAO.updateVisitSync(visit.getUuid(), "false");
+                            }
+                        } catch (DAOException e) {
+                            e.printStackTrace();
+                            throw new RuntimeException(e);
+                        }
+
+                    boolean isSynced = syncUtils.syncForeground("visitSummary");
+
+                    return null; // Java lambda → Kotlin Unit
+                });
+            }
+
+            // Increment offset for next batch
+            offset += batchSize;
+
+        } while (!visitsForRiskFactorCalculation.isEmpty());
+    }
+
+
 }
