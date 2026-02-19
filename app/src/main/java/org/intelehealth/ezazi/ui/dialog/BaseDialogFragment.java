@@ -84,6 +84,14 @@ abstract class BaseDialogFragment<T> extends AppCompatDialogFragment implements 
             if (hasTitle()) binding.setTitle(args.getTitle());
             binding.setSubmitLabel(args.getPositiveBtnLabel());
             binding.setDismissLabel(args.getNegativeBtnLabel());
+
+            ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) binding.btnSubmit.getLayoutParams();
+            if (args.getNegativeBtnLabel() == null || args.getNegativeBtnLabel().isEmpty()) {
+                params.setMarginStart(0);
+            } else {
+                params.setMarginStart((int) getResources().getDimension(R.dimen.dialog_btn_horizontal_margin));
+            }
+            binding.btnSubmit.setLayoutParams(params);
         }
     }
 
