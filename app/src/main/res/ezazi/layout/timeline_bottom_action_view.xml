@@ -95,7 +95,7 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnAddOutOfTimeReason"
-        style="@style/Theme.EZazi.TextButton"
+        style="@style/Theme.EZazi.TextButton.ViewMore"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
         android:layout_marginStart="@dimen/screen_container_padding"
