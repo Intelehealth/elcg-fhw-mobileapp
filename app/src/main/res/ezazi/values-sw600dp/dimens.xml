@@ -274,4 +274,6 @@
 
     <dimen name="common_dialog_button_top_bottom_padding">32dp</dimen>
 
+    <dimen name="forgot_password_screen_padding">@dimen/std_65dp</dimen>
+
 </resources>
