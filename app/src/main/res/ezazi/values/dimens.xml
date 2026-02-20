@@ -302,4 +302,7 @@
     <dimen name="menu_icon_size">@dimen/std_24dp</dimen>
     <dimen name="empty_data_icon_size">@dimen/std_92dp</dimen>
     <dimen name="outcome_pending_msg_padding">@dimen/std_12dp</dimen>
+
+    <dimen name="common_dialog_button_top_bottom_padding">0dp</dimen>
+
 </resources>

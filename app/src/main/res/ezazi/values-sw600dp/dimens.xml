@@ -271,4 +271,7 @@
     <dimen name="menu_icon_size">@dimen/std_48dp</dimen>
     <dimen name="empty_data_icon_size">@dimen/std_120dp</dimen>
     <dimen name="outcome_pending_msg_padding">@dimen/std_20dp</dimen>
+
+    <dimen name="common_dialog_button_top_bottom_padding">32dp</dimen>
+
 </resources>
