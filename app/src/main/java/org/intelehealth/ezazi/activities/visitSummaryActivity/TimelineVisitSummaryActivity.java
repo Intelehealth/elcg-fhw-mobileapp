@@ -992,8 +992,13 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         for (int i = 0; i < encounterListDTO.size(); i++) {
             String name = encounterDAO.getEncounterTypeNameByUUID(encounterListDTO.get(i).getEncounterTypeUuid());
             EncounterDTO.Type type = new ObsDAO().getEncounterType(encounterListDTO.get(i).getUuid(), sessionManager.getCreatorID());
+            String obsValue= new ObsDAO().getEncounterTypeFromDb(encounterListDTO.get(i).getUuid());
+
             encounterListDTO.get(i).setEncounterTypeName(name);
             encounterListDTO.get(i).setEncounterType(type);
+            encounterListDTO.get(i).setObsValue(obsValue);
+
+            Log.d(TAG, "fetchAllEncountersFromVisitForTimelineScreen: obsValue : " + obsValue);
         }
         isVCEPresent = encounterDAO.getVisitCompleteEncounterByVisitUUID(visitUuid);
         Log.d(TAG, "fetchAllEncountersFromVisitForTimelineScreen: isNewEncounterCreated : " + isNewEncounterCreated);

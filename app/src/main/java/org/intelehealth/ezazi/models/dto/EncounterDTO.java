@@ -167,6 +167,14 @@ public class EncounterDTO {
         this.encounterStatus = encounterStatus;
     }
 
+    public String getObsValue() {
+        return obsValue;
+    }
+
+    public void setObsValue(String obsValue) {
+        this.obsValue = obsValue;
+    }
+
     public Status getEncounterStatus() {
         return encounterStatus;
     }
@@ -180,4 +188,7 @@ public class EncounterDTO {
             return this == SUBMITTED;
         }
     }
+
+    private String obsValue;
+
 }

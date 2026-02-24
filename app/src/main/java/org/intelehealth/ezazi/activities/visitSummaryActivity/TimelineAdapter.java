@@ -339,18 +339,21 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
             Log.v("nextIntent", "nextIntent isEditMode - " + mode);
             String encounterType = encounterDTOList.get(getAbsoluteAdapterPosition()).getEncounterType().toString();
             Log.v("nextIntent", "encounterType - " + encounterType);
+
             int type = 10;
             int stage = 1;
             String encounterName = encounterDTOList.get(getAbsoluteAdapterPosition()).getEncounterTypeName();
-            Log.d(TAG, "nextIntent: encounterDTOList.get(getAbsoluteAdapterPosition()).getEncounterTypeName() : "+encounterDTOList.get(getAbsoluteAdapterPosition()).getEncounterTypeUuid());
             if(encounterDTOList.get(getAbsoluteAdapterPosition()).getEncounterTypeUuid().equals(UuidDictionary.LCG_SOS)){
                 type = HOURLY;
                 //encounterType = EncounterDTO.Type.SOS.name();
                 EncounterTypeResolver resolver = new EncounterTypeResolver();
                 EncounterDTO.Type enumOfTypes = resolver.resolve(encounterType);
                 encounterType = enumOfTypes.name();
-                Log.v("nextIntent", "encounterType - " + encounterType);
-
+                String obsValue =encounterDTOList.get(getAbsoluteAdapterPosition()).getObsValue();
+                String[] parts = obsValue.split("_");   // ["Stage1", "Hour1", "SOS1"]
+                String stagePart = parts[0];         // "Stage1"
+                String stageNumber = stagePart.replace("Stage", "");  // "1"
+                if(!stageNumber.isEmpty()) stage = Integer.parseInt(stageNumber);
             }else{
                 if(encounterName!=null && !encounterName.isEmpty()){
                     String[] name = encounterName.split("_");

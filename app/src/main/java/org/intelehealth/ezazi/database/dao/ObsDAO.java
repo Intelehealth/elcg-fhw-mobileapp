@@ -1275,5 +1275,21 @@ public class ObsDAO {
 
         return result;
     }
+    public String getEncounterTypeFromDb(String encounterUuid) {
+        db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
+        String value = "";
+        Cursor idCursor = db.rawQuery("SELECT value FROM tbl_obs where encounteruuid = ? " +
+                        "AND voided='0' AND (conceptuuid = ? OR conceptuuid = ?) ",
+                new String[]{encounterUuid, ENCOUNTER_TYPE, SOS_STAGE_HOUR});
 
+        if (idCursor.getCount() > 0) {
+            while (idCursor.moveToNext()) {
+                value = idCursor.getString(idCursor.getColumnIndexOrThrow("value"));
+                //if (value.equals(EncounterDTO.Type.SOS.name())) type = EncounterDTO.Type.SOS;//old
+            }
+        }
+        idCursor.close();
+
+        return value;
+    }
 }
