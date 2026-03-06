@@ -72,6 +72,8 @@ import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -2170,6 +2172,10 @@ public class PatientOtherInfoFragment extends Fragment {
                 .maxHeight(!isTable ? maxHeight : 0)
                 .build();
 
+        if (whichDate.equals("admissionDate")) {
+            dialog.setMinDate(getAdmissionMinDate().getTime());
+            dialog.setMaxDate(System.currentTimeMillis());
+        }
         dialog.setListener((day, month, year, value) -> {
             Log.e(TAG, "Date = >" + value);
             String selectedDate = value;
@@ -2188,5 +2194,9 @@ public class PatientOtherInfoFragment extends Fragment {
         });
         dialog.show(requireFragmentManager(), "DatePicker");
     }
-
+    private Date getAdmissionMinDate() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.DAY_OF_MONTH, -9); // 10 days back from today
+        return calendar.getTime();
+    }
 }
