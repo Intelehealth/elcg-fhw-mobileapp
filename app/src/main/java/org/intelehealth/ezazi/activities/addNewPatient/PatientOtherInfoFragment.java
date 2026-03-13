@@ -757,6 +757,8 @@ public class PatientOtherInfoFragment extends Fragment {
         }        //code for adding to the database
 
         //Parity Validation- warning dialog
+        mTotalBirthCount = mTotalBirthEditText.getText().toString().trim();
+        mTotalMiscarriageCount = mTotalMiscarriageEditText.getText().toString().trim();
         int totalBirth = Integer.parseInt(mTotalBirthCount);
         int totalAbortions = Integer.parseInt(mTotalMiscarriageCount);
 
@@ -1253,8 +1255,14 @@ public class PatientOtherInfoFragment extends Fragment {
                 mAdmissionTimeString = timeString;
                 mAdmissionTimeTextView.setText(timeString);
             } else if (forWhichParameter.equals("laborOnsetString")) {
-                mActiveLaborDiagnosedTime = timeString;
-                mActiveLaborDiagnosedTimeTextView.setText(timeString);
+                boolean isValid = validateActiveLabourDateTime(mActiveLaborDiagnosedDate, mActiveLaborDiagnosedTime);
+                if (!isValid) {
+                    mActiveLaborDiagnosedTimeTextView.setText("");
+                    mActiveLaborDiagnosedTime = null;
+                }else{
+                    mActiveLaborDiagnosedTime = timeString;
+                    mActiveLaborDiagnosedTimeTextView.setText(timeString);
+                }
             } else if (forWhichParameter.equals("membraneRupturedTime")) {
                 mMembraneRupturedTime = timeString;
                 mMembraneRupturedTimeTextView.setText(timeString);
@@ -1853,7 +1861,13 @@ public class PatientOtherInfoFragment extends Fragment {
         if (whichDate.equals("admissionDate")) {
             dialog.setMinDate(getAdmissionMinDate().getTime());
             dialog.setMaxDate(System.currentTimeMillis());
+        } else if (whichDate.equals("labourDiagnosedDate")) {
+            Calendar minCal = Calendar.getInstance();
+            minCal.add(Calendar.DAY_OF_MONTH, -1); // allow yesterday
+            dialog.setMinDate(minCal.getTimeInMillis());
+            dialog.setMaxDate(System.currentTimeMillis());
         }
+
         dialog.setListener((day, month, year, value) -> {
             Log.e(TAG, "Date = >" + value);
             String selectedDate = value;
@@ -2239,5 +2253,32 @@ public class PatientOtherInfoFragment extends Fragment {
         } catch (DAOException e) {
             FirebaseCrashlytics.getInstance().recordException(e);
         }
+    }
+    private boolean validateActiveLabourDateTime(String date, String time) {
+
+        try {
+
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
+            Date selectedDateTime = sdf.parse(date + " " + time);
+
+            Calendar now = Calendar.getInstance();
+
+            Calendar minCal = Calendar.getInstance();
+            minCal.add(Calendar.HOUR_OF_DAY, -15);
+
+            if (selectedDateTime.before(minCal.getTime()) || selectedDateTime.after(now.getTime())) {
+
+                Toast.makeText(mContext,
+                        "Active labour diagnosis must be within last 15 hours",
+                        Toast.LENGTH_LONG).show();
+
+                return false;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return true;
     }
 }

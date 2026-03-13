@@ -70,19 +70,21 @@ public class CalendarDialog extends BaseDialogFragment<Void> implements DatePick
         calendarBinding.tvSelectedDate.setText(formattedDate);
     }
 
-    @Override
+    /*@Override
     public void onDateChanged(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
         calendar.set(year, monthOfYear, dayOfMonth);
         changeMonth();
         setDisplayDate();
         calendarBinding.calendar.chipMonthYearGroup.clearCheck();
-    }
+    }*/
 
     private void changeMonth() {
         calendarBinding.calendar.btnYear.setText(String.valueOf(calendar.get(Calendar.YEAR)));
         calendarBinding.calendar.btnMonth.setText(getDateFormatter("LLL").format(calendar.getTime()));
         calendarBinding.calendar.chipGroupMonth.check(calendar.get(Calendar.MONTH));
         calendarBinding.calendar.btnNextMonth.setVisibility(isNextButtonDisabled() ? View.GONE : View.VISIBLE);
+        calendarBinding.calendar.btnPreviousMonth.setVisibility(canGoToPreviousMonth() ? View.VISIBLE : View.GONE);
+        calendarBinding.calendar.btnNextMonth.setVisibility(canGoToNextMonth() ? View.VISIBLE : View.GONE);
     }
 
     private boolean isNextButtonDisabled() {
@@ -154,19 +156,38 @@ public class CalendarDialog extends BaseDialogFragment<Void> implements DatePick
     }
 
     private void moveToNextMonth() {
-        if (maxDate > calendar.getTimeInMillis()) {
+        /*if (maxDate > calendar.getTimeInMillis()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 getViewByName("next").performClick();
             }
             calendar.add(Calendar.MONTH, 1);
             changeMonth();
+        }*/
+        if (!canGoToNextMonth())
+            return;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            getViewByName("next").performClick();
         }
+
+        calendar.add(Calendar.MONTH, 1);
+        changeMonth();
     }
 
     private void moveToPreviousMonth() {
+        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            getViewByName("prev").performClick();
+        }
+        calendar.add(Calendar.MONTH, -1);
+        changeMonth();*/
+
+        if (!canGoToPreviousMonth())
+            return;
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             getViewByName("prev").performClick();
         }
+
         calendar.add(Calendar.MONTH, -1);
         changeMonth();
     }
@@ -252,11 +273,11 @@ public class CalendarDialog extends BaseDialogFragment<Void> implements DatePick
         return (getMaxCalendar().get(Calendar.YEAR) == calendar.get(Calendar.YEAR));
     }
 
-    private Calendar getMaxCalendar() {
+    /*private Calendar getMaxCalendar() {
         Calendar max = Calendar.getInstance();
         max.setTimeInMillis(maxDate);
         return max;
-    }
+    }*/
 
     private void changeMonthEnableStatus() {
         int monthCnt = calendarBinding.calendar.chipGroupMonth.getChildCount();
@@ -368,5 +389,72 @@ public class CalendarDialog extends BaseDialogFragment<Void> implements DatePick
     private ConstraintLayout.LayoutParams getConstraintLayoutParams(ConstraintLayout constraintLayout) {
         ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) constraintLayout.getLayoutParams();
         return params;
+    }
+    private Calendar getMinCalendar() {
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(minDate);
+        return c;
+    }
+
+    private Calendar getMaxCalendar() {
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(maxDate);
+        return c;
+    }
+    private boolean canGoToPreviousMonth() {
+
+        Calendar minCal = getMinCalendar();
+
+        if (calendar.get(Calendar.YEAR) < minCal.get(Calendar.YEAR))
+            return false;
+
+        if (calendar.get(Calendar.YEAR) == minCal.get(Calendar.YEAR)
+                && calendar.get(Calendar.MONTH) <= minCal.get(Calendar.MONTH))
+            return false;
+
+        return true;
+    }
+    private boolean canGoToNextMonth() {
+
+        Calendar maxCal = getMaxCalendar();
+
+        if (calendar.get(Calendar.YEAR) > maxCal.get(Calendar.YEAR))
+            return false;
+
+        if (calendar.get(Calendar.YEAR) == maxCal.get(Calendar.YEAR)
+                && calendar.get(Calendar.MONTH) >= maxCal.get(Calendar.MONTH))
+            return false;
+
+        return true;
+    }
+    @Override
+    public void onDateChanged(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+
+        Calendar minCal = Calendar.getInstance();
+        minCal.setTimeInMillis(minDate);
+
+        calendar.set(year, monthOfYear, dayOfMonth);
+
+        // Only correct if user navigated before min month
+        if (year < minCal.get(Calendar.YEAR) ||
+                (year == minCal.get(Calendar.YEAR)
+                        && monthOfYear < minCal.get(Calendar.MONTH))) {
+
+            if (calendar.get(Calendar.DAY_OF_MONTH) != 1) {
+
+                calendar.set(Calendar.DAY_OF_MONTH, 1);
+
+                calendarBinding.calendar.calendarView.updateDate(
+                        calendar.get(Calendar.YEAR),
+                        calendar.get(Calendar.MONTH),
+                        calendar.get(Calendar.DAY_OF_MONTH)
+                );
+
+                return;   // IMPORTANT → stop recursion
+            }
+        }
+
+        changeMonth();
+        setDisplayDate();
     }
 }
