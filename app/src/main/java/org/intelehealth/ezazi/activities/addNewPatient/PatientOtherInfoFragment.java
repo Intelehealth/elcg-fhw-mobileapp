@@ -2267,12 +2267,14 @@ public class PatientOtherInfoFragment extends Fragment {
             minCal.add(Calendar.HOUR_OF_DAY, -15);
 
             if (selectedDateTime.before(minCal.getTime()) || selectedDateTime.after(now.getTime())) {
-
-                Toast.makeText(mContext,
-                        "Active labour diagnosis must be within last 15 hours",
-                        Toast.LENGTH_LONG).show();
-
+                tvErrorLabourDiagnosedTime.setVisibility(View.VISIBLE);
+                tvErrorLabourDiagnosedTime.setText(getString(R.string.active_labour_diagnosis));
+                cardDiagnosedTime.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
+               /// Toast.makeText(mContext, "Active labour diagnosis must be within last 15 hours", Toast.LENGTH_LONG).show();
                 return false;
+            }else{
+                tvErrorLabourDiagnosedTime.setVisibility(View.GONE);
+                cardDiagnosedTime.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
             }
 
         } catch (Exception e) {
