@@ -51,6 +51,14 @@ public class RequestOTPModel implements Serializable {
     @Expose
     private String otpFor;
 
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
+
     @SerializedName("phoneNumber")
     @Expose
     private String phoneNumber;
@@ -58,4 +66,15 @@ public class RequestOTPModel implements Serializable {
     @SerializedName("countryCode")
     @Expose
     private String countryCode;
+
+    @SerializedName("source")
+    @Expose
+    private String source;
+
+    public RequestOTPModel(String otpFor, String phoneNumber, String countryCode, String source) {
+        this.otpFor = otpFor;
+        this.phoneNumber = phoneNumber;
+        this.countryCode = countryCode;
+        this.source = source;
+    }
 }

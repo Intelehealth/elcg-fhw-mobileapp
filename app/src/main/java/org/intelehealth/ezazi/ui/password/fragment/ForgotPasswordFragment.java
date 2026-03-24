@@ -90,7 +90,7 @@ public class ForgotPasswordFragment extends Fragment {
     private void requestOTP() {
         PasswordViewModel viewModel = new ViewModelProvider(this, ViewModelProvider.Factory.from(PasswordViewModel.initializer)).get(PasswordViewModel.class);
 
-        requestOTPModel = new RequestOTPModel(OTPForString, mPhoneNumberEditText.getText().toString(), mSelectedCountryCode);
+        requestOTPModel = new RequestOTPModel(OTPForString, mPhoneNumberEditText.getText().toString(), mSelectedCountryCode, "mobile");
         viewModel.requestOtp(requestOTPModel);
 
     }
