@@ -71,6 +71,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.Serializable;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1254,6 +1255,10 @@ public class PatientOtherInfoFragment extends Fragment {
             if (forWhichParameter.equals("admissionTimeString")) {
                 mAdmissionTimeString = timeString;
                 mAdmissionTimeTextView.setText(timeString);
+                if (!validateNotFutureDateTime(mAdmissionDateString, timeString, "admissionTimeString")) {
+                    return;
+                }
+
             } else if (forWhichParameter.equals("laborOnsetString")) {
                 boolean isValid = validateActiveLabourDateTime(mActiveLaborDiagnosedDate, mActiveLaborDiagnosedTime);
                 if (!isValid) {
@@ -1262,6 +1267,9 @@ public class PatientOtherInfoFragment extends Fragment {
                 }else{
                     mActiveLaborDiagnosedTime = timeString;
                     mActiveLaborDiagnosedTimeTextView.setText(timeString);
+                }
+                if (!validateNotFutureDateTime(mActiveLaborDiagnosedDate, timeString, "laborOnsetString")) {
+                    return;
                 }
             } else if (forWhichParameter.equals("membraneRupturedTime")) {
                 mMembraneRupturedTime = timeString;
@@ -1875,9 +1883,15 @@ public class PatientOtherInfoFragment extends Fragment {
                 if (whichDate.equals("admissionDate")) {
                     mAdmissionDateString = selectedDate;
                     mAdmissionDateTextView.setText(selectedDate);
+                    if (!validateNotFutureDateTime(mAdmissionDateString, mAdmissionTimeString, "admissionTimeString")) {
+                        return;
+                    }
                 } else if (whichDate.equals("labourDiagnosedDate")) {
                     mActiveLaborDiagnosedDate = selectedDate;
                     mActiveLaborDiagnosedDateTextView.setText(selectedDate);
+                    if (!validateNotFutureDateTime(mActiveLaborDiagnosedDate, mActiveLaborDiagnosedTime, "labourDiagnosedDate")) {
+                        return;
+                    }
                 } else if (whichDate.equals("sacRupturedDate")) {
                     mMembraneRupturedDate = selectedDate;
                     mMembraneRupturedDateTextView.setText(selectedDate);
@@ -2278,6 +2292,50 @@ public class PatientOtherInfoFragment extends Fragment {
             }
 
         } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return true;
+    }
+
+    private boolean validateNotFutureDateTime(String dateStr, String timeStr, String forWhichParameter) {
+
+        if (dateStr == null || timeStr == null ||
+                dateStr.trim().isEmpty() || timeStr.trim().isEmpty()) {
+            return true; // nothing to validate yet
+        }
+
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy hh:mm a", Locale.getDefault());
+
+            Date selectedDateTime = sdf.parse(dateStr + " " + timeStr);
+            Date currentDateTime = new Date();
+
+            if (selectedDateTime != null && selectedDateTime.after(currentDateTime)) {
+
+                //Toast.makeText(mContext, "Future date/time not allowed : "+forWhichParameter, Toast.LENGTH_SHORT).show();
+
+                switch (forWhichParameter) {
+
+                    case "admissionTimeString":
+                        mAdmissionTimeString = null;
+                        mAdmissionTimeTextView.setText("");
+                        tvErrorAdmissionTime.setText(getResources().getString(R.string.select_valid_date));
+                        tvErrorAdmissionTime.setVisibility(View.VISIBLE);
+                        break;
+
+                    case "laborOnsetString":
+                        mActiveLaborDiagnosedTime = null;
+                        mActiveLaborDiagnosedTimeTextView.setText("");
+                        tvErrorLabourDiagnosedTime.setText(getResources().getString(R.string.active_labour_diagnosis));
+                        tvErrorLabourDiagnosedTime.setVisibility(View.VISIBLE);
+                        break;
+                }
+
+                return false;
+            }
+
+        } catch (ParseException e) {
             e.printStackTrace();
         }
 
