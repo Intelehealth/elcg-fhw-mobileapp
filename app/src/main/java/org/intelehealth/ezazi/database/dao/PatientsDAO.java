@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.intelehealth.ezazi.builder.QueryBuilder;
+import org.intelehealth.ezazi.enums.StageEnum;
 import org.intelehealth.ezazi.models.FamilyMemberRes;
 import org.intelehealth.ezazi.services.MyIntentService;
 import org.intelehealth.ezazi.utilities.DateAndTimeUtils;
@@ -665,4 +666,27 @@ public class PatientsDAO {
         return value;
     }
 
+    /**
+     * checking stage here
+     * @param uuid
+     * @param stage
+     * @return
+     */
+    public boolean checkStage(String uuid, StageEnum stage) {
+        String stageName = "";
+        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT name FROM tbl_uuid_dictionary where uuid = ? COLLATE NOCASE", new String[]{uuid});
+        if (cursor.getCount() != 0) {
+            while (cursor.moveToNext()) {
+                stageName = cursor.getString(cursor.getColumnIndexOrThrow("name"));
+            }
+        }
+        cursor.close();
+
+        if(stage == StageEnum.ONE) {
+            return stageName.contains("Stage1");
+        }else{
+            return stageName.contains("Stage2");
+        }
+    }
 }

@@ -54,4 +54,6 @@
     <string name="enter_sex_of_baby">Enter Sex of baby</string>
     <string name="enter_baby_status">Enter Baby Status</string>
     <string name="enter_mother_status">Enter Mother Status</string>
+    <string name="prolonged_labour_detected">Prolonged labour detected: Active stage exceeded safe duration.</string>
+    <string name="second_stage_prolonged">Second stage prolonged. Immediate attention required.</string>
 </resources>

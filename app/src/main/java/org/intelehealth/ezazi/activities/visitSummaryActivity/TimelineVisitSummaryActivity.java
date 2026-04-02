@@ -16,6 +16,8 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.telephony.TelephonyManager;
@@ -27,17 +29,14 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.StringRes;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
-import androidx.core.graphics.drawable.DrawableCompat;
+import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -49,7 +48,6 @@ import com.google.gson.Gson;
 import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.activities.epartogramActivity.EpartogramViewActivity;
 import org.intelehealth.ezazi.activities.homeActivity.HomeActivity;
-import org.intelehealth.ezazi.activities.setupActivity.SetupActivity;
 import org.intelehealth.ezazi.app.AppConstants;
 import org.intelehealth.ezazi.app.IntelehealthApplication;
 import org.intelehealth.ezazi.database.dao.EncounterDAO;
@@ -58,10 +56,10 @@ import org.intelehealth.ezazi.database.dao.PatientsDAO;
 import org.intelehealth.ezazi.database.dao.VisitAttributeListDAO;
 import org.intelehealth.ezazi.database.dao.VisitsDAO;
 import org.intelehealth.ezazi.databinding.DialogOutOfTimeEzaziBinding;
+import org.intelehealth.ezazi.enums.StageEnum;
 import org.intelehealth.ezazi.models.dto.EncounterDTO;
 import org.intelehealth.ezazi.models.dto.ObsDTO;
-import org.intelehealth.ezazi.models.dto.VisitAttributeDTO;
-import org.intelehealth.ezazi.partogram.PartogramDataCaptureActivity;
+import org.intelehealth.ezazi.models.dto.PatientAttributesDTO;
 import org.intelehealth.ezazi.services.firebase_services.FirebaseRealTimeDBUtils;
 import org.intelehealth.ezazi.syncModule.SyncUtils;
 import org.intelehealth.ezazi.ui.dialog.AppDialogUtils;
@@ -94,7 +92,6 @@ import org.intelehealth.klivekit.chat.model.ItemHeader;
 import org.intelehealth.klivekit.model.RtcArgs;
 import org.intelehealth.klivekit.socket.SocketManager;
 import org.intelehealth.klivekit.utils.DateTimeUtils;
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -106,6 +103,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 
@@ -136,6 +135,10 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
     private ConstraintLayout layoutPendingFlag;
     private List<ItemHeader> prescriptions;
     private ObsDAO obsDAO = new ObsDAO();
+    private PatientsDAO patientsDAO = new PatientsDAO();
+
+    int STAGE_1_DURATION = 30;
+    int STAGE_2_DURATION = 15;
 
     private final BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
@@ -201,8 +204,11 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         encounterDAO = new EncounterDAO();
 
         initUI();
+
+        calculateStageDurationsAndShowDialog();
+
         fabSOS.setOnClickListener(view -> {
-            if(NetworkConnection.isOnline(TimelineVisitSummaryActivity.this)){
+            if (NetworkConnection.isOnline(TimelineVisitSummaryActivity.this)) {
                 Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
                 // Vibrate for 500 milliseconds
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -213,20 +219,20 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
                 }
 
                 showEmergencyDialog();
-            }else{
+            } else {
                 InternetDialogHelper.showNoInternetDialog(TimelineVisitSummaryActivity.this);
             }
 
         });
         fabc.setOnClickListener(view -> {
             boolean isInternetAvailable = InternetDialogHelper.checkInternetOrShow(TimelineVisitSummaryActivity.this);
-            if(isInternetAvailable) {
+            if (isInternetAvailable) {
                 showDoctorSelectionDialog(true);
             }
         });
         fabv.setOnClickListener(view -> {
             boolean isInternetAvailable = InternetDialogHelper.checkInternetOrShow(TimelineVisitSummaryActivity.this);
-            if(isInternetAvailable) {
+            if (isInternetAvailable) {
                 showDoctorSelectionDialog(false);
             }
         });
@@ -371,15 +377,15 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 //                boolean isTablet = getResources().getBoolean(R.bool.isTablet);
 //                if (isTablet) showEpartogram();
 //                else showRequireTabletView();
-                if(NetworkConnection.isOnline(TimelineVisitSummaryActivity.this)) {
+                if (NetworkConnection.isOnline(TimelineVisitSummaryActivity.this)) {
                     //show dialog for no data for elcg
                     boolean doesVisitHasData = obsDAO.getObsCountForVisit(visitUuid);
-                    if(doesVisitHasData){
+                    if (doesVisitHasData) {
                         showEpartogram();
-                    }else{
+                    } else {
                         showNoDataDialogForViewLcg();
                     }
-                }else{
+                } else {
                     InternetDialogHelper.showNoInternetDialog(TimelineVisitSummaryActivity.this);
                 }
                 break;
@@ -496,7 +502,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 
         // clicking on this open dialog to confirm and start stage 2 | If stage 2 already open then ends visit.
         endStageButton.setOnClickListener(v -> {
-            if(NetworkConnection.isOnline(TimelineVisitSummaryActivity.this)){
+            if (NetworkConnection.isOnline(TimelineVisitSummaryActivity.this)) {
                 if (stageNo == 1) {
                     // showEndShiftDialog(); //old flow
                     FragmentManager fragmentManager = getSupportFragmentManager();
@@ -521,7 +527,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
                         }
                     }).buildDialog();
                 }
-            }else{
+            } else {
                 InternetDialogHelper.showNoInternetDialog(TimelineVisitSummaryActivity.this);
             }
 
@@ -760,14 +766,14 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 //        }
 //        if (isInserted) {
 //            Toast.makeText(context, context.getString(R.string.self_discharge_successful), Toast.LENGTH_SHORT).show();
-////            Intent intent = new Intent(context, HomeActivity.class);
-////            startActivity(intent);
+
+    /// /            Intent intent = new Intent(context, HomeActivity.class);
+    /// /            startActivity(intent);
 //            checkInternetAndUploadVisitEncounter(true);
 //        } else {
 //            Toast.makeText(context, context.getString(R.string.something_went_wrong), Toast.LENGTH_SHORT).show();
 //        }
 //    }
-
     private void showConfirmationDialog(@StringRes int content, ConfirmationDialogFragment.OnConfirmationActionListener listener) {
         ConfirmationDialogFragment dialog = new ConfirmationDialogFragment.Builder(this).content(getString(content)).positiveButtonLabel(R.string.yes).build();
 
@@ -809,8 +815,8 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 //
 //            if (isInserted) {
 //                Toast.makeText(context, context.getString(R.string.refer_data_submitted_successfully), Toast.LENGTH_SHORT).show();
-////                Intent intent = new Intent(context, HomeActivity.class);
-////                startActivity(intent);
+    /// /                Intent intent = new Intent(context, HomeActivity.class);
+    /// /                startActivity(intent);
 //                checkInternetAndUploadVisitEncounter(true);
 //            } else {
 //                Toast.makeText(context, context.getString(R.string.something_went_wrong), Toast.LENGTH_SHORT).show();
@@ -987,12 +993,14 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 
     // fetch all encounters from encounter tbl local db for this particular visit and show on timeline...
     private void fetchAllEncountersFromVisitForTimelineScreen(String visitUuid) {
+        int stageOneDuration = 0;
+        int stageTwoDuration = 0;
         //  encounterDAO = new EncounterDAO();
         ArrayList<EncounterDTO> encounterListDTO = encounterDAO.getEncountersByVisitUUID(visitUuid);
         for (int i = 0; i < encounterListDTO.size(); i++) {
             String name = encounterDAO.getEncounterTypeNameByUUID(encounterListDTO.get(i).getEncounterTypeUuid());
             EncounterDTO.Type type = new ObsDAO().getEncounterType(encounterListDTO.get(i).getUuid(), sessionManager.getCreatorID());
-            String obsValue= new ObsDAO().getEncounterTypeFromDb(encounterListDTO.get(i).getUuid());
+            String obsValue = new ObsDAO().getEncounterTypeFromDb(encounterListDTO.get(i).getUuid());
 
             encounterListDTO.get(i).setEncounterTypeName(name);
             encounterListDTO.get(i).setEncounterType(type);
@@ -1000,6 +1008,8 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 
             Log.d(TAG, "fetchAllEncountersFromVisitForTimelineScreen: obsValue : " + obsValue);
         }
+
+
         isVCEPresent = encounterDAO.getVisitCompleteEncounterByVisitUUID(visitUuid);
         Log.d(TAG, "fetchAllEncountersFromVisitForTimelineScreen: isNewEncounterCreated : " + isNewEncounterCreated);
         Log.d(TAG, "fetchAllEncountersFromVisitForTimelineScreen: encounterListDTO : " + new Gson().toJson(encounterListDTO));
@@ -1007,6 +1017,84 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         adapter = new TimelineAdapter(context, intent, encounterListDTO, sessionManager, isVCEPresent, isNewEncounterCreated, isDecisionPending);
         Collections.reverse(encounterListDTO);
         recyclerView.setAdapter(adapter);
+    }
+
+
+    private void calculateStageDurationsAndShowDialog() {
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Handler mainHandler = new Handler(Looper.getMainLooper());
+
+        executor.execute(() -> {
+
+            int stageOneDuration = 0;
+            int stageTwoDuration = 0;
+            int parityCount = 0;
+
+            ArrayList<EncounterDTO> encounterListDTO =
+                    encounterDAO.getEncountersByVisitUUID(visitUuid);
+
+            String parity = patientsDAO.getPatientAttributeValue(
+                    patientUuid,
+                    PatientAttributesDTO.Columns.PARITY
+            );
+
+            // Parsing parity
+            if (parity != null && !parity.isEmpty()) {
+                String[] parityArray = parity.split(",");
+                if (parityArray.length > 1) {
+                    try {
+                        parityCount = Integer.parseInt(parityArray[0].trim());
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
+
+            //if total birth is 0 then not showing the dialog
+            if (parityCount > 0) return;
+
+            for (EncounterDTO encounter : encounterListDTO) {
+
+                if (patientsDAO.checkStage(encounter.getEncounterTypeUuid(), StageEnum.ONE)) {
+                    stageOneDuration += STAGE_1_DURATION;
+
+                } else if (patientsDAO.checkStage(encounter.getEncounterTypeUuid(), StageEnum.TWO)) {
+                    stageTwoDuration += STAGE_2_DURATION;
+                }
+            }
+
+            // Adjusting durations
+            if (stageOneDuration > STAGE_1_DURATION) {
+                stageOneDuration -= STAGE_1_DURATION;
+            }
+
+            if (stageTwoDuration > STAGE_2_DURATION) {
+                stageOneDuration = 0;
+                stageTwoDuration -= STAGE_2_DURATION;
+            }
+
+            String dialogMsg = "";
+
+            if (stageOneDuration >= 12 * 60) {
+                dialogMsg = getString(R.string.prolonged_labour_detected);
+            } else if (stageTwoDuration >= 3 * 60) {
+                dialogMsg = getString(R.string.second_stage_prolonged);
+            }
+
+            String finalDialogMsg = dialogMsg;
+
+            // Switching to UI thread
+            mainHandler.post(() -> {
+                if (!finalDialogMsg.isEmpty()) {
+                    AppDialogUtils.showSingleButtonDialog(
+                            (FragmentActivity) context,
+                            context.getString(R.string.generic_warning),
+                            finalDialogMsg,
+                            context.getString(R.string.okay),
+                            () -> null
+                    );
+                }
+            });
+        });
     }
 
 //    private void triggerAlarm_Stage2_every15mins(String visitUuid) { // TODO: change 1min to 15mins..... // visituuid : 0 - 5
@@ -1021,7 +1109,8 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 //        intent.putExtra("visitUuid", visitUuid);
 //        intent.putExtra("providerID", providerID);
 //        intent.putExtra("Stage2_Hour1_1", "Stage1_Hour1_1");
-////        intent.putExtra("Stage2_Hour1_1","Stage2_Hour1_1");
+
+    /// /        intent.putExtra("Stage2_Hour1_1","Stage2_Hour1_1");
 //
 //        Log.v("timeline", "patientname_3 " + patientName + " " + patientUuid + " " + visitUuid);
 //        Log.v("timeline", "visituuid_int_15min " + visitUuid.replaceAll("[^\\d]", ""));
@@ -1034,7 +1123,6 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 //                    AlarmManager.INTERVAL_FIFTEEN_MINUTES, pendingIntent);
 //        }*/
 //    }
-
     private void triggerAlarm_Stage1_every30mins() { // TODO: change 1min to 15mins..... // visituuid : 2 - 7
         Calendar calendar = Calendar.getInstance(); // current time and from there evey 30mins notifi will be triggered...
         calendar.add(Calendar.MINUTE, 30); // So that after 15mins this notifi is triggered and scheduled...
@@ -1164,16 +1252,16 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
     private void collectEmergencyData() {
         EncounterDTO encounterDTO = encounterDAO.getEncounterByVisitUUIDLimit1(visitUuid);
         if (encounterDTO == null) return;
-        Log.d(TAG, "collectEmergencyData: encounterDTO : "+new Gson().toJson(encounterDTO));
+        Log.d(TAG, "collectEmergencyData: encounterDTO : " + new Gson().toJson(encounterDTO));
 
         String latestEncounterName = encounterDAO.getEncounterTypeNameByUUID(encounterDTO.getEncounterTypeUuid());
-        Log.d("kzsos", "collectEmergencyData: latestEncounterName : "+latestEncounterName);
+        Log.d("kzsos", "collectEmergencyData: latestEncounterName : " + latestEncounterName);
         int currentStage = -1;
-        int currentHour  = -1;
+        int currentHour = -1;
 
         if (latestEncounterName != null && !latestEncounterName.isEmpty()) {
             String name = latestEncounterName.toLowerCase();
-            Log.d("kzsos", "collectEmergencyData: name : "+name);
+            Log.d("kzsos", "collectEmergencyData: name : " + name);
 
             if (!name.contains("stage") || !name.contains("hour")) return;
             String[] parts = name
@@ -1183,20 +1271,20 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 
             if (parts.length != 3) return;
             currentStage = Integer.parseInt(parts[0]);
-            currentHour  = Integer.parseInt(parts[1]);
-            Log.d("kzsos", "collectEmergencyData: currentStage : "+currentStage);
-            Log.d("kzsos", "collectEmergencyData: currentHour : "+currentHour);
+            currentHour = Integer.parseInt(parts[1]);
+            Log.d("kzsos", "collectEmergencyData: currentStage : " + currentStage);
+            Log.d("kzsos", "collectEmergencyData: currentHour : " + currentHour);
 
         }
 
         if (currentStage == -1 || currentHour == -1) return;
         int cardNumber = 1;
         EncounterDTO lastSosEncounter = encounterDAO.getSosEncounterByVisitUUIDLimit1(visitUuid);
-        Log.d("kzsos", "collectEmergencyData: lastSosEncounter : "+new Gson().toJson(lastSosEncounter));
+        Log.d("kzsos", "collectEmergencyData: lastSosEncounter : " + new Gson().toJson(lastSosEncounter));
 
         if (lastSosEncounter != null) {
             String latestSosObs = new ObsDAO().getLatestSosObsByEncounterUuid(lastSosEncounter.getUuid());
-            Log.d("kzsos", "collectEmergencyData: latestSosObs : "+new Gson().toJson(latestSosObs));
+            Log.d("kzsos", "collectEmergencyData: latestSosObs : " + new Gson().toJson(latestSosObs));
 
             if (latestSosObs != null && !latestSosObs.isEmpty()
                     && latestSosObs.toLowerCase().contains("stage")
@@ -1213,27 +1301,28 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 
                     if (parts.length == 3) {
                         int lastStage = Integer.parseInt(parts[0]);
-                        int lastHour  = Integer.parseInt(parts[1]);
-                        int lastSOS   = Integer.parseInt(parts[2]);
+                        int lastHour = Integer.parseInt(parts[1]);
+                        int lastSOS = Integer.parseInt(parts[2]);
 
                         if (lastStage == currentStage && lastHour == currentHour) {
                             cardNumber = lastSOS + 1;
                         }
                     }
-                    Log.d("kzsos", "collectEmergencyData: cardNumber : "+cardNumber);
-                } catch (NumberFormatException ignored) {}
+                    Log.d("kzsos", "collectEmergencyData: cardNumber : " + cardNumber);
+                } catch (NumberFormatException ignored) {
+                }
             }
         }
 
         String nextEncounterTypeName = "Stage" + currentStage + "_Hour" + currentHour + "_SOS" + cardNumber;
         String encounterUuid = UUID.randomUUID().toString();
-        Log.d("kzsos", "collectEmergencyData: nextEncounterTypeName : "+nextEncounterTypeName);
+        Log.d("kzsos", "collectEmergencyData: nextEncounterTypeName : " + nextEncounterTypeName);
         //1 Create sos encounter
         try {
             EncounterDTO sosEncounter = new EncounterDTO();
             sosEncounter.setUuid(encounterUuid);
             sosEncounter.setVisituuid(encounterDTO.getVisituuid());
-            sosEncounter.setEncounterTime( DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
+            sosEncounter.setEncounterTime(DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
             sosEncounter.setProvideruuid(encounterDTO.getProvideruuid());
             sosEncounter.setEncounterTypeUuid(UuidDictionary.LCG_SOS);
             sosEncounter.setVoided(encounterDTO.getVoided());
@@ -1255,7 +1344,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
             obsDAO.insertObs(obsDTO);
 
         } catch (DAOException e) {
-            Log.d(TAG, "collectEmergencyData: e : "+e.getLocalizedMessage());
+            Log.d(TAG, "collectEmergencyData: e : " + e.getLocalizedMessage());
             e.printStackTrace();
             throw new RuntimeException(e);
         }
@@ -1266,17 +1355,17 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         fetchAllEncountersFromVisitForTimelineScreen(visitUuid);
     }
 
-  /*  private void showErrorOnNoInternet() {
-        AppDialogUtils.showSingleButtonDialog(
-                this,
-                getString(R.string.no_internet_timeline_screen_title),
-                getString(R.string.no_internet_timeline_screen_body),
-                getString(R.string.ok),
-                () -> {
-                    return null;
-                }
-        );
-    }*/
+    /*  private void showErrorOnNoInternet() {
+          AppDialogUtils.showSingleButtonDialog(
+                  this,
+                  getString(R.string.no_internet_timeline_screen_title),
+                  getString(R.string.no_internet_timeline_screen_body),
+                  getString(R.string.ok),
+                  () -> {
+                      return null;
+                  }
+          );
+      }*/
     private void showNoDataDialogForViewLcg() {
         AppDialogUtils.showSingleButtonDialog(
                 this,
