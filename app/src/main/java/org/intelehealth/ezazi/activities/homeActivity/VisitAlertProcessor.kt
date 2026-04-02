@@ -26,7 +26,7 @@ object VisitAlertProcessor {
 
             var totalScore = 0.0
 
-            obsList.forEach { obs -> totalScore += AlertScoreCalculator.calculate(obs, visit)
+            obsList.forEach { obs -> totalScore += AlertScoreCalculator.calculateUpdated(obs, visit)
             }
 
             val cervixObs = obsDAO.getCervixObsByVisit(visit.uuid, PartogramConstants.Params.CERVIX_PLOT.conceptId)
