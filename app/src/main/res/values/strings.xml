@@ -1111,6 +1111,15 @@
     <string name="empty_administer_list_message">Please add %1$s\nhere to administer</string>
     <string name="no_data_message">No record for\n%1$s</string>
     <string name="title_upcoming_visit">Upcoming Visit</string>
+    <string name="gravida_title">Gravida*</string>
+    <string name="gravida_hint">Gravida</string>
+    <string name="error_gravida_required">Please enter gravida value</string>
+    <string name="error_gravida_negative">Gravida value cannot be negative</string>
+    <string name="error_gravida_max_limit">Gravida max limit is 20</string>
+    <string name="last_menstrual_period_title">Last Menstrual Period*</string>
+    <string name="edd_title">Estimated Date of Delivery*</string>
+    <string name="hospital_id_title">Hospital ID*</string>
+    <string name="hospital_id_hint">Hospital ID</string>
     <string name="prolonged_labour_detected">Prolonged labour detected: Active stage exceeded safe duration.</string>
     <string name="second_stage_prolonged">Second stage prolonged. Immediate attention required.</string>
 </resources>

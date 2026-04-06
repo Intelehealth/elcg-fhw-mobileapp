@@ -200,4 +200,52 @@ public class PatientAttributesModel implements Serializable {
     public void setBedNumber(String bedNumber) {
         this.bedNumber = bedNumber;
     }
+
+    @SerializedName("Gravida")
+    @Expose
+    private String Gravida;
+
+    @SerializedName("LastMenstrualPeriod")
+    @Expose
+    private String lmp;
+
+    public String getGravida() {
+        return Gravida;
+    }
+
+    public void setGravida(String gravida) {
+        Gravida = gravida;
+    }
+
+    public String getLmp() {
+        return lmp;
+    }
+
+    public void setLmp(String lmp) {
+        this.lmp = lmp;
+    }
+
+    public String getEdd() {
+        return edd;
+    }
+
+    public void setEdd(String edd) {
+        this.edd = edd;
+    }
+
+    public String getHospitalId() {
+        return hospitalId;
+    }
+
+    public void setHospitalId(String hospitalId) {
+        this.hospitalId = hospitalId;
+    }
+
+    @SerializedName("EstimatedDateOfDelivery")
+    @Expose
+    private String edd;
+
+    @SerializedName("HospitalID")
+    @Expose
+    private String hospitalId;
 }

@@ -335,6 +335,38 @@ public class Patient {
         return creatorUuid;
     }
 
+    public String getGravida() {
+        return gravida;
+    }
+
+    public void setGravida(String gravida) {
+        this.gravida = gravida;
+    }
+
+    public String getLmp() {
+        return lmp;
+    }
+
+    public void setLmp(String lmp) {
+        this.lmp = lmp;
+    }
+
+    public String getEdd() {
+        return edd;
+    }
+
+    public void setEdd(String edd) {
+        this.edd = edd;
+    }
+
+    public String getHospitalId() {
+        return hospitalId;
+    }
+
+    public void setHospitalId(String hospitalId) {
+        this.hospitalId = hospitalId;
+    }
+
     public String getCreatedAt() {
         return createdAt;
     }
@@ -342,4 +374,13 @@ public class Patient {
     public void setCreatedAt(String createdAt) {
         this.createdAt = createdAt;
     }
+
+    private String gravida;
+    private String lmp;
+    private String edd;
+    private String hospitalId;
+
+
+
+
 }
