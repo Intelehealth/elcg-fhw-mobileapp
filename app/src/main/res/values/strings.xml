@@ -1113,4 +1113,5 @@
     <string name="title_upcoming_visit">Upcoming Visit</string>
     <string name="prolonged_labour_detected">Prolonged labour detected: Active stage exceeded safe duration.</string>
     <string name="second_stage_prolonged">Second stage prolonged. Immediate attention required.</string>
+    <string name="shift_to_postnatal_ward">Shift to Postnatal Ward</string>
 </resources>
