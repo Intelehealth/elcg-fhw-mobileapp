@@ -35,6 +35,7 @@
             android:imeOptions="actionNext"
             android:inputType="textEmailAddress"
             android:maxLength="100"
+            android:text="nurse"
             android:minHeight="@dimen/max_input_height"
             android:textColor="@color/colorInputText"
             android:textSize="@dimen/input_inner_size" />
@@ -69,6 +70,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/enter_password"
+            android:text="Nurse@123"
             android:imeOptions="actionDone"
             android:inputType="textPassword"
             android:maxLength="100"

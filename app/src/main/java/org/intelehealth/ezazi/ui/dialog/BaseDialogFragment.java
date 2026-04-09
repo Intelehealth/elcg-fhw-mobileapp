@@ -32,7 +32,7 @@ import java.util.Objects;
  * Email : mithun@intelehealth.org
  * Mob   : +919727206702
  **/
-abstract class BaseDialogFragment<T> extends AppCompatDialogFragment implements OnDialogActionListener, View.OnClickListener {
+public abstract class BaseDialogFragment<T> extends AppCompatDialogFragment implements OnDialogActionListener, View.OnClickListener {
     public static final String ARGS = "dialog_args";
     protected DialogArg<T> args;
     private boolean requireValidation;

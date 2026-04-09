@@ -167,4 +167,42 @@
     <string name="lmp_required">Please select LMP date</string>
     <string name="lmp_future_not_allowed">LMP cannot be a future date</string>
     <string name="lmp_range_invalid">LMP cannot be more than 44 weeks ago</string>
+
+    <!-- Woman Delivery Details -->
+    <string name="section_one_women_delivery_details">Section 1: Woman Delivery Details</string>
+    <string name="label_date_of_delivery">Date of Delivery</string>
+    <string name="label_time_of_delivery">Time of Delivery</string>
+    <string name="label_mode_of_delivery">Mode of Delivery</string>
+    <string name="label_perineal_tear">Perineal Tear</string>
+    <string name="label_degree_of_perineal_tear">Degree of Perineal Tear</string>
+    <string name="label_placenta_membrane_delivery">Placenta &amp; Membrane Delivery</string>
+    <string name="label_check_placenta_membranes">Placenta &amp; Membrane Status</string>
+    <string name="label_time_of_placenta_membrane_delivery">Time of Placenta &amp; Membranes Delivery</string>
+    <string name="label_any_placental_abnormality">Any placental abnormality</string>
+    <string name="label_amtsl">Medications used for Active Management of Third Stage of Labour (AMTSL)</string>
+
+    <!-- Newborn Birth Details -->
+    <string name="label_type_of_birth">Type of Birth</string>
+    <string name="label_sex">Sex</string>
+    <string name="label_apgar_score_1_min">APGAR Score at 1 minute</string>
+    <string name="label_apgar_score_5_min">APGAR Score at 5 minutes</string>
+    <string name="label_resuscitation">Resuscitation</string>
+    <string name="label_birth_weight">Birth Weight (in grams)</string>
+    <string name="label_skin_to_skin_contact">Skin-to-skin contact</string>
+    <string name="label_breastfeed_within_1_hour">Breastfed within 1 hour of delivery</string>
+    <string name="label_gestation">Gestation</string>
+    <string name="label_congenital_anomalies">Congenital Anomalies</string>
+    <string name="label_specify_anomaly">If yes, specify the anomaly</string>
+    <string name="women_delivery_details">Woman delivery details</string>
+    <string name="section_two_placenta_and_membrane_delivery">Section 2: Placenta &amp; Membrane Delivery Details</string>
+    <string name="new_born_details">Section 3: Newborn Details</string>
+    <string name="error_invalid_apgar_range">Apgar range is invalid</string>
+    <string name="normal_vaginal_delivery">Normal Vaginal Delivery</string>
+    <string name="normal_vaginal_delivery_episiotomy">Normal Vaginal Delivery with Episiotomy</string>
+    <string name="ventouse_assisted_vaginal_delivery">Ventouse Assisted Vaginal Delivery</string>
+    <string name="forceps_assisted_vaginal_delivery">Forceps Assisted Vaginal Delivery</string>
+    <string name="none_option">None</string>
+    <string name="final_delivery_outcome_form">Women Delivery Details</string>
+
+
 </resources>

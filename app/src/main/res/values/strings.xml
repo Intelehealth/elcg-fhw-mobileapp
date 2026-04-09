@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name" translatable="false">eZazi</string>
-<!--
+    <!--
     <string name="notification_title">Realtime sync is ON!</string>
 -->
     <string name="notification_title">eZazi is running in the background</string>
@@ -1120,4 +1120,6 @@
     <string name="edd_title">Estimated Date of Delivery*</string>
     <string name="hospital_id_title">Hospital ID*</string>
     <string name="hospital_id_hint">Hospital ID</string>
+
+
 </resources>

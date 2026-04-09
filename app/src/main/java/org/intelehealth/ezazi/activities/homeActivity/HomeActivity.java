@@ -96,6 +96,7 @@ import org.intelehealth.ezazi.partogram.PartogramConstants;
 import org.intelehealth.ezazi.services.firebase_services.CallListenerBackgroundService;
 import org.intelehealth.ezazi.services.firebase_services.DeviceInfoUtils;
 import org.intelehealth.ezazi.services.firebase_services.TokenRefreshUtils;
+import org.intelehealth.ezazi.stage3.WomenDeliveryDetailsActivity;
 import org.intelehealth.ezazi.syncModule.SyncUtils;
 import org.intelehealth.ezazi.ui.dialog.AppDialogUtils;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
@@ -843,7 +844,9 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
                     Intent intent = new Intent(HomeActivity.this, SearchPatientActivity.class);
                     startActivity(intent);
                 } else if (item.getItemId() == R.id.action_refresh) {
-                    sync();
+                   // sync();
+                    Intent intent = new Intent(HomeActivity.this, WomenDeliveryDetailsActivity.class);
+                    startActivity(intent);
                 } else if (item.getItemId() == R.id.action_help) {
                     help();
                 } else return false;

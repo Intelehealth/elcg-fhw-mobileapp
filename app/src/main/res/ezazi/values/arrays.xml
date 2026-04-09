@@ -193,4 +193,79 @@
         <item>400  mg</item>
         <item>650  mg</item>
     </string-array>
+
+    <string-array name="mode_of_delivery_array">
+        <item>@string/normal_vaginal_delivery</item>
+        <item>@string/normal_vaginal_delivery_episiotomy</item>
+        <item>@string/ventouse_assisted_vaginal_delivery</item>
+        <item>@string/forceps_assisted_vaginal_delivery</item>
+        <item>Other</item>
+
+    </string-array>
+
+    <string-array name="amtsl_options">
+        <item>None</item>
+        <item>Oxytocin 10 IU intramuscular (IM)</item>
+        <item>Oxytocin 10 IU slow intravenous (IV)</item>
+        <item>Oxytocin 20 IU IV Infusion at 60 drops per minute</item>
+        <item>Oxytocin 20 IU IV Infusion at 30 drops per minute</item>
+        <item>Misoprostol 200 µg Oral</item>
+        <item>Misoprostol 400 µg Oral</item>
+        <item>Misoprostol 600 µg Oral</item>
+        <item>Tranexamic acid 1 g (100 mg/1 ml) slow intravenous (IV)</item>
+        <item>Methylergometrine Injection</item>
+        <item>Carbetocin 100 µg intramuscular (IM)</item>
+        <item>Carbetocin 100 µg slow intravenous (IV)</item>
+        <item>Other</item>
+    </string-array>
+
+    <string-array name="gestation_options">
+        <item>Full-term</item>
+        <item>Pre-term</item>
+        <item>IUGR</item>
+        <item>Post-term</item>
+    </string-array>
+
+    <string-array name="congenital_anomalies_options">
+    <item>Oro-facial clefts (Cleft lip/cleft palate)</item>
+    <item>Neural tube defects</item>
+        <item>Congenital talipes equinovarus (CTEV/Clubfoot)</item>
+        <item>Limb reduction defects</item>
+        <item>Hypospadias</item>
+        <item>Exomphalos</item>
+        <item>Omphalocele</item>
+        <item>Gastroschisis</item>
+        <item>Imperforate anus</item>
+        <item>Other</item>
+    </string-array>
+
+    <string-array name="perineal_tear_degree">
+        <item>First Degree</item>
+        <item>Second Degree</item>
+        <item>Third Degree</item>
+        <item>Fourth Degree</item>
+    </string-array>
+
+    <string-array name="placenta_and_membranes">
+        <item>Complete</item>
+        <item>Retained</item>
+    </string-array>
+
+    <string-array name="types_of_birth">
+        <item>Live Birth</item>
+        <item>Stillbirth</item>
+    </string-array>
+
+    <string-array name="baby_gender">
+        <item>Female</item>
+        <item>Male</item>
+        <item>Ambiguous</item>
+    </string-array>
+
+    <string-array name="yes_no_options_array">
+        <item>Yes</item>
+        <item>No</item>
+    </string-array>
+
+
 </resources>
