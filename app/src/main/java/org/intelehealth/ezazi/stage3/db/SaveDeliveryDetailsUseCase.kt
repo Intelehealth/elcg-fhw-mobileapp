@@ -1,5 +1,6 @@
 package org.intelehealth.ezazi.stage3.db
 
+import org.intelehealth.ezazi.models.dto.EncounterDTO
 import org.intelehealth.ezazi.stage3.models.DeliveryDetails
 
 class SaveDeliveryDetailsUseCase(
@@ -7,13 +8,10 @@ class SaveDeliveryDetailsUseCase(
 ) {
 
     operator fun invoke(
-        encounterUuid: String,
+        encounterDTO: EncounterDTO,
         deliveryDetails: DeliveryDetails,
         creatorUuid: String
     ): Boolean {
-        return repository.saveDeliveryDetails(
-            encounterUuid,
-            deliveryDetails,creatorUuid
-        )
+        return repository.saveDeliveryDetails(encounterDTO, deliveryDetails,creatorUuid)
     }
 }

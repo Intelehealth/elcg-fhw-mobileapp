@@ -11,8 +11,12 @@ import com.google.android.material.textfield.TextInputLayout
 import com.google.gson.Gson
 import org.intelehealth.ezazi.R
 import org.intelehealth.ezazi.activities.homeActivity.HomeActivity
+import org.intelehealth.ezazi.app.AppConstants
+import org.intelehealth.ezazi.app.IntelehealthApplication
+import org.intelehealth.ezazi.database.dao.EncounterDAO
 import org.intelehealth.ezazi.database.dao.ObsDAO
 import org.intelehealth.ezazi.databinding.ActivityWomenDeliveryDetailsBinding
+import org.intelehealth.ezazi.models.dto.EncounterDTO
 import org.intelehealth.ezazi.stage3.Utils.DeliveryConcept
 import org.intelehealth.ezazi.stage3.Utils.DeliveryUIController
 import org.intelehealth.ezazi.stage3.db.DeliveryLocalDataSource
@@ -23,13 +27,16 @@ import org.intelehealth.ezazi.stage3.factory.DeliveryViewModelFactory
 import org.intelehealth.ezazi.stage3.models.DeliveryDetails
 import org.intelehealth.ezazi.stage3.viewmodel.DeliveryViewModel
 import org.intelehealth.ezazi.utilities.SessionManager
-import org.intelehealth.ezazi.utilities.SupportUtils
+import org.intelehealth.ezazi.utilities.UuidDictionary
+import org.intelehealth.klivekit.utils.DateTimeUtils
+import java.util.UUID
 
 class WomenDeliveryDetailsActivity : AppCompatActivity() {
     private val TAG = "WomenDeliveryDetailsAct"
     private lateinit var binding: ActivityWomenDeliveryDetailsBinding
     private lateinit var viewModel: DeliveryViewModel
     private lateinit var uiHandler: DeliveryUIController
+    private var visitUuid: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,8 +50,10 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
         }
         //SupportUtils.enableProperPadding(this@WomenDeliveryDetailsActivity)
 
+        visitUuid = intent?.getStringExtra("visitUuid")
+        val encounterDto = createEncounterDto()
 
-        val repository = DeliveryRepository(DeliveryLocalDataSource(ObsDAO()), DeliveryObsMapper())
+        val repository = DeliveryRepository(DeliveryLocalDataSource(ObsDAO(), EncounterDAO()), DeliveryObsMapper())
         val useCase = SaveDeliveryDetailsUseCase(repository)
 
         val factory = DeliveryViewModelFactory(useCase)
@@ -57,8 +66,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
 
             if (validateFields(deliveryDetails)) {
                 clearErrors()
-
-                viewModel.saveDelivery("", deliveryDetails, SessionManager(this).creatorID)
+                viewModel.saveDelivery(encounterDto, deliveryDetails, SessionManager(this).creatorID)
             }
         }
 
@@ -417,5 +425,18 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
         startActivity(intent)
         finish()
+    }
+
+    private fun createEncounterDto(): EncounterDTO {
+        return EncounterDTO().apply {
+            uuid = UUID.randomUUID().toString()
+            visituuid = visitUuid
+            encounterTime = DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT)
+            provideruuid = SessionManager(this@WomenDeliveryDetailsActivity).providerID
+            encounterTypeUuid = UuidDictionary.DELIVERY_OUTCOME_STAGE3
+            syncd = false
+            voided = 0
+            privacynotice_value = "true"
+        }
     }
 }

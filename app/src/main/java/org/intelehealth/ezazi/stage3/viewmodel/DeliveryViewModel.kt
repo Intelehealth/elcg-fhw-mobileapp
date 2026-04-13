@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.intelehealth.ezazi.models.dto.EncounterDTO
 import org.intelehealth.ezazi.stage3.db.SaveDeliveryDetailsUseCase
 import org.intelehealth.ezazi.stage3.models.DeliveryDetails
 
@@ -18,7 +19,7 @@ class DeliveryViewModel(
     val saveResult: LiveData<Boolean> = _saveResult
 
     fun saveDelivery(
-        encounterUuid: String,
+        encounterDTO: EncounterDTO,
         deliveryDetails: DeliveryDetails,
         creatorId: String
     ) {
@@ -26,7 +27,7 @@ class DeliveryViewModel(
 
             val result = withContext(Dispatchers.IO) {
                 saveDeliveryDetailsUseCase(
-                    encounterUuid,
+                    encounterDTO,
                     deliveryDetails,
                     creatorId
                 )
