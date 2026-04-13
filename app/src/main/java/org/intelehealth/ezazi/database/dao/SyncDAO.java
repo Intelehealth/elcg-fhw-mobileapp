@@ -19,13 +19,18 @@ import org.intelehealth.ezazi.models.ActivePatientModel;
 import org.intelehealth.ezazi.models.dto.ResponseDTO;
 import org.intelehealth.ezazi.models.dto.VisitDTO;
 import org.intelehealth.ezazi.models.pushRequestApiCall.PushRequestApiCall;
+import org.intelehealth.ezazi.models.pushResponseApiCall.Data;
+import org.intelehealth.ezazi.models.pushResponseApiCall.Encounterlist;
+import org.intelehealth.ezazi.models.pushResponseApiCall.Patientlist;
 import org.intelehealth.ezazi.models.pushResponseApiCall.PushResponseApiCall;
+import org.intelehealth.ezazi.models.pushResponseApiCall.Visitlist;
 import org.intelehealth.ezazi.utilities.Logger;
 import org.intelehealth.ezazi.utilities.NotificationID;
 import org.intelehealth.ezazi.utilities.PatientsFrameJson;
 import org.intelehealth.ezazi.utilities.SessionManager;
 import org.intelehealth.ezazi.utilities.exception.DAOException;
 
+import java.io.IOException;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -100,7 +105,7 @@ public class SyncDAO {
         String oldDate = sessionManager.getPullExcutedTime();
         String url = sessionManager.getServerUrl() + "/EMR-Middleware/webapi/pull/pulldata/" + sessionManager.getLocationUuid() + "/" + sessionManager.getPullExcutedTime();
 //        String url = "https://" + sessionManager.getServerUrl() + "/pulldata/" + sessionManager.getLocationUuid() + "/" + sessionManager.getPullExcutedTime();
-        Log.d(TAG, "pullData_Background: url : "+url);
+        Log.d(TAG, "pullData_Background: url : " + url);
         Call<ResponseDTO> middleWarePullResponseCall = AppConstants.apiInterface.RESPONSE_DTO_CALL(url, "Basic " + encoded);
         Logger.logD("Start pull request", "Started");
         middleWarePullResponseCall.enqueue(new Callback<ResponseDTO>() {
@@ -131,7 +136,7 @@ public class SyncDAO {
                     //   AppConstants.notificationUtils.DownloadDone("Sync", "Successfully synced", 1, IntelehealthApplication.getAppContext());
                     else {
                         IntelehealthApplication.getAppContext().sendBroadcast(new Intent(AppConstants.SYNC_INTENT_ACTION)
-                                        .setPackage(IntelehealthApplication.getInstance().getPackageName())
+                                .setPackage(IntelehealthApplication.getInstance().getPackageName())
                                 .putExtra(AppConstants.SYNC_INTENT_DATA_KEY, AppConstants.SYNC_FAILED));
                     }
                     //AppConstants.notificationUtils.DownloadDone("Sync", "Failed synced,You can try again", 1, IntelehealthApplication.getAppContext());
@@ -188,6 +193,56 @@ public class SyncDAO {
         return true;
     }
 
+    /**
+     * This pullDataBackgroundSync works synchronously, i.e., only from the thread where it is called from.
+     * Hence this should only be called from a background thread.
+     */
+    public boolean pullDataBackgroundSync(final Context context) {
+        sessionManager = new SessionManager(context);
+        String encoded = sessionManager.getEncoded();
+        String url = sessionManager.getServerUrl() + "/EMR-Middleware/webapi/pull/pulldata/" + sessionManager.getLocationUuid() + "/" + sessionManager.getPullExcutedTime();
+        Call<ResponseDTO> middleWarePullResponseCall = AppConstants.apiInterface.RESPONSE_DTO_CALL(url, "Basic " + encoded);
+
+        try {
+            Response<ResponseDTO> response = middleWarePullResponseCall.execute();
+            boolean isHandled = handlePullResponse(response);
+            sessionManager.setLastPulledDateTime(AppConstants.dateAndTimeUtils.currentDateTimeInHome());
+            sessionManager.setPullSyncFinished(true);
+            broadcastSyncStatus(AppConstants.SYNC_PULL_DATA_DONE);
+            return isHandled;
+        } catch (IOException e) {
+            Logger.logD("pull data", "exception" + e.getMessage());
+            broadcastSyncStatus(AppConstants.SYNC_FAILED);
+            return false;
+        }
+    }
+
+    private boolean handlePullResponse(Response<ResponseDTO> response) {
+        if (!response.isSuccessful() || response.body() == null) {
+            broadcastSyncStatus(AppConstants.SYNC_FAILED);
+            return false;
+        }
+
+        ResponseDTO responseBody = response.body();
+        if (responseBody.getData() != null) {
+            sessionManager.setPulled(responseBody.getData().getPullexecutedtime());
+        }
+
+        boolean syncSuccess = false;
+        try {
+            syncSuccess = SyncData(responseBody);
+        } catch (DAOException e) {
+            FirebaseCrashlytics.getInstance().recordException(e);
+        }
+
+        if (syncSuccess) {
+            sessionManager.setLastSyncDateTime(AppConstants.dateAndTimeUtils.getcurrentDateTime());
+        } else {
+            broadcastSyncStatus(AppConstants.SYNC_FAILED);
+        }
+
+        return syncSuccess;
+    }
 
     public boolean pullData(final Context context, String fromActivity) {
 
@@ -195,7 +250,7 @@ public class SyncDAO {
         db = mDbHelper.getWritableDatabase();
         sessionManager = new SessionManager(context);
         String encoded = sessionManager.getEncoded();
-        Log.d(TAG, "pullcheck pullData: encoded : "+encoded);
+        Log.d(TAG, "pullcheck pullData: encoded : " + encoded);
         String oldDate = sessionManager.getPullExcutedTime();
         String url = sessionManager.getServerUrl() + "/EMR-Middleware/webapi/pull/pulldata/" + sessionManager.getLocationUuid() + "/" + sessionManager.getPullExcutedTime();
 //        String url = "https://" + sessionManager.getServerUrl() + "/pulldata/" + sessionManager.getLocationUuid() + "/" + sessionManager.getPullExcutedTime();
@@ -457,6 +512,106 @@ public class SyncDAO {
         }
 
         return isSucess[0];
+    }
+
+    /**
+     * This pushDataApiPeriodicSync works synchronously, i.e., only from the thread where it is called from.
+     * Hence this should only be called from a background thread.
+     */
+    public boolean pushDataApiPeriodicSync() {
+        sessionManager = new SessionManager(IntelehealthApplication.getAppContext());
+        PushRequestApiCall pushRequestApiCall1 = new PatientsFrameJson().frameJson();
+        String encoded = sessionManager.getEncoded();
+        String url = sessionManager.getServerUrl() + "/EMR-Middleware/webapi/push/pushdata";
+
+        if (!isDataPresent(pushRequestApiCall1)) {
+            return true;
+        }
+
+        try {
+            Call<PushResponseApiCall> call = AppConstants.apiInterface.PUSH_RESPONSE_API_CALL_OBSERVABLE(
+                    url, "Basic " + encoded, pushRequestApiCall1
+            );
+
+            Response<PushResponseApiCall> response = call.execute();
+            boolean isResponseHandled = handleApiResponse(response);
+
+            if (isResponseHandled) {
+                sessionManager.setSyncFinished(true);
+                sessionManager.setPullSyncFinished(true);
+                broadcastSyncStatus(AppConstants.SYNC_PUSH_DATA_DONE);
+                return true;
+            } else {
+                broadcastSyncStatus(AppConstants.SYNC_FAILED);
+                return false;
+            }
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    private void broadcastSyncStatus(int broadcastStatus) {
+        IntelehealthApplication.getAppContext().sendBroadcast(new Intent(AppConstants.SYNC_INTENT_ACTION)
+                .putExtra(AppConstants.SYNC_INTENT_DATA_KEY, broadcastStatus)
+                .setPackage(IntelehealthApplication.getInstance().getPackageName()));
+    }
+
+    private boolean handleApiResponse(Response<PushResponseApiCall> response) {
+        if (!response.isSuccessful()) {
+            return false;
+        }
+
+        PushResponseApiCall apiResponse = response.body();
+        if (apiResponse == null) {
+            return false;
+        }
+
+        Data responseData = apiResponse.getData();
+        if (responseData == null) {
+            return false;
+        }
+
+        List<Patientlist> patientList = responseData.getPatientlist();
+        List<Visitlist> visitList = responseData.getVisitlist();
+        List<Encounterlist> encounterList = responseData.getEncounterlist();
+
+        VisitsDAO visitsDAO = new VisitsDAO();
+        PatientsDAO patientsDAO = new PatientsDAO();
+        EncounterDAO encounterDAO = new EncounterDAO();
+
+        for (Patientlist patient : patientList) {
+            try {
+                patientsDAO.updateOpemmrsId(patient.getOpenmrsId(), patient.getSyncd().toString(), patient.getUuid());
+            } catch (DAOException e) {
+                FirebaseCrashlytics.getInstance().recordException(e);
+            }
+        }
+
+        for (Visitlist visit : visitList) {
+            try {
+                visitsDAO.updateVisitSync(visit.getUuid(), visit.getSyncd().toString());
+            } catch (DAOException e) {
+                FirebaseCrashlytics.getInstance().recordException(e);
+            }
+        }
+
+        for (Encounterlist encounter : encounterList) {
+            try {
+                encounterDAO.updateEncounterSync(encounter.getSyncd().toString(), encounter.getUuid());
+            } catch (DAOException e) {
+                FirebaseCrashlytics.getInstance().recordException(e);
+            }
+        }
+
+        return true;
+    }
+
+    public boolean isDataPresent(PushRequestApiCall apiCall) {
+        boolean isVisitPresent = !apiCall.getVisits().isEmpty();
+        boolean isPersonsPresent = !apiCall.getPersons().isEmpty();
+        boolean isPatientsPresent = !apiCall.getPatients().isEmpty();
+        boolean isEncountersPresent = !apiCall.getEncounters().isEmpty();
+        return isVisitPresent || isPersonsPresent || isPatientsPresent || isEncountersPresent;
     }
 
     private void CalculateAgoTime(Context context) {

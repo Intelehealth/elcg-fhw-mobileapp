@@ -1,5 +1,6 @@
 package org.intelehealth.ezazi.database.dao;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.util.Log;
 
@@ -20,6 +21,7 @@ import org.intelehealth.ezazi.models.ObsImageModel.ObsJsonResponse;
 import org.intelehealth.ezazi.models.ObsImageModel.ObsPushDTO;
 import org.intelehealth.ezazi.models.patientImageModelRequest.PatientProfile;
 import org.intelehealth.ezazi.utilities.exception.DAOException;
+
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -34,7 +36,6 @@ import okhttp3.ResponseBody;
 public class ImagesPushDAO {
     String TAG = ImagesPushDAO.class.getSimpleName();
     SessionManager sessionManager = null;
-
 
 
     public boolean patientProfileImagesPush() {
@@ -79,6 +80,41 @@ public class ImagesPushDAO {
                 .setPackage(IntelehealthApplication.getInstance().getPackageName()));
 //        AppConstants.notificationUtils.DownloadDone("Patient Profile", "Completed Uploading Patient Profile", 4, IntelehealthApplication.getAppContext());
         return true;
+    }
+
+    public boolean patientProfileImagesPushSync() {
+        sessionManager = new SessionManager(IntelehealthApplication.getAppContext());
+        String encoded = sessionManager.getEncoded();
+        UrlModifiers urlModifiers = new UrlModifiers();
+        ImagesDAO imagesDAO = new ImagesDAO();
+        String url = urlModifiers.setPatientProfileImageUrl();
+
+        List<PatientProfile> patientProfiles = new ArrayList<>();
+        try {
+            patientProfiles = imagesDAO.getPatientProfileUnsyncedImages();
+        } catch (DAOException e) {
+            FirebaseCrashlytics.getInstance().recordException(e);
+        }
+
+        boolean allImagesSynced = true;
+
+        for (PatientProfile p : patientProfiles) {
+            try {
+                AppConstants.apiInterface.PERSON_PROFILE_PIC_UPLOAD(url, "Basic " + encoded, p).blockingGet();
+                imagesDAO.updateUnsyncedPatientProfile(p.getPerson(), "PP");
+            } catch (Exception e) {
+                FirebaseCrashlytics.getInstance().recordException(e);
+                allImagesSynced = false;
+            }
+        }
+
+        sessionManager.setPullSyncFinished(true);
+
+        IntelehealthApplication.getAppContext().sendBroadcast(new Intent(AppConstants.SYNC_INTENT_ACTION)
+                .putExtra(AppConstants.SYNC_INTENT_DATA_KEY, AppConstants.SYNC_PATIENT_PROFILE_IMAGE_PUSH_DONE)
+                .setPackage(IntelehealthApplication.getInstance().getPackageName()));
+
+        return allImagesSynced;
     }
 
     public boolean obsImagesPush() {
@@ -141,6 +177,48 @@ public class ImagesPushDAO {
         return true;
     }
 
+    /**
+     * This obsImagesPushSync works synchronously, i.e., only from the thread where it is called from.
+     * Hence this should only be called from a background thread.
+     */
+    public boolean obsImagesPushSync() {
+        sessionManager = new SessionManager(IntelehealthApplication.getAppContext());
+        String encoded = sessionManager.getEncoded();
+        UrlModifiers urlModifiers = new UrlModifiers();
+        ImagesDAO imagesDAO = new ImagesDAO();
+        String url = urlModifiers.setObsImageUrl();
+
+        List<ObsPushDTO> obsImageJsons = new ArrayList<>();
+        try {
+            obsImageJsons = imagesDAO.getObsUnsyncedImages();
+        } catch (DAOException e) {
+            FirebaseCrashlytics.getInstance().recordException(e);
+        }
+
+        boolean allImagesSynced = true;
+
+        for (ObsPushDTO p : obsImageJsons) {
+            try {
+                File file = new File(AppConstants.IMAGE_PATH + p.getUuid() + ".jpg");
+                RequestBody requestFile = RequestBody.create(MediaType.parse("application/json"), file);
+                MultipartBody.Part body = MultipartBody.Part.createFormData("file", file.getName(), requestFile);
+                AppConstants.apiInterface.OBS_JSON_RESPONSE_OBSERVABLE(url, "Basic " + encoded, body, p).blockingFirst();
+                imagesDAO.updateUnsyncedObsImages(p.getUuid());
+            } catch (Exception e) {
+                FirebaseCrashlytics.getInstance().recordException(e);
+                allImagesSynced = false;
+            }
+        }
+
+        sessionManager.setPushSyncFinished(true);
+
+        IntelehealthApplication.getAppContext().sendBroadcast(new Intent(AppConstants.SYNC_INTENT_ACTION)
+                .putExtra(AppConstants.SYNC_INTENT_DATA_KEY, AppConstants.SYNC_OBS_IMAGE_PUSH_DONE)
+                .setPackage(IntelehealthApplication.getInstance().getPackageName()));
+
+        return allImagesSynced;
+    }
+
     public boolean deleteObsImage() {
         sessionManager = new SessionManager(IntelehealthApplication.getAppContext());
         String encoded = sessionManager.getEncoded();
@@ -178,4 +256,33 @@ public class ImagesPushDAO {
         return true;
     }
 
+    /**
+     * This deleteObsImageSync() works synchronously, i.e., only from the thread where it is called from.
+     * Hence this should only be called from a background thread.
+     */
+    public boolean deleteObsImageSync() {
+        sessionManager = new SessionManager(IntelehealthApplication.getAppContext());
+        String encoded = sessionManager.getEncoded();
+        UrlModifiers urlModifiers = new UrlModifiers();
+        ImagesDAO imagesDAO = new ImagesDAO();
+        List<String> voidedObsImageList = new ArrayList<>();
+
+        try {
+            voidedObsImageList = imagesDAO.getVoidedImageObs();
+        } catch (DAOException e) {
+            FirebaseCrashlytics.getInstance().recordException(e);
+        }
+
+        boolean allDeleted = true;
+        for (String voidedObsImage : voidedObsImageList) {
+            try {
+                String url = urlModifiers.obsImageDeleteUrl(voidedObsImage);
+                AppConstants.apiInterface.DELETE_OBS_IMAGE(url, "Basic " + encoded).blockingFirst();
+            } catch (Exception e) {
+                FirebaseCrashlytics.getInstance().recordException(e);
+                allDeleted = false;
+            }
+        }
+        return allDeleted;
+    }
 }
