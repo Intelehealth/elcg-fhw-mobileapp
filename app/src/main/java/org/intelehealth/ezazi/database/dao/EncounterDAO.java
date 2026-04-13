@@ -1,5 +1,6 @@
 package org.intelehealth.ezazi.database.dao;
 
+import static org.intelehealth.ezazi.utilities.UuidDictionary.DELIVERY_OUTCOME_STAGE3;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.ENCOUNTER_VISIT_COMPLETE;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.ENCOUNTER_VISIT_NOTE;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.LCG_SOS;
@@ -822,5 +823,53 @@ public class EncounterDAO {
         return isCreated;
     }
 
+    public boolean insertDeliveryOutcomeStage3(EncounterDTO encounterDTO) throws DAOException {
+        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
+        boolean isCreated = false;
+        ContentValues values = new ContentValues();
+        try {
+            values.put("uuid", encounterDTO.getUuid());
+            values.put("visituuid", encounterDTO.getVisituuid());
+            values.put("encounter_time", encounterDTO.getEncounterTime());
+            values.put("encounter_type_uuid", DELIVERY_OUTCOME_STAGE3);
+            values.put("provider_uuid", encounterDTO.getProvideruuid());
+//            values.put("modified_date", (twoMinutesAgo(AppConstants.dateAndTimeUtils.currentDateTime())));
+            values.put("sync", "false");
+            values.put("voided", 0);
+
+            db.insertWithOnConflict("tbl_encounter", null, values, SQLiteDatabase.CONFLICT_REPLACE);
+            if (createdRecordsCount != 0)
+                isCreated = true;
+        } catch (SQLException e) {
+            throw new DAOException(e.getMessage(), e);
+        }
+        return isCreated;
+    }
+
+    public EncounterDTO getEncounterUuidByVisitUuidAndType(String visitUUID, String encounterType) {
+        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
+        Cursor idCursor = db.rawQuery("SELECT * FROM tbl_encounter where visituuid = ? and voided = '0' " +
+                        " AND encounter_type_uuid IS NOT NULL AND encounter_type_uuid != '' " +
+                        " AND encounter_type_uuid = ? ORDER BY encounter_time DESC limit 1",
+                new String[]{visitUUID, encounterType});
+
+        EncounterDTO encounterDTO = null;
+        if (idCursor.getCount() != 0) {
+            while (idCursor.moveToNext()) {
+                encounterDTO = new EncounterDTO();
+                encounterDTO.setUuid(idCursor.getString(idCursor.getColumnIndexOrThrow("uuid")));
+                encounterDTO.setVisituuid(idCursor.getString(idCursor.getColumnIndexOrThrow("visituuid")));
+                encounterDTO.setEncounterTypeUuid(idCursor.getString(idCursor.getColumnIndexOrThrow("encounter_type_uuid")));
+                encounterDTO.setProvideruuid(idCursor.getString(idCursor.getColumnIndexOrThrow("provider_uuid")));
+                encounterDTO.setEncounterTime(idCursor.getString(idCursor.getColumnIndexOrThrow("encounter_time")));
+                encounterDTO.setVoided(idCursor.getInt(idCursor.getColumnIndexOrThrow("voided")));
+                encounterDTO.setPrivacynotice_value(idCursor.getString(idCursor.getColumnIndexOrThrow("privacynotice_value")));
+
+            }
+        }
+
+        idCursor.close();
+        return encounterDTO;
+    }
 
 }

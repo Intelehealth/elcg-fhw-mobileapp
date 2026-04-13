@@ -1,20 +1,1 @@
-package org.intelehealth.ezazi.stage3.db
-
-import org.intelehealth.ezazi.stage3.models.DeliveryDetails
-
-class DeliveryRepository(
-    private val localDataSource: DeliveryLocalDataSource,
-    private val mapper: DeliveryObsMapper
-) {
-
-    fun saveDeliveryDetails(
-        encounterUuid: String,
-        deliveryDetails: DeliveryDetails,
-        creatorUuid: String
-    ): Boolean {
-
-        val obsList = mapper.mapToObsList(encounterUuid, deliveryDetails, creatorUuid)
-
-        return localDataSource.saveDeliveryObsData(obsList)
-    }
-}
+package org.intelehealth.ezazi.stage3.dbimport org.intelehealth.ezazi.models.dto.EncounterDTOimport org.intelehealth.ezazi.models.dto.ObsDTOimport org.intelehealth.ezazi.stage3.models.DeliveryDetailsclass DeliveryRepository(    private val localDataSource: DeliveryLocalDataSource,    private val mapper: DeliveryObsMapper) {    fun saveDeliveryDetails(encounterDTO: EncounterDTO, deliveryDetails: DeliveryDetails, creatorUuid: String): Boolean {        //  insert encounter        val isEncounterInserted = localDataSource.insertEncounter(encounterDTO)        if (!isEncounterInserted) {            return false        }        val obsList = mapper.mapToObsList(encounterDTO.uuid, deliveryDetails, creatorUuid)        // insert Obs        return localDataSource.saveDeliveryObsData(obsList)    }   /* fun saveDeliveryDetails(        encounterDTO: EncounterDTO,        deliveryDetails: DeliveryDetails,        creatorUuid: String    ): Boolean {        if (encounterUuid.isNullOrEmpty()) {            return false        }        val obsList = mapper.mapToObsList(encounterUuid, deliveryDetails, creatorUuid)        return localDataSource.saveDeliveryObsData(obsList)    }*/}

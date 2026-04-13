@@ -148,6 +148,8 @@ public class UuidDictionary {
     public static final String SOS_STAGE_HOUR = "2c3fb8df-b844-4e4c-8852-40917a98eef8"; //Concept to specify the stage and hour when the SOS was raised
     public static final String VISIT_RISK = "0e798578-96c1-450b-9927-52e45485b151";
     public static final String STAGE1_HOUR1_1 = "ee560d18-34a1-4ad8-87c8-98aed99c663d";
+    public static final String DELIVERY_OUTCOME_STAGE3 = "c5f95c0f-a499-4792-9ee0-ff138d8df425";
+
 
 
 }
