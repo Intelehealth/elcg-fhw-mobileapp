@@ -203,6 +203,7 @@
     <string name="forceps_assisted_vaginal_delivery">Forceps Assisted Vaginal Delivery</string>
     <string name="none_option">None</string>
     <string name="final_delivery_outcome_form">Women Delivery Details</string>
+    <string name="stage_3">Stage 3</string>
 
 
 </resources>
