@@ -3,6 +3,7 @@ package org.intelehealth.ezazi.optimized_sync
 import android.content.Context
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ForegroundInfo
+import androidx.work.OneTimeWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.Worker
@@ -62,6 +63,17 @@ class OptimizedSyncWorker(
             WorkManager.getInstance(context).cancelUniqueWork(
                 OptimizedSyncConstants.UNIQUE_PERIODIC_WORK_NAME
             )
+        }
+
+        /**
+         * Function is used for testing
+         * */
+        @JvmStatic
+        fun tempOneTimeWorkRequest(context: Context) {
+            val oneTimeRequest = OneTimeWorkRequest
+                .Builder(OptimizedSyncWorker::class.java)
+                .build()
+            WorkManager.getInstance(context).enqueue(oneTimeRequest)
         }
     }
 }
