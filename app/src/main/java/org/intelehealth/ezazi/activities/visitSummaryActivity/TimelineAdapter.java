@@ -128,7 +128,7 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
                 // check for this enc any obs created if yes than show submitted...
                 obsDAO = new ObsDAO();
                 submitted = obsDAO.checkObsAddedOrNt(encounterDTOList.get(position).getUuid(), sessionManager.getCreatorID());
-                Log.d(TAG, "onBindViewHolder: submitted : "+submitted);
+                Log.d(TAG, "onBindViewHolder: submitted : " + submitted);
 //                try {
                 Date timeDateType = DateTimeUtils.utcToLocalDate(time, AppConstants.UTC_FORMAT);
 
@@ -319,18 +319,16 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
             ivEdit.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if(handleNoInternetCase()){
-                        nextIntent(PartogramConstants.AccessMode.EDIT);
-                    }
+                    nextIntent(PartogramConstants.AccessMode.EDIT);
                 }
             });
             cardview.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     //if(handleNoInternetCase()) {
-                        PartogramConstants.AccessMode mode = (PartogramConstants.AccessMode) view.getTag();
-                        nextIntent(mode);
-                   // }
+                    PartogramConstants.AccessMode mode = (PartogramConstants.AccessMode) view.getTag();
+                    nextIntent(mode);
+                    // }
                 }
             });
         }
@@ -343,19 +341,19 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
             int type = 10;
             int stage = 1;
             String encounterName = encounterDTOList.get(getAbsoluteAdapterPosition()).getEncounterTypeName();
-            if(encounterDTOList.get(getAbsoluteAdapterPosition()).getEncounterTypeUuid().equals(UuidDictionary.LCG_SOS)){
+            if (encounterDTOList.get(getAbsoluteAdapterPosition()).getEncounterTypeUuid().equals(UuidDictionary.LCG_SOS)) {
                 type = HOURLY;
                 //encounterType = EncounterDTO.Type.SOS.name();
                 EncounterTypeResolver resolver = new EncounterTypeResolver();
                 EncounterDTO.Type enumOfTypes = resolver.resolve(encounterType);
                 encounterType = enumOfTypes.name();
-                String obsValue =encounterDTOList.get(getAbsoluteAdapterPosition()).getObsValue();
+                String obsValue = encounterDTOList.get(getAbsoluteAdapterPosition()).getObsValue();
                 String[] parts = obsValue.split("_");   // ["Stage1", "Hour1", "SOS1"]
                 String stagePart = parts[0];         // "Stage1"
                 String stageNumber = stagePart.replace("Stage", "");  // "1"
-                if(!stageNumber.isEmpty()) stage = Integer.parseInt(stageNumber);
-            }else{
-                if(encounterName!=null && !encounterName.isEmpty()){
+                if (!stageNumber.isEmpty()) stage = Integer.parseInt(stageNumber);
+            } else {
+                if (encounterName != null && !encounterName.isEmpty()) {
                     String[] name = encounterName.split("_");
                     if (encounterName.toLowerCase().contains("stage1")) {
                         //type = getAdapterPosition() % 2 != 0 ? HALF_HOUR : HOURLY; // card clicked is 30min OR 1 Hr
@@ -370,7 +368,7 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
                             type = FIFTEEN_MIN;
                         }
                     }
-            }
+                }
 
                 /*if (Integer.parseInt(name[2]) == 1) {
                     type = HOURLY;
@@ -379,22 +377,22 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
                 } else {
                     type = FIFTEEN_MIN;
                 }*/
-                }
-                Log.d("final list print", "nextIntent: whole list : " + new Gson().toJson(encounterDTOList));
-                Log.d("final", "nextIntent: encountertype : " + encounterType);
-                Intent i1 = new Intent(context, PartogramDataCaptureActivity.class);
-                i1.putExtra("patientUuid", patientUuid);
-                i1.putExtra("name", patientName);
-                i1.putExtra("visitUuid", visitUuid);
-                i1.putExtra("encounterUuid", encounterDTOList.get(getAbsoluteAdapterPosition()).getUuid());
-                i1.putExtra("type", type);
-                i1.putExtra("stage", stage);
-                i1.putExtra("encounterName", encounterDTOList.get(getAbsoluteAdapterPosition()).getEncounterTypeName());
-                i1.putExtra("encounterType", encounterType);
+            }
+            Log.d("final list print", "nextIntent: whole list : " + new Gson().toJson(encounterDTOList));
+            Log.d("final", "nextIntent: encountertype : " + encounterType);
+            Intent i1 = new Intent(context, PartogramDataCaptureActivity.class);
+            i1.putExtra("patientUuid", patientUuid);
+            i1.putExtra("name", patientName);
+            i1.putExtra("visitUuid", visitUuid);
+            i1.putExtra("encounterUuid", encounterDTOList.get(getAbsoluteAdapterPosition()).getUuid());
+            i1.putExtra("type", type);
+            i1.putExtra("stage", stage);
+            i1.putExtra("encounterName", encounterDTOList.get(getAbsoluteAdapterPosition()).getEncounterTypeName());
+            i1.putExtra("encounterType", encounterType);
 
-                i1.putExtra(TIMELINE_MODE, mode);
-                context.startActivity(i1);
-           // }
+            i1.putExtra(TIMELINE_MODE, mode);
+            context.startActivity(i1);
+            // }
         }
 
     }
@@ -424,12 +422,13 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
         else if (status == EncounterDTO.Status.MISSED) return R.string.you_have_missed_obs;
         else return R.string.you_have_captured_obs;
     }
+
     private boolean handleNoInternetCase() {
-        boolean isInternetAvailable=true;
+        boolean isInternetAvailable = true;
         if (!NetworkConnection.isOnline(context)) {
             isInternetAvailable = false;
             AppDialogUtils.showSingleButtonDialog(
-                    (FragmentActivity)context,
+                    (FragmentActivity) context,
                     context.getString(R.string.no_internet_timeline_screen_title),
                     context.getString(R.string.no_internet_timeline_screen_body),
                     context.getString(R.string.ok),

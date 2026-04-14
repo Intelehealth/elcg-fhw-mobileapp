@@ -792,10 +792,6 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
             sync();
         }
         enableProperPadding(HomeActivity.this);
-
-        if (!NetworkConnection.isOnline(context)) {
-            showErrorOnNoInternet();
-        }
         calculateRiskForAllVisits();
     }
 

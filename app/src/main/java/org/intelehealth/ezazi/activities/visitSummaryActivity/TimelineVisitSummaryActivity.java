@@ -208,22 +208,17 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         calculateStageDurationsAndShowDialog();
 
         fabSOS.setOnClickListener(view -> {
-            if (NetworkConnection.isOnline(TimelineVisitSummaryActivity.this)) {
-                Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-                // Vibrate for 500 milliseconds
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    v.vibrate(VibrationEffect.createOneShot(1000, VibrationEffect.DEFAULT_AMPLITUDE));
-                } else {
-                    //deprecated in API 26
-                    v.vibrate(1000);
-                }
-
-                showEmergencyDialog();
+            Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+            // Vibrate for 500 milliseconds
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                v.vibrate(VibrationEffect.createOneShot(1000, VibrationEffect.DEFAULT_AMPLITUDE));
             } else {
-                InternetDialogHelper.showNoInternetDialog(TimelineVisitSummaryActivity.this);
+                //deprecated in API 26
+                v.vibrate(1000);
             }
-
+            showEmergencyDialog();
         });
+
         fabc.setOnClickListener(view -> {
             boolean isInternetAvailable = InternetDialogHelper.checkInternetOrShow(TimelineVisitSummaryActivity.this);
             if (isInternetAvailable) {
@@ -377,16 +372,12 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 //                boolean isTablet = getResources().getBoolean(R.bool.isTablet);
 //                if (isTablet) showEpartogram();
 //                else showRequireTabletView();
-                if (NetworkConnection.isOnline(TimelineVisitSummaryActivity.this)) {
-                    //show dialog for no data for elcg
-                    boolean doesVisitHasData = obsDAO.getObsCountForVisit(visitUuid);
-                    if (doesVisitHasData) {
-                        showEpartogram();
-                    } else {
-                        showNoDataDialogForViewLcg();
-                    }
+                //show dialog for no data for elcg
+                boolean doesVisitHasData = obsDAO.getObsCountForVisit(visitUuid);
+                if (doesVisitHasData) {
+                    showEpartogram();
                 } else {
-                    InternetDialogHelper.showNoInternetDialog(TimelineVisitSummaryActivity.this);
+                    showNoDataDialogForViewLcg();
                 }
                 break;
             case android.R.id.home:
@@ -502,35 +493,30 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 
         // clicking on this open dialog to confirm and start stage 2 | If stage 2 already open then ends visit.
         endStageButton.setOnClickListener(v -> {
-            if (NetworkConnection.isOnline(TimelineVisitSummaryActivity.this)) {
-                if (stageNo == 1) {
-                    // showEndShiftDialog(); //old flow
-                    FragmentManager fragmentManager = getSupportFragmentManager();
+            if (stageNo == 1) {
+                // showEndShiftDialog(); //old flow
+                FragmentManager fragmentManager = getSupportFragmentManager();
 
-                    new CompleteVisitOnEndStage1Dialog(this, visitUuid, (isEndStage1) -> {
-                        if (isEndStage1) {
-                            //for end stage 1 option
-                            cancelStage1ConfirmationDialog();
-                        } else {
-                            //for all refer options and mother deceased
-                            showToastAndUploadVisitForStage1(true, getResources().getString(R.string.data_added_successfully));
-                        }
-                    }).buildDialogSingleSelection(fragmentManager); //for single selection
-                    //buildDialog();  //for custom dialog
-                } else if (stageNo == 2) {
-                    // show dialog and add birth outcome also show extra options like: Refer to other hospital & Self Discharge
-                    new CompleteVisitOnEnd2StageDialog(this, visitUuid, (hasLabour, hasMotherDeceased) -> {
-                        if (!hasLabour) {
-                            showToastAndUploadVisit(true, getResources().getString(R.string.data_added_successfully));
-                        } else {
-                            showLabourBottomSheetDialog(hasMotherDeceased);
-                        }
-                    }).buildDialog();
-                }
-            } else {
-                InternetDialogHelper.showNoInternetDialog(TimelineVisitSummaryActivity.this);
+                new CompleteVisitOnEndStage1Dialog(this, visitUuid, (isEndStage1) -> {
+                    if (isEndStage1) {
+                        //for end stage 1 option
+                        cancelStage1ConfirmationDialog();
+                    } else {
+                        //for all refer options and mother deceased
+                        showToastAndUploadVisitForStage1(true, getResources().getString(R.string.data_added_successfully));
+                    }
+                }).buildDialogSingleSelection(fragmentManager); //for single selection
+                //buildDialog();  //for custom dialog
+            } else if (stageNo == 2) {
+                // show dialog and add birth outcome also show extra options like: Refer to other hospital & Self Discharge
+                new CompleteVisitOnEnd2StageDialog(this, visitUuid, (hasLabour, hasMotherDeceased) -> {
+                    if (!hasLabour) {
+                        showToastAndUploadVisit(true, getResources().getString(R.string.data_added_successfully));
+                    } else {
+                        showLabourBottomSheetDialog(hasMotherDeceased);
+                    }
+                }).buildDialog();
             }
-
         });
 
         mCountDownTimer.cancel();
@@ -1045,7 +1031,8 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
                 if (parityArray.length > 1) {
                     try {
                         parityCount = Integer.parseInt(parityArray[0].trim());
-                    } catch (NumberFormatException ignored) {}
+                    } catch (NumberFormatException ignored) {
+                    }
                 }
             }
 

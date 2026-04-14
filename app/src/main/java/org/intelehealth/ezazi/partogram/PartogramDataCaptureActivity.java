@@ -206,8 +206,8 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
 //            else {
 //                Toast.makeText(context, R.string.this_option_available_tablet_device, Toast.LENGTH_SHORT).show();
 //            }
-            } else{
-               InternetDialogHelper.showNoInternetDialog(PartogramDataCaptureActivity.this);
+            } else {
+                InternetDialogHelper.showNoInternetDialog(PartogramDataCaptureActivity.this);
             }
 
         });
@@ -217,7 +217,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
             @Override
             public void onClick(View view) {
                 boolean isInternetAvailable = InternetDialogHelper.checkInternetOrShow(PartogramDataCaptureActivity.this);
-                if(isInternetAvailable) {
+                if (isInternetAvailable) {
                     showDoctorSelectionDialog(true);
                 }
 //                EncounterDAO encounterDAO = new EncounterDAO();
@@ -249,7 +249,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
             @Override
             public void onClick(View view) {
                 boolean isInternetAvailable = InternetDialogHelper.checkInternetOrShow(PartogramDataCaptureActivity.this);
-                if(isInternetAvailable){
+                if (isInternetAvailable) {
                     showDoctorSelectionDialog(false);
                 }
 //                EncounterDAO encounterDAO = new EncounterDAO();
@@ -346,9 +346,6 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
 
 
     private void saveObs() throws DAOException {
-        boolean isInternetAvailable = InternetDialogHelper.checkInternetOrShow(PartogramDataCaptureActivity.this);
-        if(!isInternetAvailable)
-            return;
         ObsDAO obsDAO = new ObsDAO();
 
         // validation
@@ -636,7 +633,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                         ParamInfo info = mItemList.get(j).getParamInfoList().get(k);
                         if (obsDTO.getConceptuuid().equals(info.getConceptUUID())) {
                             if (obsDTO.getConceptuuid().equals(UuidDictionary.MEDICINE)) {
-                                Log.d(TAG, "setEditData: obsDTO.getValue() :: "+obsDTO.getValue());
+                                Log.d(TAG, "setEditData: obsDTO.getValue() :: " + obsDTO.getValue());
                                 if (obsDTO.getValue() != null && !obsDTO.getValue().isEmpty() && !obsDTO.getValue().equalsIgnoreCase("no")) {
                                     //info.setCapturedValue(obsDTO.getValue());
                                     info.setCapturedValue(ParamInfo.RadioOptions.YES.name());
@@ -891,7 +888,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
 */
 
     private ObsDTO buildOxytocinIvFluidData(String uuid, ParamInfo info) {
-        Log.d(TAG, "buildOxytocinIvFluidData: info : "+new Gson().toJson(info));
+        Log.d(TAG, "buildOxytocinIvFluidData: info : " + new Gson().toJson(info));
         ObsDTO obs = new ObsDTO();
         obs.setUuid(uuid);
         obs.setConceptuuid(info.getConceptUUID());
@@ -903,6 +900,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
         obs.setCreatorUuid(new SessionManager(this).getCreatorID());
         return obs;
     }
+
     private void showToast(boolean isSynced) {
         if (isSynced) {
             Toast.makeText(this, "Data uploaded successfully!", Toast.LENGTH_SHORT).show();

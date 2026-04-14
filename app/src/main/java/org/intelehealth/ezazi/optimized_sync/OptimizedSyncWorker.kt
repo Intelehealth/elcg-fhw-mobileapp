@@ -45,6 +45,9 @@ class OptimizedSyncWorker(
         private fun buildSyncWorkRequest() = PeriodicWorkRequestBuilder<OptimizedSyncWorker>(
             OptimizedSyncConstants.PERIODIC_WORK_INTERVAL_HOURS,
             TimeUnit.HOURS
+        ).setInitialDelay(
+            OptimizedSyncConstants.PERIODIC_WORK_INTERVAL_HOURS,
+            TimeUnit.HOURS
         ).build()
 
         @JvmStatic
