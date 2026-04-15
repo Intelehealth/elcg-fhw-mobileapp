@@ -43,6 +43,7 @@ import org.intelehealth.ezazi.partogram.model.Medication;
 import org.intelehealth.ezazi.partogram.model.Medicine;
 import org.intelehealth.ezazi.partogram.model.ParamInfo;
 import org.intelehealth.ezazi.partogram.model.PartogramItemData;
+import org.intelehealth.ezazi.partogram.utils.DataCaptureGenericRadioFieldHandler;
 import org.intelehealth.ezazi.ui.dialog.CustomViewDialogFragment;
 import org.intelehealth.ezazi.ui.dialog.SingleChoiceDialogFragment;
 import org.intelehealth.ezazi.ui.dialog.model.SingChoiceItem;
@@ -84,7 +85,7 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         public void onSelect(PartogramItemData partogramItemData);
     }
 
-    private interface OnRadioCheckedListener {
+    public interface OnRadioCheckedListener {
         void onCheckedYes();
 
         void onCheckedNo();
@@ -93,12 +94,16 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
     private OnItemSelection mOnItemSelection;
     private int currentChildFocusedIndex = -1;
     private PartogramConstants.AccessMode accessMode;
+    private DataCaptureGenericRadioFieldHandler radioHandler;
 
     public PartogramQueryListingAdapter(RecyclerView recyclerView, String visitUuid, Context context, List<PartogramItemData> itemList, OnItemSelection onItemSelection) {
         mContext = context;
         mVisitUuid = visitUuid;
         mItemList = itemList;
         mOnItemSelection = onItemSelection;
+
+        radioHandler = new DataCaptureGenericRadioFieldHandler();
+
     }
 
     public void setAccessMode(PartogramConstants.AccessMode accessMode) {
@@ -119,6 +124,12 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, @SuppressLint("RecyclerView") int position) {
+       /// logLargeString("Final list ::adapter: ", new Gson().toJson(mItemList));
+        for(int i=0; i<mItemList.size();i++){
+            PartogramItemData partogramItemData = mItemList.get(i);
+            Log.d(TAG, "onBindViewHolder: partogramItemData  : "+new Gson().toJson(partogramItemData));
+
+        }
         if (holder instanceof GenericViewHolder) {
             GenericViewHolder genericViewHolder = (GenericViewHolder) holder;
             genericViewHolder.partogramItemData = mItemList.get(position);
@@ -127,6 +138,13 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
             genericViewHolder.containerLinearLayout.removeAllViews();
             for (int i = 0; i < genericViewHolder.partogramItemData.getParamInfoList().size(); i++) {
                 ParamInfo paramInfo = genericViewHolder.partogramItemData.getParamInfoList().get(i);
+                Log.d("STAGE3_DEBUG",
+                        "Name: " + paramInfo.getParamName() +
+                                " Type: " + paramInfo.getParamDateType()
+                );
+                Log.d("OPTIONS_CHECK",
+                        paramInfo.getParamName() + " options: " + Arrays.toString(paramInfo.getOptions())
+                );
                 if (paramInfo.getParamDateType().equalsIgnoreCase(PartogramConstants.INPUT_TXT_TYPE) || paramInfo.getParamDateType().equalsIgnoreCase(PartogramConstants.INPUT_DOUBLE_4_DIG_TYPE) || paramInfo.getParamDateType().equalsIgnoreCase(PartogramConstants.INPUT_INT_1_DIG_TYPE) || paramInfo.getParamDateType().equalsIgnoreCase(PartogramConstants.INPUT_INT_2_DIG_TYPE) || paramInfo.getParamDateType().equalsIgnoreCase(PartogramConstants.INPUT_INT_3_DIG_TYPE)) {
                     View tempView = View.inflate(mContext, R.layout.parto_lbl_etv_view_ezazi, null);
                     tempView.setTag(genericViewHolder.containerLinearLayout);
@@ -142,16 +160,19 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
                     genericViewHolder.containerLinearLayout.addView(tempView);
                 } else if (paramInfo.getParamDateType().equalsIgnoreCase(PartogramConstants.RADIO_SELECT_TYPE)) {
                     View tempView = null;
-                    if (!paramInfo.getConceptUUID().isEmpty() && paramInfo.getConceptUUID().equals(UuidDictionary.IV_FLUIDS)) {
+                   String conceptId =  paramInfo.getConceptUUID();
+                    if (conceptId != null && conceptId.equals(UuidDictionary.IV_FLUIDS)) {
                         tempView = View.inflate(mContext, R.layout.parto_lbl_radio_view_ezazi, null);
-                    } else if (!paramInfo.getConceptUUID().isEmpty() && paramInfo.getConceptUUID().equals(UuidDictionary.OXYTOCIN_UL_DROPS_MIN)) {
+                    } else if (conceptId != null && conceptId.equals(UuidDictionary.OXYTOCIN_UL_DROPS_MIN)) {
                         tempView = View.inflate(mContext, R.layout.parto_lbl_radio_view_oxytocin, null);
-                    } else if (!paramInfo.getConceptUUID().isEmpty() && paramInfo.getConceptUUID().equals(UuidDictionary.MEDICINE)) {
+                    } else if (conceptId != null && !paramInfo.getConceptUUID().isEmpty() && paramInfo.getConceptUUID().equals(UuidDictionary.MEDICINE)) {
                         tempView = View.inflate(mContext, R.layout.parto_labl_radio_view_medicine, null);
-                    } else if (!paramInfo.getConceptUUID().isEmpty() && paramInfo.getConceptUUID().equals(UuidDictionary.PLAN)) {
+                    } else if (conceptId != null && !paramInfo.getConceptUUID().isEmpty() && paramInfo.getConceptUUID().equals(UuidDictionary.PLAN)) {
                         tempView = View.inflate(mContext, R.layout.parto_labl_radio_view_plan, null);
-                    } else if (!paramInfo.getConceptUUID().isEmpty() && paramInfo.getConceptUUID().equals(UuidDictionary.ASSESSMENT)) {
+                    } else if (conceptId != null && !paramInfo.getConceptUUID().isEmpty() && paramInfo.getConceptUUID().equals(UuidDictionary.ASSESSMENT)) {
                         tempView = View.inflate(mContext, R.layout.parto_labl_radio_view_assessment, null);
+                    }else{
+                        tempView = View.inflate(mContext, R.layout.parto_lbl_radio_view_ezazi, null);
                     }
                     if (tempView != null) {
                         showRadioOptionBox(tempView, position, i);
@@ -288,7 +309,6 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
 
         showDataRangeMessage(dataEditText, position, positionChild);
     }
-
     private void showDataRangeMessage(EditText dataEditText, int position, int positionChild) {
         isToastShownContraction = false;
         isToastShownTemperature = false;
@@ -339,7 +359,6 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         });
 
     }
-
     private void validatedTemperature(String value, ParamInfo info, EditText dataEditText) {
         //if (!value.trim().isEmpty() && value.length() == 2 && !value.startsWith(".") && info.getParamName().equalsIgnoreCase(PartogramConstants.Params.TEMPERATURE.value)) {
 
@@ -355,7 +374,7 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         // }
     }
 
-    private void showRadioOptionBox(final View tempView, final int position, final int positionChild) {
+    /*private void showRadioOptionBox(final View tempView, final int position, final int positionChild) {
         ParamInfo info = mItemList.get(position).getParamInfoList().get(positionChild);
         TextView paramNameTextView = tempView.findViewById(R.id.tvParamName);
         String title = info.getParamName();
@@ -381,8 +400,69 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
                 showRadioOptionBoxForAssessment(tempView, info, selected, title);
                 break;
         }
-    }
+    }*/
+    private void showRadioOptionBox(final View tempView,
+                                    final int position,
+                                    final int positionChild) {
 
+        ParamInfo info = mItemList.get(position).getParamInfoList().get(positionChild);
+        Log.d("RADIO_DEBUG", "Param = " + info.getParamName()
+                + " | concept = " + info.getConceptUUID()
+                + " | raw DB value = " + info.getCapturedValue());
+        TextView paramNameTextView = tempView.findViewById(R.id.tvParamName);
+        RadioGroup paramRadio = tempView.findViewById(R.id.radioYesNoGroup);
+        TextView selected = tempView.findViewById(R.id.tvSelectedValue);
+
+        paramNameTextView.setText(info.getParamName());
+
+        //fr general radio buttons- with yes no option
+        radioHandler.restoreRadioState(paramRadio, info);
+        radioHandler.syncRadioState(info, paramRadio, selected);
+
+
+        selected.setTag(info.getCapturedValue());
+        selected.setText(info.getCapturedValue());
+
+        // existing concept logic (UNCHANGED)
+        switch (info.getConceptUUID()) {
+            case UuidDictionary.IV_FLUIDS:
+                showRadioOptionBoxForIVFluid(tempView, info, selected, info.getParamName());
+                break;
+
+            case UuidDictionary.OXYTOCIN_UL_DROPS_MIN:
+                showRadioOptionBoxForOxytocin(tempView, info, selected, info.getParamName());
+                break;
+
+            case UuidDictionary.MEDICINE:
+                showRadioOptionBoxForMedicine(tempView, info, selected, info.getParamName());
+                break;
+
+            case UuidDictionary.PLAN:
+                showRadioOptionBoxForPlan(tempView, info, selected, info.getParamName());
+                break;
+
+            case UuidDictionary.ASSESSMENT:
+                showRadioOptionBoxForAssessment(tempView, info, selected, info.getParamName());
+                break;
+        }
+
+        //  attach listener (NOT only generic)
+        if (radioHandler.isGenericConcept(info.getConceptUUID())) {
+            handleGenericRadioCheckListener(paramRadio, info, new OnRadioCheckedListener() {
+
+                @Override
+                public void onCheckedYes() {
+                    info.setCapturedValue("Y");
+                    selected.setText("YES");
+                }
+
+                @Override
+                public void onCheckedNo() {
+                    info.setCapturedValue("N");
+                    selected.setText("NO");
+                }
+            });        }
+    }
     private void showRadioOptionBoxForMedicine(View tempView, ParamInfo info, TextView selected, String title) {
         PartoLablRadioViewMedicineBinding binding = PartoLablRadioViewMedicineBinding.bind(tempView);
 
@@ -728,7 +808,7 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
                     showIVFluidDialog(ivFluidInfo.getParamName(), ivFluidInfo, tempView);
                 } else {
                     final String[] items = mItemList.get(position).getParamInfoList().get(positionChild).getOptions();
-
+                    Log.d(TAG, "showListOptions: items : "+items.toString());
                     ArrayList<SingChoiceItem> choiceItems = new ArrayList<>();
                     for (int i = 0; i < items.length; i++) {
                         SingChoiceItem item = new SingChoiceItem();
@@ -861,6 +941,7 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
 
     private void handleRadioCheckListener(final View tempView, final ParamInfo info, OnRadioCheckedListener listener) {
         RadioGroup radioGroup = tempView.findViewById(R.id.radioYesNoGroup);
+
         if (info.getCapturedValue() != null && !TextUtils.isEmpty(info.getCapturedValue()) && !info.getCapturedValue().equalsIgnoreCase("NO")) {
             radioGroup.check(R.id.radioYes);
             info.setCheckedRadioOption(ParamInfo.RadioOptions.YES);
@@ -1210,4 +1291,54 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         if (updated.size() == 0) textView.setText(mContext.getString(R.string.lbl_add));
         else textView.setText("" + updated.size());
     }
+    public static void logLargeString(String tag, String message) {
+        if (message == null) return;
+
+        int maxLogSize = 2000; // safe chunk
+        for (int i = 0; i <= message.length() / maxLogSize; i++) {
+            int start = i * maxLogSize;
+            int end = Math.min((i + 1) * maxLogSize, message.length());
+            Log.d(tag, message.substring(start, end));
+        }
+    }
+
+    private void handleGenericRadioCheckListener(final RadioGroup radioGroup,
+                                                 final ParamInfo info,
+                                                 final OnRadioCheckedListener listener) {
+        String value = info.getCapturedValue();
+        radioGroup.clearCheck();
+
+        if ("YES".equalsIgnoreCase(value)) {
+            radioGroup.check(R.id.radioYes);
+            info.setCheckedRadioOption(ParamInfo.RadioOptions.YES);
+            listener.onCheckedYes();
+
+        } else if ("NO".equalsIgnoreCase(value)) {
+            radioGroup.check(R.id.radioNo);
+            info.setCheckedRadioOption(ParamInfo.RadioOptions.NO);
+            listener.onCheckedNo();
+        } else {
+            info.setCheckedRadioOption(null);
+        }
+
+        radioGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            if (checkedId == R.id.radioYes) {
+                info.setCapturedValue("YES");
+                info.setCheckedRadioOption(ParamInfo.RadioOptions.YES);
+                listener.onCheckedYes();
+
+            } else if (checkedId == R.id.radioNo) {
+                info.setCapturedValue("NO");
+                info.setCheckedRadioOption(ParamInfo.RadioOptions.NO);
+                listener.onCheckedNo();
+            }
+        });
+
+        for (int i = 0; i < radioGroup.getChildCount(); i++) {
+            radioGroup.getChildAt(i).setEnabled(
+                    accessMode != PartogramConstants.AccessMode.READ
+            );
+        }
+    }
+
 }

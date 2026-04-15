@@ -1292,4 +1292,29 @@ public class ObsDAO {
 
         return value;
     }
+    public List<ObsDTO> getObsRecordByEncounterUuid(String encounterUuid) {
+        List<ObsDTO> obsDTOList = new ArrayList<>();
+        db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
+        Cursor idCursor = db.rawQuery("SELECT * FROM tbl_obs where encounteruuid = ? " + " AND voided='0' " + " ORDER BY created_date DESC",
+                new String[]{encounterUuid});
+        ObsDTO obsDTO = new ObsDTO();
+        if (idCursor.getCount() != 0) {
+            while (idCursor.moveToNext()) {
+                obsDTO = new ObsDTO();
+                obsDTO.setUuid(idCursor.getString(idCursor.getColumnIndexOrThrow("uuid")));
+                obsDTO.setEncounteruuid(idCursor.getString(idCursor.getColumnIndexOrThrow("encounteruuid")));
+                obsDTO.setConceptuuid(idCursor.getString(idCursor.getColumnIndexOrThrow("conceptuuid")));
+                obsDTO.setValue(idCursor.getString(idCursor.getColumnIndexOrThrow("value")));
+                obsDTO.setComment(idCursor.getString(idCursor.getColumnIndexOrThrow("comment")));
+                obsDTO.setCreatedDate(idCursor.getString(idCursor.getColumnIndexOrThrow("created_date")));
+                obsDTO.setCreatorUuid(idCursor.getString(idCursor.getColumnIndexOrThrow("creatoruuid")));
+                obsDTOList.add(obsDTO);
+            }
+        }
+        idCursor.close();
+
+        return obsDTOList;
+    }
+
+
 }

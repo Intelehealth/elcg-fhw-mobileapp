@@ -1,9 +1,13 @@
 package org.intelehealth.ezazi.activities.visitSummaryActivity;
 
 import static org.intelehealth.ezazi.partogram.PartogramConstants.TIMELINE_MODE;
+import static org.intelehealth.ezazi.utilities.UuidDictionary.STAGE1_HOUR1_1;
+import static org.intelehealth.ezazi.utilities.UuidDictionary.STAGE1_HOUR3_1;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -37,6 +41,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -82,7 +88,16 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
             patientUuid = intent.getStringExtra("patientUuid");
             visitUuid = intent.getStringExtra("visitUuid");
             patientName = intent.getStringExtra("patientNameTimeline");
-            nurseHasEditAccess = new VisitsDAO().checkLoggedInUserAccessVisit(visitUuid, sessionManager.getProviderID());
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            Handler mainHandler = new Handler(Looper.getMainLooper());
+
+            executor.execute(() -> {
+                nurseHasEditAccess = new VisitsDAO().checkLoggedInUserAccessVisit(visitUuid, sessionManager.getProviderID());
+                /*mainHandler.post(() -> {
+                    // Update UI here
+                    updateUI(hasAccess);
+                });*/
+            });
             Log.e("TimelineAdapter", "TimelineAdapter: nurseHasEditAccess=>" + nurseHasEditAccess);
 //            String time = intent.getStringExtra("encounter_time");
 //            SimpleDateFormat timeLineTime = new SimpleDateFormat("HH:mm a", Locale.ENGLISH);
@@ -101,6 +116,7 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
     @Override
     public void onBindViewHolder(@NonNull TimelineViewHolder holder, int position) {
         if (encounterDTOList.size() > 0) {
+            Log.d(TAG, "onBindViewHolder: stage no : "+encounterDTOList.get(position).getEncounterTypeUuid());
             if (encounterDTOList.get(position).getEncounterTime() != null &&
                     !encounterDTOList.get(position).getEncounterTime().equalsIgnoreCase("")) {
 
@@ -112,6 +128,10 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
                         .equalsIgnoreCase("558cc1b8-c352-4b27-9ec2-131fc19c26f0")) {
                     holder.stage1start.setVisibility(View.VISIBLE);
                     holder.stage1start.setText(context.getResources().getText(R.string.stage_2));
+                }else if (encounterDTOList.get(position).getEncounterTypeUuid()
+                        .equalsIgnoreCase(STAGE1_HOUR3_1)) {
+                    holder.stage1start.setVisibility(View.VISIBLE);
+                    holder.stage1start.setText(context.getResources().getText(R.string.stage_3));
                 } else {
                     holder.stage1start.setVisibility(View.GONE);
                 }
@@ -354,6 +374,25 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
                 String stagePart = parts[0];         // "Stage1"
                 String stageNumber = stagePart.replace("Stage", "");  // "1"
                 if(!stageNumber.isEmpty()) stage = Integer.parseInt(stageNumber);
+            }else if (encounterName.toLowerCase().contains("stage3")) {
+                String[] name = encounterName.split("_");
+                stage = 3;
+
+                // Stage3_HourX_Y
+                if (name.length >= 3) {
+
+                    int hourNumber = Integer.parseInt(name[1].replace("Hour", ""));
+
+                    if (hourNumber == 1) {
+                       // type = FIFTEEN_MIN;
+
+                    } else if (hourNumber == 2) {
+                     //   type = HALF_HOUR;
+
+                    } else if (hourNumber == 3 || hourNumber == 4) {
+                      //  type = HOURLY;
+                    }
+                }
             }else{
                 if(encounterName!=null && !encounterName.isEmpty()){
                     String[] name = encounterName.split("_");

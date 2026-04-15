@@ -2,6 +2,7 @@ package org.intelehealth.ezazi.activities.visitSummaryActivity;
 
 
 import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
+import static org.intelehealth.ezazi.utilities.UuidDictionary.DELIVERY_OUTCOME_STAGE3;
 
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;
@@ -16,6 +17,8 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.telephony.TelephonyManager;
@@ -27,17 +30,13 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.StringRes;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
-import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -49,7 +48,6 @@ import com.google.gson.Gson;
 import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.activities.epartogramActivity.EpartogramViewActivity;
 import org.intelehealth.ezazi.activities.homeActivity.HomeActivity;
-import org.intelehealth.ezazi.activities.setupActivity.SetupActivity;
 import org.intelehealth.ezazi.app.AppConstants;
 import org.intelehealth.ezazi.app.IntelehealthApplication;
 import org.intelehealth.ezazi.database.dao.EncounterDAO;
@@ -60,9 +58,8 @@ import org.intelehealth.ezazi.database.dao.VisitsDAO;
 import org.intelehealth.ezazi.databinding.DialogOutOfTimeEzaziBinding;
 import org.intelehealth.ezazi.models.dto.EncounterDTO;
 import org.intelehealth.ezazi.models.dto.ObsDTO;
-import org.intelehealth.ezazi.models.dto.VisitAttributeDTO;
-import org.intelehealth.ezazi.partogram.PartogramDataCaptureActivity;
 import org.intelehealth.ezazi.services.firebase_services.FirebaseRealTimeDBUtils;
+import org.intelehealth.ezazi.stage3.WomenDeliveryDetailsActivity;
 import org.intelehealth.ezazi.syncModule.SyncUtils;
 import org.intelehealth.ezazi.ui.dialog.AppDialogUtils;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
@@ -76,7 +73,6 @@ import org.intelehealth.ezazi.ui.rtc.activity.EzaziChatActivity;
 import org.intelehealth.ezazi.ui.rtc.activity.EzaziVideoCallActivity;
 import org.intelehealth.ezazi.ui.rtc.call.CallInitializer;
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
-import org.intelehealth.ezazi.ui.visit.activity.VisitLabourActivity;
 import org.intelehealth.ezazi.ui.visit.data.VisitRepository;
 import org.intelehealth.ezazi.ui.visit.dialog.CompleteVisitOnEnd2StageDialog;
 import org.intelehealth.ezazi.ui.visit.dialog.CompleteVisitOnEndStage1Dialog;
@@ -94,18 +90,20 @@ import org.intelehealth.klivekit.chat.model.ItemHeader;
 import org.intelehealth.klivekit.model.RtcArgs;
 import org.intelehealth.klivekit.socket.SocketManager;
 import org.intelehealth.klivekit.utils.DateTimeUtils;
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 
@@ -441,8 +439,17 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
             providerID = intent.getStringExtra("providerID");
             whichScreenUserCameFromTag = intent.getStringExtra("tag");
 
-            hwHasEditAccess = new VisitsDAO().checkLoggedInUserAccessVisit(visitUuid, sessionManager.getProviderID());
+            //hwHasEditAccess = new VisitsDAO().checkLoggedInUserAccessVisit(visitUuid, sessionManager.getProviderID());
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            Handler mainHandler = new Handler(Looper.getMainLooper());
 
+            executor.execute(() -> {
+                hwHasEditAccess = new VisitsDAO().checkLoggedInUserAccessVisit(visitUuid, sessionManager.getProviderID());
+                /*mainHandler.post(() -> {
+                    // Update UI here
+                    updateUI(hasAccess);
+                });*/
+            });
             if (whichScreenUserCameFromTag != null && whichScreenUserCameFromTag.equalsIgnoreCase("new")) {
                 triggerAlarm_Stage1_every30mins(); // Notification to show every 30min.
             }
@@ -461,6 +468,10 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
             endStageButton.setEnabled(true);
             endStageButton.setClickable(true);
             endStageButton.setBackground(ContextCompat.getDrawable(context, R.drawable.ic_rectangle_76));
+            if (latestEncounterName.toLowerCase().contains("stage3")) {
+                stageNo = 3;
+                endStageButton.setText(context.getResources().getText(R.string.end3StageButton));
+            }
             if (latestEncounterName.toLowerCase().contains("stage2")) {
                 stageNo = 2;
                 endStageButton.setText(context.getResources().getText(R.string.end2StageButton));
@@ -496,7 +507,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 
         // clicking on this open dialog to confirm and start stage 2 | If stage 2 already open then ends visit.
         endStageButton.setOnClickListener(v -> {
-            if(NetworkConnection.isOnline(TimelineVisitSummaryActivity.this)){
+           // if(NetworkConnection.isOnline(TimelineVisitSummaryActivity.this)){
                 if (stageNo == 1) {
                     // showEndShiftDialog(); //old flow
                     FragmentManager fragmentManager = getSupportFragmentManager();
@@ -520,10 +531,13 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
                             showLabourBottomSheetDialog(hasMotherDeceased);
                         }
                     }).buildDialog();
+                }else if (stageNo == 3) {
+                    // End visit nepal flow
+                   //todo- Stage 3 Kaveri Pending work
                 }
-            }else{
+           /* }else{
                 InternetDialogHelper.showNoInternetDialog(TimelineVisitSummaryActivity.this);
-            }
+            }*/
 
         });
 
@@ -560,6 +574,8 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
             tvPendingDecision.setText(getResources().getString(R.string.outcome_decision_stage_1));
         } else if (stageNo == 2) {
             tvPendingDecision.setText(getResources().getString(R.string.outcome_decision_stage_2));
+        }else if (stageNo == 3) {
+            tvPendingDecision.setText(getResources().getString(R.string.outcome_decision_stage_3));
         }
 //        new Thread(new Runnable() {
 //            @Override
@@ -581,7 +597,10 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
     }
 
     private void showLabourBottomSheetDialog(boolean hasMotherDeceased) {
-        VisitLabourActivity.startLabourCompleteActivity(this, visitUuid, hasMotherDeceased);
+        //VisitLabourActivity.startLabourCompleteActivity(this, visitUuid, hasMotherDeceased);
+        Intent activity = new Intent(this, WomenDeliveryDetailsActivity.class);
+                    activity.putExtra("visitUuid", visitUuid);
+                    startActivity(activity);
     }
 
     private void checkForOutOfTime(VisitOutcome outcome) {
@@ -988,25 +1007,34 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
     // fetch all encounters from encounter tbl local db for this particular visit and show on timeline...
     private void fetchAllEncountersFromVisitForTimelineScreen(String visitUuid) {
         //  encounterDAO = new EncounterDAO();
-        ArrayList<EncounterDTO> encounterListDTO = encounterDAO.getEncountersByVisitUUID(visitUuid);
-        for (int i = 0; i < encounterListDTO.size(); i++) {
-            String name = encounterDAO.getEncounterTypeNameByUUID(encounterListDTO.get(i).getEncounterTypeUuid());
-            EncounterDTO.Type type = new ObsDAO().getEncounterType(encounterListDTO.get(i).getUuid(), sessionManager.getCreatorID());
-            String obsValue= new ObsDAO().getEncounterTypeFromDb(encounterListDTO.get(i).getUuid());
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Handler mainHandler = new Handler(Looper.getMainLooper());
 
-            encounterListDTO.get(i).setEncounterTypeName(name);
-            encounterListDTO.get(i).setEncounterType(type);
-            encounterListDTO.get(i).setObsValue(obsValue);
+        executor.execute(() -> {
+            ArrayList<EncounterDTO> encounterListDTO = encounterDAO.getEncountersByVisitUUID(visitUuid);
+            for (int i = 0; i < encounterListDTO.size(); i++) {
+                EncounterDTO encounterDTO = encounterListDTO.get(i);
 
-            Log.d(TAG, "fetchAllEncountersFromVisitForTimelineScreen: obsValue : " + obsValue);
-        }
-        isVCEPresent = encounterDAO.getVisitCompleteEncounterByVisitUUID(visitUuid);
-        Log.d(TAG, "fetchAllEncountersFromVisitForTimelineScreen: isNewEncounterCreated : " + isNewEncounterCreated);
-        Log.d(TAG, "fetchAllEncountersFromVisitForTimelineScreen: encounterListDTO : " + new Gson().toJson(encounterListDTO));
+                String name = encounterDAO.getEncounterTypeNameByUUID(encounterListDTO.get(i).getEncounterTypeUuid());
+                EncounterDTO.Type type = new ObsDAO().getEncounterType(encounterListDTO.get(i).getUuid(), sessionManager.getCreatorID());
+                String obsValue = new ObsDAO().getEncounterTypeFromDb(encounterListDTO.get(i).getUuid());
 
-        adapter = new TimelineAdapter(context, intent, encounterListDTO, sessionManager, isVCEPresent, isNewEncounterCreated, isDecisionPending);
-        Collections.reverse(encounterListDTO);
-        recyclerView.setAdapter(adapter);
+                encounterListDTO.get(i).setEncounterTypeName(name);
+                encounterListDTO.get(i).setEncounterType(type);
+                encounterListDTO.get(i).setObsValue(obsValue);
+            }
+            isVCEPresent = encounterDAO.getVisitCompleteEncounterByVisitUUID(visitUuid);
+            encounterListDTO.removeIf(dto -> dto.getEncounterTypeUuid().equalsIgnoreCase(DELIVERY_OUTCOME_STAGE3)); // remove this from timeline ui
+            Collections.reverse(encounterListDTO);
+            mainHandler.post(() -> {
+                adapter = new TimelineAdapter(context, intent, encounterListDTO, sessionManager, isVCEPresent, isNewEncounterCreated, isDecisionPending);
+
+
+                     /*   adapter = new TimelineAdapter(context, intent, encounterListDTO,
+                                sessionManager, vce, isNewEncounterCreated, isDecisionPending);*/
+                recyclerView.setAdapter(adapter);
+            });
+        });
     }
 
 //    private void triggerAlarm_Stage2_every15mins(String visitUuid) { // TODO: change 1min to 15mins..... // visituuid : 0 - 5
@@ -1073,7 +1101,9 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
     @Override
     protected void onStart() { // when finish() called in Epartogram screen than onStart() is called here.
         super.onStart();
-        adapter.notifyDataSetChanged();
+        /*if (adapter != null) {
+            adapter.notifyDataSetChanged();
+        }*/
     }
 
     @Override
