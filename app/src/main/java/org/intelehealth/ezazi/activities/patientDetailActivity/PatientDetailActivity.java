@@ -67,6 +67,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import io.reactivex.Observable;
@@ -135,15 +136,19 @@ public class PatientDetailActivity extends BaseActionBarActivity {
 
     /**
      * Converts a Gregorian DOB string (yyyy-MM-dd) to a BS display string.
-     * Returns an empty string if parsing fails.
-     *
      * Display format: "DD MonthName YYYY"  e.g. "15 Baisakh 2055"
+     *
+     * Uses UTC parsing to stay consistent with how NepaliDateConverter stores
+     * dates (also UTC-based after the Bug #1 fix).
      */
     private String gregDobToBsDisplay(String gregYyyyMmDd) {
         if (gregYyyyMmDd == null || gregYyyyMmDd.trim().isEmpty()) return "";
         try {
-            Date date = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).parse(gregYyyyMmDd);
-            int[] bs   = NepaliDateConverter.gregorianToBs(date);
+            // ── FIX: parse with UTC so we get the same day NepaliDateConverter stored ──
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+            Date date = sdf.parse(gregYyyyMmDd);
+            int[] bs  = NepaliDateConverter.gregorianToBs(date);
             return String.format(Locale.ENGLISH, "%02d %s %d",
                     bs[2], BS_MONTH_NAMES[bs[1] - 1], bs[0]);
         } catch (Exception e) {
@@ -155,15 +160,37 @@ public class PatientDetailActivity extends BaseActionBarActivity {
     /**
      * Calculates age in completed years from a Gregorian yyyy-MM-dd DOB string.
      * Returns -1 if parsing fails.
+     *
+     * ── FIX (Bug #3 – leap-year off-by-one) ─────────────────────────────────
+     * The original code used DAY_OF_YEAR for the "has birthday passed?" check,
+     * which gives the wrong answer across leap/non-leap year boundaries:
+     *
+     *   DOB  = 2000-03-01  → DAY_OF_YEAR = 61  (2000 is a leap year)
+     *   Today = 2001-03-01  → DAY_OF_YEAR = 60  (2001 is not)
+     *   Raw diff = 1 year.  60 < 61 → age-- → 0  ← WRONG (should be 1)
+     *
+     * Fix: compare MONTH + DAY_OF_MONTH instead of DAY_OF_YEAR.
+     * ────────────────────────────────────────────────────────────────────────
      */
     private int calcAgeYears(String gregYyyyMmDd) {
         if (gregYyyyMmDd == null || gregYyyyMmDd.trim().isEmpty()) return -1;
         try {
-            Date birth = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).parse(gregYyyyMmDd);
-            Calendar b = Calendar.getInstance(); b.setTime(birth);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+            Date birth = sdf.parse(gregYyyyMmDd);
+            Calendar b   = Calendar.getInstance();
+            b.setTime(birth);
             Calendar now = Calendar.getInstance();
+
             int age = now.get(Calendar.YEAR) - b.get(Calendar.YEAR);
-            if (now.get(Calendar.DAY_OF_YEAR) < b.get(Calendar.DAY_OF_YEAR)) age--;
+
+            // ── FIX: use MONTH + DAY_OF_MONTH, not DAY_OF_YEAR ───────────────
+            boolean birthdayNotYetThisYear =
+                    now.get(Calendar.MONTH) < b.get(Calendar.MONTH)
+                            || (now.get(Calendar.MONTH) == b.get(Calendar.MONTH)
+                            && now.get(Calendar.DAY_OF_MONTH) < b.get(Calendar.DAY_OF_MONTH));
+
+            if (birthdayNotYetThisYear) age--;
             return age;
         } catch (Exception e) {
             Log.e(TAG, "calcAgeYears: failed for " + gregYyyyMmDd, e);
@@ -439,36 +466,40 @@ public class PatientDetailActivity extends BaseActionBarActivity {
         setTitle(patient.getOpenmrs_id());
 
         // ── 9. DOB in BS format ───────────────────────────────────────────────
-        String gregDob = patient.getDate_of_birth(); // stored as yyyy-MM-dd
+        String gregDob = patient.getDate_of_birth();
         Log.d(TAG, "setDisplay: gregDob = " + gregDob);
 
         if (gregDob != null && !gregDob.isEmpty()) {
             String bsDobDisplay = gregDobToBsDisplay(gregDob);
             if (!bsDobDisplay.isEmpty()) {
                 dobView.setText(bsDobDisplay);
-                Log.d(TAG, "setDisplay: bsDobDisplay = " + bsDobDisplay);
             } else {
-                // Fallback to original Gregorian display if BS conversion fails
-                String fallback = DateAndTimeUtils.getFormatedDateOfBirthAsView(gregDob);
-                dobView.setText(fallback);
+                dobView.setText(DateAndTimeUtils.getFormatedDateOfBirthAsView(gregDob));
                 Log.w(TAG, "setDisplay: BS conversion failed, showing Gregorian DOB");
             }
         } else {
             dobView.setText(getString(R.string.not_provided));
         }
 
-        // ── 10. Age — computed fresh from Gregorian DOB ───────────────────────
+        // ── 10. Age — "X years - Y months - Z days" ──────────────────────────
+        //
+        // ── FIX (Bug #2 – age format inconsistency) ──────────────────────────
+        // Both screens now use DateAndTimeUtils.getAgeInYearMonthNew() which
+        // returns the full "X years - Y months - Z days" string.
+        // The Fragment's mAge field is an INPUT control so it still shows only
+        // the integer year count — that is intentional and correct.
+        // This detail screen always shows the full breakdown.
+        // ─────────────────────────────────────────────────────────────────────
         float_ageYear_Month = DateAndTimeUtils.getFloat_Age_Year_Month(gregDob);
         int ageYears = calcAgeYears(gregDob);
+
         if (ageYears >= 0) {
-            // Construct a human-readable age string.
-            // Re-use the existing DateAndTimeUtils method for full years/months/days detail;
-            // fall back to plain years if it returns an unexpected format.
             String ageDetail = DateAndTimeUtils.getAgeInYearMonthNew(gregDob, context);
             if (ageDetail != null && !ageDetail.trim().isEmpty()) {
                 ageView.setText(ageDetail.trim());
             } else {
-                ageView.setText(ageYears + " " + getString(R.string.years));
+                // Fallback: build "X years - Y months - Z days" manually
+                ageView.setText(buildAgeFallback(gregDob, ageYears));
             }
             Log.d(TAG, "setDisplay: ageYears = " + ageYears + " | detail = " + ageDetail);
         } else {
@@ -683,6 +714,44 @@ public class PatientDetailActivity extends BaseActionBarActivity {
             default: return super.onOptionsItemSelected(item);
         }
     }
+
+    /**
+     * Fallback age string when DateAndTimeUtils.getAgeInYearMonthNew() returns null/empty.
+     * Format: "X years - Y months - Z days"
+     */
+    private String buildAgeFallback(String gregYyyyMmDd, int knownYears) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+            Date birth = sdf.parse(gregYyyyMmDd);
+            Calendar b   = Calendar.getInstance();
+            b.setTime(birth);
+            Calendar now = Calendar.getInstance();
+
+            int years  = knownYears;
+            // Advance birth by years to find remaining months
+            b.add(Calendar.YEAR, years);
+
+            int months = 0;
+            while (b.compareTo(now) <= 0) {
+                b.add(Calendar.MONTH, 1);
+                months++;
+            }
+            b.add(Calendar.MONTH, -1); // step back one overshoot
+            months = Math.max(0, months - 1);
+
+            long remainMs   = now.getTimeInMillis() - b.getTimeInMillis();
+            int  days       = (int) (remainMs / (1000L * 60 * 60 * 24));
+
+            return years  + " " + getString(R.string.years)  + " - "
+                    + months + " " + getString(R.string.months) + " - "
+                    + days   + " " + getString(R.string.days);
+        } catch (Exception e) {
+            // Ultra-safe fallback
+            return knownYears + " " + getString(R.string.years);
+        }
+    }
+
 
     private String getBedNumber(String patientuuid) throws DAOException {
         String bedNumber = null;

@@ -90,21 +90,10 @@ import java.util.Objects;
 import java.util.TimeZone;
 import java.util.UUID;
 
-/**
- * PatientPersonalInfoFragment
- *
- * DOB entry is done in the Nepali (BS) calendar via a 3-wheel NumberPicker dialog.
- * The displayed value is always in BS (e.g. "२०५५-०४-१५" or plain "2055-04-15").
- * Storage and all internal computation use the Gregorian yyyy-MM-dd format.
- *
- * Age is auto-calculated from DOB; entering age directly back-calculates a DOB in BS.
- * Minimum allowed age: 13 years.
- */
 public class PatientPersonalInfoFragment extends Fragment {
 
     private static final String TAG = "PatientPersonalInfoFrag";
 
-    // ── Nepali month names (Romanised) ────────────────────────────────────────
     private static final String[] BS_MONTH_NAMES = {
             "Baisakh", "Jestha", "Asar", "Shrawan",
             "Bhadra", "Ashwin", "Kartik", "Mangsir",
@@ -113,13 +102,9 @@ public class PatientPersonalInfoFragment extends Fragment {
 
     // ── State ─────────────────────────────────────────────────────────────────
     private boolean isDobFromCalendar = false;
-
-    /** BS date currently selected (used for display & picker state). */
     private int selectedBsYear  = 0;
-    private int selectedBsMonth = 0; // 1-based
+    private int selectedBsMonth = 0;
     private int selectedBsDay   = 0;
-
-    /** Gregorian DOB stored in db / patientDTO – always yyyy-MM-dd. */
     private String dobToDb = "";
 
     // ── UI fields ─────────────────────────────────────────────────────────────
@@ -159,7 +144,6 @@ public class PatientPersonalInfoFragment extends Fragment {
     private PatientAttributesModel patientAttributesModel;
     private NestedScrollView scrollviewPersonalInfo;
 
-    // ── Factory ───────────────────────────────────────────────────────────────
     public static PatientPersonalInfoFragment getInstance() {
         return new PatientPersonalInfoFragment();
     }
@@ -211,18 +195,18 @@ public class PatientPersonalInfoFragment extends Fragment {
         tvDobForDb   = view.findViewById(R.id.tv_selected_date_dob);
         tvAgeDob     = view.findViewById(R.id.tv_age_dob);
 
-        cardFirstName           = view.findViewById(R.id.card_first_name);
-        cardLastName            = view.findViewById(R.id.card_last_name);
-        cardDob                 = view.findViewById(R.id.card_dob);
-        cardAge                 = view.findViewById(R.id.card_age);
-        cardMobileNumber        = view.findViewById(R.id.card_mobile_no);
+        cardFirstName             = view.findViewById(R.id.card_first_name);
+        cardLastName              = view.findViewById(R.id.card_last_name);
+        cardDob                   = view.findViewById(R.id.card_dob);
+        cardAge                   = view.findViewById(R.id.card_age);
+        cardMobileNumber          = view.findViewById(R.id.card_mobile_no);
         cardAlternateMobileNumber = view.findViewById(R.id.card_alternate_mobile_no);
 
-        tvErrorFirstName    = view.findViewById(R.id.firstname_error);
-        tvErrorLastName     = view.findViewById(R.id.lastname_error);
-        tvErrorDob          = view.findViewById(R.id.dob_error);
-        tvErrorAge          = view.findViewById(R.id.age_error);
-        tvErrorMobileNo     = view.findViewById(R.id.mobile_no_error);
+        tvErrorFirstName       = view.findViewById(R.id.firstname_error);
+        tvErrorLastName        = view.findViewById(R.id.lastname_error);
+        tvErrorDob             = view.findViewById(R.id.dob_error);
+        tvErrorAge             = view.findViewById(R.id.age_error);
+        tvErrorMobileNo        = view.findViewById(R.id.mobile_no_error);
         tvErrAlternateMobileNo = view.findViewById(R.id.alternate_no_error);
 
         ProviderDAO providerDAO = new ProviderDAO();
@@ -232,16 +216,16 @@ public class PatientPersonalInfoFragment extends Fragment {
             e.printStackTrace();
         }
 
-        fab             = view.findViewById(R.id.fab_update_photo);
-        ivProfilePhoto  = view.findViewById(R.id.iv_profile_photo);
-        mFirstName      = view.findViewById(R.id.et_first_name);
-        mMiddleName     = view.findViewById(R.id.et_middle_name);
-        mLastName       = view.findViewById(R.id.et_last_name);
-        mDOB            = view.findViewById(R.id.et_dob);
-        mAge            = view.findViewById(R.id.et_age);
-        mMobileNumber   = view.findViewById(R.id.et_mobile_no);
+        fab              = view.findViewById(R.id.fab_update_photo);
+        ivProfilePhoto   = view.findViewById(R.id.iv_profile_photo);
+        mFirstName       = view.findViewById(R.id.et_first_name);
+        mMiddleName      = view.findViewById(R.id.et_middle_name);
+        mLastName        = view.findViewById(R.id.et_last_name);
+        mDOB             = view.findViewById(R.id.et_dob);
+        mAge             = view.findViewById(R.id.et_age);
+        mMobileNumber    = view.findViewById(R.id.et_mobile_no);
         mAlternateNumber = view.findViewById(R.id.et_alternate_mobile);
-        btnSaveUpdate   = view.findViewById(R.id.btn_save_update_first);
+        btnSaveUpdate    = view.findViewById(R.id.btn_save_update_first);
         scrollviewPersonalInfo = view.findViewById(R.id.scroll_personal_info);
 
         i_privacy     = getActivity().getIntent();
@@ -251,7 +235,6 @@ public class PatientPersonalInfoFragment extends Fragment {
             mDOB.setShowSoftInputOnFocus(false);
         }
 
-        // Default display: show today in BS
         int[] todayBs = NepaliDateConverter.getCurrentBsDate();
         tvDobForDb.setText(formatBsDate(todayBs[0], todayBs[1], todayBs[2]));
 
@@ -276,27 +259,20 @@ public class PatientPersonalInfoFragment extends Fragment {
     private void handleClickListeners() {
         etLayoutDob.setEndIconOnClickListener(v -> showNepaliDatePicker());
         mDOB.setOnClickListener(v -> showNepaliDatePicker());
-        // Age end-icon: no action needed; age text-watcher drives DOB calculation
     }
 
     // ═════════════════════════════════════════════════════════════════════════
     //  Nepali Date Picker
     // ═════════════════════════════════════════════════════════════════════════
 
-    /**
-     * Shows a 3-wheel (Year / Month / Day) NumberPicker dialog for BS date input.
-     * The maximum selectable date corresponds to today-minus-13-years in BS.
-     */
     private void showNepaliDatePicker() {
-        // Determine max-allowed BS date (today − 13 years in Gregorian → BS)
         Calendar maxGreg = Calendar.getInstance();
         maxGreg.add(Calendar.YEAR, -13);
-        int[] maxBs = NepaliDateConverter.gregorianToBs(maxGreg.getTime());
+        int[] maxBs    = NepaliDateConverter.gregorianToBs(maxGreg.getTime());
         int maxBsYear  = maxBs[0];
         int maxBsMonth = maxBs[1];
         int maxBsDay   = maxBs[2];
 
-        // Determine initial picker values
         int initYear, initMonth, initDay;
         if (selectedBsYear > 0) {
             initYear  = selectedBsYear;
@@ -308,33 +284,29 @@ public class PatientPersonalInfoFragment extends Fragment {
             initDay   = maxBsDay;
         }
 
-        // Build NumberPickers
         NumberPicker yearPicker  = new NumberPicker(mContext);
         NumberPicker monthPicker = new NumberPicker(mContext);
         NumberPicker dayPicker   = new NumberPicker(mContext);
 
-        // Year range: 2000 BS → maxBsYear
         yearPicker.setMinValue(2000);
         yearPicker.setMaxValue(maxBsYear);
         yearPicker.setValue(initYear);
 
-        // Month
         monthPicker.setMinValue(1);
-        monthPicker.setMaxValue(12);
+        monthPicker.setMaxValue(initYear == maxBsYear ? maxBsMonth : 12);
         monthPicker.setDisplayedValues(BS_MONTH_NAMES);
         monthPicker.setValue(initMonth);
 
-        // Day – depends on year+month
         int daysInMonth = NepaliDateConverter.getDaysInBsMonth(initYear, initMonth);
+        boolean isBoundaryMonth = (initYear == maxBsYear && initMonth == maxBsMonth);
         dayPicker.setMinValue(1);
-        dayPicker.setMaxValue(daysInMonth);
-        dayPicker.setValue(Math.min(initDay, daysInMonth));
+        dayPicker.setMaxValue(isBoundaryMonth ? Math.min(daysInMonth, maxBsDay) : daysInMonth);
+        dayPicker.setValue(Math.min(initDay, dayPicker.getMaxValue()));
 
-        // Re-compute days when year or month changes
         NumberPicker.OnValueChangeListener refreshDays = (picker, oldVal, newVal) -> {
             int y = yearPicker.getValue();
             int m = monthPicker.getValue();
-            // Clamp max month when at maxBsYear
+
             if (y == maxBsYear) {
                 if (monthPicker.getMaxValue() != maxBsMonth) {
                     monthPicker.setMaxValue(maxBsMonth);
@@ -346,24 +318,20 @@ public class PatientPersonalInfoFragment extends Fragment {
             } else {
                 monthPicker.setMaxValue(12);
             }
+
             int days = NepaliDateConverter.getDaysInBsMonth(y, m);
-            // Clamp max day when at maxBsYear + maxBsMonth
-            if (y == maxBsYear && m == maxBsMonth) {
-                days = Math.min(days, maxBsDay);
-            }
-            int curDay = dayPicker.getValue();
-            dayPicker.setMaxValue(days);
-            if (curDay > days) dayPicker.setValue(days);
+            int dayLimit = (y == maxBsYear && m == maxBsMonth) ? Math.min(days, maxBsDay) : days;
+            dayPicker.setMaxValue(dayLimit);
+            if (dayPicker.getValue() > dayLimit) dayPicker.setValue(dayLimit);
         };
         yearPicker.setOnValueChangedListener(refreshDays);
         monthPicker.setOnValueChangedListener(refreshDays);
 
-        // Layout pickers horizontally
         android.widget.LinearLayout layout = new android.widget.LinearLayout(mContext);
         layout.setOrientation(android.widget.LinearLayout.HORIZONTAL);
         layout.setPadding(16, 16, 16, 16);
-        android.widget.LinearLayout.LayoutParams lp = new android.widget.LinearLayout.LayoutParams(0,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+        android.widget.LinearLayout.LayoutParams lp = new android.widget.LinearLayout.LayoutParams(
+                0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
         layout.addView(yearPicker, lp);
         layout.addView(monthPicker, lp);
         layout.addView(dayPicker, lp);
@@ -386,40 +354,33 @@ public class PatientPersonalInfoFragment extends Fragment {
      * Converts to Gregorian, validates age ≥ 13, populates UI fields.
      */
     private void onBsDateSelected(int bsYear, int bsMonth, int bsDay) {
-        // Convert BS → Gregorian
         Date gregDate = NepaliDateConverter.bsToGregorian(bsYear, bsMonth, bsDay);
 
-        // Age validation
         int ageYears = calcAgeYears(gregDate);
         if (ageYears < 13) {
             showAgeError();
             return;
         }
 
-        // Persist BS selection state
-        selectedBsYear  = bsYear;
-        selectedBsMonth = bsMonth;
-        selectedBsDay   = bsDay;
+        selectedBsYear    = bsYear;
+        selectedBsMonth   = bsMonth;
+        selectedBsDay     = bsDay;
         isDobFromCalendar = true;
 
-        // Gregorian yyyy-MM-dd for DB
         dobToDb = toGregorianDbFormat(gregDate);
         patient1.setDate_of_birth(dobToDb);
         patientDTO.setDateofbirth(dobToDb);
 
-        // Display in BS
         String bsDisplay = formatBsDate(bsYear, bsMonth, bsDay);
         mDOB.setText(bsDisplay);
         tvDobForDb.setText(bsDisplay);
-
-        // Save to SharedPrefs
         setSelectedDob(mContext, bsDisplay);
 
-        // Populate age field
+        // ── FIX (Bug #2): age field shows only years (it is an input field).
+        // The detail screen shows the full "X years - Y months - Z days" string.
         mAgeYears = ageYears;
         mAge.setText(String.valueOf(mAgeYears));
 
-        // Clear errors
         tvErrorDob.setVisibility(View.GONE);
         tvErrorAge.setVisibility(View.GONE);
         cardDob.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
@@ -431,15 +392,21 @@ public class PatientPersonalInfoFragment extends Fragment {
     // ═════════════════════════════════════════════════════════════════════════
 
     /**
-     * When the user types an age, calculates an approximate DOB
-     * (same calendar day/month, ageYears ago) and shows it in BS.
+     * Calculates an approximate DOB from an integer age and populates the DOB field.
+     *
+     * Strategy: subtract exactly {@code ageInYears} from today's date.
+     * This gives a DOB whose calcAgeYears() will always return exactly
+     * {@code ageInYears}, because Calendar.add(YEAR, -n) produces the
+     * exact anniversary date n years ago.
+     *
+     * Example: today = 2026-04-15, age = 25 → DOB = 2001-04-15
+     *   calcAgeYears(2001-04-15) on 2026-04-15 = 25 ✓
      */
     private void calculateDobFromAge(int ageInYears) {
         Calendar birthGreg = Calendar.getInstance();
         birthGreg.add(Calendar.YEAR, -ageInYears);
         Date birthDate = birthGreg.getTime();
 
-        // Convert to BS for display
         int[] bs = NepaliDateConverter.gregorianToBs(birthDate);
         selectedBsYear  = bs[0];
         selectedBsMonth = bs[1];
@@ -449,11 +416,9 @@ public class PatientPersonalInfoFragment extends Fragment {
         mDOB.setText(bsDisplay);
         tvDobForDb.setText(bsDisplay);
 
-        // Store Gregorian yyyy-MM-dd
         dobToDb = toGregorianDbFormat(birthDate);
         patient1.setDate_of_birth(dobToDb);
         patientDTO.setDateofbirth(dobToDb);
-
         setSelectedDob(mContext, bsDisplay);
 
         Log.d(TAG, "calculateDobFromAge → BS: " + bsDisplay + " | DB: " + dobToDb);
@@ -463,33 +428,58 @@ public class PatientPersonalInfoFragment extends Fragment {
     //  Helper utilities
     // ═════════════════════════════════════════════════════════════════════════
 
-    /** Returns "YYYY-Baisakh-DD" style label, e.g. "2055-Baisakh-15". */
+    /** Returns "YYYY-MonthName-DD" e.g. "2055-Baisakh-15". */
     private String formatBsDate(int y, int m, int d) {
         return String.format(Locale.ENGLISH, "%d-%s-%02d", y, BS_MONTH_NAMES[m - 1], d);
     }
 
-    /** Full years of age from a Gregorian birth date to today. */
+    /**
+     * Full completed years of age from a Gregorian birth date to today.
+     *
+     * ── FIX (Bug #3 – leap-year off-by-one in calcAgeYears) ─────────────────
+     * The original code used DAY_OF_YEAR for the "birthday not yet passed"
+     * check. This is wrong across leap/non-leap year boundaries:
+     *
+     *   DOB  = 2000-03-01  →  DAY_OF_YEAR = 61  (2000 is a leap year)
+     *   Today = 2001-03-01  →  DAY_OF_YEAR = 60  (2001 is not a leap year)
+     *   Raw diff = 1 year.  60 < 61 → age-- → 0  ← WRONG (should be 1)
+     *
+     * Fix: compare MONTH + DAY_OF_MONTH instead of DAY_OF_YEAR.
+     * ────────────────────────────────────────────────────────────────────────
+     */
     private int calcAgeYears(Date birthDate) {
         Calendar birth = Calendar.getInstance();
         birth.setTime(birthDate);
         Calendar now = Calendar.getInstance();
+
         int age = now.get(Calendar.YEAR) - birth.get(Calendar.YEAR);
-        if (now.get(Calendar.DAY_OF_YEAR) < birth.get(Calendar.DAY_OF_YEAR)) age--;
+
+        // ── FIX: use MONTH + DAY_OF_MONTH, not DAY_OF_YEAR ───────────────────
+        boolean birthdayNotYetThisYear =
+                now.get(Calendar.MONTH) < birth.get(Calendar.MONTH)
+                        || (now.get(Calendar.MONTH) == birth.get(Calendar.MONTH)
+                        && now.get(Calendar.DAY_OF_MONTH) < birth.get(Calendar.DAY_OF_MONTH));
+
+        if (birthdayNotYetThisYear) age--;
         return age;
     }
 
     /** Formats a Date as yyyy-MM-dd (Gregorian) for DB storage. */
     private String toGregorianDbFormat(Date date) {
-        return new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).format(date);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC")); // consistent with NepaliDateConverter
+        return sdf.format(date);
     }
 
     /**
-     * Parses a Gregorian yyyy-MM-dd string and converts it to the BS display string.
+     * Parses a Gregorian yyyy-MM-dd string → converts to the BS display string.
      * Used when loading existing patient data from DB.
      */
     private String gregDbDateToBsDisplay(String yyyyMMdd) {
         try {
-            Date date = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).parse(yyyyMMdd);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+            Date date = sdf.parse(yyyyMMdd);
             if (date == null) return "";
             int[] bs = NepaliDateConverter.gregorianToBs(date);
             selectedBsYear  = bs[0];
@@ -520,7 +510,7 @@ public class PatientPersonalInfoFragment extends Fragment {
     private void updatePatientDetailsFromSecondScreen() {
         fragment_secondScreen = new PatientAddressInfoFragment();
         if (getArguments() != null) {
-            patientDTO = (PatientDTO) getArguments().getSerializable("patientDTO");
+            patientDTO               = (PatientDTO) getArguments().getSerializable("patientDTO");
             patient_detail           = getArguments().getBoolean("patient_detail");
             fromSecondScreen         = getArguments().getBoolean("fromSecondScreen");
             mAlternateNumberString   = getArguments().getString("mAlternateNumberString");
@@ -536,18 +526,18 @@ public class PatientPersonalInfoFragment extends Fragment {
                 mMobileNumber.setText(patientDTO.getPhonenumber());
                 mAlternateNumber.setText(mAlternateNumberString);
 
-                // Restore BS DOB from SharedPrefs (saved as BS display string)
                 String savedBsDisplay = getSelectedDob(mContext);
                 if (savedBsDisplay != null && !savedBsDisplay.isEmpty()) {
                     mDOB.setText(savedBsDisplay);
                     tvDobForDb.setText(savedBsDisplay);
                 }
 
-                // Age from patientDTO gregorian date
                 if (patientDTO.getDateofbirth() != null && !patientDTO.getDateofbirth().isEmpty()) {
                     dobToDb = patientDTO.getDateofbirth();
                     try {
-                        Date d = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).parse(dobToDb);
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+                        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+                        Date d = sdf.parse(dobToDb);
                         mAgeYears = calcAgeYears(d);
                         mAge.setText(String.valueOf(mAgeYears));
                     } catch (Exception ignored) {}
@@ -617,7 +607,6 @@ public class PatientPersonalInfoFragment extends Fragment {
         }
         c.close();
 
-        // Patient attributes
         Cursor ca = db.query("tbl_patient_attribute",
                 new String[]{"value","person_attribute_type_uuid"},
                 "patientuuid = ?", new String[]{patientUID}, null, null, null);
@@ -655,7 +644,6 @@ public class PatientPersonalInfoFragment extends Fragment {
         }
         ca.close();
 
-        // Populate text fields
         mFirstName.setText(patient1.getFirst_name());
         mMiddleName.setText(patient1.getMiddle_name());
         mLastName.setText(patient1.getLast_name());
@@ -664,15 +652,16 @@ public class PatientPersonalInfoFragment extends Fragment {
 
         mCurrentPhotoPath = patient1.getPatient_photo();
 
-        // ── DOB: convert stored Gregorian yyyy-MM-dd → BS display ──────────
-        String gregDob = patient1.getDate_of_birth(); // e.g. "1998-05-10"
+        String gregDob = patient1.getDate_of_birth();
         if (gregDob != null && !gregDob.isEmpty()) {
             dobToDb = gregDob;
             String bsDisplay = gregDbDateToBsDisplay(gregDob);
             mDOB.setText(bsDisplay);
             tvDobForDb.setText(bsDisplay);
             try {
-                Date d = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).parse(gregDob);
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+                sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+                Date d = sdf.parse(gregDob);
                 mAgeYears = calcAgeYears(d);
             } catch (Exception ignored) {}
             mAge.setText(String.valueOf(mAgeYears));
@@ -711,7 +700,6 @@ public class PatientPersonalInfoFragment extends Fragment {
             patientDTO.setMiddlename(mMiddleName.getText().toString());
             patientDTO.setLastname(mLastName.getText().toString());
             patientDTO.setPhonenumber(mMobileNumber.getText().toString());
-            // dobToDb is already in yyyy-MM-dd Gregorian
             patientDTO.setDateofbirth(dobToDb);
             patientDTO.setGender(((EditText) view.findViewById(R.id.etGender)).getText().toString());
 
@@ -916,7 +904,7 @@ public class PatientPersonalInfoFragment extends Fragment {
     }
 
     // ═════════════════════════════════════════════════════════════════════════
-    //  SharedPrefs – DOB (stored as BS display string)
+    //  SharedPrefs
     // ═════════════════════════════════════════════════════════════════════════
 
     public String getSelectedDob(Context context) {
@@ -931,16 +919,12 @@ public class PatientPersonalInfoFragment extends Fragment {
     }
 
     // ═════════════════════════════════════════════════════════════════════════
-    //  UUID generation
+    //  UUID / Scroll helpers
     // ═════════════════════════════════════════════════════════════════════════
 
     public void generateUuid() {
         patientUuid = uuidGenerator.UuidGenerator();
     }
-
-    // ═════════════════════════════════════════════════════════════════════════
-    //  Scroll helper
-    // ═════════════════════════════════════════════════════════════════════════
 
     private void setScrollToFocusedItem() {
         if (requireView().findFocus() != null) {
@@ -990,7 +974,6 @@ public class PatientPersonalInfoFragment extends Fragment {
                         empty ? R.color.error_red : R.color.colorScrollbar));
 
             } else if (id == R.id.et_dob) {
-                // DOB field is read-only (set via picker); just reflect error state
                 boolean empty = val.isEmpty();
                 tvErrorDob.setVisibility(empty ? View.VISIBLE : View.GONE);
                 if (empty) tvErrorDob.setText(getString(R.string.select_dob));
@@ -999,11 +982,11 @@ public class PatientPersonalInfoFragment extends Fragment {
 
             } else if (id == R.id.et_age) {
                 if (val.isEmpty()) {
-                    // Age cleared → clear DOB too
                     mDOB.setText("");
                     tvDobForDb.setText("");
                     dobToDb = "";
                     selectedBsYear = selectedBsMonth = selectedBsDay = 0;
+                    isDobFromCalendar = false;
                     tvErrorAge.setVisibility(View.VISIBLE);
                     tvErrorAge.setText(getString(R.string.patient_age_validation));
                     cardAge.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
@@ -1015,7 +998,7 @@ public class PatientPersonalInfoFragment extends Fragment {
                     } else {
                         tvErrorAge.setVisibility(View.GONE);
                         cardAge.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
-                        // Only back-calculate DOB if user hasn't already picked one from the picker
+                        // Back-calculate DOB only when user is typing age directly (not after picker)
                         if (!isDobFromCalendar || mDOB.getText().toString().isEmpty()) {
                             calculateDobFromAge(age);
                         }
