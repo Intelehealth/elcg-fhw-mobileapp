@@ -2,6 +2,7 @@ package org.intelehealth.ezazi.partogram;
 
 import static org.intelehealth.ezazi.partogram.PartogramConstants.STAGE_1;
 import static org.intelehealth.ezazi.partogram.PartogramConstants.STAGE_2;
+import static org.intelehealth.ezazi.partogram.PartogramConstants.STAGE_3;
 import static org.intelehealth.ezazi.partogram.PartogramConstants.TIMELINE_MODE;
 import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
 
@@ -46,6 +47,8 @@ import org.intelehealth.ezazi.partogram.model.Medicine;
 import org.intelehealth.ezazi.partogram.model.ParamInfo;
 import org.intelehealth.ezazi.partogram.model.PartogramItemData;
 import org.intelehealth.ezazi.partogram.model.ValidatePartogramFields;
+import org.intelehealth.ezazi.partogram.utils.DataCaptureGenericRadioFieldHandler;
+import org.intelehealth.ezazi.stage3.Utils.DeliveryConcept;
 import org.intelehealth.ezazi.syncModule.SyncUtils;
 import org.intelehealth.ezazi.ui.dialog.AppDialogUtils;
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
@@ -70,6 +73,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import kotlin.Unit;
 
@@ -98,6 +103,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
     private String encounterType = "";
     private boolean isSynced = false;
     private VisitAttributeListDAO visitAttributeListDAO;
+    private DataCaptureGenericRadioFieldHandler radioHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,6 +124,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
         encounterName = getIntent().getStringExtra("encounterName");
         encounterType = getIntent().getStringExtra("encounterType");
 
+        radioHandler = new DataCaptureGenericRadioFieldHandler();
 
         accessMode = (PartogramConstants.AccessMode) getIntent().getSerializableExtra(TIMELINE_MODE);
         context = PartogramDataCaptureActivity.this;
@@ -135,12 +142,17 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
         Log.d(TAG, "k2onCreate: kz encounterType : " + encounterType);
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
-        if (mQueryFor == HOURLY) {
-            prepareDataForHourly();
-        } else if (mQueryFor == HALF_HOUR) {
-            prepareDataForHalfHourly();
-        } else if (mQueryFor == FIFTEEN_MIN) {
-            prepareDataForFifteenMins();
+
+        if (mStageNumber == 3) {
+            prepareDataForStage3();
+        }else {
+            if (mQueryFor == HOURLY) {
+                prepareDataForHourly();
+            } else if (mQueryFor == HALF_HOUR) {
+                prepareDataForHalfHourly();
+            } else if (mQueryFor == FIFTEEN_MIN) {
+                prepareDataForFifteenMins();
+            }
         }
 
         mSaveTextView.setOnClickListener(v -> {
@@ -347,8 +359,8 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
 
     private void saveObs() throws DAOException {
         boolean isInternetAvailable = InternetDialogHelper.checkInternetOrShow(PartogramDataCaptureActivity.this);
-        if(!isInternetAvailable)
-            return;
+       /* if(!isInternetAvailable)
+            return;*/
         ObsDAO obsDAO = new ObsDAO();
 
         // validation
@@ -464,7 +476,27 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                             }
                         }
 
-                    } else {
+                    }else {
+                        if (PartogramConstants.RADIO_SELECT_TYPE.equalsIgnoreCase(info.getParamDateType())) {
+                            addGeneralRadioValuesOrNormalObs(info, obsDAO, mEncounterUUID, obsDTOList);
+                        } else {
+                            //  EXISTING NORMAL EDITTEXT FLOW
+                            info.setCreatedDate(DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
+
+                            ObsDTO obsDTOData = buildObservation(info);
+
+                            String uuid = obsDAO.getObsuuid(mEncounterUUID, info.getConceptUUID());
+                            obsDTOData.setUuid(uuid);
+
+                            if (uuid != null && !uuid.isEmpty()) {
+                                obsDTOList.add(obsDTOData);
+                            } else {
+                                if (info.getCapturedValue() != null && !info.getCapturedValue().isEmpty()) {
+                                    obsDTOList.add(obsDTOData);
+                                }
+                            }
+                        }
+                    } /*else {
                         info.setCreatedDate(DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
                         ObsDTO obsDTOData = buildObservation(info);
 
@@ -481,7 +513,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                                 obsDTOList.add(obsDTOData);
                             }
                         }
-                    }
+                    }*/
                 }
             }
         }
@@ -630,8 +662,12 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
         if (accessMode != PartogramConstants.AccessMode.WRITE) {
             mObsDTOList = new ObsDAO().getOBSByEncounterUUID(mEncounterUUID);
             for (int i = 0; i < mObsDTOList.size(); i++) {
+
                 ObsDTO obsDTO = mObsDTOList.get(i);
                 for (int j = 0; j < mItemList.size(); j++) {
+                    Log.d("RADIO_DB", "concept=" + obsDTO.getConceptuuid()
+                            + " value=" + obsDTO.getValue()
+                            + " created=" + obsDTO.getCreatedDate(true));
                     for (int k = 0; k < mItemList.get(j).getParamInfoList().size(); k++) {
                         ParamInfo info = mItemList.get(j).getParamInfoList().get(k);
                         if (obsDTO.getConceptuuid().equals(info.getConceptUUID())) {
@@ -683,6 +719,17 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                                 Log.d(TAG, "setEditData:savecheck: " + obsDTO.createdDate());
                                 //info.setCreatedDate(obsDTO.getCreatedDate());
                                 info.setCapturedValue(obsDTO.getValue());
+                                if (radioHandler.isGenericConcept(info.getConceptUUID())) {
+                                    if ("Y".equalsIgnoreCase(obsDTO.getValue()) || "YES".equalsIgnoreCase(obsDTO.getValue())) {
+                                        info.setCheckedRadioOption(ParamInfo.RadioOptions.YES);
+                                        info.setCapturedValue("YES");
+                                    } else if ("N".equalsIgnoreCase(obsDTO.getValue()) || "NO".equalsIgnoreCase(obsDTO.getValue())) {
+                                        info.setCheckedRadioOption(ParamInfo.RadioOptions.NO);
+                                        info.setCapturedValue("NO");
+                                    } else {
+                                        info.setCheckedRadioOption(null);
+                                    }
+                                }
                             }
                             break;
                         }
@@ -909,5 +956,157 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
         } else {
             Toast.makeText(this, "Unable to upload the data!", Toast.LENGTH_SHORT).show();
         }
+    }
+    private boolean checkNewbornStatusIsLive() {
+
+        try {
+
+            EncounterDAO encounterDAO = new EncounterDAO();
+            ObsDAO observationDAO = new ObsDAO();
+
+            // 1️⃣ Get latest Stage 3 encounter for this visit
+            EncounterDTO stage3Encounter = encounterDAO.getEncounterUuidByVisitUuidAndType(mVisitUUID, UuidDictionary.DELIVERY_OUTCOME_STAGE3);
+
+            if (stage3Encounter == null) {
+                Log.d(TAG, "Stage3 encounter not found");
+                return false;
+            }
+
+            // 2️⃣ Get Birth Outcome observation
+            List<ObsDTO> obsList = observationDAO.getObsRecordByEncounterUuid(stage3Encounter.getUuid());
+
+            if (obsList == null || obsList.isEmpty()) {
+                Log.d(TAG, "No observations found in Stage3 encounter");
+                return false;
+            }
+
+            for (ObsDTO obs : obsList) {
+
+                if (DeliveryConcept.BIRTH_TYPE.getUuid().equals(obs.getConceptuuid())) {
+                    String value = obs.getValue();
+                    Log.d(TAG, "Birth Outcome value: " + value);
+                    if (value != null && value.equalsIgnoreCase("LIVE BIRTH")) {
+                        return true;
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            Log.e(TAG, "checkNewbornStatusIsLive error", e);
+        }
+
+        return false;
+    }
+    private void prepareDataForStage3() {
+        TreeMap<String, List<ParamInfo>> stage3Map = PartogramConstants.getSectionParamInfoMasterMap(STAGE_3);
+        mItemList.clear();
+        boolean isLiveBirth = checkNewbornStatusIsLive();
+
+      /*  boolean isFifteenMin = false;
+        boolean isHalfHour = false;
+        boolean isHourly = false;
+
+        if (encounterName != null) {
+
+            String name = encounterName.toLowerCase();
+
+            if (name.contains("hour1")) {
+                isFifteenMin = true;
+            } else if (name.contains("hour2")) {
+                isHalfHour = true;
+            } else if (name.contains("hour3") || name.contains("hour4")) {
+                isHourly = true;
+            }
+        }*/
+
+        for (Map.Entry<String, List<ParamInfo>> entry : stage3Map.entrySet()) {
+            String section = entry.getKey();
+            //  Hide Newborn section ONLY if baby is not live
+            if (section.equalsIgnoreCase("Newborn Monitoring") && !isLiveBirth) {
+                Log.d(TAG, "Skipping Newborn Monitoring because baby is not live");
+                continue;
+            }
+            List<ParamInfo> masterList = entry.getValue();
+            List<ParamInfo> paramInfoList = new ArrayList<>();
+
+            for (ParamInfo original : masterList) {
+                // Create copy to avoid modifying master map object
+                ParamInfo paramInfo = new ParamInfo(original);
+                paramInfo.setCurrentStage(mStageNumber);
+                paramInfoList.add(paramInfo);
+
+               /* if (isFifteenMin && paramInfo.isFifteenMinField()) ||
+                                (isHalfHour && paramInfo.isHalfHourField()) ||
+                                (isHourly && paramInfo.isOnlyOneHourField()) ||
+                                paramInfo.isEachEncounterField()) {
+                 paramInfoList.add(paramInfo);
+                }*/
+            }
+            if (!paramInfoList.isEmpty()) {
+                PartogramItemData partogramItemData = new PartogramItemData();
+                partogramItemData.setParamSectionName(section);
+                partogramItemData.setParamInfoList(paramInfoList);
+
+                mItemList.add(partogramItemData);
+            }
+        }
+        logLargeString("Final list ::kk: ", new Gson().toJson(mItemList));
+        setEditData();
+
+        PartogramQueryListingAdapter adapter = new PartogramQueryListingAdapter(mRecyclerView, mVisitUUID, this, mItemList,
+                partogramItemData -> {});
+        adapter.setAccessMode(accessMode);
+        mRecyclerView.setAdapter(adapter);
+    }
+    public static void logLargeString(String tag, String message) {
+        if (message == null) return;
+
+        int maxLogSize = 2000; // safe chunk
+        for (int i = 0; i <= message.length() / maxLogSize; i++) {
+            int start = i * maxLogSize;
+            int end = Math.min((i + 1) * maxLogSize, message.length());
+            Log.d(tag, message.substring(start, end));
+        }
+    }
+
+    private void addGeneralRadioValuesOrNormalObs(
+            ParamInfo info,
+            ObsDAO obsDAO,
+            String encounterUUID,
+            List<ObsDTO> obsDTOList
+    ) {
+        try{
+            // General RADIO HANDLING
+                String uuid = obsDAO.getObsuuid(encounterUUID, info.getConceptUUID());
+                ObsDTO obs = new ObsDTO();
+                obs.setUuid(uuid);
+                obs.setEncounteruuid(encounterUUID);
+                obs.setConceptuuid(info.getConceptUUID());
+                obs.setCreatorUuid(new SessionManager(this).getCreatorID());
+
+                String value = info.getCapturedValue();
+
+                if (value != null && !value.isEmpty()) {
+
+                    if (value.equalsIgnoreCase("Yes")) {
+                        obs.setValue("Y");
+                    } else if (value.equalsIgnoreCase("No")) {
+                        obs.setValue("N");
+                    } else {
+                        obs.setValue(value);
+                    }
+
+                    obs.setCreatedDate(
+                            DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT)
+                    );
+
+                    obsDTOList.add(obs);
+                }
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+
     }
 }

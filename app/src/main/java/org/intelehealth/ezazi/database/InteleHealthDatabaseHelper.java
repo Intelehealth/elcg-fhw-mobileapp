@@ -318,22 +318,24 @@ public class InteleHealthDatabaseHelper extends SQLiteOpenHelper {
             db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('d1fb190a-9ebb-448f-8d61-dfeeb20fd931','Encounter Status')");
             db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('6ce3e2eb-35d4-4aa2-aa77-6d1d3b3f524a','LCG_SOS')");
 
-            /*// ---------------- STAGE 3 ----------------
+            // ---------------- STAGE 3 ----------------
 
             // 0–1 Hour (Every 15 mins → 4 encounters)
-            db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('11111111-aaaa-4aaa-aaaa-111111111111','Stage3_Hour1_1')");
-            db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('22222222-bbbb-4bbb-bbbb-222222222222','Stage3_Hour1_2')");
-            db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('33333333-cccc-4ccc-cccc-333333333333','Stage3_Hour1_3')");
-            db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('44444444-dddd-4ddd-dddd-444444444444','Stage3_Hour1_4')");
+            db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('e58b22d1-b09e-4cda-b05c-a45d1e63d390','Stage3_Hour1_1')");
+            db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('2c112cc2-3922-400e-9dd9-11b27fc76404','Stage3_Hour1_2')");
+            db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('83ddb485-4d99-4efa-b7c9-8a2aab14c868','Stage3_Hour1_3')");
+            db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('45d3680e-b368-4a05-8ae5-e0baa31b1973','Stage3_Hour1_4')");
 
             // 1–2 Hour (Every 30 mins → 2 encounters)
-            db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('55555555-eeee-4eee-eeee-555555555555','Stage3_Hour2_1')");
-            db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('66666666-ffff-4fff-ffff-666666666666','Stage3_Hour2_2')");
+            db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('3d71ad42-7b6e-4687-b096-f0dd89e84647','Stage3_Hour2_1')");
+            db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('3b3960f4-c9d2-4d41-aed9-f376312fc33e','Stage3_Hour2_2')");
 
             // 2–4 Hour (Every 1 hour → 2 encounters)
-            db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('77777777-gggg-4ggg-gggg-777777777777','Stage3_Hour3_1')");
-            db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('88888888-hhhh-4hhh-hhhh-888888888888','Stage3_Hour4_1')");
-*/
+            db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('0ca40a73-3581-47ae-9cb2-0c6cde17158e','Stage3_Hour3_1')");
+            db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('746e8cc9-e8e8-4055-87a2-2687888cf7f8','Stage3_Hour4_1')");
+
+            // DELIVERY_OUTCOME_STAGE3
+            db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('c5f95c0f-a499-4792-9ee0-ff138d8df425','DELIVERY_OUTCOME_STAGE3')");
         }
     }
 

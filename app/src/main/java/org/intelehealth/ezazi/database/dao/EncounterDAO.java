@@ -837,7 +837,7 @@ public class EncounterDAO {
             values.put("sync", "false");
             values.put("voided", 0);
 
-            db.insertWithOnConflict("tbl_encounter", null, values, SQLiteDatabase.CONFLICT_REPLACE);
+            createdRecordsCount =  db.insertWithOnConflict("tbl_encounter", null, values, SQLiteDatabase.CONFLICT_REPLACE);
             if (createdRecordsCount != 0)
                 isCreated = true;
         } catch (SQLException e) {
