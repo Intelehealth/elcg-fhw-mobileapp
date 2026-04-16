@@ -25,12 +25,7 @@ class DeliveryViewModel(
     ) {
         viewModelScope.launch {
 
-            val result = withContext(Dispatchers.IO) {
-                saveDeliveryDetailsUseCase(
-                    encounterDTO,
-                    deliveryDetails,
-                    creatorId
-                )
+            val result = withContext(Dispatchers.IO) { saveDeliveryDetailsUseCase(encounterDTO, deliveryDetails, creatorId)
             }
 
             _saveResult.value = result

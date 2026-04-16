@@ -2,17 +2,14 @@ package org.intelehealth.ezazi.stage3
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.textfield.TextInputLayout
-import com.google.gson.Gson
 import org.intelehealth.ezazi.R
-import org.intelehealth.ezazi.activities.homeActivity.HomeActivity
+import org.intelehealth.ezazi.activities.visitSummaryActivity.TimelineVisitSummaryActivity
 import org.intelehealth.ezazi.app.AppConstants
-import org.intelehealth.ezazi.app.IntelehealthApplication
 import org.intelehealth.ezazi.database.dao.EncounterDAO
 import org.intelehealth.ezazi.database.dao.ObsDAO
 import org.intelehealth.ezazi.databinding.ActivityWomenDeliveryDetailsBinding
@@ -44,11 +41,10 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
         setContentView(binding.root)
         binding.bottomSheetAppBar.toolbar.setTitle(R.string.final_delivery_outcome_form)
         binding.bottomSheetAppBar.toolbar.setNavigationOnClickListener { v ->
-            val intent = Intent(this, HomeActivity::class.java)////timeline
+            val intent = Intent(this, TimelineVisitSummaryActivity::class.java)////timeline
             startActivity(intent)
             finish()
         }
-        //SupportUtils.enableProperPadding(this@WomenDeliveryDetailsActivity)
 
         visitUuid = intent?.getStringExtra("visitUuid")
         val encounterDto = createEncounterDto()
@@ -62,8 +58,6 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             .get(DeliveryViewModel::class.java)
         binding.btnSave.setOnClickListener {
             val deliveryDetails = collectFormData()
-            Log.d("DELIVERY_DEBUG", Gson().toJson(deliveryDetails))
-
             if (validateFields(deliveryDetails)) {
                 clearErrors()
                 viewModel.saveDelivery(encounterDto, deliveryDetails, SessionManager(this).creatorID)
@@ -190,7 +184,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             return false
         }
 
-        // 🔹 LIVE BIRTH VALIDATION
+        //  LIVE BIRTH VALIDATION
         if (deliveryDetails.typeOfBirth.equals("Live Birth", true)) {
 
             val apgar1 = binding.etApgar1.text.toString()
@@ -308,33 +302,16 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
     private fun observeViewModel() {
 
         viewModel.saveResult.observe(this) { success ->
-
             if (success) {
-
-                Toast.makeText(
-                    this,
-                    "Delivery saved successfully",
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                finish() // or navigate
-
+                Toast.makeText(this, getString(R.string.delivery_outcome_msg), Toast.LENGTH_SHORT).show()
+                finish()
             } else {
-
-                Toast.makeText(
-                    this,
-                    "Failed to save delivery",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(this, getString(R.string.failed_to_save_details), Toast.LENGTH_SHORT).show()
             }
         }
     }
     private fun setupUIHandler() {
-        uiHandler = DeliveryUIController(
-            binding = binding,
-            context = this,
-            fragmentManager = supportFragmentManager)
-
+        uiHandler = DeliveryUIController(binding = binding, context = this, fragmentManager = supportFragmentManager)
         uiHandler.initialize()
     }
     fun collectFormData(): DeliveryDetails {
@@ -421,7 +398,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
 
     override fun onBackPressed() {
         super.onBackPressed()
-        val intent = Intent(this, HomeActivity::class.java) //timeline
+        val intent = Intent(this, TimelineVisitSummaryActivity::class.java) //timeline
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
         startActivity(intent)
         finish()

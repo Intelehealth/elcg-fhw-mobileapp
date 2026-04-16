@@ -1,12 +1,10 @@
 package org.intelehealth.ezazi.stage3.Utils
 
 import android.content.Context
-import android.util.Log
 import android.view.View
 import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentManager
-import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputLayout
 import com.google.android.material.textview.MaterialTextView
 import org.intelehealth.ezazi.R
@@ -243,21 +241,13 @@ class DeliveryUIController(
         }
 
         // ---- Field Clicks ----
-        binding.etDateOfDelivery.setOnClickListener {
-            selectDeliveryDate()
-        }
+        binding.etDateOfDelivery.setOnClickListener { selectDeliveryDate() }
 
-        binding.etTimeOfDelivery.setOnClickListener {
-            selectTimeForAllParameters("timeOfDelivery")
-        }
+        binding.etTimeOfDelivery.setOnClickListener { selectTimeForAllParameters("timeOfDelivery") }
 
-        binding.etTimeOfPlacentaDelivery.setOnClickListener {
-            selectTimeForAllParameters("timeOfPlacentaDelivery")
-        }
+        binding.etTimeOfPlacentaDelivery.setOnClickListener { selectTimeForAllParameters("timeOfPlacentaDelivery") }
 
-        binding.actvAmtsl.setOnClickListener {
-            showAmtslDialog()
-        }
+        binding.actvAmtsl.setOnClickListener { showAmtslDialog() }
     }
     private fun selectDeliveryDate() {
         val isTablet = context.resources.getBoolean(R.bool.isTabletSize)
@@ -419,8 +409,10 @@ class DeliveryUIController(
         binding.btnPerinealTearYes.setOnClickListener {
         binding.tvPerinealTearValidationError.visibility = View.GONE
             // Toggle UI
-            binding.btnPerinealTearYes.isSelected = true
-            binding.btnPerinealTearNo.isSelected = false
+            //binding.btnPerinealTearYes.isSelected = true
+            //binding.btnPerinealTearNo.isSelected = false
+            binding.btnPerinealTearYes.isChecked = true
+            binding.btnPerinealTearNo.isChecked = false
 
             // Update model
             deliveryDetails.perinealTear = "Yes"
@@ -433,8 +425,10 @@ class DeliveryUIController(
             binding.tvPerinealTearValidationError.visibility = View.GONE
 
             // Toggle UI
-            binding.btnPerinealTearYes.isSelected = false
-            binding.btnPerinealTearNo.isSelected = true
+            //binding.btnPerinealTearYes.isSelected = false
+            //binding.btnPerinealTearNo.isSelected = true
+            binding.btnPerinealTearYes.isChecked = false
+            binding.btnPerinealTearNo.isChecked = true
 
             // Update model
             deliveryDetails.perinealTear = "No"
