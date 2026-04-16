@@ -2,9 +2,9 @@ package org.intelehealth.ezazi.partogram.utils
 
 object Stage3EncounterHelper {
 
-    /**
-     * Returns required interval (in minutes) for next encounter
-     */
+
+      //Returns required interval (in minutes) for next encounter
+
     fun getRequiredIntervalMinutes(encounterName: String?): Int {
 
         if (encounterName.isNullOrEmpty()) return 0
