@@ -1,7 +1,9 @@
 package org.intelehealth.ezazi.utilities;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 import java.util.TimeZone;
 
 /**
@@ -120,6 +122,12 @@ public class NepaliDateConverter {
     private static final int REF_AD_MONTH = 4;  // April (1-based)
     private static final int REF_AD_DAY   = 14;
 
+    private static final String[] BS_DISPLAY_MONTHS = {
+            "Baisakh", "Jestha", "Asar", "Shrawan",
+            "Bhadra", "Ashwin", "Kartik", "Mangsir",
+            "Poush", "Magh", "Falgun", "Chaitra"
+    };
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     /**
@@ -225,5 +233,83 @@ public class NepaliDateConverter {
         }
 
         return new int[]{bsYear, bsMonth, bsDay};
+    }
+
+    /**
+     * Converts a {@link Date} (any timezone — normalised to UTC midnight internally)
+     * to a Nepali BS display string: "DD MonthName YYYY BS"
+     * e.g. {@code Date} representing 2024-06-28 → "15 Asar 2081 BS"
+     *
+     * Use this wherever a {@code java.util.Date} is already available
+     * (e.g. after {@code DateTimeUtils.utcToLocalDate()}).
+     *
+     * @param date Gregorian date to convert; returns empty string if null.
+     */
+    public static String dateToBsDisplay(Date date) {
+        if (date == null) return "";
+        int[] bs = gregorianToBs(date);
+        return bs[2] + " " + BS_DISPLAY_MONTHS[bs[1] - 1] + " " + bs[0] + " BS";
+    }
+
+    /**
+     * Converts a Gregorian date <em>string</em> in any of the common formats used
+     * in this project to a Nepali BS display string: "DD MonthName YYYY BS"
+     *
+     * Supported input formats (tried in order):
+     * <ul>
+     *   <li>{@code yyyy-MM-dd}          — DB storage format for DOB / admission date</li>
+     *   <li>{@code dd/MM/yyyy}          — PatientOtherInfoFragment storage format</li>
+     *   <li>{@code dd MMM yyyy}         — Formatted display strings (e.g. from DateAndTimeUtils)</li>
+     *   <li>{@code yyyy-MM-dd HH:mm:ss} — Full datetime strings from tbl_visit.startdate</li>
+     * </ul>
+     *
+     * Returns an empty string if the input is null/empty or cannot be parsed.
+     *
+     * @param gregorianDateStr Gregorian date string in one of the formats above.
+     */
+    public static String gregStringToBsDisplay(String gregorianDateStr) {
+        if (gregorianDateStr == null || gregorianDateStr.trim().isEmpty()) return "";
+
+        // Each entry: { parse-format, time-output-format-or-null }
+        // time-output-format is non-null only for formats that contain a time component.
+        String[][] formats = {
+                {"yyyy-MM-dd",                  null},
+                {"dd/MM/yyyy",                  null},
+                {"dd MMM yyyy",                 null},
+                {"dd MMM, yyyy",                null},
+                {"dd MMM, yyyy hh:mm a",        "hh:mm a"},   // "15 Apr, 2026 06:21 PM"
+                {"dd MMM yyyy hh:mm a",         "hh:mm a"},   // "15 Apr 2026 06:21 PM"
+                {"dd MMM yyyy HH:mm",           "HH:mm"},     // "28 Jun 2024 14:30"
+                {"yyyy-MM-dd HH:mm:ss",         "HH:mm:ss"},
+                {"yyyy-MM-dd'T'HH:mm:ss.SSSZ",  "HH:mm:ss"},
+        };
+
+        for (String[] entry : formats) {
+            String parseFmt   = entry[0];
+            String timeFmt    = entry[1]; // null = date-only format, no time to preserve
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat(parseFmt, Locale.ENGLISH);
+                sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+                sdf.setLenient(false);
+                Date parsed = sdf.parse(gregorianDateStr.trim());
+                if (parsed == null) continue;
+
+                // Convert date portion to BS
+                String bsDate = dateToBsDisplay(parsed);
+
+                // If this format has a time component, extract and append it
+                if (timeFmt != null) {
+                    SimpleDateFormat timeSdf = new SimpleDateFormat(timeFmt, Locale.ENGLISH);
+                    timeSdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+                    String timeStr = timeSdf.format(parsed);
+                    return bsDate + " " + timeStr;
+                }
+
+                return bsDate;
+            } catch (Exception ignored) {}
+        }
+
+        // Graceful fallback: return original string rather than crashing
+        return gregorianDateStr;
     }
 }
