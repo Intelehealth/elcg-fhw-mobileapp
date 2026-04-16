@@ -481,17 +481,13 @@ public class PartogramConstants {
 
     private static TreeMap<String, List<ParamInfo>> getStage3SectionMap() {
 
-        //TreeMap<String, List<ParamInfo>> sectionMap = new TreeMap<>();
         TreeMap<String, List<ParamInfo>> sectionMap =
-                new TreeMap<>(new Comparator<String>() {
-                    @Override
-                    public int compare(String a, String b) {
+                new TreeMap<>((a, b) -> {
 
-                        if (a.equals("Woman Monitoring")) return -1;
-                        if (b.equals("Woman Monitoring")) return 1;
+                    if (a.equals("Woman Monitoring")) return -1;
+                    if (b.equals("Woman Monitoring")) return 1;
 
-                        return a.compareTo(b);
-                    }
+                    return a.compareTo(b);
                 });
         // ─── SECTION 1: WOMAN MONITORING ───────────────────────────────────────────
 
