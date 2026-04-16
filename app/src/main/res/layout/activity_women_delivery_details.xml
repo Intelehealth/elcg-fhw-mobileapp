@@ -203,21 +203,22 @@
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_perineal_tear_yes"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            style="@style/Theme.EZazi.Button_YesNoButton"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="5dp"
                             android:layout_marginEnd="5dp"
+                            android:checked="false"
                             android:layout_weight="1"
-                            android:text="Yes"
-                            app:backgroundTint="@color/button_bg_selector" />
+                            android:text="Yes" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_perineal_tear_no"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            style="@style/Theme.EZazi.Button_YesNoButton"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:checked="false"
                             android:text="No" />
                     </LinearLayout>
                     <TextView
