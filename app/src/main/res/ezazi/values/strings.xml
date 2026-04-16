@@ -204,6 +204,8 @@
     <string name="none_option">None</string>
     <string name="final_delivery_outcome_form">Women Delivery Details</string>
     <string name="stage_3">Stage 3</string>
-
+    <string name="stage_3_early_postpartum">Stage-3 &amp; Early Postpartum</string>
+    <string name="delivery_outcome_msg">Delivery outcome details saved successfully</string>
+    <string name="failed_to_save_details">Failed to save delivery outcome details</string>">
 
 </resources>

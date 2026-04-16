@@ -1120,6 +1120,10 @@
     <string name="edd_title">Estimated Date of Delivery*</string>
     <string name="hospital_id_title">Hospital ID*</string>
     <string name="hospital_id_hint">Hospital ID</string>
+    <string name="outcome_decision_stage_3">Please enter the outcome of Stage 3</string>
+    <string name="end3StageButton">End Third Stage</string>
+    <string name="edd_error">EDD should be within ±3 weeks of today for active labor</string>
+    <string name="invalid_number_error">Please enter valid number</string>
 
 
 </resources>
