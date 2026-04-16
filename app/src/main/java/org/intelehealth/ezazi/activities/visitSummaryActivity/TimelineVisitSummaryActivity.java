@@ -461,9 +461,9 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         setTitle(patientName);
         encounterDAO = new EncounterDAO();
         Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
-        Log.d(TAG, "kkinitUI: visitUuid : " + visitUuid);
         EncounterDTO encounterDTO = encounterDAO.getEncounterByVisitUUIDLimit1(visitUuid); // get latest encounter.
         String latestEncounterName = encounterDAO.findCurrentStage(encounterDTO.getVisituuid());
+
         if (isVCEPresent.equalsIgnoreCase("")) { // "" ie. not present
             endStageButton.setEnabled(true);
             endStageButton.setClickable(true);
@@ -472,7 +472,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
                 stageNo = 3;
                 endStageButton.setText(context.getResources().getText(R.string.end3StageButton));
             }
-            if (latestEncounterName.toLowerCase().contains("stage2")) {
+            else if (latestEncounterName.toLowerCase().contains("stage2")) {
                 stageNo = 2;
                 endStageButton.setText(context.getResources().getText(R.string.end2StageButton));
             } else if (latestEncounterName.toLowerCase().contains("stage1")) {
@@ -531,9 +531,6 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
                             showLabourBottomSheetDialog(hasMotherDeceased);
                         }
                     }).buildDialog();
-                }else if (stageNo == 3) {
-                    // End visit nepal flow
-                   //todo- Stage 3 Kaveri Pending work
                 }
            /* }else{
                 InternetDialogHelper.showNoInternetDialog(TimelineVisitSummaryActivity.this);
@@ -1024,6 +1021,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
                 encounterListDTO.get(i).setObsValue(obsValue);
             }
             isVCEPresent = encounterDAO.getVisitCompleteEncounterByVisitUUID(visitUuid);
+
             encounterListDTO.removeIf(dto -> dto.getEncounterTypeUuid().equalsIgnoreCase(DELIVERY_OUTCOME_STAGE3)); // remove this from timeline ui
             Collections.reverse(encounterListDTO);
             mainHandler.post(() -> {
