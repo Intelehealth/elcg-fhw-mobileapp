@@ -627,6 +627,8 @@ public class VisitsDAO {
     }
 
     public boolean isVisitActive(String visitUuid, String providerId) {
+        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
+
         String query = new QueryBuilder()
                 .select("1")
                 .from("tbl_visit V")
@@ -639,9 +641,7 @@ public class VisitsDAO {
         String[] selectionArgs = new String[]{visitUuid, ENCOUNTER_VISIT_COMPLETE, "0", providerId};
 
         boolean isActive = false;
-
-        try (SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
-             Cursor cursor = db.rawQuery(query, selectionArgs)) {
+        try (Cursor cursor = db.rawQuery(query, selectionArgs)) {
 
             // If cursor has at least one row, visit is active
             isActive = cursor.moveToFirst();
