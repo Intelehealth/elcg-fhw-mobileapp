@@ -844,9 +844,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
                     Intent intent = new Intent(HomeActivity.this, SearchPatientActivity.class);
                     startActivity(intent);
                 } else if (item.getItemId() == R.id.action_refresh) {
-                   // sync();
-                    Intent intent = new Intent(HomeActivity.this, WomenDeliveryDetailsActivity.class);
-                    startActivity(intent);
+                    sync();
                 } else if (item.getItemId() == R.id.action_help) {
                     help();
                 } else return false;
