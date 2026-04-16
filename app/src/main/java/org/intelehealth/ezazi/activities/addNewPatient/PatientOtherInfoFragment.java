@@ -1,5 +1,9 @@
 package org.intelehealth.ezazi.activities.addNewPatient;
 
+import static org.intelehealth.klivekit.utils.DateTimeUtils.getMaxEDDDate;
+import static org.intelehealth.klivekit.utils.DateTimeUtils.getMinEDDDate;
+import static org.intelehealth.klivekit.utils.DateTimeUtils.normalize;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
@@ -66,6 +70,7 @@ import org.intelehealth.ezazi.utilities.SessionManager;
 import org.intelehealth.ezazi.utilities.StringUtils;
 import org.intelehealth.ezazi.utilities.UuidGenerator;
 import org.intelehealth.ezazi.utilities.exception.DAOException;
+import org.intelehealth.ezazi.utilities.validations.FormValidationHelper;
 import org.intelehealth.klivekit.utils.DateTimeUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -156,7 +161,7 @@ public class PatientOtherInfoFragment extends Fragment {
     private String mLmpDate = "", mEDD = "";
     private TextInputEditText mLmpDateTextView, mEDDTextView;
     private TextView tvErrorLmpDate, tvErrorEDD,tvErrorGravida, tvErrorHospitalId;
-
+    private MaterialCardView cardGravida, cardLMP, cardEdd, cardHospitalId;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_patient_other_info, container, false);
@@ -366,6 +371,10 @@ public class PatientOtherInfoFragment extends Fragment {
         layoutErrorLabourOnset = view.findViewById(R.id.card_labour_onset);
         cardOptions = view.findViewById(R.id.card_options);
         cardHospitalOther = view.findViewById(R.id.card_hospital_other);
+        cardGravida = view.findViewById(R.id.card_gravida);
+        cardLMP = view.findViewById(R.id.card_lmp);
+        cardEdd = view.findViewById(R.id.card_edd);
+        cardHospitalId = view.findViewById(R.id.card_hospital_id);
 
 
         mAdmissionDateTextView.addTextChangedListener(new MyTextWatcher(mAdmissionDateTextView));
@@ -416,11 +425,17 @@ public class PatientOtherInfoFragment extends Fragment {
 
 
         mGravidaEdittext.addTextChangedListener(new MyTextWatcher(mGravidaEdittext));
-        mGravidaEdittext.setOnFocusChangeListener((v, hasFocus) -> {
-            if (!hasFocus) {
-                updateGravida();
+        mLmpDateTextView.addTextChangedListener(new MyTextWatcher(mLmpDateTextView));
+        mEDDTextView.addTextChangedListener(new MyTextWatcher(mEDDTextView));
+        mHospitalId.addTextChangedListener(new MyTextWatcher(mHospitalId));
+
+        /*mGravidaEdittext.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                if(!mGravidaEdittext.getText().toString().isEmpty()){
+
+                }
             }
-        });
+        });*/
         scrollviewOtherInfo.setOnTouchListener((v, event) -> {
             recoverGravidaIfNeeded();
             return false;
@@ -817,9 +832,9 @@ public class PatientOtherInfoFragment extends Fragment {
             isParityWarningDialogShown = true;
             showParityWarningDialog();
         }else{
-            if (validateGravida()) {
+            //if (validateGravida()) {
                 savePatientsDataInDb();
-            }
+            //}
         }
     }
 
@@ -1090,6 +1105,36 @@ public class PatientOtherInfoFragment extends Fragment {
 //            tvErrorBedNumber.setVisibility(View.GONE);
 //            cardBedNumber.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
 //        }
+        //gravida
+        String error = validateGravida();
+        if (error != null) {
+            FormValidationHelper.applyFieldValidation(mContext, mGravidaEdittext, tvErrorGravida, cardGravida, error);
+            errorDetailsList.add(new ErrorManagerModel(mGravidaEdittext,tvErrorGravida, error, cardGravida));
+        }
+        //lmp
+        String lmpValue = mLmpDateTextView.getText().toString();
+        String lmpError = validateLMPValue(lmpValue);
+        /*
+        if (lmpError != null) {
+            errorDetailsList.add(new ErrorManagerModel(mLmpDateTextView, tvErrorLmpDate, lmpError, cardLMP));
+        }*/
+        if(lmpValue.isEmpty()){
+            FormValidationHelper.applyFieldValidation(mContext, mLmpDateTextView, tvErrorLmpDate, cardLMP, lmpError);
+            errorDetailsList.add(new ErrorManagerModel(mLmpDateTextView, tvErrorLmpDate, lmpError, cardLMP));
+        }
+
+        //edd
+        String eddValue = mEDDTextView.getText().toString().trim();
+        //String eddError = validateEDD(eddValue);
+        if (eddValue.isEmpty()) {
+            FormValidationHelper.applyFieldValidation(mContext, mEDDTextView, tvErrorEDD, cardEdd, getString(R.string.this_field_is_mandatory));
+            errorDetailsList.add(new ErrorManagerModel(mEDDTextView, tvErrorEDD, getString(R.string.this_field_is_mandatory), cardEdd));
+        }
+        //hospital id
+        if (TextUtils.isEmpty(mHospitalId.getText().toString())) {
+            FormValidationHelper.applyFieldValidation(mContext, mHospitalId, tvErrorHospitalId, cardHospitalId, getString(R.string.this_field_is_mandatory));
+            errorDetailsList.add(new ErrorManagerModel(mHospitalId, tvErrorHospitalId, getString(R.string.this_field_is_mandatory), cardHospitalId));
+        }
 
         Log.e(TAG, "areValidFields: size of error =>" + errorDetailsList.size());
         if (errorDetailsList.size() > 0) {
@@ -1872,9 +1917,29 @@ public class PatientOtherInfoFragment extends Fragment {
                         cardHospitalOther.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
 
                     }
+                }else if (this.editText.getId() == R.id.et_gravida) {
+                    String error = validateGravida();
+                    FormValidationHelper.applyFieldValidation(mContext, mGravidaEdittext, tvErrorGravida, cardGravida, error);
+                }else if (this.editText.getId() == R.id.et_lmp) {
+                    if (val.isEmpty()) {
+                        FormValidationHelper.applyFieldValidation(mContext, mLmpDateTextView, tvErrorLmpDate, cardLMP, getString(R.string.this_field_is_mandatory));
+                    }
+                   /* String lmpValue = mLmpDateTextView.getText().toString();
+                    String lmpError = validateLMPValue(lmpValue);
+                    FormValidationHelper.applyFieldValidation(mContext, mLmpDateTextView, tvErrorLmpDate, cardLMP, lmpError);*/
                 }
-            } else if (this.editText.getId() == R.id.et_total_birth) {
-                isGravidaEdited = true;
+                else if (this.editText.getId() == R.id.et_edd) {
+                   /* String eddValue = mEDDTextView.getText().toString();
+                    String eddError = validateEDD(eddValue);
+                    FormValidationHelper.applyFieldValidation(mContext, mEDDTextView, tvErrorEDD, cardEdd, eddError);*/
+                    if (val.isEmpty()) {
+                        FormValidationHelper.applyFieldValidation(mContext, mEDDTextView, tvErrorEDD, cardEdd, getString(R.string.this_field_is_mandatory));
+                    }
+                } else if (this.editText.getId() == R.id.et_hospital_id) {
+                    if (val.isEmpty()) {
+                    FormValidationHelper.applyFieldValidation(mContext, mHospitalId, tvErrorHospitalId, cardHospitalId, getString(R.string.this_field_is_mandatory));
+                    }
+                }
             }
 
         }
@@ -1957,35 +2022,10 @@ public class PatientOtherInfoFragment extends Fragment {
             minCal.add(Calendar.DAY_OF_MONTH, -1); // allow yesterday
             dialog.setMinDate(minCal.getTimeInMillis());
             dialog.setMaxDate(System.currentTimeMillis());
-        }/*else if(whichDate.equals("lmpDate")){
-            Log.d(TAG, "selectDateForAll: lmpDate");
-
-            Calendar minCal = Calendar.getInstance();
-            minCal.add(Calendar.WEEK_OF_YEAR, -44);
-            minCal.set(Calendar.HOUR_OF_DAY, 0);
-            minCal.set(Calendar.MINUTE, 0);
-            minCal.set(Calendar.SECOND, 0);
-            minCal.set(Calendar.MILLISECOND, 0);
-
-            Calendar maxCal = Calendar.getInstance();
-            maxCal.set(Calendar.HOUR_OF_DAY, 23);
-            maxCal.set(Calendar.MINUTE, 59);
-            maxCal.set(Calendar.SECOND, 59);
-            maxCal.set(Calendar.MILLISECOND, 999);
-
-            dialog.setMinDate(minCal.getTimeInMillis());
-            dialog.setMaxDate(maxCal.getTimeInMillis());
-
-            dialog.setDefaultDate(System.currentTimeMillis());
-        }*/
+        }
         else if(whichDate.equals("lmpDate")){
-            Log.d(TAG, "=== LMP DATE PICKER OPENED ===");
-
-            Calendar minCal = Calendar.getInstance();
-            Log.d(TAG, "LMP BEFORE: " + minCal.get(Calendar.YEAR) + "-" + (minCal.get(Calendar.MONTH)+1));
-
+            /*Calendar minCal = Calendar.getInstance();
             minCal.add(Calendar.WEEK_OF_YEAR, -44);
-            Log.d(TAG, "LMP AFTER:  " + minCal.get(Calendar.YEAR) + "-" + (minCal.get(Calendar.MONTH)+1));  // ← KEY LOG
 
             minCal.set(Calendar.HOUR_OF_DAY, 0);
             minCal.set(Calendar.MINUTE, 0);
@@ -1998,21 +2038,21 @@ public class PatientOtherInfoFragment extends Fragment {
             maxCal.set(Calendar.SECOND, 59);
             maxCal.set(Calendar.MILLISECOND, 999);
 
-            Log.d(TAG, "LMP RANGE: " + minCal.getTimeInMillis() + " to " + maxCal.getTimeInMillis());
-
             dialog.setMinDate(minCal.getTimeInMillis());
             dialog.setMaxDate(maxCal.getTimeInMillis());
-            dialog.setDefaultDate(System.currentTimeMillis());
+            dialog.setDefaultDate(System.currentTimeMillis());*/
+            dialog.setMaxDate(System.currentTimeMillis());
         }
         else if (whichDate.equals("edd")) {
-
-            // Allow selection within reasonable range (optional wider range)
+           /* // Allow selection within reasonable range (optional wider range)
             Calendar minCal = Calendar.getInstance();
             minCal.add(Calendar.WEEK_OF_YEAR, -3);   // 3 weeks before today
-
             Calendar maxCal = Calendar.getInstance();
             maxCal.add(Calendar.WEEK_OF_YEAR, 3);    // 3 weeks after today
-
+            dialog.setMinDate(minCal.getTimeInMillis());
+            dialog.setMaxDate(maxCal.getTimeInMillis());*/
+            Calendar minCal = getMinEDDDate();
+            Calendar maxCal = getMaxEDDDate();
             dialog.setMinDate(minCal.getTimeInMillis());
             dialog.setMaxDate(maxCal.getTimeInMillis());
         }
@@ -2038,20 +2078,24 @@ public class PatientOtherInfoFragment extends Fragment {
                     mMembraneRupturedDateTextView.setText(selectedDate);
                 }else if (whichDate.equals("lmpDate")) {
 
-                    if (!validateLMP(selectedDate)) {
-                        return;
-                    }
+
+                   /* if (error != null) return;*/
                     mLmpDate = selectedDate;
                     mLmpDateTextView.setText(selectedDate);
-
+                    if(mLmpDateTextView.getText().toString().isEmpty()){
+                        FormValidationHelper.applyFieldValidation(mContext, mLmpDateTextView, tvErrorLmpDate, cardLMP, getString(R.string.this_field_is_mandatory));
+                    }else{
+                        tvErrorLmpDate.setVisibility(View.GONE);
+                        cardLMP.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+                    }
                     // Auto-calculate EDD here if needed
                     calculateEDDFromLMP(selectedDate);
                 }
                 else if (whichDate.equals("edd")) {
 
-                    if (!validateEDD(selectedDate)) {
+                    /*if (!validateEDD(selectedDate)) {
                         return;
-                    }
+                    }*/
 
                     mEDD = selectedDate;
                     mEDDTextView.setText(selectedDate);
@@ -2541,10 +2585,19 @@ public class PatientOtherInfoFragment extends Fragment {
     }
     private void updateGravida() {
 
-        if (isGravidaEdited) return;
+        //if (isGravidaEdited) return;
 
         int gravida = calculateGravida();
         mGravidaEdittext.setText(String.valueOf(gravida));
+
+        String gravidaError = validateGravida();
+        if (gravidaError != null) {
+            mGravidaEdittext.requestFocus();
+            errorDetailsList.add(new ErrorManagerModel(mGravidaEdittext,tvErrorGravida, gravidaError, cardGravida));
+        } else {
+            tvErrorGravida.setVisibility(View.GONE);
+            cardGravida.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+        }
     }
     private int calculateGravida() {
 
@@ -2553,35 +2606,38 @@ public class PatientOtherInfoFragment extends Fragment {
 
         return birth + abortion + 1;
     }
-    private boolean validateGravida() {
-        EditText etGravida = view.findViewById(R.id.et_gravida);
+    private String validateGravida() {
 
-        String val = etGravida.getText().toString().trim();
+        String val = mGravidaEdittext.getText().toString().trim();
 
+        // If empty → auto update
         if (val.isEmpty()) {
-            tvErrorGravida.setText(getResources().getString(R.string.error_gravida_required));
-            tvErrorGravida.setVisibility(View.VISIBLE);
-            return false;
+            updateGravida();
+            val = mGravidaEdittext.getText().toString().trim(); // re-read value
         }
 
-        int g = Integer.parseInt(val);
+        if (val.isEmpty()) {
+            return getString(R.string.error_gravida_required);
+        }
+
+        int g;
+        try {
+            g = Integer.parseInt(val);
+        } catch (Exception e) {
+            return getString(R.string.invalid_number_error);
+        }
 
         if (g < 0) {
-            tvErrorGravida.setText(getResources().getString(R.string.error_gravida_negative));
-            tvErrorGravida.setVisibility(View.VISIBLE);
-            return false;
+            return getString(R.string.error_gravida_negative);
         }
 
         if (g > 20) {
-            tvErrorGravida.setText(getResources().getString(R.string.error_gravida_max_limit));
-            tvErrorGravida.setVisibility(View.VISIBLE);
-            return false;
+            return getString(R.string.error_gravida_max_limit);
         }
 
-        tvErrorGravida.setVisibility(View.GONE);
-        return true;
+        return null; // VALID
     }
-    private void calculateEDDFromLMP(String lmpDateStr) {
+   /* private void calculateEDDFromLMP(String lmpDateStr) {
 
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
@@ -2601,11 +2657,53 @@ public class PatientOtherInfoFragment extends Fragment {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
+    }*/
+   private void calculateEDDFromLMP(String lmpDateStr) {
+
+       try {
+           if (lmpDateStr == null || lmpDateStr.trim().isEmpty()) return;
+
+           SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+           Date lmpDate = sdf.parse(lmpDateStr);
+
+           if (lmpDate == null) return;
+
+           Calendar cal = Calendar.getInstance();
+           cal.setTime(lmpDate);
+
+           // Naegele's rule: +280 days
+           cal.add(Calendar.DAY_OF_YEAR, 280);
+
+           String eddDate = sdf.format(cal.getTime());
+
+           mEDD = eddDate;
+           mEDDTextView.setText(eddDate);
+
+           //remove error
+           //String eddError = validateEDD(eddDate);
+           String eddError = "";
+           if(mEDDTextView.getText().toString().isEmpty()){
+               eddError= getString(R.string.this_field_is_mandatory);
+               FormValidationHelper.applyFieldValidation(
+                       mContext,
+                       mEDDTextView,
+                       tvErrorEDD,
+                       cardEdd,
+                       eddError
+               );
+           }else{
+               tvErrorEDD.setVisibility(View.GONE);
+               cardEdd.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+           }
+
+       } catch (Exception e) {
+           e.printStackTrace();
+       }
+   }
     private boolean validateLMP(String dateStr) {
 
         if (dateStr == null || dateStr.trim().isEmpty()) {
-            tvErrorLmpDate.setText(getString(R.string.lmp_required));
+            tvErrorLmpDate.setText(getString(R.string.this_field_is_mandatory));
             tvErrorLmpDate.setVisibility(View.VISIBLE);
             return false;
         }
@@ -2616,14 +2714,14 @@ public class PatientOtherInfoFragment extends Fragment {
 
             Calendar now = Calendar.getInstance();
 
-            // ❌ Future check
+            //  Future check
             if (selectedDate.after(now.getTime())) {
                 tvErrorLmpDate.setText(getString(R.string.lmp_future_not_allowed));
                 tvErrorLmpDate.setVisibility(View.VISIBLE);
                 return false;
             }
 
-            // ❌ 44 weeks range check
+            //  44 weeks range check
             Calendar minCal = Calendar.getInstance();
             minCal.add(Calendar.WEEK_OF_YEAR, -44);
 
@@ -2641,36 +2739,6 @@ public class PatientOtherInfoFragment extends Fragment {
         tvErrorLmpDate.setVisibility(View.GONE);
         return true;
     }
-
-    private boolean validateEDD(String eddDate) {
-
-        try {
-            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-            Date selected = sdf.parse(eddDate);
-
-            Calendar today = Calendar.getInstance();
-
-            Calendar minCal = Calendar.getInstance();
-            minCal.add(Calendar.WEEK_OF_YEAR, -3);
-
-            Calendar maxCal = Calendar.getInstance();
-            maxCal.add(Calendar.WEEK_OF_YEAR, 3);
-
-            if (selected.before(minCal.getTime()) || selected.after(maxCal.getTime())) {
-
-                tvErrorEDD.setText("EDD should be within ±3 weeks of today for active labor");
-                tvErrorEDD.setVisibility(View.VISIBLE);
-                return false;
-            }
-
-            tvErrorEDD.setVisibility(View.GONE);
-            return true;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
     private void recoverGravidaIfNeeded() {
 
         String val = mGravidaEdittext.getText().toString().trim();
@@ -2678,5 +2746,81 @@ public class PatientOtherInfoFragment extends Fragment {
         if (val.isEmpty()) {
             mGravidaEdittext.setText(String.valueOf(calculateGravida()));
         }
+    }
+    private String validateLMPValue(String dateStr) {
+
+        if (dateStr == null || dateStr.trim().isEmpty()) {
+            return getString(R.string.this_field_is_mandatory);
+        }
+
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+            Date selectedDate = sdf.parse(dateStr);
+
+            Calendar now = Calendar.getInstance();
+
+            // Future check
+            if (selectedDate.after(now.getTime())) {
+                return getString(R.string.lmp_future_not_allowed);
+            }
+
+            // 44 weeks back check
+            Calendar minCal = Calendar.getInstance();
+            minCal.add(Calendar.WEEK_OF_YEAR, -44);
+
+            if (selectedDate.before(minCal.getTime())) {
+                return getString(R.string.lmp_range_invalid);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return getString(R.string.lmp_range_invalid);
+        }
+
+        return null; // valid
+    }
+    private boolean isActiveLabour() {
+        return mActiveLaborDiagnosedDate != null
+                && !mActiveLaborDiagnosedDate.trim().isEmpty();
+    }
+    private String validateEDD(String eddDate) {
+
+        if (eddDate == null || eddDate.trim().isEmpty()) {
+            return getString(R.string.this_field_is_mandatory);
+        }
+
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+            Date selected = sdf.parse(eddDate);
+
+            if (selected == null) {
+                return getString(R.string.edd_error);
+            }
+
+            Calendar selectedCal = Calendar.getInstance();
+            selectedCal.setTime(selected);
+            selectedCal = normalize(selectedCal);
+
+            // Apply ±3 weeks ONLY if active labour
+            if (isActiveLabour()) {
+
+                Calendar today = normalize(Calendar.getInstance());
+
+                Calendar minCal = (Calendar) today.clone();
+                minCal.add(Calendar.WEEK_OF_YEAR, -3);
+
+                Calendar maxCal = (Calendar) today.clone();
+                maxCal.add(Calendar.WEEK_OF_YEAR, 3);
+
+                if (selectedCal.before(minCal) || selectedCal.after(maxCal)) {
+                    return getString(R.string.edd_error);
+                }
+            }
+
+        } catch (Exception e) {
+            return getString(R.string.invalid_number_error);
+        }
+
+        return null;
     }
 }
