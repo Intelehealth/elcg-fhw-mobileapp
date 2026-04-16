@@ -416,6 +416,15 @@ public class PatientOtherInfoFragment extends Fragment {
 
 
         mGravidaEdittext.addTextChangedListener(new MyTextWatcher(mGravidaEdittext));
+        mGravidaEdittext.setOnFocusChangeListener((v, hasFocus) -> {
+            if (!hasFocus) {
+                updateGravida();
+            }
+        });
+        scrollviewOtherInfo.setOnTouchListener((v, event) -> {
+            recoverGravidaIfNeeded();
+            return false;
+        });
     }
 
     private void handleOptionsForMaternity() {
@@ -2660,6 +2669,14 @@ public class PatientOtherInfoFragment extends Fragment {
         } catch (Exception e) {
             e.printStackTrace();
             return false;
+        }
+    }
+    private void recoverGravidaIfNeeded() {
+
+        String val = mGravidaEdittext.getText().toString().trim();
+
+        if (val.isEmpty()) {
+            mGravidaEdittext.setText(String.valueOf(calculateGravida()));
         }
     }
 }
