@@ -76,7 +76,6 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
     }
 
     private fun validateFields(deliveryDetails: DeliveryDetails): Boolean {
-
         // Clear previous errors first
         clearErrors()
 
@@ -86,10 +85,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
         }
 
         if (binding.etTimeOfDelivery.text.isNullOrEmpty()) {
-            setFieldError(
-                binding.etlTimeOfDelivery,
-                getString(R.string.this_field_is_mandatory)
-            )
+            setFieldError(binding.etlTimeOfDelivery, getString(R.string.this_field_is_mandatory))
             return false
         }
 
@@ -97,187 +93,71 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
         val otherText = binding.etModeOfDeliveryOtherOption.text?.toString()?.trim()
 
         if (selectedMode.isNullOrEmpty()) {
-            setFieldError(
-                binding.etlModeOfDelivery,
-                getString(R.string.this_field_is_mandatory)
-            )
+            setFieldError(binding.etlModeOfDelivery, getString(R.string.this_field_is_mandatory))
             return false
         }
         if (selectedMode.equals(getString(R.string.other), ignoreCase = true)) {
-
             if (otherText.isNullOrEmpty()) {
-                setFieldError(
-                    binding.etlModeOfDeliveryOtherOption,
-                    getString(R.string.this_field_is_mandatory)
-                )
+                setFieldError(binding.etlModeOfDeliveryOtherOption, getString(R.string.this_field_is_mandatory))
                 return false
             }
         }
-
-        if (deliveryDetails.perinealTear.isNullOrEmpty()) {
-            binding.tvPerinealTearValidationError.visibility =View.VISIBLE
-            return false
-        }
-
-        if (deliveryDetails.perinealTear == "Yes" &&
-            deliveryDetails.degreeOfPerinealTear.isNullOrEmpty()
-        ) {
-            setFieldError(binding.etlDegreeOfPerinealTear, getString(R.string.this_field_is_mandatory))
-            binding.tvPerinealTearValidationError.visibility =View.GONE
-            //binding.tvPerinealTearValidationError.visibility =View.VISIBLE
-            return false
-        }
+        validatePerinealTear()
 
         if (deliveryDetails.placentaMembraneStatus.isNullOrEmpty()) {
-            setFieldError(
-                binding.etlPlacentaMembraneDelivery,
-                getString(R.string.this_field_is_mandatory)
-            )
+            setFieldError(binding.etlPlacentaMembraneDelivery, getString(R.string.this_field_is_mandatory))
             return false
         }
 
         if (binding.etTimeOfPlacentaDelivery.text.isNullOrEmpty()) {
-            setFieldError(
-                binding.etlTimeOfPlacentaDelivery,
-                getString(R.string.this_field_is_mandatory)
-            )
+            setFieldError(binding.etlTimeOfPlacentaDelivery, getString(R.string.this_field_is_mandatory))
             return false
         }
-
-        if (deliveryDetails.placentalOrCordAbnormality.isNullOrEmpty()) {
-
-            uiHandler.showPlacentalCordError()
-            return false
-        }
-
-        if (deliveryDetails.placentalOrCordAbnormality == "Yes" &&
-            binding.etPlacentalOrCordAbnormalityOtherOption.text.isNullOrEmpty()
-        ) {
-            binding.etPlacentalOrCordAbnormalityOtherOption.error =
-                getString(R.string.this_field_is_mandatory)
-            return false
-        }
+        validatePlacentalAbnormality()
 
         if (binding.actvAmtsl.text.toString().contains(getString(R.string.other), true)
-            && binding.etAmtslOtherOption.text.isNullOrEmpty()
-        ) {
-            setFieldError(
-                binding.etlAmtslOtherOption,
-                getString(R.string.this_field_is_mandatory)
-            )
+            && binding.etAmtslOtherOption.text.isNullOrEmpty()) {
+            setFieldError(binding.etlAmtslOtherOption, getString(R.string.this_field_is_mandatory))
             return false
         }
 
         if (deliveryDetails.typeOfBirth.isNullOrEmpty()) {
-            setFieldError(
-                binding.etlTypeOfBirth,
-                getString(R.string.this_field_is_mandatory)
-            )
+            setFieldError(binding.etlTypeOfBirth, getString(R.string.this_field_is_mandatory))
             return false
         }
 
         if (deliveryDetails.babyGender.isNullOrEmpty()) {
-            setFieldError(
-                binding.etlSex,
-                getString(R.string.this_field_is_mandatory)
-            )
+            setFieldError(binding.etlSex, getString(R.string.this_field_is_mandatory))
             return false
         }
 
         //  LIVE BIRTH VALIDATION
         if (deliveryDetails.typeOfBirth.equals("Live Birth", true)) {
-
             val apgar1 = binding.etApgar1.text.toString()
             val apgar5 = binding.etApgar5.text.toString()
 
             if (apgar1.isEmpty()) {
-                setFieldError(
-                    binding.etlApgar1,
-                    getString(R.string.this_field_is_mandatory)
-                )
+                setFieldError(binding.etlApgar1, getString(R.string.this_field_is_mandatory))
                 return false
             }
 
             if (apgar5.isEmpty()) {
-                setFieldError(
-                    binding.etlApgar5,
-                    getString(R.string.this_field_is_mandatory)
-                )
+                setFieldError(binding.etlApgar5, getString(R.string.this_field_is_mandatory))
                 return false
             }
 
             if (apgar1.toInt() !in 0..10 || apgar5.toInt() !in 0..10) {
-                setFieldError(
-                    binding.etlApgar1,
-                    getString(R.string.error_invalid_apgar_range)
-                )
+                setFieldError(binding.etlApgar1, getString(R.string.error_invalid_apgar_range))
                 return false
             }
 
             if (binding.etBirthWeightGrams.text.isNullOrEmpty()) {
-                setFieldError(
-                    binding.etlBirthWeightGrams,
-                    getString(R.string.this_field_is_mandatory)
-                )
-                return false
-            }
-
-           /* if (deliveryDetails.congenitalAnomalies == "Yes" &&
-                deliveryDetails.congenitalAnomalySpecification.isNullOrEmpty()
-            ) {
-                setFieldError(
-                    binding.etlCongenitalYesOptions,
-                    getString(R.string.this_field_is_mandatory)
-                )
-                return false
-            }*/
-        }
-
-        if (deliveryDetails.congenitalAnomalies == "Yes") {
-
-            if (binding.autotvCongenitalYesOptions.text.isNullOrEmpty()) {
-                setFieldError(
-                    binding.etlCongenitalYesOptions,
-                    getString(R.string.this_field_is_mandatory)
-                )
-                return false
-            }
-
-            if (binding.autotvCongenitalYesOptions.text.toString()
-                    .equals(getString(R.string.other), true)
-                && binding.etCongenitalYesOtherOption.text.isNullOrEmpty()
-            ) {
-                setFieldError(
-                    binding.etlCongenitalYesOtherOption,
-                    getString(R.string.this_field_is_mandatory)
-                )
+                setFieldError(binding.etlBirthWeightGrams, getString(R.string.this_field_is_mandatory))
                 return false
             }
         }
+        validateCongenital()
 
-        if (deliveryDetails.congenitalAnomalies.isNullOrEmpty()) {
-            uiHandler.showCongenitalSelectionError()
-            return false
-        }
-
-        if (deliveryDetails.congenitalAnomalies == "Yes") {
-
-            if (binding.autotvCongenitalYesOptions.text.isNullOrEmpty()) {
-                binding.etlCongenitalYesOptions.error =
-                    getString(R.string.this_field_is_mandatory)
-                return false
-            }
-
-            // 3️⃣ If dropdown = Other → text mandatory
-            if (binding.autotvCongenitalYesOptions.text.toString()
-                    .equals("Other", true)
-                && binding.etCongenitalYesOtherOption.text.isNullOrEmpty()
-            ) {
-                binding.etlCongenitalYesOtherOption.error =
-                    getString(R.string.this_field_is_mandatory)
-                return false
-            }
-        }
         return true
     }
 
@@ -314,7 +194,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
         uiHandler = DeliveryUIController(binding = binding, context = this, fragmentManager = supportFragmentManager)
         uiHandler.initialize()
     }
-    fun collectFormData(): DeliveryDetails {
+    private fun collectFormData(): DeliveryDetails {
         return DeliveryDetails().apply {
             //Section 1: Woman Delivery Details
             dateOfDelivery = binding.etDateOfDelivery.text.toString().trim()
@@ -324,18 +204,19 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
                 mainValue = binding.autotvModeOfDelivery.text.toString(),
                 otherValue = binding.etModeOfDeliveryOtherOption.text.toString()
             )
-            perinealTear = uiHandler.getPerinealTearValue()
+            perinealTear = uiHandler.getYesNoValue(binding.layoutPernealTearRadio.radioYesNoGroupCommon)
             degreeOfPerinealTear = binding.autotvDegreeOfPerinealTear.text.toString().trim()
 
            // Section 2: Placenta &amp; Membrane Delivery Details
             placentaMembraneStatus = binding.autotvPlacentaMembraneDelivery.text.toString().trim()
             timeOfPlacentaDelivery = binding.etTimeOfPlacentaDelivery.text.toString().trim()
-            placentalOrCordAbnormality = uiHandler.getPlacentalCordAbnormalityValue()
+            placentalOrCordAbnormality = uiHandler.getYesNoValue(binding.layoutPlacentalAbnormalityRadio.radioYesNoGroupCommon)
             modeOfDelivery = uiHandler.handleOtherField(
                 keyName = DeliveryConcept.PLACENTA_CORD_ABNORMALITY.name,
                 mainValue = placentalOrCordAbnormality,
                 otherValue = binding.etPlacentalOrCordAbnormalityOtherOption.text.toString()
             )
+
             amtsl= handleConditionalField(DeliveryConcept.MEDICATIONS_AMTSL.name, binding.actvAmtsl.text.toString(),  binding.actvAmtsl.text.toString(), binding.actvAmtsl.text.toString())
 
             // SECTION 3: Newborn Details
@@ -350,12 +231,12 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             breastfeedWithin1Hour = binding.autotvBreastfeedWithin1Hour.text.toString().trim()
             gestationWeeks = binding.autotvGestation.text.toString().trim()
             congenitalAnomalies= handleConditionalField(DeliveryConcept.CONGENITAL_ANOMALY.name,
-                uiHandler.getCongenitalAnomalyValue(),  binding.autotvCongenitalYesOptions.text.toString(),
+                uiHandler.getYesNoValue(binding.layoutCongenitalAnomaliesRadio.radioYesNoGroupCommon),  binding.autotvCongenitalYesOptions.text.toString(),
                 binding.etCongenitalYesOtherOption.text.toString())
 
         }
     }
-    fun handleConditionalField(
+    private fun handleConditionalField(
         keyName: String,              // e.g. "complications"
         yesNoValue: String?,          // "Yes" / "No"
         selectedOptionsString: String?, // comma-separated values
@@ -415,5 +296,99 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             voided = 0
             privacynotice_value = "true"
         }
+    }
+    private fun validatePerinealTear(): Boolean {
+
+        // 1️⃣ Yes/No selected?
+        if (binding.layoutPernealTearRadio.radioYesNoGroupCommon.checkedRadioButtonId == -1) {
+            binding.tvPerinealTearValidationError.visibility = View.VISIBLE
+            binding.tvPerinealTearValidationError.text =
+                getString(R.string.this_field_is_mandatory)
+            return false
+        }
+
+        // Clear error if selected
+        binding.tvPerinealTearValidationError.visibility = View.GONE
+
+        // 2️⃣ If YES selected → Degree mandatory
+        if (binding.layoutPernealTearRadio.radioYesCommon.isChecked) {
+
+            if (binding.autotvDegreeOfPerinealTear.text.isNullOrEmpty()) {
+                setFieldError(
+                    binding.etlDegreeOfPerinealTear,
+                    getString(R.string.this_field_is_mandatory)
+                )
+                return false
+            }
+
+            binding.etlDegreeOfPerinealTear.error = null
+        }
+
+        // 3️⃣ If everything valid
+        return true
+    }
+    private fun validatePlacentalAbnormality(): Boolean {
+
+        val radioGroup = binding.layoutPlacentalAbnormalityRadio.radioYesNoGroupCommon
+        val radioYes = binding.layoutPlacentalAbnormalityRadio.radioYesCommon
+
+        // 1️⃣ Yes/No mandatory
+        if (radioGroup.checkedRadioButtonId == -1) {
+            binding.tvCordAbnormalityValidationError.visibility = View.VISIBLE
+            binding.tvCordAbnormalityValidationError.text =
+                getString(R.string.this_field_is_mandatory)
+            return false
+        }
+
+        binding.tvCordAbnormalityValidationError.visibility = View.GONE
+
+        // 2️⃣ If YES → Other field mandatory
+        if (radioYes.isChecked) {
+
+            if (binding.etPlacentalOrCordAbnormalityOtherOption.text.isNullOrEmpty()) {
+                setFieldError(
+                    binding.etlPlacentalOrCordAbnormalityOtherOption,
+                    getString(R.string.this_field_is_mandatory)
+                )
+                return false
+            }
+
+            binding.etlPlacentalOrCordAbnormalityOtherOption.error = null
+        }
+
+        return true
+    }
+
+    private fun validateCongenital(): Boolean {
+        val radioGroup = binding.layoutCongenitalAnomaliesRadio.radioYesNoGroupCommon
+        // yes/no
+        if (radioGroup.checkedRadioButtonId == -1) {
+            uiHandler.showCongenitalSelectionError()
+            return false
+        }
+
+        // yes- dropdown
+        if (binding.layoutCongenitalAnomaliesRadio.radioYesCommon.isChecked) {
+            if (binding.autotvCongenitalYesOptions.text.isNullOrEmpty()) {
+                setFieldError(
+                    binding.etlCongenitalYesOptions,
+                    getString(R.string.this_field_is_mandatory)
+                )
+                return false
+            }
+
+            // dropdown - Other option - text mandatory
+            if (binding.autotvCongenitalYesOptions.text.toString()
+                    .equals(getString(R.string.other), true)
+                && binding.etCongenitalYesOtherOption.text.isNullOrEmpty()
+            ) {
+                setFieldError(
+                    binding.etlCongenitalYesOtherOption,
+                    getString(R.string.this_field_is_mandatory)
+                )
+                return false
+            }
+        }
+        return true
     }
 }

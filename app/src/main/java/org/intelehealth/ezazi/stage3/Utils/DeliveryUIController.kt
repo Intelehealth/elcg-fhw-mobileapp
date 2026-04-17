@@ -3,6 +3,7 @@ package org.intelehealth.ezazi.stage3.Utils
 import android.content.Context
 import android.view.View
 import android.widget.ArrayAdapter
+import android.widget.RadioGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentManager
 import com.google.android.material.textfield.TextInputLayout
@@ -26,9 +27,9 @@ class DeliveryUIController(
          deliveryDetails = DeliveryDetails()
 
         setDropdownsData()
-        setupPerinealTearButtons()
-        setupCongenitalButtons()
-        setupPlacentalAbnormalityButtons()
+        setupPerinealTearRadio()
+        setupPlacentalAbnormalityRadio()
+        setupCongenitalRadio()
         handleClickListeners()
     }
 
@@ -44,7 +45,6 @@ class DeliveryUIController(
         setupCongenitalAnomaliesDropdown()
         setupPlacentaAndMembranesDropdown();
         setupResuscitationDropdown()
-
         handleTextwatcher()
     }
     private fun setupPlacentaAndMembranesDropdown() {
@@ -347,8 +347,7 @@ class DeliveryUIController(
         binding.etlBreastfeedWithin1Hour.visibility = visibility
 
         // Congenital anomaly section
-        binding.btnCongenitalYes.visibility = visibility
-        binding.btnCongenitalNo.visibility = visibility
+        binding.layoutCongenitalAnomaliesRadio.root.visibility = visibility
         binding.etlCongenitalYesOptions.visibility = View.GONE
 
         if (!isLiveBirth) {
@@ -369,12 +368,11 @@ class DeliveryUIController(
         binding.autotvDegreeOfPerinealTear.setAdapter(labourCompletedAdapter)
 
         binding.autotvDegreeOfPerinealTear.setOnItemClickListener { parent, _, position, _ ->
-
             Utils.hideKeyboard(context as AppCompatActivity)
-
             deliveryDetails.degreeOfPerinealTear = parent.getItemAtPosition(position).toString()
-
             binding.autotvDegreeOfPerinealTear.tag = deliveryDetails.degreeOfPerinealTear
+            binding.autotvDegreeOfPerinealTear.setDropDownBackgroundResource(R.drawable.rounded_corner_white_with_gray_stroke)
+            binding.etlDegreeOfPerinealTear.error = null
         }
     }
 
@@ -404,121 +402,35 @@ class DeliveryUIController(
             clearTextInputError(binding.etlResuscitation)
         }
     }
-    private fun setupPerinealTearButtons() {
+    private fun setupPerinealTearRadio() {
+        binding.layoutPernealTearRadio.radioYesNoGroupCommon.setOnCheckedChangeListener { _, checkedId ->
 
-        binding.btnPerinealTearYes.setOnClickListener {
-        binding.tvPerinealTearValidationError.visibility = View.GONE
-            // Toggle UI
-            //binding.btnPerinealTearYes.isSelected = true
-            //binding.btnPerinealTearNo.isSelected = false
-            binding.btnPerinealTearYes.isChecked = true
-            binding.btnPerinealTearNo.isChecked = false
-
-            // Update model
-            deliveryDetails.perinealTear = "Yes"
-
-            binding.etlDegreeOfPerinealTear.visibility = View.VISIBLE
-            setupDegreeOfPerinealTearDropdown()
-        }
-
-        binding.btnPerinealTearNo.setOnClickListener {
             binding.tvPerinealTearValidationError.visibility = View.GONE
 
-            // Toggle UI
-            //binding.btnPerinealTearYes.isSelected = false
-            //binding.btnPerinealTearNo.isSelected = true
-            binding.btnPerinealTearYes.isChecked = false
-            binding.btnPerinealTearNo.isChecked = true
+            when (checkedId) {
 
-            // Update model
-            deliveryDetails.perinealTear = "No"
+                R.id.radioYesCommon -> {
+                    // Update model
+                    deliveryDetails.perinealTear = "Yes"
 
-            binding.etlDegreeOfPerinealTear.visibility = View.GONE
-            deliveryDetails.degreeOfPerinealTear = null
+                    // Show degree dropdown
+                    binding.etlDegreeOfPerinealTear.visibility = View.VISIBLE
+                    setupDegreeOfPerinealTearDropdown()
+                }
+
+                R.id.radioNoCommon -> {
+                    // Update model
+                    deliveryDetails.perinealTear = "No"
+
+                    // Hide degree dropdown
+                    binding.etlDegreeOfPerinealTear.visibility = View.GONE
+                    deliveryDetails.degreeOfPerinealTear = null
+                }
+            }
         }
     }
-    fun getPerinealTearValue(): String? {
-        return when {
-            binding.btnPerinealTearYes.isSelected -> "Yes"
-            binding.btnPerinealTearNo.isSelected -> "No"
-            else -> null
-        }
-    }
-    private fun setupPlacentalAbnormalityButtons() {
 
-        binding.btnPlacentalOrCordAbnormalityYes.setOnClickListener {
 
-            // Toggle UI
-            binding.btnPlacentalOrCordAbnormalityYes.isSelected = true
-            binding.btnPlacentalOrCordAbnormalityNo.isSelected = false
-
-            // Update model
-            deliveryDetails.placentalOrCordAbnormality = "Yes"
-            binding.etlPlacentalOrCordAbnormalityOtherOption.visibility = View.VISIBLE
-
-            // Clear error if any
-            clearPlacentalCordError()
-        }
-
-        binding.btnPlacentalOrCordAbnormalityNo.setOnClickListener {
-
-            // Toggle UI
-            binding.btnPlacentalOrCordAbnormalityYes.isSelected = false
-            binding.btnPlacentalOrCordAbnormalityNo.isSelected = true
-
-            // Update model
-            deliveryDetails.placentalOrCordAbnormality = "No"
-            binding.etlPlacentalOrCordAbnormalityOtherOption.visibility = View.GONE
-            deliveryDetails.placentalOrCordAbnormalityOther = null
-
-            // Clear error if any
-            clearPlacentalCordError()
-        }
-    }
-     fun showPlacentalCordError() {
-        binding.tvCordAbnormalityValidationError.visibility = View.VISIBLE
-    }
-
-     fun clearPlacentalCordError() {
-        binding.tvCordAbnormalityValidationError.visibility = View.GONE
-    }
-
-    private fun setupCongenitalButtons() {
-
-        binding.btnCongenitalYes.setOnClickListener {
-
-            // Toggle UI
-            binding.btnCongenitalYes.isSelected = true
-            binding.btnCongenitalNo.isSelected = false
-
-            deliveryDetails.congenitalAnomalies = "Yes"
-
-            // Show dependent views
-            binding.tvCongenitalYes.visibility = View.VISIBLE
-            binding.etlCongenitalYesOptions.visibility = View.VISIBLE
-
-            clearCongenitalErrors()
-        }
-
-        binding.btnCongenitalNo.setOnClickListener {
-
-            // Toggle UI
-            binding.btnCongenitalYes.isSelected = false
-            binding.btnCongenitalNo.isSelected = true
-
-            deliveryDetails.congenitalAnomalies = "No"
-
-            // Hide dependent views
-            binding.tvCongenitalYes.visibility = View.GONE
-            binding.etlCongenitalYesOptions.visibility = View.GONE
-            binding.etlCongenitalYesOtherOption.visibility = View.GONE
-
-            // Clear model values
-            deliveryDetails.congenitalAnomalySpecification = null
-
-            clearCongenitalErrors()
-        }
-    }
      fun showCongenitalSelectionError() {
         binding.tvCongenitalValidationError.visibility = View.VISIBLE
     }
@@ -528,19 +440,74 @@ class DeliveryUIController(
         binding.etlCongenitalYesOptions.error = null
         binding.etlCongenitalYesOtherOption.error = null
     }
-    fun getPlacentalCordAbnormalityValue(): String? {
-        return when {
-            binding.btnPlacentalOrCordAbnormalityYes.isSelected -> "Yes"
-            binding.btnPlacentalOrCordAbnormalityNo.isSelected -> "No"
-            else -> null
-        }
-    }
-    fun getCongenitalAnomalyValue(): String? {
-        return when {
-            binding.btnCongenitalYes.isSelected -> "Yes"
-            binding.btnCongenitalNo.isSelected -> "No"
-            else -> null
-        }
+    private fun setupPlacentalAbnormalityRadio() {
+
+        binding.layoutPlacentalAbnormalityRadio.radioYesNoGroupCommon
+            .setOnCheckedChangeListener { _, checkedId ->
+
+                binding.tvCordAbnormalityValidationError.visibility = View.GONE
+
+                when (checkedId) {
+
+                    R.id.radioYesCommon -> {
+                        deliveryDetails.placentalOrCordAbnormality = "Yes"
+                        binding.etlPlacentalOrCordAbnormalityOtherOption.visibility = View.VISIBLE
+                    }
+
+                    R.id.radioNoCommon -> {
+                        deliveryDetails.placentalOrCordAbnormality = "No"
+                        binding.etlPlacentalOrCordAbnormalityOtherOption.visibility = View.GONE
+                        deliveryDetails.placentalOrCordAbnormalityOther = null
+                    }
+                }
+            }
     }
 
+    private fun setupCongenitalRadio() {
+
+        binding.layoutCongenitalAnomaliesRadio.radioYesNoGroupCommon
+            .setOnCheckedChangeListener { _, checkedId ->
+
+                clearCongenitalErrors()
+
+                when (checkedId) {
+
+                    R.id.radioYesCommon -> {
+                        deliveryDetails.congenitalAnomalies = "Yes"
+
+                        //  dependent views
+                        binding.tvCongenitalYes.visibility = View.VISIBLE
+                        binding.etlCongenitalYesOptions.visibility = View.VISIBLE
+                    }
+
+                    R.id.radioNoCommon -> {
+                        deliveryDetails.congenitalAnomalies = "No"
+
+                        // Hide dependent views
+                        binding.tvCongenitalYes.visibility = View.GONE
+                        binding.etlCongenitalYesOptions.visibility = View.GONE
+                        binding.etlCongenitalYesOtherOption.visibility = View.GONE
+
+                        // Clear model values
+                        deliveryDetails.congenitalAnomalySpecification = null
+                    }
+                }
+            }
+    }
+     fun getCongenitalAnomalyValue(): String? {
+        return when (
+            binding.layoutCongenitalAnomaliesRadio.radioYesNoGroupCommon.checkedRadioButtonId
+        ) {
+            R.id.radioYesCommon -> "Yes"
+            R.id.radioNoCommon -> "No"
+            else -> null
+        }
+    }
+     fun getYesNoValue(radioGroup: RadioGroup): String? {
+        return when (radioGroup.checkedRadioButtonId) {
+            R.id.radioYesCommon -> "Yes"
+            R.id.radioNoCommon -> "No"
+            else -> null
+        }
+    }
 }
