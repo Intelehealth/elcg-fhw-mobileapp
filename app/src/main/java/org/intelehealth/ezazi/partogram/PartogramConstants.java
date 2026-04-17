@@ -125,7 +125,7 @@ public class PartogramConstants {
         ParamInfo paramInfo = new ParamInfo();
         paramInfo.setParamSectionName(SECTION_LIST[0]);
         paramInfo.setParamName(Params.COMPANION.value);
-        paramInfo.setParamDateType(RADIO_SELECT_TYPE);
+        paramInfo.setParamDateType(DROPDOWN_SINGLE_SELECT_TYPE);
         paramInfo.setOptions(new String[]{"Yes", "No", "Woman Declines"});
         paramInfo.setValues(new String[]{"Y", "N", "D"});
         paramInfo.setConceptUUID("5090AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
@@ -135,7 +135,7 @@ public class PartogramConstants {
         paramInfo = new ParamInfo();
         paramInfo.setParamSectionName(SECTION_LIST[0]);
         paramInfo.setParamName(Params.PAIN_RELIEF.value);
-        paramInfo.setParamDateType(RADIO_SELECT_TYPE);
+        paramInfo.setParamDateType(DROPDOWN_SINGLE_SELECT_TYPE);
         paramInfo.setOptions(new String[]{"Yes", "No", "Woman Declines"});
         paramInfo.setValues(new String[]{"Y", "N", "D"});
         paramInfo.setConceptUUID("9d313f72-538f-11e6-9cfe-86f436325720");
@@ -145,7 +145,7 @@ public class PartogramConstants {
         paramInfo = new ParamInfo();
         paramInfo.setParamSectionName(SECTION_LIST[0]);
         paramInfo.setParamName(Params.ORAL_FLUID.value);
-        paramInfo.setParamDateType(RADIO_SELECT_TYPE);
+        paramInfo.setParamDateType(DROPDOWN_SINGLE_SELECT_TYPE);
         paramInfo.setOptions(new String[]{"Yes", "No", "Woman Declines"});
         paramInfo.setValues(new String[]{"Y", "N", "D"});
         paramInfo.setConceptUUID("9d31451b-538f-11e6-9cfe-86f436325720");
@@ -155,7 +155,7 @@ public class PartogramConstants {
         paramInfo = new ParamInfo();
         paramInfo.setParamSectionName(SECTION_LIST[0]);
         paramInfo.setParamName(Params.POSTURE.value);
-        paramInfo.setParamDateType(RADIO_SELECT_TYPE);
+        paramInfo.setParamDateType(DROPDOWN_SINGLE_SELECT_TYPE);
         paramInfo.setOptions(new String[]{"Supine", "Mobile"});
         paramInfo.setValues(new String[]{"SP", "MO"});
         paramInfo.setConceptUUID("9d3148b1-538f-11e6-9cfe-86f436325720");
@@ -179,7 +179,7 @@ public class PartogramConstants {
         paramInfo = new ParamInfo();
         paramInfo.setParamSectionName(SECTION_LIST[1]);
         paramInfo.setParamName(Params.FHR_DEC.value);
-        paramInfo.setParamDateType(RADIO_SELECT_TYPE);
+        paramInfo.setParamDateType(DROPDOWN_SINGLE_SELECT_TYPE);
         paramInfo.setOptions(new String[]{"No", "Early", "Late", "Variable"});
         paramInfo.setValues(new String[]{"N", "E", "L", "V"});
         paramInfo.setHalfHourField(true);
@@ -190,7 +190,7 @@ public class PartogramConstants {
         paramInfo = new ParamInfo();
         paramInfo.setParamSectionName(SECTION_LIST[1]);
         paramInfo.setParamName(Params.AMNIOTIC_FLUID.value);
-        paramInfo.setParamDateType(RADIO_SELECT_TYPE);
+        paramInfo.setParamDateType(DROPDOWN_SINGLE_SELECT_TYPE);
         paramInfo.setOptions(new String[]{"I (Intact)", "C (Clear fluid)", "M+ (Meconium stained fluid-Nonsignificant)",
                 "M++ (Meconium stained fluid-Medium)", "M+++ (Meconium stained fluid-Thick)", "B (Blood stained)"});
         paramInfo.setValues(new String[]{"I", "C", "M+", "M++", "M+++", "B"});
@@ -201,7 +201,7 @@ public class PartogramConstants {
         paramInfo = new ParamInfo();
         paramInfo.setParamSectionName(SECTION_LIST[1]);
         paramInfo.setParamName(Params.FETAL_POSITION.value);
-        paramInfo.setParamDateType(RADIO_SELECT_TYPE);
+        paramInfo.setParamDateType(DROPDOWN_SINGLE_SELECT_TYPE);
         paramInfo.setOptions(new String[]{"A (Occiput anterior)", "P (Occiput posterior)", "T (Occiput transverse)"});
         paramInfo.setValues(new String[]{"A", "P", "T"});
         paramInfo.setConceptUUID("9d316387-538f-11e6-9cfe-86f436325720");
@@ -211,7 +211,7 @@ public class PartogramConstants {
         paramInfo = new ParamInfo();
         paramInfo.setParamSectionName(SECTION_LIST[1]);
         paramInfo.setParamName(Params.CAPUT.value);
-        paramInfo.setParamDateType(RADIO_SELECT_TYPE);
+        paramInfo.setParamDateType(DROPDOWN_SINGLE_SELECT_TYPE);
         paramInfo.setOptions(new String[]{"0 (None)", "+", "++", "+++ (Marked)"});
         paramInfo.setValues(new String[]{"0", "+", "++", "+++"});
         paramInfo.setConceptUUID("9d316761-538f-11e6-9cfe-86f436325720");
@@ -221,7 +221,7 @@ public class PartogramConstants {
         paramInfo = new ParamInfo();
         paramInfo.setParamSectionName(SECTION_LIST[1]);
         paramInfo.setParamName(Params.MOULDING.value);
-        paramInfo.setParamDateType(RADIO_SELECT_TYPE);
+        paramInfo.setParamDateType(DROPDOWN_SINGLE_SELECT_TYPE);
 //        paramInfo.setOptions(new String[]{"None", "Sutures apposed", "Sutures overlapped but reducible", "Sutures overlapped and not reducible"});
         paramInfo.setOptions(new String[]{"0 (None)", "+ (Sutures apposed)", "++ (Sutures overlapped but reducible)", "+++ (Sutures overlapped but not reducible)"});
         paramInfo.setValues(new String[]{"0", "+", "++", "+++"});
@@ -269,7 +269,7 @@ public class PartogramConstants {
         paramInfo = new ParamInfo();
         paramInfo.setParamSectionName(SECTION_LIST[2]);
         paramInfo.setParamName("Urine protein");
-        paramInfo.setParamDateType(RADIO_SELECT_TYPE);
+        paramInfo.setParamDateType(DROPDOWN_SINGLE_SELECT_TYPE);
         paramInfo.setOptions(new String[]{"No Proteinuria (P-)", "Trace of Proteinuria (P Trace)", "P1+", "P2+", "P3+", "P4+"});
 //        paramInfo.setValues(new String[]{"P-", "P", "P1", "P2", "P3"});
         paramInfo.setValues(new String[]{"Negative", "Trace", "P1+", "P2+", "P3+", "P4+"});
@@ -280,7 +280,7 @@ public class PartogramConstants {
         paramInfo = new ParamInfo();
         paramInfo.setParamSectionName(SECTION_LIST[2]);
         paramInfo.setParamName("Urine Acetone");
-        paramInfo.setParamDateType(RADIO_SELECT_TYPE);
+        paramInfo.setParamDateType(DROPDOWN_SINGLE_SELECT_TYPE);
         paramInfo.setOptions(new String[]{"No Acetonuria (A-)", "Trace of Acetonuria (A Trace)", "A1+", "A2+", "A3+", "A4+"});
         paramInfo.setValues(new String[]{"Negative", "Trace", "A1+", "A2+", "A3+", "A4+"});
         paramInfo.setConceptUUID("968f9bc2-b33d-4daf-b59f-79d9a899e018");
@@ -313,7 +313,7 @@ public class PartogramConstants {
         paramInfo = new ParamInfo();
         paramInfo.setParamSectionName(SECTION_LIST[3]);
         paramInfo.setParamName("Cervix Plot[X]");
-        paramInfo.setParamDateType(RADIO_SELECT_TYPE);
+        paramInfo.setParamDateType(DROPDOWN_SINGLE_SELECT_TYPE);
         paramInfo.setOptions(new String[]{"10", "9", "8", "7", "6", "5"});
         paramInfo.setValues(new String[]{"10", "9", "8", "7", "6", "5"});
         if (stage == STAGE_2) {
@@ -330,7 +330,7 @@ public class PartogramConstants {
         paramInfo = new ParamInfo();
         paramInfo.setParamSectionName(SECTION_LIST[3]);
         paramInfo.setParamName("Descent Plot[O]");
-        paramInfo.setParamDateType(RADIO_SELECT_TYPE);
+        paramInfo.setParamDateType(DROPDOWN_SINGLE_SELECT_TYPE);
         paramInfo.setOptions(new String[]{"5", "4", "3", "2", "1", "0"});
         paramInfo.setValues(new String[]{"5", "4", "3", "2", "1", "0"});
         paramInfo.setConceptUUID("9d316d41-538f-11e6-9cfe-86f436325720");
