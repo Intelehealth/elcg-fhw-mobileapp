@@ -137,7 +137,8 @@ public class ActivePatientAdapter extends RecyclerView.Adapter<ActivePatientAdap
         //added extra spaces to fit text inside of the bg icon
         String riskValue = "\u00A0\u00A0" + riskScore + "\u00A0\u00A0";
         holder.ivPriscription.setText(riskValue);
-        if (count > 3.5) { // red //prev - count > 22
+        //older logic
+       /* if (count > 3.5) { // red //prev - count > 22
             // holder.cardView_todaysVisit.setCardBackgroundColor(context.getResources().getColor(R.color.red_1));
             //added extra spaces to fit text inside of the bg icon
             riskValue = "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0" + riskScore + "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0";
@@ -158,8 +159,26 @@ public class ActivePatientAdapter extends RecyclerView.Adapter<ActivePatientAdap
             holder.ivPriscription.setBackground(ContextCompat.getDrawable(context, R.drawable.ic_normal_alert));
             holder.ivPriscription.setTextColor(ContextCompat.getColor(context, R.color.colorNormalAlert));
             holder.ivPriscription.setPadding(0, 0, 0, 0);
-        }
+        }*/
         // alert -> end
+
+        //new logic. Ticket: EZ-753
+        if (count > 0) { // red //prev - count > 22
+            // holder.cardView_todaysVisit.setCardBackgroundColor(context.getResources().getColor(R.color.red_1));
+            //added extra spaces to fit text inside of the bg icon
+            riskValue = "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0" + riskScore + "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0";
+            holder.ivPriscription.setText(riskValue);
+            holder.ivPriscription.setBackground(ContextCompat.getDrawable(context, R.drawable.ic_high_alert));
+            holder.ivPriscription.setTextColor(ContextCompat.getColor(context, R.color.colorHighAlert));
+            int padding = context.getResources().getDimensionPixelSize(R.dimen.high_alert_top_padding);
+            holder.ivPriscription.setPadding(0, padding, 0, 0);
+
+        } else if (count == 0) { // green
+            // holder.cardView_todaysVisit.setCardBackgroundColor(context.getResources().getColor(R.color.green2));
+            holder.ivPriscription.setBackground(ContextCompat.getDrawable(context, R.drawable.ic_normal_alert));
+            holder.ivPriscription.setTextColor(ContextCompat.getColor(context, R.color.colorNormalAlert));
+            holder.ivPriscription.setPadding(0, 0, 0, 0);
+        }
 
         if (activePatientModel.getObsExistsFlag()) {
             Animation anim = new AlphaAnimation(1.0f, 0.2f);

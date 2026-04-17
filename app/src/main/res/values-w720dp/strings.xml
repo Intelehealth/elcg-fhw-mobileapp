@@ -34,4 +34,10 @@
     <string name="enter_sex_of_baby">Enter Sex of baby</string>
     <string name="enter_baby_status">Enter Baby Status</string>
     <string name="enter_mother_status">Enter Mother Status</string>
+    <string name="prolonged_labour_detected">Prolonged labour detected: Active stage exceeded safe duration.</string>
+    <string name="second_stage_prolonged">Second stage prolonged. Immediate attention required.</string>
+    <string name="select_edd_date">Select a valid estimate date of delivery.</string>
+    <string name="select_lmp_date">Select a valid date of last menstruation period (LMP).</string>
+    <string name="select_labor_diagnosed_date">Select valid date when labor was diagnosed.</string>
+    <string name="edd_range_invalid">EDD can range between 3 weeks after or before today.</string>
 </resources>

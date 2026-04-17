@@ -650,7 +650,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
         obsDTOData.setEncounteruuid(mEncounterUUID);
         obsDTOData.setConceptuuid(info.getConceptUUID());
         obsDTOData.setValue(info.getCapturedValue());
-        obsDTOData.setComment(PartogramAlertEngine.getAlertName(info));
+        obsDTOData.setComment(PartogramAlertEngine.getAlertNameUpdated(info));
         obsDTOData.setCreatorUuid(new SessionManager(this).getCreatorID());
         obsDTOData.setCreatedDate(info.getCreatedDate());
         return obsDTOData;

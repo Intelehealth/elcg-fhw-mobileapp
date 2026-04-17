@@ -23,6 +23,18 @@ object AlertScoreCalculator {
         }
     }
 
+    fun calculateUpdated(
+        obs: ObsDTO,
+        visit: ActivePatientModel
+    ): Double {
+
+        return when (obs.comment.trim().uppercase()) {
+            "G" -> 0.0
+            "R" -> 1.0
+            else -> 0.0
+        }
+    }
+
     private fun calculateRedScore(obs: ObsDTO): Double {
         val rawValue = obs.value ?: return 0.0
         val conceptId = obs.conceptuuid

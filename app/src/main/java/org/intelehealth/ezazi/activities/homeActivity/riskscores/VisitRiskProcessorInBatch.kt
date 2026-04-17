@@ -28,7 +28,7 @@ object VisitRiskProcessorInBatch {
 
                 var totalScore = 0.0
                 obsList.forEach { obs ->
-                    totalScore += AlertScoreCalculator.calculate(obs, visit)
+                    totalScore += AlertScoreCalculator.calculateUpdated(obs, visit)
                 }
 
                 val cervixObs = obsDAO.getCervixObsByVisit(
