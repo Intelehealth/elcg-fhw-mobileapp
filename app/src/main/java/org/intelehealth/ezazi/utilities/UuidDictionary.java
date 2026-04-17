@@ -152,6 +152,10 @@ public class UuidDictionary {
     public static final String STAGE1_HOUR3_1 = "e58b22d1-b09e-4cda-b05c-a45d1e63d390";
 
 
+    //provider ward type either it can be ward or postnatal
+    //added it to filter based on the ward
+    public static final String PROVIDER_WARD = "af56439d-5e7f-42e7-9249-6a894b07eb51";
+
 
 
 }
