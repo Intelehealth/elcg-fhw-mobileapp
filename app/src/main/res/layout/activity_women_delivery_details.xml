@@ -194,7 +194,11 @@
                         android:text="@string/label_perineal_tear"
                          />
 
+                    <include
+                        layout="@layout/layout_radio_buttons_common"
+                        android:id="@+id/layout_perneal_tear_radio"/>
                     <LinearLayout
+                        android:visibility="gone"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="@dimen/list_container_padding"
@@ -357,31 +361,11 @@
                         android:layout_height="wrap_content"
                         android:text="Any placental or cord abnormality" />
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="@dimen/list_container_padding"
-                        android:minHeight="@dimen/max_input_height"
-                        android:orientation="horizontal">
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_placental_or_cord_abnormality_yes"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="5dp"
-                            android:layout_marginEnd="5dp"
-                            android:layout_weight="1"
-                            android:text="Yes" />
+                    <include
+                        layout="@layout/layout_radio_buttons_common"
+                        android:id="@+id/layout_placental_abnormality_radio"/>
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_placental_or_cord_abnormality_no"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="No" />
-                    </LinearLayout>
                     <!-- placental_or_cord_abnormality- other option -->
                     <TextView
                         android:id="@+id/tv_cord_abnormality_validation_error"
@@ -765,37 +749,9 @@
                         android:layout_height="wrap_content"
                         android:text="Congenital Anomalies" />
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="@dimen/list_container_padding"
-                        android:orientation="horizontal">
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_congenital_yes"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="5dp"
-                            android:layout_marginEnd="5dp"
-                            android:layout_weight="1"
-
-                            android:textColor="@color/button_text_selector"
-                            app:backgroundTint="@color/button_bg_selector"
-                            android:checkable="true"
-                            android:text="Yes" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_congenital_no"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:checkable="true"
-                            android:textColor="@color/button_text_selector"
-                            app:backgroundTint="@color/button_bg_selector"
-                            android:text="No" />
-                    </LinearLayout>
+                    <include
+                        layout="@layout/layout_radio_buttons_common"
+                        android:id="@+id/layout_congenital_anomalies_radio"/>
 
                     <!--If yes  -  Congenital Anomalies -->
                     <com.google.android.material.textview.MaterialTextView
