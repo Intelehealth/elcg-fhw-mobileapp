@@ -2,12 +2,11 @@ package org.intelehealth.ezazi.stage3.db
 
 import org.intelehealth.ezazi.database.dao.EncounterDAO
 import org.intelehealth.ezazi.database.dao.ObsDAO
-import org.intelehealth.ezazi.database.dao.VisitAttributeListDAO
 import org.intelehealth.ezazi.database.dao.VisitsDAO
 import org.intelehealth.ezazi.models.dto.EncounterDTO
 import org.intelehealth.ezazi.models.dto.ObsDTO
 
-class DeliveryLocalDataSource(
+class DeliveryDetailsLocalDataSource(
     private val obsDAO: ObsDAO,
     private val encounterDAO: EncounterDAO,
     private val visitDAO: VisitsDAO,

@@ -4,7 +4,7 @@ import org.intelehealth.ezazi.models.dto.EncounterDTO
 import org.intelehealth.ezazi.stage3.models.DeliveryDetails
 
 class SaveDeliveryDetailsUseCase(
-    private val repository: DeliveryRepository
+    private val repository: DeliveryDetailsRepository
 ) {
 
     operator fun invoke(

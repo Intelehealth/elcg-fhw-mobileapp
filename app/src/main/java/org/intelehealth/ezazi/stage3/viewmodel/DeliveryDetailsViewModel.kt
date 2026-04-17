@@ -11,7 +11,7 @@ import org.intelehealth.ezazi.models.dto.EncounterDTO
 import org.intelehealth.ezazi.stage3.db.SaveDeliveryDetailsUseCase
 import org.intelehealth.ezazi.stage3.models.DeliveryDetails
 
-class DeliveryViewModel(
+class DeliveryDetailsViewModel(
     private val saveDeliveryDetailsUseCase: SaveDeliveryDetailsUseCase
 ) : ViewModel() {
 

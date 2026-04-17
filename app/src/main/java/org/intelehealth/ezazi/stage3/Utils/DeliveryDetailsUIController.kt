@@ -16,7 +16,7 @@ import org.intelehealth.ezazi.ui.dialog.MultiChoiceDialogFragment
 import org.intelehealth.ezazi.ui.dialog.ThemeTimePickerDialog
 import org.intelehealth.ezazi.utilities.Utils
 
-class DeliveryUIController(
+class DeliveryDetailsUIController(
     private val binding: ActivityWomenDeliveryDetailsBinding,
     private val context: Context,
     private val fragmentManager: FragmentManager

@@ -2,7 +2,7 @@ package org.intelehealth.ezazi.stage3.Utils
 
 import android.content.Context
 
-class DeliveryDialogHelper(
+class DeliveryDetailsDialogHelper(
     private val context: Context
 ) {
 

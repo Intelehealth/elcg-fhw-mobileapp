@@ -3,7 +3,7 @@ package org.intelehealth.ezazi.stage3.Utils
 import com.google.android.material.textfield.TextInputLayout
 import org.intelehealth.ezazi.databinding.ActivityWomenDeliveryDetailsBinding
 
-class DeliveryErrorHandler(
+class DeliveryDetailsErrorHandler(
     private val binding: ActivityWomenDeliveryDetailsBinding
 ) {
 

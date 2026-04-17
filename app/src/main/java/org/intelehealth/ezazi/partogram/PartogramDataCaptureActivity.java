@@ -1,7 +1,6 @@
 package org.intelehealth.ezazi.partogram;
 
 import static org.intelehealth.ezazi.partogram.PartogramConstants.STAGE_1;
-import static org.intelehealth.ezazi.partogram.PartogramConstants.STAGE_2;
 import static org.intelehealth.ezazi.partogram.PartogramConstants.STAGE_3;
 import static org.intelehealth.ezazi.partogram.PartogramConstants.TIMELINE_MODE;
 import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
@@ -19,7 +18,6 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.annotation.StringRes;
-import androidx.core.content.IntentCompat;
 import androidx.lifecycle.LifecycleCoroutineScope;
 import androidx.lifecycle.LifecycleOwnerKt;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -30,10 +28,7 @@ import com.google.gson.Gson;
 import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.activities.epartogramActivity.EpartogramViewActivity;
 import org.intelehealth.ezazi.activities.homeActivity.VisitAlertBridge;
-import org.intelehealth.ezazi.activities.splash_activity.SplashActivity;
-import org.intelehealth.ezazi.activities.visitSummaryActivity.TimelineVisitSummaryActivity;
 import org.intelehealth.ezazi.app.AppConstants;
-import org.intelehealth.ezazi.app.IntelehealthApplication;
 import org.intelehealth.ezazi.database.dao.EncounterDAO;
 import org.intelehealth.ezazi.database.dao.ObsDAO;
 import org.intelehealth.ezazi.database.dao.PatientsDAO;
@@ -43,14 +38,12 @@ import org.intelehealth.ezazi.models.ActivePatientModel;
 import org.intelehealth.ezazi.models.dto.EncounterDTO;
 import org.intelehealth.ezazi.models.dto.ObsDTO;
 import org.intelehealth.ezazi.partogram.adapter.PartogramQueryListingAdapter;
-import org.intelehealth.ezazi.partogram.model.Medicine;
 import org.intelehealth.ezazi.partogram.model.ParamInfo;
 import org.intelehealth.ezazi.partogram.model.PartogramItemData;
 import org.intelehealth.ezazi.partogram.model.ValidatePartogramFields;
 import org.intelehealth.ezazi.partogram.utils.DataCaptureGenericRadioFieldHandler;
-import org.intelehealth.ezazi.stage3.Utils.DeliveryConcept;
+import org.intelehealth.ezazi.stage3.Utils.DeliveryDetailsConcept;
 import org.intelehealth.ezazi.syncModule.SyncUtils;
-import org.intelehealth.ezazi.ui.dialog.AppDialogUtils;
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
 import org.intelehealth.ezazi.ui.dialog.SingleChoiceDialogFragment;
@@ -58,8 +51,6 @@ import org.intelehealth.ezazi.ui.dialog.model.SingChoiceItem;
 import org.intelehealth.ezazi.ui.rtc.activity.EzaziChatActivity;
 import org.intelehealth.ezazi.ui.rtc.activity.EzaziVideoCallActivity;
 import org.intelehealth.ezazi.ui.rtc.call.CallInitializer;
-import org.intelehealth.ezazi.ui.visit.model.LabourInfo;
-import org.intelehealth.ezazi.utilities.DateAndTimeUtils;
 import org.intelehealth.ezazi.utilities.InternetDialogHelper;
 import org.intelehealth.ezazi.utilities.NetworkConnection;
 import org.intelehealth.ezazi.utilities.SessionManager;
@@ -70,7 +61,6 @@ import org.intelehealth.klivekit.socket.SocketManager;
 import org.intelehealth.klivekit.utils.DateTimeUtils;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -982,7 +972,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
 
             for (ObsDTO obs : obsList) {
 
-                if (DeliveryConcept.BIRTH_TYPE.getUuid().equals(obs.getConceptuuid())) {
+                if (DeliveryDetailsConcept.BIRTH_TYPE.getUuid().equals(obs.getConceptuuid())) {
                     String value = obs.getValue();
                     Log.d(TAG, "Birth Outcome value: " + value);
                     if (value != null && value.equalsIgnoreCase("LIVE BIRTH")) {

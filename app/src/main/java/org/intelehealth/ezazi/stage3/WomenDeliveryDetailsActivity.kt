@@ -15,15 +15,15 @@ import org.intelehealth.ezazi.database.dao.ObsDAO
 import org.intelehealth.ezazi.database.dao.VisitsDAO
 import org.intelehealth.ezazi.databinding.ActivityWomenDeliveryDetailsBinding
 import org.intelehealth.ezazi.models.dto.EncounterDTO
-import org.intelehealth.ezazi.stage3.Utils.DeliveryConcept
-import org.intelehealth.ezazi.stage3.Utils.DeliveryUIController
-import org.intelehealth.ezazi.stage3.db.DeliveryLocalDataSource
-import org.intelehealth.ezazi.stage3.db.DeliveryObsMapper
-import org.intelehealth.ezazi.stage3.db.DeliveryRepository
+import org.intelehealth.ezazi.stage3.Utils.DeliveryDetailsConcept
+import org.intelehealth.ezazi.stage3.Utils.DeliveryDetailsUIController
+import org.intelehealth.ezazi.stage3.db.DeliveryDetailsLocalDataSource
+import org.intelehealth.ezazi.stage3.db.DeliveryDetailsObsMapper
+import org.intelehealth.ezazi.stage3.db.DeliveryDetailsRepository
 import org.intelehealth.ezazi.stage3.db.SaveDeliveryDetailsUseCase
-import org.intelehealth.ezazi.stage3.factory.DeliveryViewModelFactory
+import org.intelehealth.ezazi.stage3.factory.DeliveryDetailsViewModelFactory
 import org.intelehealth.ezazi.stage3.models.DeliveryDetails
-import org.intelehealth.ezazi.stage3.viewmodel.DeliveryViewModel
+import org.intelehealth.ezazi.stage3.viewmodel.DeliveryDetailsViewModel
 import org.intelehealth.ezazi.utilities.SessionManager
 import org.intelehealth.ezazi.utilities.UuidDictionary
 import org.intelehealth.klivekit.utils.DateTimeUtils
@@ -32,8 +32,8 @@ import java.util.UUID
 class WomenDeliveryDetailsActivity : AppCompatActivity() {
     private val TAG = "WomenDeliveryDetailsAct"
     private lateinit var binding: ActivityWomenDeliveryDetailsBinding
-    private lateinit var viewModel: DeliveryViewModel
-    private lateinit var uiHandler: DeliveryUIController
+    private lateinit var viewModel: DeliveryDetailsViewModel
+    private lateinit var uiHandler: DeliveryDetailsUIController
     private var visitUuid: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,13 +50,13 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
         visitUuid = intent?.getStringExtra("visitUuid")
         val encounterDto = createEncounterDto()
 
-        val repository = DeliveryRepository(DeliveryLocalDataSource(ObsDAO(), EncounterDAO(), VisitsDAO()), DeliveryObsMapper())
+        val repository = DeliveryDetailsRepository(DeliveryDetailsLocalDataSource(ObsDAO(), EncounterDAO(), VisitsDAO()), DeliveryDetailsObsMapper())
         val useCase = SaveDeliveryDetailsUseCase(repository)
 
-        val factory = DeliveryViewModelFactory(useCase)
+        val factory = DeliveryDetailsViewModelFactory(useCase)
 
         viewModel = ViewModelProvider(this, factory)
-            .get(DeliveryViewModel::class.java)
+            .get(DeliveryDetailsViewModel::class.java)
         binding.btnSave.setOnClickListener {
             val deliveryDetails = collectFormData()
             if (validateFields(deliveryDetails)) {
@@ -192,7 +192,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
         }
     }
     private fun setupUIHandler() {
-        uiHandler = DeliveryUIController(binding = binding, context = this, fragmentManager = supportFragmentManager)
+        uiHandler = DeliveryDetailsUIController(binding = binding, context = this, fragmentManager = supportFragmentManager)
         uiHandler.initialize()
     }
     private fun collectFormData(): DeliveryDetails {
@@ -201,7 +201,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             dateOfDelivery = binding.etDateOfDelivery.text.toString().trim()
             timeOfDelivery = binding.etTimeOfDelivery.text.toString().trim()
             modeOfDelivery = uiHandler.handleOtherField(
-                keyName = DeliveryConcept.MODE_OF_DELIVERY.name,
+                keyName = DeliveryDetailsConcept.MODE_OF_DELIVERY.name,
                 mainValue = binding.autotvModeOfDelivery.text.toString(),
                 otherValue = binding.etModeOfDeliveryOtherOption.text.toString()
             )
@@ -213,12 +213,12 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             timeOfPlacentaDelivery = binding.etTimeOfPlacentaDelivery.text.toString().trim()
             placentalOrCordAbnormality = uiHandler.getYesNoValue(binding.layoutPlacentalAbnormalityRadio.radioYesNoGroupCommon)
             modeOfDelivery = uiHandler.handleOtherField(
-                keyName = DeliveryConcept.PLACENTA_CORD_ABNORMALITY.name,
+                keyName = DeliveryDetailsConcept.PLACENTA_CORD_ABNORMALITY.name,
                 mainValue = placentalOrCordAbnormality,
                 otherValue = binding.etPlacentalOrCordAbnormalityOtherOption.text.toString()
             )
 
-            amtsl= handleConditionalField(DeliveryConcept.MEDICATIONS_AMTSL.name, binding.actvAmtsl.text.toString(),  binding.actvAmtsl.text.toString(), binding.actvAmtsl.text.toString())
+            amtsl= handleConditionalField(DeliveryDetailsConcept.MEDICATIONS_AMTSL.name, binding.actvAmtsl.text.toString(),  binding.actvAmtsl.text.toString(), binding.actvAmtsl.text.toString())
 
             // SECTION 3: Newborn Details
 
@@ -231,7 +231,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             skinToSkinContact = binding.autotvSkinToSkinContact.text.toString().trim()
             breastfeedWithin1Hour = binding.autotvBreastfeedWithin1Hour.text.toString().trim()
             gestationWeeks = binding.autotvGestation.text.toString().trim()
-            congenitalAnomalies= handleConditionalField(DeliveryConcept.CONGENITAL_ANOMALY.name,
+            congenitalAnomalies= handleConditionalField(DeliveryDetailsConcept.CONGENITAL_ANOMALY.name,
                 uiHandler.getYesNoValue(binding.layoutCongenitalAnomaliesRadio.radioYesNoGroupCommon),  binding.autotvCongenitalYesOptions.text.toString(),
                 binding.etCongenitalYesOtherOption.text.toString())
 

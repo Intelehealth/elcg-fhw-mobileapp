@@ -1,6 +1,6 @@
 package org.intelehealth.ezazi.stage3.Utils
 
-enum class DeliveryConcept (val uuid: String) {
+enum class DeliveryDetailsConcept (val uuid: String) {
 
     DATE_OF_DELIVERY("79a1d8d7-b224-40f4-8d99-80e2936c96e3"),
     TIME_OF_DELIVERY("8b30dda2-ac0a-4031-a7d1-1b72c6dae5fe"),
