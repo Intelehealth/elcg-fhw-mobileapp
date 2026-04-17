@@ -19,6 +19,7 @@ import org.intelehealth.ezazi.models.dto.VisitAttribute_Speciality;
 import org.intelehealth.ezazi.models.dto.VisitDTO;
 import org.intelehealth.ezazi.utilities.DateAndTimeUtils;
 import org.intelehealth.ezazi.utilities.Logger;
+import org.intelehealth.ezazi.utilities.UuidDictionary;
 import org.intelehealth.ezazi.utilities.exception.DAOException;
 
 import java.util.ArrayList;
@@ -624,6 +625,21 @@ public class VisitsDAO {
         idCursor.close();
         // db.close();
         return false;
+    }
+     public void updateVisitDecisionPendingFlag(String visitId, String value) {
+        if (visitId != null && !visitId.isEmpty()) {
+            if (new VisitAttributeListDAO().isSameOutcomePendingValueExist(visitId, "false"))
+                return;
+            long updated = new VisitAttributeListDAO().updateVisitAttribute(visitId, UuidDictionary.DECISION_PENDING, value);
+            if (updated > 0) {
+                try {
+                    VisitsDAO visitsDAO = new VisitsDAO();
+                    visitsDAO.updateVisitSync(visitId, "false");
+                } catch (DAOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
     }
 
 }

@@ -52,6 +52,7 @@ class VisitRepository(val database: SQLiteDatabase) {
         val outcomePendingVisits = arrayListOf<ItemHeader>()
         val stage1Visits = visits.filter { it.stage.lowercase().contains("Stage-1".lowercase()) }
         val stage2Visits = visits.filter { it.stage.lowercase().contains("Stage-2".lowercase()) }
+        val stage3Visits = visits.filter { it.stage.lowercase().contains("Stage-3".lowercase()) }
 
         if (stage2Visits.isNotEmpty()) {
             outcomePendingVisits.add(CategoryHeader(R.string.stage_2))
@@ -62,7 +63,10 @@ class VisitRepository(val database: SQLiteDatabase) {
             outcomePendingVisits.add(CategoryHeader(R.string.stage_1))
             outcomePendingVisits.addAll(stage1Visits)
         }
-
+        if (stage3Visits.isNotEmpty()) {
+            outcomePendingVisits.add(CategoryHeader(R.string.stage_3))
+            outcomePendingVisits.addAll(stage3Visits)
+        }
         return outcomePendingVisits
     }
 

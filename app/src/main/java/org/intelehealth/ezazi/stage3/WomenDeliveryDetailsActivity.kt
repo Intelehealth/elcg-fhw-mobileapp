@@ -12,6 +12,7 @@ import org.intelehealth.ezazi.activities.visitSummaryActivity.TimelineVisitSumma
 import org.intelehealth.ezazi.app.AppConstants
 import org.intelehealth.ezazi.database.dao.EncounterDAO
 import org.intelehealth.ezazi.database.dao.ObsDAO
+import org.intelehealth.ezazi.database.dao.VisitsDAO
 import org.intelehealth.ezazi.databinding.ActivityWomenDeliveryDetailsBinding
 import org.intelehealth.ezazi.models.dto.EncounterDTO
 import org.intelehealth.ezazi.stage3.Utils.DeliveryConcept
@@ -49,7 +50,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
         visitUuid = intent?.getStringExtra("visitUuid")
         val encounterDto = createEncounterDto()
 
-        val repository = DeliveryRepository(DeliveryLocalDataSource(ObsDAO(), EncounterDAO()), DeliveryObsMapper())
+        val repository = DeliveryRepository(DeliveryLocalDataSource(ObsDAO(), EncounterDAO(), VisitsDAO()), DeliveryObsMapper())
         val useCase = SaveDeliveryDetailsUseCase(repository)
 
         val factory = DeliveryViewModelFactory(useCase)
