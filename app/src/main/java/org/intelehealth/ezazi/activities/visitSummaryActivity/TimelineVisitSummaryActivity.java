@@ -1010,12 +1010,9 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         executor.execute(() -> {
             ArrayList<EncounterDTO> encounterListDTO = encounterDAO.getEncountersByVisitUUID(visitUuid);
             for (int i = 0; i < encounterListDTO.size(); i++) {
-                EncounterDTO encounterDTO = encounterListDTO.get(i);
-
                 String name = encounterDAO.getEncounterTypeNameByUUID(encounterListDTO.get(i).getEncounterTypeUuid());
-                EncounterDTO.Type type = new ObsDAO().getEncounterType(encounterListDTO.get(i).getUuid(), sessionManager.getCreatorID());
-                String obsValue = new ObsDAO().getEncounterTypeFromDb(encounterListDTO.get(i).getUuid());
-
+                EncounterDTO.Type type = obsDAO.getEncounterType(encounterListDTO.get(i).getUuid(), sessionManager.getCreatorID());
+                String obsValue = obsDAO.getEncounterTypeFromDb(encounterListDTO.get(i).getUuid());
                 encounterListDTO.get(i).setEncounterTypeName(name);
                 encounterListDTO.get(i).setEncounterType(type);
                 encounterListDTO.get(i).setObsValue(obsValue);
@@ -1024,6 +1021,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 
             encounterListDTO.removeIf(dto -> dto.getEncounterTypeUuid().equalsIgnoreCase(DELIVERY_OUTCOME_STAGE3)); // remove this from timeline ui
             Collections.reverse(encounterListDTO);
+            Log.d("TIMELINE", "Adapter set with size: " + encounterListDTO.size());
             mainHandler.post(() -> {
                 adapter = new TimelineAdapter(context, intent, encounterListDTO, sessionManager, isVCEPresent, isNewEncounterCreated, isDecisionPending);
 

@@ -756,7 +756,7 @@ public class ObsDAO {
 
     public EncounterDTO.Type getEncounterType(String encounterUuid, String creatorID) {
         EncounterDTO.Type type = EncounterDTO.Type.NORMAL;
-        db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
+        db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
 
         Cursor idCursor = db.rawQuery("SELECT value FROM tbl_obs where encounteruuid = ? " +
                         "AND voided='0' AND (conceptuuid = ? OR conceptuuid = ?) ",

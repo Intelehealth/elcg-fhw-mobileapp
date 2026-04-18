@@ -214,7 +214,7 @@ public class EncounterDAO {
     public String getEncounterTypeNameByUUID(String uuid) {
         if (uuid == null) return "";
         String name = "";
-        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
+        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT name FROM tbl_uuid_dictionary where uuid  = ? COLLATE NOCASE", new String[]{uuid});
         if (cursor.getCount() != 0) {
             while (cursor.moveToNext()) {
@@ -313,7 +313,7 @@ public class EncounterDAO {
 
     public ArrayList<EncounterDTO> getEncountersByVisitUUID(String visitUUID) {
 
-        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWritableDatabase();
+        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
         // db.beginTransaction();
         Cursor idCursor = db.rawQuery("SELECT DISTINCT uuid, visituuid, encounter_type_uuid, provider_uuid, encounter_time " +
                         "FROM tbl_encounter where visituuid = ? and voided = '0' AND encounter_type_uuid != ? ORDER BY encounter_time",
@@ -505,7 +505,7 @@ public class EncounterDAO {
 
     public String getVisitCompleteEncounterByVisitUUID(String visitUUID) {
         String isPresent = "";
-        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWritableDatabase();
+        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
         //   db.beginTransaction();
         Cursor idCursor = db.rawQuery("SELECT uuid FROM tbl_encounter where visituuid = ? AND encounter_type_uuid = ?",
                 new String[]{visitUUID, ENCOUNTER_VISIT_COMPLETE});
