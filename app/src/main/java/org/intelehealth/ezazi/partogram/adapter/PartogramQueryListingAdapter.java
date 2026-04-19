@@ -320,6 +320,9 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
             } else if (paramDateType.equalsIgnoreCase(PartogramConstants.INPUT_INT_2_DIG_TYPE)) {
                 dataEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(2)});
                 dataEditText.setInputType(InputType.TYPE_CLASS_NUMBER);
+            } else if (paramDateType.equalsIgnoreCase(PartogramConstants.INPUT_INT_4_DIG_TYPE)) {
+                dataEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(4)});
+                dataEditText.setInputType(InputType.TYPE_CLASS_NUMBER);
             } else {
                 dataEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(3)});
                 dataEditText.setInputType(InputType.TYPE_CLASS_NUMBER);
