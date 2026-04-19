@@ -32,6 +32,7 @@ public class PartogramConstants {
 
     public static final int STAGE_3 = 3;
 
+    public static String INPUT_INT_4_DIG_TYPE = "J";
 
     public enum AccessMode {
         WRITE, EDIT, READ
@@ -558,7 +559,7 @@ public class PartogramConstants {
         paramInfo = new ParamInfo();
         paramInfo.setParamSectionName("Woman Monitoring");
         paramInfo.setParamName(Params.BLOOD_LOSS_MOTHER.value);
-        paramInfo.setParamDateType(INPUT_INT_3_DIG_TYPE);
+        paramInfo.setParamDateType(INPUT_INT_4_DIG_TYPE);
         paramInfo.setConceptUUID(Params.BLOOD_LOSS_MOTHER.conceptId);
         paramInfo.setEachEncounterField(true);
         /*paramInfo.setFifteenMinField(true);
