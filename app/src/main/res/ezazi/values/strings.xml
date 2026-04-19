@@ -222,4 +222,18 @@
     <string name="err_nb_spo2_range">SPO2 must be between %1$d and %2$d%%</string>
     <string name="err_nb_temp_range">Newborn Temperature must be between %1$.1f and %2$.1f °F</string>
     <string name="err_invalid_number">Invalid numeric value</string>
+
+    <string name="select_mode">Select mode</string>
+    <string name="select_degree">Select degree</string>
+    <string name="time_placenta_delivery">Time of placenta and membranes delivery</string>
+    <string name="placental_cord_abnormality">Any placental or cord abnormality</string>
+    <string name="amtsl_label">Medications used for Active Management of Third Stage of labour (AMTSL)</string>
+    <string name="select_sex">Select sex</string>
+    <string name="select_contact">Select contact</string>
+    <string name="select_breastfeeding">Select breastfeeding</string>
+    <string name="gestation_weeks">Gestation (weeks)</string>
+    <string name="in_weeks">In weeks</string>
+    <string name="congenital_anomalies">Congenital Anomalies</string>
+    <string name="specify_anomaly">Specify Anomaly</string>
+
 </resources>

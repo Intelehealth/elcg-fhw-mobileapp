@@ -46,7 +46,7 @@
                         style="@style/LabelStyleAddPatient"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
+                        android:layout_marginTop="@dimen/margin_top_parto_section_labels"
                         android:gravity="start"
                         android:text="@string/label_date_of_delivery"
                          />
@@ -147,7 +147,7 @@
                             android:dropDownSelector="@color/white"
                             android:editable="false"
                             android:focusable="false"
-                            android:hint="Select mode"
+                            android:hint="@string/select_mode"
                             android:inputType="none"
                             android:maxLines="1"
                             android:minHeight="@dimen/max_input_height"
@@ -175,7 +175,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:gravity="center_vertical"
-                            android:hint="Enter other option"
+                            android:hint="@string/please_specify"
                             android:imeOptions="actionNext"
                             android:importantForAutofill="no"
                             android:maxLines="1"
@@ -197,34 +197,6 @@
                     <include
                         layout="@layout/layout_radio_buttons_common"
                         android:id="@+id/layout_perneal_tear_radio"/>
-                    <LinearLayout
-                        android:visibility="gone"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="@dimen/list_container_padding"
-                        android:minHeight="@dimen/max_input_height"
-                        android:orientation="horizontal">
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_perineal_tear_yes"
-                            style="@style/Theme.EZazi.Button_YesNoButton"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="5dp"
-                            android:layout_marginEnd="5dp"
-                            android:checked="false"
-                            android:layout_weight="1"
-                            android:text="Yes" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_perineal_tear_no"
-                            style="@style/Theme.EZazi.Button_YesNoButton"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:checked="false"
-                            android:text="No" />
-                    </LinearLayout>
                     <TextView
                         android:id="@+id/tv_perineal_tear_validation_error"
                         style="@style/Textview_Validation_Error"
@@ -235,7 +207,7 @@
                         android:layout_marginEnd="@dimen/admission_date_margin_end"
                         android:gravity="end"
                         android:lineSpacingExtra="0sp"
-                        android:text="This field is mandatory"
+                        android:text="@string/this_field_is_mandatory"
                         android:visibility="gone" />
 
                     <!-- Degree of Perineal tear -->
@@ -263,7 +235,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:focusable="true"
-                            android:hint="Select degree"
+                            android:hint="@string/select_degree"
                             android:inputType="none"
                             android:minHeight="@dimen/max_input_height"
                             android:textSize="@dimen/input_inner_size" />
@@ -287,7 +259,7 @@
                         style="@style/LabelStyleAddPatient"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
+                        android:layout_marginTop="@dimen/margin_top_parto_section_labels"
                         android:text="@string/label_check_placenta_membranes"
                          />
 
@@ -308,7 +280,7 @@
                             android:dropDownSelector="@color/white"
                             android:editable="false"
                             android:focusable="false"
-                            android:hint="Select"
+                            android:hint="@string/select"
                             android:inputType="none"
                             android:maxLines="1"
                             android:minHeight="@dimen/max_input_height"
@@ -322,7 +294,7 @@
                         style="@style/LabelStyleAddPatient"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Time of placenta and membranes delivery" />
+                        android:text="@string/time_placenta_delivery" />
 
                     <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
                         android:id="@+id/etl_time_of_placenta_delivery"
@@ -359,7 +331,7 @@
                         style="@style/LabelStyleAddPatient"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Any placental or cord abnormality" />
+                        android:text="@string/placental_cord_abnormality" />
 
 
                     <include
@@ -377,7 +349,7 @@
                         android:layout_marginEnd="@dimen/admission_date_margin_end"
                         android:gravity="end"
                         android:lineSpacingExtra="0sp"
-                        android:text="This field is mandatory"
+                        android:text="@string/this_field_is_mandatory"
                         android:visibility="gone" />
 
                     <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
@@ -396,7 +368,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:gravity="center_vertical"
-                            android:hint="Enter other option"
+                            android:hint="@string/please_specify"
                             android:imeOptions="actionNext"
                             android:importantForAutofill="no"
                             android:maxLines="1"
@@ -412,7 +384,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
-                        android:text="Medications used for Active Management of Third Stage of labour (AMTSL)" />
+                        android:text="@string/amtsl_label" />
 
                     <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
                         android:id="@+id/etl_amtsl"
@@ -427,7 +399,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:focusable="true"
-                            android:hint="Select"
+                            android:hint="@string/select"
                             android:inputType="none"
                             android:minHeight="@dimen/max_input_height"
                             android:textSize="@dimen/input_inner_size" />
@@ -476,8 +448,8 @@
                         style="@style/LabelStyleAddPatient"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:text="Type of Birth" />
+                        android:layout_marginTop="@dimen/margin_top_parto_section_labels"
+                        android:text="@string/label_type_of_birth" />
 
                     <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
                         android:id="@+id/etl_type_of_birth"
@@ -493,7 +465,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:focusable="true"
-                            android:hint="Select"
+                            android:hint="@string/select"
                             android:inputType="none"
                             android:minHeight="@dimen/max_input_height"
                             android:textSize="@dimen/input_inner_size" />
@@ -504,7 +476,7 @@
                         style="@style/LabelStyleAddPatient"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Sex" />
+                        android:text="@string/sex" />
 
                     <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
                         android:id="@+id/etl_sex"
@@ -519,7 +491,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:focusable="true"
-                            android:hint="Select sex"
+                            android:hint="@string/select_sex"
                             android:inputType="none"
                             android:minHeight="@dimen/max_input_height"
                             android:textSize="@dimen/input_inner_size" />
@@ -614,7 +586,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:focusable="true"
-                            android:hint="Select"
+                            android:hint="@string/select"
                             android:inputType="none"
                             android:minHeight="@dimen/max_input_height"
                             android:textSize="@dimen/input_inner_size" />
@@ -678,7 +650,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:focusable="true"
-                            android:hint="Select contact"
+                            android:hint="@string/select_contact"
                             android:inputType="none"
                             android:minHeight="@dimen/max_input_height"
                             android:textSize="@dimen/input_inner_size" />
@@ -708,7 +680,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:focusable="true"
-                            android:hint="Select breastfeeding"
+                            android:hint="@string/select_breastfeeding"
                             android:inputType="none"
                             android:minHeight="@dimen/max_input_height"
                             android:textSize="@dimen/input_inner_size" />
@@ -720,7 +692,7 @@
                         style="@style/LabelStyleAddPatient"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Gestation (weeks)" />
+                        android:text="@string/gestation_weeks" />
 
                     <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
                         android:id="@+id/etl_gestation"
@@ -736,7 +708,7 @@
                             android:layout_height="wrap_content"
                             android:focusable="true"
                             android:gravity="center_vertical"
-                            android:hint="In weeks"
+                            android:hint="@string/in_weeks"
                             android:inputType="none"
                             android:minHeight="@dimen/max_input_height"
                             android:textSize="@dimen/input_inner_size" />
@@ -747,7 +719,7 @@
                         style="@style/LabelStyleAddPatient"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Congenital Anomalies" />
+                        android:text="@string/congenital_anomalies" />
 
                     <include
                         layout="@layout/layout_radio_buttons_common"
@@ -760,7 +732,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:visibility="gone"
-                        android:text="Specify Anomaly" />
+                        android:text="@string/specify_anomaly" />
 
                     <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
                         android:id="@+id/etl_congenital_yes_options"
@@ -777,7 +749,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:focusable="true"
-                            android:hint="Select"
+                            android:hint="@string/select"
                             android:inputType="none"
                             android:minHeight="@dimen/max_input_height"
                             android:textSize="@dimen/input_inner_size" />
@@ -802,7 +774,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:gravity="center_vertical"
-                            android:hint="Enter other option"
+                            android:hint="@string/please_specify"
                             android:imeOptions="actionNext"
                             android:importantForAutofill="no"
                             android:maxLines="1"
@@ -821,7 +793,7 @@
                         android:layout_marginEnd="@dimen/admission_date_margin_end"
                         android:gravity="end"
                         android:lineSpacingExtra="0sp"
-                        android:text="This field is mandatory"
+                        android:text="@string/this_field_is_mandatory"
                         android:visibility="gone" />
                 </LinearLayout>
 
