@@ -10,8 +10,9 @@ class SaveDeliveryDetailsUseCase(
     operator fun invoke(
         encounterDTO: EncounterDTO,
         deliveryDetails: DeliveryDetails,
-        creatorUuid: String
+        creatorUuid: String,
+        encounterTypeName: String
     ): Boolean {
-        return repository.saveDeliveryDetails(encounterDTO, deliveryDetails,creatorUuid)
+        return repository.saveDeliveryDetails(encounterDTO, deliveryDetails,creatorUuid, encounterTypeName)
     }
 }

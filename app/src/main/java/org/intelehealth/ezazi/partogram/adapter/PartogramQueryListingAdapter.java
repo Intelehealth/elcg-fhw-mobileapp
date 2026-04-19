@@ -143,12 +143,6 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, @SuppressLint("RecyclerView") int position) {
-       /// logLargeString("Final list ::adapter: ", new Gson().toJson(mItemList));
-        for(int i=0; i<mItemList.size();i++){
-            PartogramItemData partogramItemData = mItemList.get(i);
-            Log.d(TAG, "onBindViewHolder: partogramItemData  : "+new Gson().toJson(partogramItemData));
-
-        }
         if (holder instanceof GenericViewHolder) {
             GenericViewHolder genericViewHolder = (GenericViewHolder) holder;
             genericViewHolder.partogramItemData = mItemList.get(position);

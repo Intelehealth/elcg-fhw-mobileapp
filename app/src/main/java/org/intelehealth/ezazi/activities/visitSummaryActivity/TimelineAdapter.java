@@ -2,7 +2,7 @@ package org.intelehealth.ezazi.activities.visitSummaryActivity;
 
 import static org.intelehealth.ezazi.partogram.PartogramConstants.TIMELINE_MODE;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.STAGE1_HOUR1_1;
-import static org.intelehealth.ezazi.utilities.UuidDictionary.STAGE1_HOUR3_1;
+import static org.intelehealth.ezazi.utilities.UuidDictionary.STAGE3_HOUR1_1;
 
 import android.content.Context;
 import android.content.Intent;
@@ -129,7 +129,7 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
                     holder.stage1start.setVisibility(View.VISIBLE);
                     holder.stage1start.setText(context.getResources().getText(R.string.stage_2));
                 }else if (encounterDTOList.get(position).getEncounterTypeUuid()
-                        .equalsIgnoreCase(STAGE1_HOUR3_1)) {
+                        .equalsIgnoreCase(STAGE3_HOUR1_1)) {
                     holder.stage1start.setVisibility(View.VISIBLE);
                     holder.stage1start.setText(context.getResources().getText(R.string.stage_3));
                 } else {

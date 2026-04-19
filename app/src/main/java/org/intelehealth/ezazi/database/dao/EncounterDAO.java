@@ -20,6 +20,7 @@ import org.intelehealth.ezazi.app.AppConstants;
 import org.intelehealth.ezazi.app.IntelehealthApplication;
 import org.intelehealth.ezazi.models.dto.EncounterDTO;
 import org.intelehealth.ezazi.models.dto.ObsDTO;
+import org.intelehealth.ezazi.services.firebase_services.FirebaseRealTimeDBUtils;
 import org.intelehealth.ezazi.utilities.Logger;
 import org.intelehealth.ezazi.utilities.SessionManager;
 import org.intelehealth.ezazi.utilities.UuidDictionary;
@@ -31,8 +32,10 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 
 public class EncounterDAO {
@@ -63,6 +66,10 @@ public class EncounterDAO {
     }
 
     private boolean createEncounters(EncounterDTO encounter, SQLiteDatabase db) throws DAOException {
+        if(db == null){
+            db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
+        }
+
         boolean isCreated = false;
         ContentValues values = new ContentValues();
         values.put("uuid", encounter.getUuid());
@@ -870,6 +877,93 @@ public class EncounterDAO {
 
         idCursor.close();
         return encounterDTO;
+    }
+    public boolean createStage3FirstEncounter(String visitUUID, String encounterTypeName) {
+        if (visitUUID == null || visitUUID.isEmpty()
+                || encounterTypeName == null || encounterTypeName.isEmpty()) {
+            Log.e(TAG, "Invalid input parameters");
+            return false;
+        }
+        String encounterTypeUuid = getEncounterTypeUuid(encounterTypeName);
+        if (encounterTypeUuid == null || encounterTypeUuid.isEmpty()) {
+            Log.e(TAG, "EncounterTypeUuid NOT FOUND for: " + encounterTypeName);
+            return false;
+        }
+        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
+        db.beginTransaction();
+
+        try {
+            // ---------------- ENCOUNTER ----------------
+            EncounterDTO encounterDTO = new EncounterDTO();
+            encounterDTO.setUuid(UUID.randomUUID().toString());
+            encounterDTO.setVisituuid(visitUUID);
+            encounterDTO.setEncounterTime(
+                    DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT)
+            );
+            encounterDTO.setProvideruuid(
+                    new SessionManager(IntelehealthApplication.getAppContext()).getProviderID()
+            );
+            encounterDTO.setEncounterTypeUuid(encounterTypeUuid);
+            encounterDTO.setSyncd(false);
+            encounterDTO.setVoided(0);
+            encounterDTO.setPrivacynotice_value("true");
+            boolean encounterInserted = insertStage3Encounter(encounterDTO);
+
+            if (!encounterInserted) {
+                return false;
+            }
+
+            // ---------------- OBS ----------------
+            ObsDAO obsDAO = new ObsDAO();
+            SessionManager sessionManager = new SessionManager(IntelehealthApplication.getAppContext());
+            ObsDTO obsDTO = obsDAO.createObs(encounterDTO.getUuid(), EncounterDTO.Type.NORMAL.name(), sessionManager.getCreatorID(), TAG);
+
+            boolean obsResult = obsDAO.insertObs(obsDTO);
+            if (!obsResult) {
+                return false;
+            }
+
+            db.setTransactionSuccessful();
+            return true;
+
+        } catch (Exception e) {
+            return false;
+
+        } finally {
+            db.endTransaction();
+        }
+    }
+    public boolean insertStage3Encounter(EncounterDTO encounter) throws DAOException {
+        boolean isCreated = false;
+            if (encounter.getEncounterTypeUuid() != null && encounter.getEncounterTypeUuid().length() > 0) {
+                SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
+                db.beginTransaction();
+
+                ContentValues values = new ContentValues();
+                values.put("uuid", encounter.getUuid());
+                values.put("visituuid", encounter.getVisituuid());
+                values.put("encounter_time", encounter.getEncounterTime());
+                values.put("encounter_type_uuid", encounter.getEncounterTypeUuid());
+                values.put("provider_uuid", encounter.getProvideruuid());
+                values.put("modified_date", DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
+                values.put("sync", encounter.getSyncd());
+                values.put("voided", encounter.getVoided());
+                values.put("privacynotice_value", encounter.getPrivacynotice_value());
+
+                try {
+                    createdRecordsCount = db.insertWithOnConflict("tbl_encounter", null, values, SQLiteDatabase.CONFLICT_REPLACE);
+                    if (createdRecordsCount != 0)
+                        isCreated = true;
+                    db.setTransactionSuccessful();
+                } catch (SQLException e) {
+                    isCreated = false;
+                    throw new DAOException(e.getMessage(), e);
+
+                } finally {
+                    db.endTransaction();
+                }
+        }
+        return isCreated;
     }
 
 }

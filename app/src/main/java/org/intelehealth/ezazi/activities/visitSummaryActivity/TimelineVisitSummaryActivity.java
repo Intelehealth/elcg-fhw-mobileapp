@@ -188,6 +188,9 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         ContextCompat.registerReceiver(TimelineVisitSummaryActivity.this, checkEncounterEditMode, new IntentFilter(AppConstants.CURRENT_ENC_EDIT_INTENT_ACTION), ContextCompat.RECEIVER_EXPORTED);
 
         manageVisibilityOfPendingFlag();
+        if (visitUuid != null && !visitUuid.isEmpty()) {
+            fetchAllEncountersFromVisitForTimelineScreen(visitUuid);
+        }
     }
 
     @Override
@@ -455,7 +458,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
             }
 
             showToastIfNoPrescription();
-            fetchAllEncountersFromVisitForTimelineScreen(visitUuid); // fetch all records...
+           // fetchAllEncountersFromVisitForTimelineScreen(visitUuid); // fetch all records... taken on -onresume
         }
 
         setTitle(patientName);
@@ -594,10 +597,14 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
     }
 
     private void showLabourBottomSheetDialog(boolean hasMotherDeceased) {
-        //VisitLabourActivity.startLabourCompleteActivity(this, visitUuid, hasMotherDeceased);
+        //VisitLabourActivity.startLabourCompleteActivity(this, visitUuid, hasMotherDeceased); // non nepal flow
         Intent activity = new Intent(this, WomenDeliveryDetailsActivity.class);
-                    activity.putExtra("visitUuid", visitUuid);
-                    startActivity(activity);
+        activity.putExtra("patientNameTimeline", patientName);
+        activity.putExtra("patientUuid", patientUuid);
+        activity.putExtra("visitUuid", visitUuid);
+        activity.putExtra("providerID", providerID);
+        activity.putExtra("tag", "timline");
+        startActivity(activity);
     }
 
     private void checkForOutOfTime(VisitOutcome outcome) {

@@ -96,7 +96,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
     private boolean isSynced = false;
     private VisitAttributeListDAO visitAttributeListDAO;
     private DataCaptureGenericRadioFieldHandler radioHandler;
-
+    private  boolean isLiveBirth =false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -355,9 +355,8 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
             return;*/
 
             // Stage 3 Validation (ONLY for Stage 3)
-        boolean status  = checkNewbornStatusIsLive();
         if (mStageNumber == PartogramConstants.STAGE_3) {
-            ValidateStage3Fields.ValidationResult result = ValidateStage3Fields.INSTANCE.validatePostpartumMonitoringFromParams(PartogramDataCaptureActivity.this, mItemList,status);
+            ValidateStage3Fields.ValidationResult result = ValidateStage3Fields.INSTANCE.validatePostpartumMonitoringFromParams(PartogramDataCaptureActivity.this, mItemList,isLiveBirth);
 
             if (!result.isValid()) {
                 // Format error message with parameters
@@ -1034,7 +1033,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
     private void prepareDataForStage3() {
         TreeMap<String, List<ParamInfo>> stage3Map = PartogramConstants.getSectionParamInfoMasterMap(STAGE_3);
         mItemList.clear();
-        boolean isLiveBirth = checkNewbornStatusIsLive();
+        isLiveBirth = checkNewbornStatusIsLive();
 
       /*  boolean isFifteenMin = false;
         boolean isHalfHour = false;
@@ -1084,7 +1083,6 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                 mItemList.add(partogramItemData);
             }
         }
-        logLargeString("Final list ::kk: ", new Gson().toJson(mItemList));
         setEditData();
 
         PartogramQueryListingAdapter adapter = new PartogramQueryListingAdapter(mRecyclerView, mVisitUUID, this, mItemList,
