@@ -166,7 +166,7 @@
                         android:layout_margin="@dimen/list_container_padding"
                         android:layout_marginTop="-1dp"
                         android:gravity="center_vertical"
-                        android:hint="@string/enter_answer"
+                        android:hint="@string/please_specify"
                         android:visibility="gone">
 
                         <com.google.android.material.textfield.TextInputEditText
@@ -359,7 +359,7 @@
                         android:layout_height="wrap_content"
                         android:layout_margin="@dimen/list_container_padding"
                         android:gravity="center_vertical"
-                        android:hint="@string/enter_answer"
+                        android:hint="@string/please_specify"
                         android:visibility="gone">
 
                         <com.google.android.material.textfield.TextInputEditText
@@ -421,7 +421,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:gravity="center_vertical"
-                            android:hint="@string/enter_answer"
+                            android:hint="@string/please_specify"
                             android:imeOptions="actionNext"
                             android:importantForAutofill="no"
                             android:inputType="text"
@@ -765,7 +765,7 @@
                         android:layout_margin="@dimen/list_container_padding"
                         android:layout_marginTop="-1dp"
                         android:gravity="center_vertical"
-                        android:hint="@string/enter_answer"
+                        android:hint="@string/please_specify"
                         android:visibility="gone">
 
                         <com.google.android.material.textfield.TextInputEditText

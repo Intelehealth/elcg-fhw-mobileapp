@@ -87,26 +87,26 @@ public class PartogramConstants {
         PRESCRIBED_IV_FLUID("Prescribed IV Fluids", "0c21f925-d225-48ce-9e98-bb1cc5638e04"),
 
         RESPIRATORY_RATE_MOTHER("Respiratory Rate (per min)", "5242AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
-        BLOOD_LOSS_MOTHER("Blood Loss (ml)", "585c2f4a-16d3-4fd7-8b50-2927e14ca379"),
-        UTERUS_CONTRACTED_MOTHER("Uterus Contracted", "13de11c4-76cc-4851-8b37-513cee310c93"),
-        URINE_PASSED_MOTHER("Urine Passed in 2 hours", "cb6ee6f9-6476-4b44-adac-8e85798a716c"),
+        BLOOD_LOSS_MOTHER("Blood loss (ml)", "585c2f4a-16d3-4fd7-8b50-2927e14ca379"),
+        UTERUS_CONTRACTED_MOTHER("Uterus contracted", "13de11c4-76cc-4851-8b37-513cee310c93"),
+        URINE_PASSED_MOTHER("Urine passed in 2 hours", "cb6ee6f9-6476-4b44-adac-8e85798a716c"),
         HEMATOMA_MOTHER("Hematoma", "afd25b45-cb3f-4e77-8c3d-8b8f6cc83944"),
-        ONGOING_COMPLICATIONS_MOTHER("Any Ongoing Complications", "caa174fc-5889-443e-b53d-701fb2e85c23"),
-        ASSESSMENT_MOTHER("Assessment (Mother)", "67a050c1-35e5-451c-a4ab-fff9d57b0db1"),
-        PLAN_MOTHER("Plan (Mother)", "5991aeaf-c4c3-457d-ada1-334d90c545fc"),
+        ONGOING_COMPLICATIONS_MOTHER("Any signs of ongoing complications", "caa174fc-5889-443e-b53d-701fb2e85c23"),
+        ASSESSMENT_MOTHER("Assessment", "67a050c1-35e5-451c-a4ab-fff9d57b0db1"),
+        PLAN_MOTHER("Plan", "5991aeaf-c4c3-457d-ada1-334d90c545fc"),
         GRUNTING_NEWBORN("Grunting", "694d18a3-8163-43ba-9ac8-cf07a8c84b6b"),
-        CHEST_INDRAWING_NEWBORN("Chest Indrawing", "5d9c44df-eb2b-435b-aac9-ee6b83ee6d27"),
-        FAST_BREATHING_NEWBORN("Fast Breathing", "9d2ebbfd-538f-11e6-9cfe-86f436325720"),
+        CHEST_INDRAWING_NEWBORN("Chest indrawing", "5d9c44df-eb2b-435b-aac9-ee6b83ee6d27"),
+        FAST_BREATHING_NEWBORN("Fast breathing", "9d2ebbfd-538f-11e6-9cfe-86f436325720"),
         RESPIRATORY_RATE_NEWBORN("Respiratory Rate (per min)", "e642e4a6-2799-488f-9f95-eec27a3bb756"),
         SPO2_NEWBORN("SPO2 (%)", "ef9490bc-b039-45bc-98a8-34d55b750e04"),
-        FEET_WARM_NEWBORN("Feet Warm", "d16058b1-8756-4db2-bf71-834466e1f436"),
+        FEET_WARM_NEWBORN("Feet (warm)", "d16058b1-8756-4db2-bf71-834466e1f436"),
         TEMPERATURE_NEWBORN("Temperature (°F)", "5c74ba33-b194-4a1a-b6e8-cfca07d2a593"),
-        SKIN_COLOR_NEWBORN("Skin Color (Cyanosis)", "641cf6ac-ce38-42ca-9672-d30dce1c56de"),
-        UC_OOZING_NEWBORN("Umbilical Cord Oozing", "995ab5c8-76a0-4e3c-ac70-2270fdbc14a8"),
+        SKIN_COLOR_NEWBORN("Colour of the skin (Cyanosed)", "641cf6ac-ce38-42ca-9672-d30dce1c56de"),
+        UC_OOZING_NEWBORN("Umbilical cord oozing", "995ab5c8-76a0-4e3c-ac70-2270fdbc14a8"),
         SUCKING_FEEDING_NEWBORN("Suckling & Feeding", "1a49a4ef-ad20-4cd8-b176-06eb6fbf9971"),
-        ONGOING_COMPLICATIONS_NEWBORN("Any Ongoing Complications", "820ae093-d3ab-402a-9a81-279963cf9dc8"),
-        ASSESSMENT_NEWBORN("Assessment (Newborn)", "15fc4eca-7635-4e7c-baa4-20c250cfe62a"),
-        PLAN_NEWBORN("Plan (Newborn)", "a79853d9-e45e-41b2-8473-b19e5cae66cb");
+        ONGOING_COMPLICATIONS_NEWBORN("Any signs of ongoing complications", "820ae093-d3ab-402a-9a81-279963cf9dc8"),
+        ASSESSMENT_NEWBORN("Assessment", "15fc4eca-7635-4e7c-baa4-20c250cfe62a"),
+        PLAN_NEWBORN("Plan", "a79853d9-e45e-41b2-8473-b19e5cae66cb");
 
         public final String value;
         public final String conceptId;
@@ -754,7 +754,7 @@ public class PartogramConstants {
         newbornParam.setOnlyOneHourField(true);*/
         newbornList.add(newbornParam);
 
-        //8 Skin Color (Cyanosis)
+        //8 Colour of the skin (Cyanosed)
         newbornParam = new ParamInfo();
         newbornParam.setParamSectionName("Newborn Monitoring");
         newbornParam.setParamName(Params.SKIN_COLOR_NEWBORN.value);
@@ -796,7 +796,7 @@ public class PartogramConstants {
         newbornParam.setOnlyOneHourField(true);*/
         newbornList.add(newbornParam);
 
-        //11 Any Ongoing Complications
+        //11 Any signs of ongoing complications
         newbornParam = new ParamInfo();
         newbornParam.setParamSectionName("Newborn Monitoring");
         newbornParam.setParamName(Params.ONGOING_COMPLICATIONS_NEWBORN.value);

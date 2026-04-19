@@ -194,7 +194,7 @@
     <string name="label_congenital_anomalies">Congenital Anomalies</string>
     <string name="label_specify_anomaly">If yes, specify the anomaly</string>
     <string name="women_delivery_details">Woman delivery details</string>
-    <string name="section_two_placenta_and_membrane_delivery">Section 2: Placenta &amp; Membrane Delivery Details</string>
+    <string name="section_two_placenta_and_membrane_delivery">Section 2: Placenta &amp; Membrane Delivery</string>
     <string name="new_born_details">Section 3: Newborn Details</string>
     <string name="error_invalid_apgar_range">Apgar range is invalid</string>
     <string name="normal_vaginal_delivery">Normal Vaginal Delivery</string>
@@ -225,9 +225,9 @@
 
     <string name="select_mode">Select mode</string>
     <string name="select_degree">Select degree</string>
-    <string name="time_placenta_delivery">Time of placenta and membranes delivery</string>
-    <string name="placental_cord_abnormality">Any placental or cord abnormality</string>
-    <string name="amtsl_label">Medications used for Active Management of Third Stage of labour (AMTSL)</string>
+    <string name="time_placenta_delivery">Time of Placenta Delivery</string>
+    <string name="placental_cord_abnormality">Placental or Cord Abnormality</string>
+    <string name="amtsl_label">Medications for AMTSL</string>
     <string name="select_sex">Select sex</string>
     <string name="select_contact">Select contact</string>
     <string name="select_breastfeeding">Select breastfeeding</string>
@@ -235,5 +235,5 @@
     <string name="in_weeks">In weeks</string>
     <string name="congenital_anomalies">Congenital Anomalies</string>
     <string name="specify_anomaly">Specify Anomaly</string>
-
+    <string name="error_placenta_time_after_delivery">Time of placenta delivery must be after time of delivery</string>
 </resources>
