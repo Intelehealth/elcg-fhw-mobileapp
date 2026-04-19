@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MenuItem;
@@ -42,6 +43,7 @@ import org.intelehealth.ezazi.partogram.model.ParamInfo;
 import org.intelehealth.ezazi.partogram.model.PartogramItemData;
 import org.intelehealth.ezazi.partogram.model.ValidatePartogramFields;
 import org.intelehealth.ezazi.partogram.utils.DataCaptureGenericRadioFieldHandler;
+import org.intelehealth.ezazi.partogram.utils.ValidateStage3Fields;
 import org.intelehealth.ezazi.stage3.Utils.DeliveryDetailsConcept;
 import org.intelehealth.ezazi.syncModule.SyncUtils;
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
@@ -351,6 +353,26 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
         boolean isInternetAvailable = InternetDialogHelper.checkInternetOrShow(PartogramDataCaptureActivity.this);
        /* if(!isInternetAvailable)
             return;*/
+
+            // Stage 3 Validation (ONLY for Stage 3)
+        boolean status  = checkNewbornStatusIsLive();
+        if (mStageNumber == PartogramConstants.STAGE_3) {
+            ValidateStage3Fields.ValidationResult result = ValidateStage3Fields.INSTANCE.validatePostpartumMonitoringFromParams(PartogramDataCaptureActivity.this, mItemList,status);
+
+            if (!result.isValid()) {
+                // Format error message with parameters
+                String message;
+                Object[] args = result.getErrorArgs();
+                if (args != null && args.length > 0) {
+                    message = getString(result.getErrorMessageRes(), args);
+                } else {
+                    message = getString(result.getErrorMessageRes());
+                }
+                showErrorDialogForValidations(message);
+                return;
+            }
+        }
+
         ObsDAO obsDAO = new ObsDAO();
 
         // validation
@@ -466,6 +488,26 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                             }
                         }
 
+                    }else if (PartogramConstants.DROPDOWN_MULTI_SELECT_TYPE
+                            .equalsIgnoreCase(info.getParamDateType())) {
+
+                        // Multi-select: save exactly like a plain text obs.
+                        // capturedValue already holds the serialised comma-separated string.
+                        if (!TextUtils.isEmpty(info.getCapturedValue())) {
+                            info.setCreatedDate(
+                                    DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
+                            ObsDTO obsDTO = buildObservation(info);
+
+                            String uuid = obsDAO.getObsuuid(mEncounterUUID, info.getConceptUUID());
+                            obsDTO.setUuid(uuid);
+
+                            // uuid not null → update; null → insert (same pattern as other fields)
+                            if (uuid != null && !uuid.isEmpty()) {
+                                obsDTOList.add(obsDTO);
+                            } else {
+                                obsDTOList.add(obsDTO);
+                            }
+                        }
                     }else {
                         if (PartogramConstants.RADIO_SELECT_TYPE.equalsIgnoreCase(info.getParamDateType())) {
                             addGeneralRadioValuesOrNormalObs(info, obsDAO, mEncounterUUID, obsDTOList);
@@ -515,6 +557,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                 && (diastolicBp == null || diastolicBp.length() == 0)) {
             showErrorDialog(R.string.error_diastolic_require);
         } *//* else*/
+
         if (!isValidOxytocin) {
             showErrorDialog(R.string.error_oxytocin);
         } else if (!isValidIVFluid) {
@@ -523,21 +566,22 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
             showErrorDialog(R.string.error_medicine);
         } else if (!isValidBaselineFHR) {
             showErrorDialogForValidations(getString(R.string.baseline_fhr_err, AppConstants.MINIMUM_BASELINE_FHR, AppConstants.MAXIMUM_BASELINE_FHR));
-        } else if (!isValidPulse) {
+        } else if (!isValidPulse && mStageNumber != PartogramConstants.STAGE_3) {
             showErrorDialogForValidations(getString(R.string.pulse_err, AppConstants.MINIMUM_PULSE, AppConstants.MAXIMUM_PULSE));
-        } else if (!isValidSystolicBP) {
+        } else if (!isValidSystolicBP && mStageNumber != PartogramConstants.STAGE_3) {
             //showErrorDialog(R.string.systolic_bp_range);
             showErrorDialogForValidations(getString(R.string.systolic_bp_range_toast_err, AppConstants.MINIMUM_BP_SYS, AppConstants.MAXIMUM_BP_SYS));
 
-        } else if (!isValidDiastolicBP) {
+        } else if (!isValidDiastolicBP && mStageNumber != PartogramConstants.STAGE_3) {
             // showErrorDialog(R.string.diastolic_bp_range);
             showErrorDialogForValidations(getString(R.string.diastolic_bp_range_toast_err, AppConstants.MINIMUM_BP_DSYS, AppConstants.MAXIMUM_BP_DSYS));
 
-        } else if (!isValidTemperature) {
+        } else if (!isValidTemperature && mStageNumber != PartogramConstants.STAGE_3) {
             showErrorDialogForValidations(getString(R.string.temp_error_new, AppConstants.MINIMUM_TEMPERATURE_CELSIUS, AppConstants.MAXIMUM_TEMPERATURE_CELSIUS));
         } else if (!isValidDuration) {
             showErrorDialogForValidations(getString(R.string.contraction_duration_err, AppConstants.MINIMUM_CONTRACTION_DURATION, AppConstants.MAXIMUM_CONTRACTION_DURATION));
-        } else {
+        }
+        else {
 
             try {
                 if (accessMode == PartogramConstants.AccessMode.EDIT) {
