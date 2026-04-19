@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.textfield.TextInputLayout
@@ -24,6 +25,7 @@ import org.intelehealth.ezazi.stage3.db.SaveDeliveryDetailsUseCase
 import org.intelehealth.ezazi.stage3.factory.DeliveryDetailsViewModelFactory
 import org.intelehealth.ezazi.stage3.models.DeliveryDetails
 import org.intelehealth.ezazi.stage3.viewmodel.DeliveryDetailsViewModel
+import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment
 import org.intelehealth.ezazi.utilities.SessionManager
 import org.intelehealth.ezazi.utilities.UuidDictionary
 import org.intelehealth.klivekit.utils.DateTimeUtils
@@ -41,13 +43,14 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
         binding = ActivityWomenDeliveryDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.bottomSheetAppBar.toolbar.setTitle(R.string.final_delivery_outcome_form)
-        binding.bottomSheetAppBar.toolbar.setNavigationOnClickListener { v ->
-            val intent = Intent(this, TimelineVisitSummaryActivity::class.java)////timeline
-            startActivity(intent)
-            finish()
-        }
 
         visitUuid = intent?.getStringExtra("visitUuid")
+
+        binding.bottomSheetAppBar.toolbar.setNavigationOnClickListener { v ->
+            showBackConfirmationDialog()
+        }
+
+
         val encounterDto = createEncounterDto()
 
         val repository = DeliveryDetailsRepository(DeliveryDetailsLocalDataSource(ObsDAO(), EncounterDAO(), VisitsDAO()), DeliveryDetailsObsMapper())
@@ -61,12 +64,21 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             val deliveryDetails = collectFormData()
             if (validateFields(deliveryDetails)) {
                 clearErrors()
-                viewModel.saveDelivery(encounterDto, deliveryDetails, SessionManager(this).creatorID)
+                viewModel.saveDelivery(encounterDto, deliveryDetails, SessionManager(this).creatorID, "Stage3_Hour1_1")
             }
         }
 
         setupUIHandler()
         observeViewModel()
+
+        onBackPressedDispatcher.addCallback(
+            this, object : OnBackPressedCallback(true) {
+
+                override fun handleOnBackPressed() {
+                    showBackConfirmationDialog()
+                }
+            }
+        )
     }
 
     private fun setFieldError(layout: TextInputLayout, message: String) {
@@ -103,7 +115,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
                 return false
             }
         }
-        validatePerinealTear()
+        if (!validatePerinealTear()) return false
 
         if (deliveryDetails.placentaMembraneStatus.isNullOrEmpty()) {
             setFieldError(binding.etlPlacentaMembraneDelivery, getString(R.string.this_field_is_mandatory))
@@ -114,8 +126,24 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             setFieldError(binding.etlTimeOfPlacentaDelivery, getString(R.string.this_field_is_mandatory))
             return false
         }
-        validatePlacentalAbnormality()
+        // ADD after line 116:
+        val deliveryTime = binding.etTimeOfDelivery.text.toString().trim()
+        val placentaTime = binding.etTimeOfPlacentaDelivery.text.toString().trim()
+        if (deliveryTime.isNotEmpty() && placentaTime.isNotEmpty()) {
+            if (!isTimeAfterOrEqual(placentaTime, deliveryTime)) {
+                setFieldError(binding.etlTimeOfPlacentaDelivery,
+                    getString(R.string.error_placenta_time_after_delivery))
+                return false
+            }
+        }
 
+        if (!validatePlacentalAbnormality()) return false
+
+
+        if (binding.actvAmtsl.text.isNullOrEmpty()) {
+            setFieldError(binding.etlAmtsl, getString(R.string.this_field_is_mandatory))
+            return false
+        }
         if (binding.actvAmtsl.text.toString().contains(getString(R.string.other), true)
             && binding.etAmtslOtherOption.text.isNullOrEmpty()) {
             setFieldError(binding.etlAmtslOtherOption, getString(R.string.this_field_is_mandatory))
@@ -147,17 +175,40 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
                 return false
             }
 
-            if (apgar1.toInt() !in 0..10 || apgar5.toInt() !in 0..10) {
+            if (apgar1.toInt() !in 0..10) {
                 setFieldError(binding.etlApgar1, getString(R.string.error_invalid_apgar_range))
                 return false
             }
-
+            if (apgar5.toInt() !in 0..10) {
+                setFieldError(binding.etlApgar5, getString(R.string.error_invalid_apgar_range))
+                return false
+            }
+            if (binding.autotvResuscitation.text.isNullOrEmpty()) {
+                setFieldError(binding.etlResuscitation, getString(R.string.this_field_is_mandatory))
+                return false
+            }
             if (binding.etBirthWeightGrams.text.isNullOrEmpty()) {
                 setFieldError(binding.etlBirthWeightGrams, getString(R.string.this_field_is_mandatory))
                 return false
             }
+
+
+            if (binding.autotvSkinToSkinContact.text.isNullOrEmpty()) {
+                setFieldError(binding.etlSkinToSkinContact, getString(R.string.this_field_is_mandatory))
+                return false
+            }
+
+            if (binding.autotvBreastfeedWithin1Hour.text.isNullOrEmpty()) {
+                setFieldError(binding.etlBreastfeedWithin1Hour, getString(R.string.this_field_is_mandatory))
+                return false
+            }
+
+            if (binding.autotvGestation.text.isNullOrEmpty()) {
+                setFieldError(binding.etlGestation, getString(R.string.this_field_is_mandatory))
+                return false
+            }
         }
-        validateCongenital()
+        if (!validateCongenital()) return false
 
         return true
     }
@@ -280,10 +331,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
 
     override fun onBackPressed() {
         super.onBackPressed()
-        val intent = Intent(this, TimelineVisitSummaryActivity::class.java) //timeline
-        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-        startActivity(intent)
-        finish()
+        showBackConfirmationDialog()
     }
 
     private fun createEncounterDto(): EncounterDTO {
@@ -329,34 +377,21 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
         return true
     }
     private fun validatePlacentalAbnormality(): Boolean {
-
         val radioGroup = binding.layoutPlacentalAbnormalityRadio.radioYesNoGroupCommon
         val radioYes = binding.layoutPlacentalAbnormalityRadio.radioYesCommon
 
-        // 1️⃣ Yes/No mandatory
-        if (radioGroup.checkedRadioButtonId == -1) {
-            binding.tvCordAbnormalityValidationError.visibility = View.VISIBLE
-            binding.tvCordAbnormalityValidationError.text =
-                getString(R.string.this_field_is_mandatory)
-            return false
-        }
+        // Optional — skip if nothing selected
+        if (radioGroup.checkedRadioButtonId == -1) return true
 
         binding.tvCordAbnormalityValidationError.visibility = View.GONE
 
-        // 2️⃣ If YES → Other field mandatory
-        if (radioYes.isChecked) {
-
-            if (binding.etPlacentalOrCordAbnormalityOtherOption.text.isNullOrEmpty()) {
-                setFieldError(
-                    binding.etlPlacentalOrCordAbnormalityOtherOption,
-                    getString(R.string.this_field_is_mandatory)
-                )
-                return false
-            }
-
-            binding.etlPlacentalOrCordAbnormalityOtherOption.error = null
+        // If YES → free text mandatory
+        if (radioYes.isChecked &&
+            binding.etPlacentalOrCordAbnormalityOtherOption.text.isNullOrEmpty()) {
+            setFieldError(binding.etlPlacentalOrCordAbnormalityOtherOption,
+                getString(R.string.this_field_is_mandatory))
+            return false
         }
-
         return true
     }
 
@@ -391,5 +426,45 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             }
         }
         return true
+    }
+    private fun isTimeAfterOrEqual(laterTime: String, earlierTime: String): Boolean {
+        return try {
+            val format = java.text.SimpleDateFormat("hh:mm a", java.util.Locale.getDefault())
+            val t1 = format.parse(earlierTime)
+            val t2 = format.parse(laterTime)
+            t2 != null && t1 != null && !t2.before(t1)
+        } catch (e: Exception) { true } // don't block if parsing fails
+    }
+    private fun navigateToTimeline() {
+        val patientUuid = intent?.getStringExtra("patientUuid")
+        val patientName = intent?.getStringExtra("patientName")
+        val providerID = intent?.getStringExtra("providerID")
+        //val tag = intent?.getStringExtra("deliveryOutcome")
+
+        val intent = Intent(this, TimelineVisitSummaryActivity::class.java).apply {
+            putExtra("patientNameTimeline", patientName)
+            putExtra("patientUuid", patientUuid)
+            putExtra("visitUuid", visitUuid)
+            putExtra("providerID", providerID)
+            putExtra("tag", "timline")
+
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                    Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+
+        startActivity(intent)
+        finish()
+    }
+    private fun showBackConfirmationDialog() {
+        val dialog = ConfirmationDialogFragment.Builder(this)
+            .content(getString(R.string.are_you_want_go_back))
+            .positiveButtonLabel(R.string.yes)
+            .build().apply {
+                setListener {
+                    navigateToTimeline()
+                }
+            }
+        dialog.show(supportFragmentManager, dialog::class.java.canonicalName)
     }
 }

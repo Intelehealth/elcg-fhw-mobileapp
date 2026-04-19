@@ -133,34 +133,6 @@ class DeliveryDetailsUIController(
             clearTextInputError(binding.etlBreastfeedWithin1Hour)
         }
     }
-    private fun setupCongenitalAnomaliesDropdown() {
-        val congenitalAnomaliesOptionsList = context.resources.getStringArray(R.array.congenital_anomalies_options)
-        val labourCompletedAdapter = ArrayAdapter(context, R.layout.spinner_textview, congenitalAnomaliesOptionsList)
-
-        binding.autotvCongenitalYesOptions.setDropDownBackgroundResource(R.drawable.rounded_corner_white_with_gray_stroke)
-        binding.autotvCongenitalYesOptions.setAdapter(labourCompletedAdapter)
-
-        binding.autotvCongenitalYesOptions.setOnItemClickListener { parent, _, position, _ ->
-
-            Utils.hideKeyboard(context as AppCompatActivity)
-
-            deliveryDetails.congenitalAnomalies = parent.getItemAtPosition(position).toString()
-            val otherString = context.getString(R.string.other).lowercase()
-            val mode = deliveryDetails.congenitalAnomalies
-
-            if (!mode.isNullOrEmpty() &&
-                mode.equals(otherString, ignoreCase = true)
-            ) {
-                // enableAndDisableAllFields(false)
-                changeOtherInputEnableStatus(binding.etlCongenitalYesOptions, true, null, false)
-            } else {
-                //enableAndDisableAllFields(true)
-                changeOtherInputEnableStatus(binding.etlCongenitalYesOptions, false, null, false)
-            }
-            binding.autotvCongenitalYesOptions.tag = deliveryDetails.congenitalAnomalies
-            binding.etlCongenitalYesOptions.error = null
-        }
-    }
     private fun setupModeOfDeliveryDropdown() {
         val modeOfDeliveryList = context.resources.getStringArray(R.array.mode_of_delivery_array)
         val labourCompletedAdapter = ArrayAdapter(context, R.layout.spinner_textview, modeOfDeliveryList)
@@ -308,6 +280,8 @@ class DeliveryDetailsUIController(
         dialog.setListener { selectedItems ->
             binding.etlAmtslOtherOption.visibility = View.GONE
             if (selectedItems.isNotEmpty()) {
+                binding.etlAmtsl.error = null
+                binding.etlAmtsl.isErrorEnabled = false
                 val selectedText = selectedItems.joinToString(", ")
                 // Show "Other" layout if selected
                 if (selectedItems.contains(context.getString(R.string.other))) {
@@ -317,42 +291,6 @@ class DeliveryDetailsUIController(
             }
         }
         dialog.show(fragmentManager, MultiChoiceDialogFragment::class.java.canonicalName)
-    }
-
-    private fun handleLiveBirthUI(type: String?) {
-
-        val isLiveBirth = type.equals("Live Birth", ignoreCase = true)
-        val visibility = if (isLiveBirth) View.VISIBLE else View.GONE
-
-        // APGAR
-        binding.textViewApgar1.visibility = visibility
-        binding.etlApgar1.visibility = visibility
-        binding.textViewApgar5.visibility = visibility
-        binding.etlApgar5.visibility = visibility
-
-        // Resuscitation
-        binding.textViewResuscitation.visibility = visibility
-        binding.etlResuscitation.visibility = visibility
-
-        // Birth weight
-        binding.textViewBirthWeightGrams.visibility = visibility
-        binding.etlBirthWeightGrams.visibility = visibility
-
-        // Skin to skin
-        binding.textViewSkinToSkinContact.visibility = visibility
-        binding.etlSkinToSkinContact.visibility = visibility
-
-        // Breastfeeding
-        binding.textViewLabelBreastfeedWithin1Hour.visibility = visibility
-        binding.etlBreastfeedWithin1Hour.visibility = visibility
-
-        // Congenital anomaly section
-        binding.layoutCongenitalAnomaliesRadio.root.visibility = visibility
-        binding.etlCongenitalYesOptions.visibility = View.GONE
-
-        if (!isLiveBirth) {
-            clearLiveBirthFields()
-        }
     }
 
     private fun clearLiveBirthFields() {
@@ -397,7 +335,7 @@ class DeliveryDetailsUIController(
 
         binding.autotvResuscitation.setOnItemClickListener { parent, _, position, _ ->
             Utils.hideKeyboard(context as AppCompatActivity)
-            deliveryDetails.babyGender = parent.getItemAtPosition(position).toString()
+            deliveryDetails.resuscitation = parent.getItemAtPosition(position).toString()
             binding.autotvResuscitation.tag = deliveryDetails.resuscitation
             clearTextInputError(binding.etlResuscitation)
         }
@@ -490,18 +428,11 @@ class DeliveryDetailsUIController(
 
                         // Clear model values
                         deliveryDetails.congenitalAnomalySpecification = null
+                        binding.autotvCongenitalYesOptions.setText("", false)
+
                     }
                 }
             }
-    }
-     fun getCongenitalAnomalyValue(): String? {
-        return when (
-            binding.layoutCongenitalAnomaliesRadio.radioYesNoGroupCommon.checkedRadioButtonId
-        ) {
-            R.id.radioYesCommon -> "Yes"
-            R.id.radioNoCommon -> "No"
-            else -> null
-        }
     }
      fun getYesNoValue(radioGroup: RadioGroup): String? {
         return when (radioGroup.checkedRadioButtonId) {
@@ -509,5 +440,71 @@ class DeliveryDetailsUIController(
             R.id.radioNoCommon -> "No"
             else -> null
         }
+    }
+    private fun setupCongenitalAnomaliesDropdown() {
+        // Make field clickable to open multi-select dialog
+        binding.autotvCongenitalYesOptions.setOnClickListener {
+            showCongenitalDialog()
+        }
+        binding.etlCongenitalYesOptions.setEndIconOnClickListener {
+            showCongenitalDialog()
+        }
+    }
+
+    private fun showCongenitalDialog() {
+        val dialog = MultiChoiceDialogFragment.Builder<String>(context)
+            .title(R.string.select)
+            .positiveButtonLabel(R.string.save_button)
+            .build()
+        dialog.isSearchable(true)
+
+        val items = context.resources.getStringArray(R.array.congenital_anomalies_options).toList()
+        val adapter = GenericMultiChoiceAdapter(context, ArrayList(items), null)
+        dialog.setAdapter(adapter)
+        dialog.setListener { selectedItems ->
+            binding.etlCongenitalYesOtherOption.visibility = View.GONE
+            if (selectedItems.isNotEmpty()) {
+                val selectedText = selectedItems.joinToString(", ")
+                binding.etlCongenitalYesOptions.error = null
+                binding.etlCongenitalYesOptions.isErrorEnabled = false
+
+                if (selectedItems.contains(context.getString(R.string.other))) {
+                    binding.etlCongenitalYesOtherOption.visibility = View.VISIBLE
+                }
+                binding.autotvCongenitalYesOptions.setText(selectedText, false)
+            }
+        }
+        dialog.show(fragmentManager, MultiChoiceDialogFragment::class.java.canonicalName)
+    }
+
+    private fun handleLiveBirthUI(type: String?) {
+        val isLiveBirth = type.equals("Live Birth", ignoreCase = true)
+        val visibility = if (isLiveBirth) View.VISIBLE else View.GONE
+
+        // APGAR
+        binding.textViewApgar1.visibility = visibility
+        binding.etlApgar1.visibility = visibility
+        binding.textViewApgar5.visibility = visibility
+        binding.etlApgar5.visibility = visibility
+
+        // Resuscitation
+        binding.textViewResuscitation.visibility = visibility
+        binding.etlResuscitation.visibility = visibility
+
+        // Birth weight
+        //binding.textViewBirthWeightGrams.visibility = visibility
+        //binding.etlBirthWeightGrams.visibility = visibility
+
+        // Skin to skin
+        binding.textViewSkinToSkinContact.visibility = visibility
+        binding.etlSkinToSkinContact.visibility = visibility
+
+        // Breastfeeding
+        binding.textViewLabelBreastfeedWithin1Hour.visibility = visibility
+        binding.etlBreastfeedWithin1Hour.visibility = visibility
+
+        if(!isLiveBirth)
+            clearLiveBirthFields()
+
     }
 }
