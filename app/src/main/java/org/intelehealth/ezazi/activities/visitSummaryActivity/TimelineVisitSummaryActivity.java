@@ -75,6 +75,7 @@ import org.intelehealth.ezazi.ui.rtc.call.CallInitializer;
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
 import org.intelehealth.ezazi.ui.visit.data.VisitRepository;
 import org.intelehealth.ezazi.ui.visit.dialog.CompleteVisitOnEnd2StageDialog;
+import org.intelehealth.ezazi.ui.visit.dialog.CompleteVisitOnEnd3StageDialog;
 import org.intelehealth.ezazi.ui.visit.dialog.CompleteVisitOnEndStage1Dialog;
 import org.intelehealth.ezazi.ui.visit.model.CompletedVisitStatus;
 import org.intelehealth.ezazi.ui.visit.model.VisitOutcome;
@@ -191,7 +192,6 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         if (visitUuid != null && !visitUuid.isEmpty()) {
             fetchAllEncountersFromVisitForTimelineScreen(visitUuid);
         }
-        manageEndStageButtonText();
     }
 
     @Override
@@ -494,6 +494,10 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
                         } else {
                             showLabourBottomSheetDialog(hasMotherDeceased);
                         }
+                    }).buildDialog();
+                }else if (stageNo == 3) {
+                    new CompleteVisitOnEnd3StageDialog(this, visitUuid, () -> {
+                        showToastAndUploadVisit(true, getResources().getString(R.string.data_added_successfully));
                     }).buildDialog();
                 }
            /* }else{
@@ -997,6 +1001,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
                      /*   adapter = new TimelineAdapter(context, intent, encounterListDTO,
                                 sessionManager, vce, isNewEncounterCreated, isDecisionPending);*/
                 recyclerView.setAdapter(adapter);
+                manageEndStageButtonText();
             });
         });
     }

@@ -150,4 +150,7 @@ public class UuidDictionary {
     public static final String STAGE1_HOUR1_1 = "ee560d18-34a1-4ad8-87c8-98aed99c663d";
     public static final String DELIVERY_OUTCOME_STAGE3 = "c5f95c0f-a499-4792-9ee0-ff138d8df425";
     public static final String STAGE3_HOUR1_1 = "e58b22d1-b09e-4cda-b05c-a45d1e63d390";
+    public static final String NEONATAL_DEATH = "dfa09987-96f2-46ae-846b-972f88b898a2";
+    public static final String NEWBORN_DISCHARGE_TYPE = "6f461764-e68b-47c0-9459-6f5c13292551";
+
 }

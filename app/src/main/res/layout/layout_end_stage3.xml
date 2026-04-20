@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <import type="org.intelehealth.ezazi.ui.visit.model.CompletedVisitStatus" />
+    </data>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:id="@+id/llStage3Dialog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:orientation="vertical"
+            android:paddingVertical="@dimen/list_container_padding">
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/textView_women_end_stage3_options"
+                style="@style/LabelStyleAddPatient"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="start"
+                android:text="@string/label_mode_of_delivery" />
+
+            <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
+                android:id="@+id/etl_women_end_stage3_options"
+                style="@style/Theme.EZazi.Input.Login.DropDown"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/list_container_padding">
+
+                <AutoCompleteTextView
+                    android:id="@+id/autotv_women_end_stage3_options"
+                    style="@style/Theme.EZazi.Scrollbar.Thumb"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clickable="false"
+                    android:cursorVisible="false"
+                    android:dropDownSelector="@color/white"
+                    android:editable="false"
+                    android:focusable="false"
+                    android:hint="@string/select"
+                    android:inputType="none"
+                    android:maxLines="1"
+                    android:minHeight="@dimen/max_input_height"
+                    android:textAlignment="viewStart"
+                    android:textSize="@dimen/input_inner_size" />
+
+            </org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout>
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/textView_newborn_end_stage3_options"
+                style="@style/LabelStyleAddPatient"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="start"
+                android:text="@string/label_mode_of_delivery"
+                />
+
+            <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
+                android:id="@+id/etl_newborn_end_stage3_options"
+                style="@style/Theme.EZazi.Input.Login.DropDown"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/list_container_padding">
+
+                <AutoCompleteTextView
+                    android:id="@+id/autotv_newborn_end_stage3_options"
+                    style="@style/Theme.EZazi.Scrollbar.Thumb"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clickable="false"
+                    android:cursorVisible="false"
+                    android:dropDownSelector="@color/white"
+                    android:editable="false"
+                    android:focusable="false"
+                    android:hint="@string/select"
+                    android:inputType="none"
+                    android:maxLines="1"
+                    android:minHeight="@dimen/max_input_height"
+                    android:textAlignment="viewStart"
+                    android:textSize="@dimen/input_inner_size" />
+
+            </org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout>
+
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</layout>

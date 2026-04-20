@@ -267,5 +267,25 @@
         <item>No</item>
     </string-array>
 
+    <!-- Mother Status Options -->
+    <string-array name="mother_status_options">
+        <item>Transfer to PNC module</item>
+        <item>Discharge</item>
+        <item>Discharge at request</item>
+        <item>Discharge against medical advice</item>
+        <item>Transfer to ICU</item>
+        <item>Referral to higher center</item>
+        <item>Maternal death</item>
+    </string-array>
 
+    <!-- Newborn Status Options -->
+    <string-array name="newborn_status_options">
+        <item>Transfer to PNC module</item>
+        <item>Discharge</item>
+        <item>Discharge at request</item>
+        <item>Discharge against medical advice</item>
+        <item>Transfer to NICU/SNCU</item>
+        <item>Referral to higher center</item>
+        <item>Neonatal death</item>
+    </string-array>
 </resources>
