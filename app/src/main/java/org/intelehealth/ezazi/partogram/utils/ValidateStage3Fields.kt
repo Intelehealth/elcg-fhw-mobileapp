@@ -3,6 +3,14 @@ package org.intelehealth.ezazi.partogram.utils
 import android.content.Context
 import androidx.annotation.StringRes
 import org.intelehealth.ezazi.R
+import org.intelehealth.ezazi.app.AppConstants.MAXIMUM_BP_DSYS
+import org.intelehealth.ezazi.app.AppConstants.MAXIMUM_BP_SYS
+import org.intelehealth.ezazi.app.AppConstants.MAXIMUM_PULSE
+import org.intelehealth.ezazi.app.AppConstants.MAXIMUM_TEMPERATURE_CELSIUS
+import org.intelehealth.ezazi.app.AppConstants.MINIMUM_BP_DSYS
+import org.intelehealth.ezazi.app.AppConstants.MINIMUM_BP_SYS
+import org.intelehealth.ezazi.app.AppConstants.MINIMUM_PULSE
+import org.intelehealth.ezazi.app.AppConstants.MINIMUM_TEMPERATURE_CELSIUS
 import org.intelehealth.ezazi.partogram.model.PartogramItemData
 
 /**
@@ -49,7 +57,7 @@ object ValidateStage3Fields {
     fun validatePostpartumMonitoringFromParams(
         context: Context,
         itemList: List<PartogramItemData>,
-        isNewbornLiveBirth: Boolean = true  // 🔴 REQUIRED: Hide newborn section if NOT live birth
+        isNewbornLiveBirth: Boolean = true  //  REQUIRED: Hide newborn section if NOT live birth
     ): ValidationResult {
 
         val values = extractValues(itemList)
@@ -166,34 +174,47 @@ object ValidateStage3Fields {
         val rr = values[KEY_WOMAN_RR] ?: ""
         val bloodLoss = values[KEY_BLOOD_LOSS] ?: ""
 
-        // 🔴 REQUIRED: Check at least one field has value
+        // REQUIRED: Check at least one field has value
         if (pulse.isEmpty() && sysBP.isEmpty() && diaBP.isEmpty() &&
             temp.isEmpty() && rr.isEmpty() && bloodLoss.isEmpty()) {
             return null
         }
 
         // Pulse: 40-200 bpm
+        // Pulse: MINIMUM_PULSE - MAXIMUM_PULSE bpm
         if (pulse.isNotEmpty()) {
-            validateIntRange(pulse, 40, 200)?.let {
-                return ValidationResult(false, R.string.err_pulse_range, arrayOf(40, 200))
+            val minPulse = MINIMUM_PULSE.toInt()
+            val maxPulse = MAXIMUM_PULSE.toInt()
+            validateIntRange(pulse, minPulse, maxPulse)?.let {
+                return ValidationResult(false, R.string.err_pulse_range, arrayOf(minPulse, maxPulse))
             }
         }
 
         // Systolic BP: 70-200 mmHg
+        // Systolic BP: MINIMUM_BP_SYS - MAXIMUM_BP_SYS mmHg
         if (sysBP.isNotEmpty()) {
-            validateIntRange(sysBP, 70, 200)?.let {
-                return ValidationResult(false, R.string.err_systolic_range, arrayOf(70, 200))
+            val minSys = MINIMUM_BP_SYS.toInt()
+            val maxSys = MAXIMUM_BP_SYS.toInt()
+            validateIntRange(sysBP, minSys, maxSys)?.let {
+                return ValidationResult(false, R.string.err_systolic_range, arrayOf(minSys, maxSys))
             }
         }
 
         // Diastolic BP: 40-120 mmHg and < Systolic
+        // Diastolic BP: MINIMUM_BP_DSYS - MAXIMUM_BP_DSYS mmHg and < Systolic
         if (diaBP.isNotEmpty()) {
+
             if (sysBP.isEmpty()) {
                 return ValidationResult(false, R.string.err_enter_systolic_first)
             }
-            validateIntRange(diaBP, 40, 120)?.let {
-                return ValidationResult(false, R.string.err_diastolic_range, arrayOf(40, 120))
+
+            val minDia = MINIMUM_BP_DSYS.toInt()
+            val maxDia = MAXIMUM_BP_DSYS.toInt()
+
+            validateIntRange(diaBP, minDia, maxDia)?.let {
+                return ValidationResult(false, R.string.err_diastolic_range, arrayOf(minDia, maxDia))
             }
+
             try {
                 if (diaBP.toInt() >= sysBP.toInt()) {
                     return ValidationResult(false, R.string.err_diastolic_less_than_sys)
@@ -203,14 +224,21 @@ object ValidateStage3Fields {
             }
         }
 
-        // Temperature: 95.0-107.6 °F
+        // Temperature: MINIMUM_TEMPERATURE_CELSIUS - MAXIMUM_TEMPERATURE_CELSIUS °C
         if (temp.isNotEmpty()) {
-            validateDoubleRange(temp, 95.0, 107.6)?.let {
-                return ValidationResult(false, R.string.err_temperature_range, arrayOf(95.0, 107.6))
+            val minTemp = MINIMUM_TEMPERATURE_CELSIUS.toDouble()
+            val maxTemp = MAXIMUM_TEMPERATURE_CELSIUS.toDouble()
+
+            validateDoubleRange(temp, minTemp, maxTemp)?.let {
+                return ValidationResult(
+                    false,
+                    R.string.err_temperature_range,
+                    arrayOf(minTemp, maxTemp)
+                )
             }
         }
 
-        // Respiratory Rate: 10-60 breaths/min
+        /*// Respiratory Rate: 10-60 breaths/min
         if (rr.isNotEmpty()) {
             validateIntRange(rr, 10, 60)?.let {
                 return ValidationResult(false, R.string.err_rr_range, arrayOf(10, 60))
@@ -222,7 +250,7 @@ object ValidateStage3Fields {
             validateIntRange(bloodLoss, 0, 5000)?.let {
                 return ValidationResult(false, R.string.err_blood_loss_range, arrayOf(0, 5000))
             }
-        }
+        }*/
 
         // Yes/No fields - no validation needed
         // Free text fields (Assessment, Plan) - no validation needed
@@ -239,7 +267,7 @@ object ValidateStage3Fields {
         val spo2 = values[KEY_NEWBORN_SPO2] ?: ""
         val temp = values[KEY_NEWBORN_TEMP] ?: ""
 
-        // 🔴 REQUIRED: Check at least one field has value
+        //  REQUIRED: Check at least one field has value
         if (rr.isEmpty() && spo2.isEmpty() && temp.isEmpty()) {
             return null
         }

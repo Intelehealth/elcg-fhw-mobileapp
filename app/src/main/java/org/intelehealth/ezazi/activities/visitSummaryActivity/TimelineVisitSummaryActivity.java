@@ -191,6 +191,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         if (visitUuid != null && !visitUuid.isEmpty()) {
             fetchAllEncountersFromVisitForTimelineScreen(visitUuid);
         }
+        manageEndStageButtonText();
     }
 
     @Override
@@ -464,49 +465,9 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         setTitle(patientName);
         encounterDAO = new EncounterDAO();
         Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
-        EncounterDTO encounterDTO = encounterDAO.getEncounterByVisitUUIDLimit1(visitUuid); // get latest encounter.
-        String latestEncounterName = encounterDAO.findCurrentStage(encounterDTO.getVisituuid());
+        //moved this code to separate method
+        manageEndStageButtonText();
 
-        if (isVCEPresent.equalsIgnoreCase("")) { // "" ie. not present
-            endStageButton.setEnabled(true);
-            endStageButton.setClickable(true);
-            endStageButton.setBackground(ContextCompat.getDrawable(context, R.drawable.ic_rectangle_76));
-            if (latestEncounterName.toLowerCase().contains("stage3")) {
-                stageNo = 3;
-                endStageButton.setText(context.getResources().getText(R.string.end3StageButton));
-            }
-            else if (latestEncounterName.toLowerCase().contains("stage2")) {
-                stageNo = 2;
-                endStageButton.setText(context.getResources().getText(R.string.end2StageButton));
-            } else if (latestEncounterName.toLowerCase().contains("stage1")) {
-                stageNo = 1;
-                endStageButton.setText(context.getResources().getText(R.string.endStageButton));
-            } else {
-                stageNo = 0;
-            }
-
-            if (!hwHasEditAccess) {
-                fabc.setEnabled(false);
-                fabv.setEnabled(false);
-                fabSOS.setEnabled(false);
-                fabPrescription.setEnabled(false);
-                endStageButton.setEnabled(false);
-            }
-
-        } else {
-            VisitOutcome outcome = new ObsDAO().getCompletedVisitType(isVCEPresent);
-            endStageButton.setVisibility(View.INVISIBLE);
-            if (outcome != null && outcome.getOutcome() != null && !outcome.getOutcome().equalsIgnoreCase("")) {
-                outcomeTV.setVisibility(View.VISIBLE);
-                setOutcomeText(outcome.getOutcome());
-                outcomeTV.setGravity(Gravity.CENTER);
-                checkForOutOfTime(outcome);
-            }
-            fabc.setVisibility(View.GONE);
-            fabv.setVisibility(View.GONE);
-            fabSOS.setVisibility(View.GONE);
-            fabPrescription.setVisibility(View.GONE);
-        }
 
         // clicking on this open dialog to confirm and start stage 2 | If stage 2 already open then ends visit.
         endStageButton.setOnClickListener(v -> {
@@ -1321,4 +1282,50 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
                 }
         );
     }
+    private void manageEndStageButtonText(){
+        EncounterDTO encounterDTO = encounterDAO.getEncounterByVisitUUIDLimit1(visitUuid); // get latest encounter.
+        String latestEncounterName = encounterDAO.findCurrentStage(encounterDTO.getVisituuid());
+        Log.d(TAG, "initUI: latestEncounterName : "+latestEncounterName);
+        if (isVCEPresent.equalsIgnoreCase("")) { // "" ie. not present
+            endStageButton.setEnabled(true);
+            endStageButton.setClickable(true);
+            endStageButton.setBackground(ContextCompat.getDrawable(context, R.drawable.ic_rectangle_76));
+            if (latestEncounterName.toLowerCase().contains("stage3")) {
+                stageNo = 3;
+                endStageButton.setText(context.getResources().getText(R.string.end3StageButton));
+            }
+            else if (latestEncounterName.toLowerCase().contains("stage2")) {
+                stageNo = 2;
+                endStageButton.setText(context.getResources().getText(R.string.end2StageButton));
+            } else if (latestEncounterName.toLowerCase().contains("stage1")) {
+                stageNo = 1;
+                endStageButton.setText(context.getResources().getText(R.string.endStageButton));
+            } else {
+                stageNo = 0;
+            }
+
+            if (!hwHasEditAccess) {
+                fabc.setEnabled(false);
+                fabv.setEnabled(false);
+                fabSOS.setEnabled(false);
+                fabPrescription.setEnabled(false);
+                endStageButton.setEnabled(false);
+            }
+
+        } else {
+            VisitOutcome outcome = new ObsDAO().getCompletedVisitType(isVCEPresent);
+            endStageButton.setVisibility(View.INVISIBLE);
+            if (outcome != null && outcome.getOutcome() != null && !outcome.getOutcome().equalsIgnoreCase("")) {
+                outcomeTV.setVisibility(View.VISIBLE);
+                setOutcomeText(outcome.getOutcome());
+                outcomeTV.setGravity(Gravity.CENTER);
+                checkForOutOfTime(outcome);
+            }
+            fabc.setVisibility(View.GONE);
+            fabv.setVisibility(View.GONE);
+            fabSOS.setVisibility(View.GONE);
+            fabPrescription.setVisibility(View.GONE);
+        }
+    }
+
 }
