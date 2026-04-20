@@ -317,7 +317,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         try {
             ProviderDAO providerDAO = new ProviderDAO();
             String myCreatorUUID = new SessionManager(IntelehealthApplication.getAppContext()).getCreatorID();
-            List<ProviderDTO> mProviderNurseList = providerDAO.getNurseList();
+            List<ProviderDTO> mProviderNurseList = providerDAO.getNurseList(false);
 //            String[] nurseNames = new String[mProviderNurseList.size() - 1];
 //            String[] nurseUUID = new String[mProviderNurseList.size() - 1];
 
