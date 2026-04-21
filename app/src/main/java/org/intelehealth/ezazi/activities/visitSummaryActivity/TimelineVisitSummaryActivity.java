@@ -1,6 +1,7 @@
 package org.intelehealth.ezazi.activities.visitSummaryActivity;
 
 
+import static org.intelehealth.ezazi.app.AppConstants.EVENT_SHIFT_CHANGED;
 import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.DELIVERY_OUTCOME_STAGE3;
 
@@ -14,6 +15,7 @@ import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.drawable.Drawable;
+import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -30,6 +32,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -37,6 +41,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.StringRes;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -48,16 +53,22 @@ import com.google.gson.Gson;
 import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.activities.epartogramActivity.EpartogramViewActivity;
 import org.intelehealth.ezazi.activities.homeActivity.HomeActivity;
+import org.intelehealth.ezazi.activities.setupActivity.SetupActivity;
 import org.intelehealth.ezazi.app.AppConstants;
 import org.intelehealth.ezazi.app.IntelehealthApplication;
 import org.intelehealth.ezazi.database.dao.EncounterDAO;
 import org.intelehealth.ezazi.database.dao.ObsDAO;
 import org.intelehealth.ezazi.database.dao.PatientsDAO;
+import org.intelehealth.ezazi.database.dao.ProviderDAO;
 import org.intelehealth.ezazi.database.dao.VisitAttributeListDAO;
 import org.intelehealth.ezazi.database.dao.VisitsDAO;
 import org.intelehealth.ezazi.databinding.DialogOutOfTimeEzaziBinding;
+import org.intelehealth.ezazi.enums.StageEnum;
+import org.intelehealth.ezazi.models.FamilyMemberRes;
 import org.intelehealth.ezazi.models.dto.EncounterDTO;
 import org.intelehealth.ezazi.models.dto.ObsDTO;
+import org.intelehealth.ezazi.models.dto.PatientAttributesDTO;
+import org.intelehealth.ezazi.models.dto.ProviderDTO;
 import org.intelehealth.ezazi.services.firebase_services.FirebaseRealTimeDBUtils;
 import org.intelehealth.ezazi.stage3.WomenDeliveryDetailsActivity;
 import org.intelehealth.ezazi.syncModule.SyncUtils;
@@ -65,6 +76,7 @@ import org.intelehealth.ezazi.ui.dialog.AppDialogUtils;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
 import org.intelehealth.ezazi.ui.dialog.CustomViewDialogFragment;
 import org.intelehealth.ezazi.ui.dialog.SingleChoiceDialogFragment;
+import org.intelehealth.ezazi.ui.dialog.model.MultiChoiceItem;
 import org.intelehealth.ezazi.ui.dialog.model.SingChoiceItem;
 import org.intelehealth.ezazi.ui.prescription.activity.PrescriptionActivity;
 import org.intelehealth.ezazi.ui.prescription.data.PrescriptionRepository;
@@ -73,6 +85,7 @@ import org.intelehealth.ezazi.ui.rtc.activity.EzaziChatActivity;
 import org.intelehealth.ezazi.ui.rtc.activity.EzaziVideoCallActivity;
 import org.intelehealth.ezazi.ui.rtc.call.CallInitializer;
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
+import org.intelehealth.ezazi.ui.visit.activity.VisitLabourActivity;
 import org.intelehealth.ezazi.ui.visit.data.VisitRepository;
 import org.intelehealth.ezazi.ui.visit.dialog.CompleteVisitOnEnd2StageDialog;
 import org.intelehealth.ezazi.ui.visit.dialog.CompleteVisitOnEnd3StageDialog;
@@ -91,7 +104,11 @@ import org.intelehealth.klivekit.chat.model.ItemHeader;
 import org.intelehealth.klivekit.model.RtcArgs;
 import org.intelehealth.klivekit.socket.SocketManager;
 import org.intelehealth.klivekit.utils.DateTimeUtils;
+import org.w3c.dom.Text;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -122,7 +139,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
     private Button endStageButton;
     private int stageNo = 0;
     private String isVCEPresent = "";
-    private Button fabc, fabv, fabSOS, fabPrescription;
+    private Button fabc, fabv, fabSOS, fabPrescription, btnShiftToPostnatalWard;
     private TextView outcomeTV;
     public static final String TAG = "TimelineVisitSummary";
 
@@ -135,6 +152,14 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
     private ConstraintLayout layoutPendingFlag;
     private List<ItemHeader> prescriptions;
     private ObsDAO obsDAO = new ObsDAO();
+    private PatientsDAO patientsDAO = new PatientsDAO();
+    private ProviderDAO providerDAO = new ProviderDAO();
+    private VisitsDAO visitsDAO = new VisitsDAO();
+    SyncUtils syncUtils = new SyncUtils();
+
+
+    int STAGE_1_DURATION = 30;
+    int STAGE_2_DURATION = 15;
 
     private final BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
@@ -203,6 +228,9 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         encounterDAO = new EncounterDAO();
 
         initUI();
+        setupShiftToPostnatalWardBtn();
+        calculateStageDurationsAndShowDialog();
+
         fabSOS.setOnClickListener(view -> {
             if(NetworkConnection.isOnline(TimelineVisitSummaryActivity.this)){
                 Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
@@ -249,6 +277,154 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
             }
         });
     }
+
+    private void setupShiftToPostnatalWardBtn() {
+       try {
+           String providerId = sessionManager.getProviderID();
+           String ward = providerDAO.checkNurseWard(providerId);
+           Boolean isVisitActive = visitsDAO.isVisitActive(visitUuid, providerId);
+           if(((ward.isEmpty() || ward.equals("Labor Ward")) && isVisitActive)){
+               btnShiftToPostnatalWard.setVisibility(View.VISIBLE);
+           }else{
+               btnShiftToPostnatalWard.setVisibility(View.GONE);
+           }
+       }catch (Exception e){
+           btnShiftToPostnatalWard.setVisibility(View.GONE);
+           e.printStackTrace();
+       }
+
+        btnShiftToPostnatalWard.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ArrayList<MultiChoiceItem> items = new ArrayList<>();
+                FamilyMemberRes patientNameInfo = null;
+                try {
+                    patientNameInfo = patientsDAO.getPatientNameInfo(patientUuid);
+                    patientNameInfo.setVisitUuid(visitUuid);
+                    items.add(patientNameInfo);
+                    showNextShiftNursesDialog(items);
+                } catch (DAOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+    }
+
+    private void showNextShiftNursesDialog(List<MultiChoiceItem> items) {
+        List<String> visitUuids = new ArrayList<>();
+        List<FamilyMemberRes> patients = new ArrayList<>();
+        Log.e(TAG, "Selected patients : " + items.size());
+        for (MultiChoiceItem item : items) {
+            if (item instanceof FamilyMemberRes) {
+                patients.add((FamilyMemberRes) item);
+                visitUuids.add(((FamilyMemberRes) item).getVisitUuid());
+                Log.e(TAG, "Visit Uuid =>" + ((FamilyMemberRes) item).getVisitUuid());
+            }
+        }
+        showNurseAssignDialog(visitUuids, patients);
+    }
+
+    private void showNurseAssignDialog(List<String> visitUUIDList, List<FamilyMemberRes> patientsList) {
+        try {
+            ProviderDAO providerDAO = new ProviderDAO();
+            String myCreatorUUID = new SessionManager(IntelehealthApplication.getAppContext()).getCreatorID();
+            List<ProviderDTO> mProviderNurseList = providerDAO.getNurseList(false);
+//            String[] nurseNames = new String[mProviderNurseList.size() - 1];
+//            String[] nurseUUID = new String[mProviderNurseList.size() - 1];
+
+            ArrayList<SingChoiceItem> choiceItems = new ArrayList<>();
+            for (int i = 0; i < mProviderNurseList.size(); i++) {
+                if (!mProviderNurseList.get(i).getUserUuid().equals(myCreatorUUID)) {
+                    SingChoiceItem item = new SingChoiceItem();
+                    item.setItem(mProviderNurseList.get(i).getGivenName() + " " + mProviderNurseList.get(i).getFamilyName());
+                    item.setItemId(mProviderNurseList.get(i).getUuid());
+                    item.setUserUuid(mProviderNurseList.get(i).getUserUuid());
+                    item.setItemIndex(i);
+                    choiceItems.add(item);
+                }
+            }
+
+            showNurseSelectionDialog(visitUUIDList, choiceItems, patientsList);
+        } catch (DAOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void showNurseSelectionDialog(List<String> visitUUIDList, ArrayList<SingChoiceItem> choiceItems, List<FamilyMemberRes> patientsList) {
+        SingleChoiceDialogFragment dialog = new SingleChoiceDialogFragment.Builder(this)
+                .title(R.string.select_nurse)
+                .positiveButtonLabel(R.string.save_button)
+                .content(choiceItems)
+                .build();
+
+        dialog.isSearchable(true);
+        dialog.setListener(item -> assignNurseToPatient(visitUUIDList, item.getItemId(), item.getUserUuid(), patientsList));
+
+        dialog.show(getSupportFragmentManager(), dialog.getClass().getCanonicalName());
+    }
+
+    private void assignNurseToPatient(List<String> visitUUIDList, String selectedNurseProviderUuid, String assigneeNurseUserUuid, List<FamilyMemberRes> patientsList) {
+        PatientsDAO patientsDAO = new PatientsDAO();
+        Log.e(TAG, "assignNurseToPatient: " + selectedNurseProviderUuid);
+        Log.e(TAG, "assignNurseToPatient: assigneeNurseUserUuid check2 :: " + assigneeNurseUserUuid);
+
+        VisitAttributeListDAO visitsAttrsDAO = new VisitAttributeListDAO();
+        for (int j = 0; j < visitUUIDList.size(); j++) {
+            try {
+                visitsAttrsDAO.updateVisitTypeAttributeUuid(visitUUIDList.get(j), selectedNurseProviderUuid);
+                new VisitsDAO().updateVisitSync(visitUUIDList.get(j), "0");
+            } catch (DAOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        ShiftChangeData shiftChangeData = new ShiftChangeData();
+        shiftChangeData.setToHwUserUuid(assigneeNurseUserUuid);
+        shiftChangeData.setProviderID(sessionManager.getProviderID());
+        shiftChangeData.setAssignorNurse(sessionManager.getChwname());
+        shiftChangeData.generatePatientsInfo(patientsList);
+        shiftChangeData.setTag("shiftChange");
+        Log.d("1122Shift", new Gson().toJson(shiftChangeData));
+
+
+
+        SocketManager.getInstance().emit(EVENT_SHIFT_CHANGED, new Gson().toJson(shiftChangeData));
+        //mPendingForLogout = true;
+        sync();
+        Toast.makeText(context, getString(R.string.patient_assigned_successfully), Toast.LENGTH_SHORT).show();
+        finish();
+
+    }
+
+    private void sync() {
+        if (isNetworkConnected()) {
+            Toast.makeText(context, getString(R.string.syncInProgress), Toast.LENGTH_LONG).show();
+            syncUtils.syncForeground("home");
+        } else {
+            showErrorOnNoInternetOnRefresh();
+            //Toast.makeText(context, context.getString(R.string.failed_synced), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void showErrorOnNoInternetOnRefresh() {
+        AppDialogUtils.showSingleButtonDialog(
+                this,
+                getString(R.string.no_internet_setup_screen_title),
+                getString(R.string.no_internet_setup_screen_body),
+                getString(R.string.ok),
+                () -> {
+                    //finish();
+                    return null;
+                }
+        );
+    }
+
+    private boolean isNetworkConnected() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnected();
+    }
+
 
     @Override
     protected int getScreenTitle() {
@@ -417,6 +593,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         outcomeTV = findViewById(R.id.outcomeTV);
         fabc = findViewById(R.id.btnFlipCamera);
         fabPrescription = findViewById(R.id.btnPrescription);
+        btnShiftToPostnatalWard = findViewById(R.id.btnShiftToPostnatalWard);
         recyclerView = findViewById(R.id.recyclerview_timeline);
         endStageButton = findViewById(R.id.btnEndStage);
         LinearLayoutManager linearLayout = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, true);
@@ -472,6 +649,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         // clicking on this open dialog to confirm and start stage 2 | If stage 2 already open then ends visit.
         endStageButton.setOnClickListener(v -> {
            // if(NetworkConnection.isOnline(TimelineVisitSummaryActivity.this)){
+            if (NetworkConnection.isOnline(TimelineVisitSummaryActivity.this)) {
                 if (stageNo == 1) {
                     // showEndShiftDialog(); //old flow
                     FragmentManager fragmentManager = getSupportFragmentManager();
@@ -500,7 +678,9 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
                         showToastAndUploadVisit(true, getResources().getString(R.string.data_added_successfully));
                     }).buildDialog();
                 }
-           /* }else{
+            }else{
+                InternetDialogHelper.showNoInternetDialog(TimelineVisitSummaryActivity.this);
+            } /*else {
                 InternetDialogHelper.showNoInternetDialog(TimelineVisitSummaryActivity.this);
             }*/
 
@@ -797,8 +977,8 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 //
 //            if (isInserted) {
 //                Toast.makeText(context, context.getString(R.string.refer_data_submitted_successfully), Toast.LENGTH_SHORT).show();
-////                Intent intent = new Intent(context, HomeActivity.class);
-////                startActivity(intent);
+    /// /                Intent intent = new Intent(context, HomeActivity.class);
+    /// /                startActivity(intent);
 //                checkInternetAndUploadVisitEncounter(true);
 //            } else {
 //                Toast.makeText(context, context.getString(R.string.something_went_wrong), Toast.LENGTH_SHORT).show();
@@ -1006,6 +1186,101 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         });
     }
 
+
+    private void calculateStageDurationsAndShowDialog() {
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Handler mainHandler = new Handler(Looper.getMainLooper());
+
+        executor.execute(() -> {
+
+            ArrayList<EncounterDTO> stageOneList = new ArrayList<>();
+            ArrayList<EncounterDTO> stageTwoList = new ArrayList<>();
+
+            int parityCount = 0;
+
+            ArrayList<EncounterDTO> encounterListDTO =
+                    encounterDAO.getEncountersByVisitUUID(visitUuid);
+
+            String parity = patientsDAO.getPatientAttributeValue(
+                    patientUuid,
+                    PatientAttributesDTO.Columns.PARITY
+            );
+
+            // Parsing parity
+            if (parity != null && !parity.isEmpty()) {
+                String[] parityArray = parity.split(",");
+                if (parityArray.length > 1) {
+                    try {
+                        parityCount = Integer.parseInt(parityArray[0].trim());
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+            }
+
+            for (EncounterDTO encounter : encounterListDTO) {
+
+                if (patientsDAO.checkStage(encounter.getEncounterTypeUuid(), StageEnum.ONE)) {
+                    stageOneList.add(encounter);
+
+                } else if (patientsDAO.checkStage(encounter.getEncounterTypeUuid(), StageEnum.TWO)) {
+                    stageTwoList.add(encounter);
+                }
+            }
+
+            double stageOneDuration = calculateStageDiff(stageOneList);
+            double stageTwoDuration = 0.0;
+
+            if(!stageTwoList.isEmpty()){
+                stageOneDuration = 0;
+                stageTwoDuration = calculateStageDiff(stageTwoList);
+            }
+
+
+            String dialogMsg = "";
+
+            if ((parityCount == 0 && stageOneDuration >= 12 * 60)
+                    || (parityCount > 0 && stageOneDuration >= 10 * 60)) {
+                dialogMsg = getString(R.string.prolonged_labour_detected);
+            } else if ((parityCount == 0 && stageTwoDuration >= 3 * 60)
+                    || (parityCount > 0 && stageTwoDuration >= 2 * 60)) {
+                dialogMsg = getString(R.string.second_stage_prolonged);
+            }
+
+            String finalDialogMsg = dialogMsg;
+
+            // Switching to UI thread
+            mainHandler.post(() -> {
+                if (!finalDialogMsg.isEmpty()) {
+                    AppDialogUtils.showSingleButtonDialog(
+                            (FragmentActivity) context,
+                            context.getString(R.string.generic_warning),
+                            finalDialogMsg,
+                            context.getString(R.string.okay),
+                            () -> null
+                    );
+                }
+            });
+        });
+    }
+
+    private double calculateStageDiff(ArrayList<EncounterDTO> encounterList) {
+
+        if (encounterList == null || encounterList.size() < 2) {
+            return 0;
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        LocalDateTime first = LocalDateTime.parse(
+                encounterList.get(0).getEncounterTime(), formatter);
+
+        LocalDateTime last = LocalDateTime.parse(
+                encounterList.get(encounterList.size() - 1).getEncounterTime(), formatter);
+
+        return Duration.between(first, last).toMinutes();
+    }
+
 //    private void triggerAlarm_Stage2_every15mins(String visitUuid) { // TODO: change 1min to 15mins..... // visituuid : 0 - 5
 //        Calendar calendar = Calendar.getInstance(); // current time and from there evey 15mins notifi will be triggered...
 //        calendar.add(Calendar.MINUTE, 15); // So that after 15mins this notifi is triggered and scheduled...
@@ -1018,7 +1293,8 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 //        intent.putExtra("visitUuid", visitUuid);
 //        intent.putExtra("providerID", providerID);
 //        intent.putExtra("Stage2_Hour1_1", "Stage1_Hour1_1");
-////        intent.putExtra("Stage2_Hour1_1","Stage2_Hour1_1");
+
+    /// /        intent.putExtra("Stage2_Hour1_1","Stage2_Hour1_1");
 //
 //        Log.v("timeline", "patientname_3 " + patientName + " " + patientUuid + " " + visitUuid);
 //        Log.v("timeline", "visituuid_int_15min " + visitUuid.replaceAll("[^\\d]", ""));
@@ -1031,7 +1307,6 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 //                    AlarmManager.INTERVAL_FIFTEEN_MINUTES, pendingIntent);
 //        }*/
 //    }
-
     private void triggerAlarm_Stage1_every30mins() { // TODO: change 1min to 15mins..... // visituuid : 2 - 7
         Calendar calendar = Calendar.getInstance(); // current time and from there evey 30mins notifi will be triggered...
         calendar.add(Calendar.MINUTE, 30); // So that after 15mins this notifi is triggered and scheduled...
@@ -1163,16 +1438,16 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
     private void collectEmergencyData() {
         EncounterDTO encounterDTO = encounterDAO.getEncounterByVisitUUIDLimit1(visitUuid);
         if (encounterDTO == null) return;
-        Log.d(TAG, "collectEmergencyData: encounterDTO : "+new Gson().toJson(encounterDTO));
+        Log.d(TAG, "collectEmergencyData: encounterDTO : " + new Gson().toJson(encounterDTO));
 
         String latestEncounterName = encounterDAO.getEncounterTypeNameByUUID(encounterDTO.getEncounterTypeUuid());
-        Log.d("kzsos", "collectEmergencyData: latestEncounterName : "+latestEncounterName);
+        Log.d("kzsos", "collectEmergencyData: latestEncounterName : " + latestEncounterName);
         int currentStage = -1;
-        int currentHour  = -1;
+        int currentHour = -1;
 
         if (latestEncounterName != null && !latestEncounterName.isEmpty()) {
             String name = latestEncounterName.toLowerCase();
-            Log.d("kzsos", "collectEmergencyData: name : "+name);
+            Log.d("kzsos", "collectEmergencyData: name : " + name);
 
             if (!name.contains("stage") || !name.contains("hour")) return;
             String[] parts = name
@@ -1182,20 +1457,20 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 
             if (parts.length != 3) return;
             currentStage = Integer.parseInt(parts[0]);
-            currentHour  = Integer.parseInt(parts[1]);
-            Log.d("kzsos", "collectEmergencyData: currentStage : "+currentStage);
-            Log.d("kzsos", "collectEmergencyData: currentHour : "+currentHour);
+            currentHour = Integer.parseInt(parts[1]);
+            Log.d("kzsos", "collectEmergencyData: currentStage : " + currentStage);
+            Log.d("kzsos", "collectEmergencyData: currentHour : " + currentHour);
 
         }
 
         if (currentStage == -1 || currentHour == -1) return;
         int cardNumber = 1;
         EncounterDTO lastSosEncounter = encounterDAO.getSosEncounterByVisitUUIDLimit1(visitUuid);
-        Log.d("kzsos", "collectEmergencyData: lastSosEncounter : "+new Gson().toJson(lastSosEncounter));
+        Log.d("kzsos", "collectEmergencyData: lastSosEncounter : " + new Gson().toJson(lastSosEncounter));
 
         if (lastSosEncounter != null) {
             String latestSosObs = new ObsDAO().getLatestSosObsByEncounterUuid(lastSosEncounter.getUuid());
-            Log.d("kzsos", "collectEmergencyData: latestSosObs : "+new Gson().toJson(latestSosObs));
+            Log.d("kzsos", "collectEmergencyData: latestSosObs : " + new Gson().toJson(latestSosObs));
 
             if (latestSosObs != null && !latestSosObs.isEmpty()
                     && latestSosObs.toLowerCase().contains("stage")
@@ -1212,27 +1487,28 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 
                     if (parts.length == 3) {
                         int lastStage = Integer.parseInt(parts[0]);
-                        int lastHour  = Integer.parseInt(parts[1]);
-                        int lastSOS   = Integer.parseInt(parts[2]);
+                        int lastHour = Integer.parseInt(parts[1]);
+                        int lastSOS = Integer.parseInt(parts[2]);
 
                         if (lastStage == currentStage && lastHour == currentHour) {
                             cardNumber = lastSOS + 1;
                         }
                     }
-                    Log.d("kzsos", "collectEmergencyData: cardNumber : "+cardNumber);
-                } catch (NumberFormatException ignored) {}
+                    Log.d("kzsos", "collectEmergencyData: cardNumber : " + cardNumber);
+                } catch (NumberFormatException ignored) {
+                }
             }
         }
 
         String nextEncounterTypeName = "Stage" + currentStage + "_Hour" + currentHour + "_SOS" + cardNumber;
         String encounterUuid = UUID.randomUUID().toString();
-        Log.d("kzsos", "collectEmergencyData: nextEncounterTypeName : "+nextEncounterTypeName);
+        Log.d("kzsos", "collectEmergencyData: nextEncounterTypeName : " + nextEncounterTypeName);
         //1 Create sos encounter
         try {
             EncounterDTO sosEncounter = new EncounterDTO();
             sosEncounter.setUuid(encounterUuid);
             sosEncounter.setVisituuid(encounterDTO.getVisituuid());
-            sosEncounter.setEncounterTime( DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
+            sosEncounter.setEncounterTime(DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
             sosEncounter.setProvideruuid(encounterDTO.getProvideruuid());
             sosEncounter.setEncounterTypeUuid(UuidDictionary.LCG_SOS);
             sosEncounter.setVoided(encounterDTO.getVoided());
@@ -1254,7 +1530,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
             obsDAO.insertObs(obsDTO);
 
         } catch (DAOException e) {
-            Log.d(TAG, "collectEmergencyData: e : "+e.getLocalizedMessage());
+            Log.d(TAG, "collectEmergencyData: e : " + e.getLocalizedMessage());
             e.printStackTrace();
             throw new RuntimeException(e);
         }
@@ -1265,17 +1541,17 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         fetchAllEncountersFromVisitForTimelineScreen(visitUuid);
     }
 
-  /*  private void showErrorOnNoInternet() {
-        AppDialogUtils.showSingleButtonDialog(
-                this,
-                getString(R.string.no_internet_timeline_screen_title),
-                getString(R.string.no_internet_timeline_screen_body),
-                getString(R.string.ok),
-                () -> {
-                    return null;
-                }
-        );
-    }*/
+    /*  private void showErrorOnNoInternet() {
+          AppDialogUtils.showSingleButtonDialog(
+                  this,
+                  getString(R.string.no_internet_timeline_screen_title),
+                  getString(R.string.no_internet_timeline_screen_body),
+                  getString(R.string.ok),
+                  () -> {
+                      return null;
+                  }
+          );
+      }*/
     private void showNoDataDialogForViewLcg() {
         AppDialogUtils.showSingleButtonDialog(
                 this,

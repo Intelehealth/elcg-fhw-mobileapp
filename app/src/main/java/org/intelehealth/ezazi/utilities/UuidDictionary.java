@@ -153,4 +153,10 @@ public class UuidDictionary {
     public static final String NEONATAL_DEATH = "dfa09987-96f2-46ae-846b-972f88b898a2";
     public static final String NEWBORN_DISCHARGE_TYPE = "6f461764-e68b-47c0-9459-6f5c13292551";
 
+    //provider ward type either it can be ward or postnatal
+    //added it to filter based on the ward
+    public static final String PROVIDER_WARD = "af56439d-5e7f-42e7-9249-6a894b07eb51";
+
+
+
 }

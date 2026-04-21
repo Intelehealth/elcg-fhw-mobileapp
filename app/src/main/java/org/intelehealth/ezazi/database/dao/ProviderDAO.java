@@ -8,7 +8,9 @@ import android.database.sqlite.SQLiteDatabase;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 
 import org.intelehealth.ezazi.app.AppConstants;
+import org.intelehealth.ezazi.app.IntelehealthApplication;
 import org.intelehealth.ezazi.models.dto.ProviderDTO;
+import org.intelehealth.ezazi.utilities.SessionManager;
 import org.intelehealth.ezazi.utilities.exception.DAOException;
 
 import java.util.ArrayList;
@@ -246,12 +248,50 @@ public class ProviderDAO {
         return providersList;
     }
 
-    public List<ProviderDTO> getNurseList() throws DAOException {
+    public List<ProviderDTO> getNurseList(
+            Boolean isFromHome
+    ) throws DAOException {
         List<ProviderDTO> providersList = new ArrayList<>();
+        String providerId = new SessionManager(IntelehealthApplication.getAppContext()).getProviderID();
+        String ward = checkNurseWard(providerId);
         SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
         db.beginTransaction();
         try {
+            // EZ-757
+            // Filtering nurses based on ward assignment
+
+            // Default behavior:
+            // - If nurse is assigned to "Labor Ward":
+            //     → Return nurses from "Labor Ward" + "Unassigned Ward"
+            // - If nurse is assigned to "Postnatal Ward":
+            //     → Return nurses from "Postnatal Ward" + "Unassigned Ward"
+            // - If nurse has no ward or is "Unassigned Ward":
+            //     → Return only "Unassigned Ward" nurses
+
+            // Special case: When called from Timeline Activity and we need to shift the patient to postnatal ward:
+            // - If nurse is assigned to "Labor Ward":
+            //     → Return nurses from "Postnatal Ward" + "Unassigned Ward"
+            //   (This overrides the default behavior for Labor Ward in timeline context)
+
+            // Note:
+            // - "Unassigned Ward" nurses are always included where applicable
             String query = "select * from tbl_provider where role='Organizational: Nurse'";
+            if(ward.equals("Labor Ward") && isFromHome){
+                query = "select p.*, pa.* from tbl_provider as p " +
+                        "left join tbl_provider_attribute as pa on  p.uuid = pa.provideruuid " +
+                        "where p.role='Organizational: Nurse'" +
+                        "and (pa.value is null or pa.value != 'Post Natal Ward') order by pa.value desc";
+            }else if(ward.equals("Post Natal Ward") && isFromHome){
+                query = "select p.*, pa.* from tbl_provider as p " +
+                        "left join tbl_provider_attribute as pa on  p.uuid = pa.provideruuid " +
+                        "where p.role='Organizational: Nurse'" +
+                        "and (pa.value is null or pa.value != 'Labor Ward') order by pa.value desc";
+            }else if(ward.equals("Labor Ward") && !isFromHome){
+                query = "select p.*, pa.* from tbl_provider as p " +
+                        "left join tbl_provider_attribute as pa on  p.uuid = pa.provideruuid " +
+                        "where p.role='Organizational: Nurse'" +
+                        "and (pa.value is null or pa.value != 'Labor Ward') order by pa.value desc";
+            }
             Cursor cursor = db.rawQuery(query, new String[]{});
             if (cursor.getCount() != 0) {
                 while (cursor.moveToNext()) {
@@ -278,6 +318,30 @@ public class ProviderDAO {
 
         }
         return providersList;
+    }
+
+    public String checkNurseWard(String providerUuid) throws DAOException {
+        String wardType = "";
+        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
+        db.beginTransaction();
+        try {
+            String query = "select value from tbl_provider_attribute where provideruuid = ?";
+            Cursor cursor = db.rawQuery(query, new String[]{providerUuid});
+            if (cursor.getCount() != 0) {
+                while (cursor.moveToNext()) {
+                    wardType = cursor.getString(cursor.getColumnIndexOrThrow("value"));
+                }
+            }
+            cursor.close();
+            db.setTransactionSuccessful();
+        } catch (SQLException s) {
+            FirebaseCrashlytics.getInstance().recordException(s);
+            throw new DAOException(s);
+        } finally {
+            db.endTransaction();
+
+        }
+        return wardType;
     }
 
     public String getUserUuid(String providerUuid) throws DAOException {

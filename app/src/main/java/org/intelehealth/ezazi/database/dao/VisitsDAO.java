@@ -277,7 +277,7 @@ public class VisitsDAO {
             }
         }
         idCursor.close();
-       // db.setTransactionSuccessful();
+        // db.setTransactionSuccessful();
         //db.endTransaction();
 
 //        List<VisitAttribute_Speciality> list = new ArrayList<>();
@@ -335,7 +335,7 @@ public class VisitsDAO {
         idCursor.close();
         db.setTransactionSuccessful();
         db.endTransaction();
-         db.close();
+        db.close();
         return visitDTOList;
     }
 
@@ -554,12 +554,12 @@ public class VisitsDAO {
 //            }
 //        }
 //        idCursor.close();
-////        db.setTransactionSuccessful();
-////        db.endTransaction();
+
+    /// /        db.setTransactionSuccessful();
+    /// /        db.endTransaction();
 //        // db.close();
 //        return visitDTOList;
 //    }
-
     public List<VisitDTO> getAllActiveVisitByProviderId(String providerId) {
         List<VisitDTO> visitDTOList = new ArrayList<>();
         SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
@@ -642,4 +642,30 @@ public class VisitsDAO {
         }
     }
 
+    public boolean isVisitActive(String visitUuid, String providerId) {
+        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
+
+        String query = new QueryBuilder()
+                .select("1")
+                .from("tbl_visit V")
+                .join("LEFT OUTER JOIN tbl_visit_attribute VA ON VA.visit_uuid = V.uuid")
+                .where("V.uuid == ? and V.uuid NOT IN (SELECT visituuid FROM tbl_encounter WHERE encounter_type_uuid = ?) " +
+                        "AND V.voided = ? AND VA.value = ? AND (V.enddate IS NULL OR V.enddate = '')")
+
+                .build();
+
+        String[] selectionArgs = new String[]{visitUuid, ENCOUNTER_VISIT_COMPLETE, "0", providerId};
+
+        boolean isActive = false;
+        try (Cursor cursor = db.rawQuery(query, selectionArgs)) {
+
+            // If cursor has at least one row, visit is active
+            isActive = cursor.moveToFirst();
+
+        } catch (Exception e) {
+            Log.e(TAG, "Error checking active visit for provider", e);
+        }
+
+        return isActive;
+    }
 }

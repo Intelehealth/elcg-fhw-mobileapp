@@ -208,6 +208,15 @@ public class InteleHealthDatabaseHelper extends SQLiteOpenHelper {
             "sync TEXT DEFAULT 'false' " +
             ")";
 
+    //provider attribute table
+    public static final String CREATE_PROVIDER_ATTRIBUTE =
+            "CREATE TABLE IF NOT EXISTS tbl_provider_attribute (" +
+                    "uuid TEXT PRIMARY KEY," +
+                    "provideruuid TEXT," +
+                    "attributetypeuuid TEXT," +
+                    "value TEXT," +
+                    "voided TEXT" +
+                    ")";
 
     public InteleHealthDatabaseHelper(@Nullable Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -356,6 +365,7 @@ public class InteleHealthDatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_VISIT_ATTRIBUTES);
         db.execSQL(CREATE_RTC_LOGS);
         db.execSQL(CREATE_APPOINTMENTS);
+        db.execSQL(CREATE_PROVIDER_ATTRIBUTE);
         uuidInsert(db);
         database = db;
 
@@ -371,7 +381,8 @@ public class InteleHealthDatabaseHelper extends SQLiteOpenHelper {
             case 3:
                 //upgrade logic from version 3 to 4
             case 4:
-                //upgrade logic from version 4
+                db.execSQL(CREATE_PROVIDER_ATTRIBUTE);
+                break;
             default:
                 throw new IllegalStateException(
                         "onUpgrade() with unknown oldVersion " + oldVersion);
