@@ -49,6 +49,12 @@
         android:usesCleartextTraffic="true"
         tools:ignore="UnusedAttribute, LockedOrientationActivity, DiscouragedApi"
         tools:replace="allowBackup">
+
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
+
         <activity
             android:name=".stage3.WomenDeliveryDetailsActivity"
             android:configChanges="orientation|keyboardHidden|screenSize|uiMode"
@@ -114,6 +120,15 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="org.intelehealth.app.RTC_MESSAGING_EVENT" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".optimized_sync.BootCompleteReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
 

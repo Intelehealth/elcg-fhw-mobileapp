@@ -386,7 +386,7 @@ public class PatientDetailActivity extends BaseActionBarActivity {
 
                 } catch (DAOException e) {
                     e.printStackTrace();
-                    Log.d(TAG, "onClick: e message : "+e.getLocalizedMessage());
+                    Log.d(TAG, "onClick: e message : " + e.getLocalizedMessage());
                     FirebaseCrashlytics.getInstance().recordException(e);
                 }
                 // end - visit
@@ -540,7 +540,7 @@ public class PatientDetailActivity extends BaseActionBarActivity {
 
     @Override
     protected void onStart() {
-       // registerReceiver(reMyreceive, filter);
+        // registerReceiver(reMyreceive, filter);
         ContextCompat.registerReceiver(this, reMyreceive, filter, ContextCompat.RECEIVER_EXPORTED);
 
         super.onStart();
@@ -733,7 +733,6 @@ public class PatientDetailActivity extends BaseActionBarActivity {
 //            sessionManager.setOfllineOpenMRSID(patient_new.getOpenmrs_id());
         } else {
             idView.setText(getString(R.string.patient_not_registered));
-            newVisit.setEnabled(false);
         }
 
         setTitle(patient.getOpenmrs_id());
@@ -1086,11 +1085,8 @@ public class PatientDetailActivity extends BaseActionBarActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             try {
-                String patientId = patientsDAO.getOpenmrsId(patientUuid);
                 String id = "Patient ID: " + patientsDAO.getOpenmrsId(patientUuid);
                 idView.setText(id);
-                if (patientId == null) newVisit.setEnabled(false);
-                else newVisit.setEnabled(true);
             } catch (DAOException e) {
                 FirebaseCrashlytics.getInstance().recordException(e);
             }

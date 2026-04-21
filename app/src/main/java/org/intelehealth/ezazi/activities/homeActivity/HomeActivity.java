@@ -92,6 +92,7 @@ import org.intelehealth.ezazi.models.dto.EncounterDTO;
 import org.intelehealth.ezazi.models.dto.ObsDTO;
 import org.intelehealth.ezazi.models.dto.ProviderDTO;
 import org.intelehealth.ezazi.models.dto.VisitDTO;
+import org.intelehealth.ezazi.optimized_sync.OptimizedSyncWorker;
 import org.intelehealth.ezazi.partogram.PartogramConstants;
 import org.intelehealth.ezazi.services.firebase_services.CallListenerBackgroundService;
 import org.intelehealth.ezazi.services.firebase_services.DeviceInfoUtils;
@@ -359,8 +360,9 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_ezazi);
-
         sessionManager = new SessionManager(this);
+        OptimizedSyncWorker.enqueuePeriodicWork(this);
+
         Log.e(TAG, "onNext: setChwname" + sessionManager.getChwname());
         Log.e(TAG, "onNext: setCreatorID" + sessionManager.getCreatorID());
         Log.e(TAG, "onNext: setSessionID" + sessionManager.getSessionID());
@@ -562,7 +564,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
                     } catch (DAOException e) {
                         e.printStackTrace();
                     }
-                }else{
+                } else {
                     showErrorOnNoInternet();
                 }
 
@@ -791,10 +793,6 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
             sync();
         }
         enableProperPadding(HomeActivity.this);
-
-        if (!NetworkConnection.isOnline(context)) {
-            showErrorOnNoInternet();
-        }
         calculateRiskForAllVisits();
     }
 
@@ -1058,7 +1056,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
                         PartogramConstants.Params.URINE_ACETONE.conceptId,
                         PartogramConstants.Params.CONTRACTION_PER_10_MIN.conceptId,
                         PartogramConstants.Params.DURATION_OF_CONTRACTION.conceptId
-                        ));
+                ));
                 int red = 2, yellow = 1, green = 0;
                 int r_count = 0, y_count = 0, g_count = 0;
                 int count = 0;
@@ -1069,7 +1067,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
                 // 1) Load encounters of this visit ordered by time (latest → oldest)
                 List<EncounterDTO> encounterList =
                         encounterDAO.getAllEncountersByVisitUuid(activePatientModels.get(j).getUuid());
-                Log.d(TAG, "loadVisits: encounterList : "+encounterList.size());
+                Log.d(TAG, "loadVisits: encounterList : " + encounterList.size());
                /* Collections.sort(encounterList, (e1, e2) ->
                         e2.getEncounterTime().compareTo(e1.getEncounterTime())
                 );*/
@@ -1117,7 +1115,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
 
                 // Now use encounterToUse for alert calculation
                 if (encounterToUse != null && !encounterToUse.isEmpty()) {
-                //if (encounterUUID != null && !encounterUUID.equalsIgnoreCase("")) {
+                    //if (encounterUUID != null && !encounterUUID.equalsIgnoreCase("")) {
                     obsDTOList = obsDAO.obsCommentList(encounterToUse);
                     if (obsDTOList != null) {
                         for (int i = 0; i < obsDTOList.size(); i++) {
@@ -1180,8 +1178,8 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
                                     " | Total: " + count +
                                     " | VisibilityOrder: " + activePatientModels.get(j).getVisibilityOrder());
 
-               // }
-}
+                    // }
+                }
             }
 
             // #-- Alert logic -- end
@@ -1582,7 +1580,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
      * @return void
      */
     public void logout() {
-
+        OptimizedSyncWorker.cancelPeriodicWork(this);
         OfflineLogin.getOfflineLogin().setOfflineLoginStatus(false);
 
 //        parseLogOut();
@@ -2345,6 +2343,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
         search = query;
         return false;
     }
+
     private void loadVisits() {
 
         // Step 1: get visits
@@ -2360,8 +2359,8 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
 
     private void showOnHomeScreen(List<ActivePatientModel> visits) {
         Collections.sort(visits, (v1, v2) -> Integer.compare(
-                        v2.getVisibilityOrder(),
-                        v1.getVisibilityOrder())
+                v2.getVisibilityOrder(),
+                v1.getVisibilityOrder())
         );
 
         mActivePatientAdapter = new ActivePatientAdapter(visits, new ArrayList<>(visits), this, listPatientUUID, sessionManager);
@@ -2370,6 +2369,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
         setActiveCasesCount();
         showDecisionPendingVisits();
     }
+
     private void showErrorOnNoInternet() {
         AppDialogUtils.showSingleButtonDialog(
                 this,
@@ -2382,6 +2382,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
                 }
         );
     }
+
     private void showErrorOnNoInternetOnRefresh() {
         AppDialogUtils.showSingleButtonDialog(
                 this,
@@ -2394,6 +2395,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
                 }
         );
     }
+
     public void calculateRiskForAllVisits() {
         int offset = 0;
         int batchSize = 100; // batch size
@@ -2402,17 +2404,17 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
 
         do {
             visitsForRiskFactorCalculation = new VisitQueryResultBinder().executeVisitsQueryForRiskCalculation(offset, batchSize);
-            if (visitsForRiskFactorCalculation !=null && !visitsForRiskFactorCalculation.isEmpty()) {
+            if (visitsForRiskFactorCalculation != null && !visitsForRiskFactorCalculation.isEmpty()) {
                 VisitAlertBridgeForRiskCalculations.processVisits(scope, visitsForRiskFactorCalculation, result -> {
                     VisitsDAO visitsDAO = new VisitsDAO();
-                        try {
-                            for (ActivePatientModel visit : result) {
-                                visitsDAO.updateVisitSync(visit.getUuid(), "false");
-                            }
-                        } catch (DAOException e) {
-                            e.printStackTrace();
-                            throw new RuntimeException(e);
+                    try {
+                        for (ActivePatientModel visit : result) {
+                            visitsDAO.updateVisitSync(visit.getUuid(), "false");
                         }
+                    } catch (DAOException e) {
+                        e.printStackTrace();
+                        throw new RuntimeException(e);
+                    }
 
                     boolean isSynced = syncUtils.syncForeground("visitSummary");
 

@@ -19,6 +19,7 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.annotation.StringRes;
+import androidx.core.content.IntentCompat;
 import androidx.lifecycle.LifecycleCoroutineScope;
 import androidx.lifecycle.LifecycleOwnerKt;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -29,7 +30,10 @@ import com.google.gson.Gson;
 import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.activities.epartogramActivity.EpartogramViewActivity;
 import org.intelehealth.ezazi.activities.homeActivity.VisitAlertBridge;
+import org.intelehealth.ezazi.activities.splash_activity.SplashActivity;
+import org.intelehealth.ezazi.activities.visitSummaryActivity.TimelineVisitSummaryActivity;
 import org.intelehealth.ezazi.app.AppConstants;
+import org.intelehealth.ezazi.app.IntelehealthApplication;
 import org.intelehealth.ezazi.database.dao.EncounterDAO;
 import org.intelehealth.ezazi.database.dao.ObsDAO;
 import org.intelehealth.ezazi.database.dao.PatientsDAO;
@@ -39,6 +43,7 @@ import org.intelehealth.ezazi.models.ActivePatientModel;
 import org.intelehealth.ezazi.models.dto.EncounterDTO;
 import org.intelehealth.ezazi.models.dto.ObsDTO;
 import org.intelehealth.ezazi.partogram.adapter.PartogramQueryListingAdapter;
+import org.intelehealth.ezazi.partogram.model.Medicine;
 import org.intelehealth.ezazi.partogram.model.ParamInfo;
 import org.intelehealth.ezazi.partogram.model.PartogramItemData;
 import org.intelehealth.ezazi.partogram.model.ValidatePartogramFields;
@@ -46,6 +51,7 @@ import org.intelehealth.ezazi.partogram.utils.DataCaptureGenericRadioFieldHandle
 import org.intelehealth.ezazi.partogram.utils.ValidateStage3Fields;
 import org.intelehealth.ezazi.stage3.Utils.DeliveryDetailsConcept;
 import org.intelehealth.ezazi.syncModule.SyncUtils;
+import org.intelehealth.ezazi.ui.dialog.AppDialogUtils;
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
 import org.intelehealth.ezazi.ui.dialog.SingleChoiceDialogFragment;
@@ -53,6 +59,8 @@ import org.intelehealth.ezazi.ui.dialog.model.SingChoiceItem;
 import org.intelehealth.ezazi.ui.rtc.activity.EzaziChatActivity;
 import org.intelehealth.ezazi.ui.rtc.activity.EzaziVideoCallActivity;
 import org.intelehealth.ezazi.ui.rtc.call.CallInitializer;
+import org.intelehealth.ezazi.ui.visit.model.LabourInfo;
+import org.intelehealth.ezazi.utilities.DateAndTimeUtils;
 import org.intelehealth.ezazi.utilities.InternetDialogHelper;
 import org.intelehealth.ezazi.utilities.NetworkConnection;
 import org.intelehealth.ezazi.utilities.SessionManager;
@@ -63,6 +71,7 @@ import org.intelehealth.klivekit.socket.SocketManager;
 import org.intelehealth.klivekit.utils.DateTimeUtils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -350,9 +359,6 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
 
 
     private void saveObs() throws DAOException {
-        boolean isInternetAvailable = InternetDialogHelper.checkInternetOrShow(PartogramDataCaptureActivity.this);
-       /* if(!isInternetAvailable)
-            return;*/
 
             // Stage 3 Validation (ONLY for Stage 3)
         if (mStageNumber == PartogramConstants.STAGE_3) {
@@ -705,7 +711,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                         ParamInfo info = mItemList.get(j).getParamInfoList().get(k);
                         if (obsDTO.getConceptuuid().equals(info.getConceptUUID())) {
                             if (obsDTO.getConceptuuid().equals(UuidDictionary.MEDICINE)) {
-                                Log.d(TAG, "setEditData: obsDTO.getValue() :: "+obsDTO.getValue());
+                                Log.d(TAG, "setEditData: obsDTO.getValue() :: " + obsDTO.getValue());
                                 if (obsDTO.getValue() != null && !obsDTO.getValue().isEmpty() && !obsDTO.getValue().equalsIgnoreCase("no")) {
                                     //info.setCapturedValue(obsDTO.getValue());
                                     info.setCapturedValue(ParamInfo.RadioOptions.YES.name());
@@ -971,7 +977,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
 */
 
     private ObsDTO buildOxytocinIvFluidData(String uuid, ParamInfo info) {
-        Log.d(TAG, "buildOxytocinIvFluidData: info : "+new Gson().toJson(info));
+        Log.d(TAG, "buildOxytocinIvFluidData: info : " + new Gson().toJson(info));
         ObsDTO obs = new ObsDTO();
         obs.setUuid(uuid);
         obs.setConceptuuid(info.getConceptUUID());
@@ -983,6 +989,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
         obs.setCreatorUuid(new SessionManager(this).getCreatorID());
         return obs;
     }
+
     private void showToast(boolean isSynced) {
         if (isSynced) {
             Toast.makeText(this, "Data uploaded successfully!", Toast.LENGTH_SHORT).show();
