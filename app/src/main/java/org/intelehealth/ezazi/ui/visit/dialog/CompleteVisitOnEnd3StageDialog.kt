@@ -41,7 +41,7 @@ class CompleteVisitOnEnd3StageDialog(
 
         showCustomViewDialog(
             R.string.complete_case,
-            R.string.yes,
+            R.string.save_button,
             R.string.cancel,
             binding.root
         ) { saveStage3Outcome() }
