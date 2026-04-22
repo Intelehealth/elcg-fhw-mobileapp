@@ -24,6 +24,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
@@ -43,7 +44,11 @@ import org.intelehealth.ezazi.partogram.model.Medication;
 import org.intelehealth.ezazi.partogram.model.Medicine;
 import org.intelehealth.ezazi.partogram.model.ParamInfo;
 import org.intelehealth.ezazi.partogram.model.PartogramItemData;
+import org.intelehealth.ezazi.partogram.utils.DataCaptureGenericRadioFieldHandler;
+import org.intelehealth.ezazi.partogram.utils.MultiSelectDropdownHandlerForDataCapture;
+import org.intelehealth.ezazi.stage3.Utils.GenericMultiChoiceAdapter;
 import org.intelehealth.ezazi.ui.dialog.CustomViewDialogFragment;
+import org.intelehealth.ezazi.ui.dialog.MultiChoiceDialogFragment;
 import org.intelehealth.ezazi.ui.dialog.SingleChoiceDialogFragment;
 import org.intelehealth.ezazi.ui.dialog.model.SingChoiceItem;
 import org.intelehealth.ezazi.ui.prescription.activity.AdministeredActivity;
@@ -84,7 +89,7 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         public void onSelect(PartogramItemData partogramItemData);
     }
 
-    private interface OnRadioCheckedListener {
+    public interface OnRadioCheckedListener {
         void onCheckedYes();
 
         void onCheckedNo();
@@ -93,17 +98,36 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
     private OnItemSelection mOnItemSelection;
     private int currentChildFocusedIndex = -1;
     private PartogramConstants.AccessMode accessMode;
-
+    private DataCaptureGenericRadioFieldHandler radioHandler;
+    // existing field
+    // add this
+    private MultiSelectDropdownHandlerForDataCapture multiSelectHandler;
     public PartogramQueryListingAdapter(RecyclerView recyclerView, String visitUuid, Context context, List<PartogramItemData> itemList, OnItemSelection onItemSelection) {
         mContext = context;
         mVisitUuid = visitUuid;
         mItemList = itemList;
         mOnItemSelection = onItemSelection;
+
+        radioHandler = new DataCaptureGenericRadioFieldHandler();
+
+        multiSelectHandler = new MultiSelectDropdownHandlerForDataCapture(
+                context,
+                ((AppCompatActivity) context).getSupportFragmentManager(),
+                accessMode != null ? accessMode : PartogramConstants.AccessMode.READ
+        );
+
     }
 
     public void setAccessMode(PartogramConstants.AccessMode accessMode) {
         Log.d(TAG, "setAccessMode: accessMode :: kk :: " + accessMode);
         this.accessMode = accessMode;
+
+        // keep handler in sync
+        multiSelectHandler = new MultiSelectDropdownHandlerForDataCapture(
+                mContext,
+                ((AppCompatActivity) mContext).getSupportFragmentManager(),
+                accessMode
+        );
     }
 
     @Override
@@ -127,7 +151,14 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
             genericViewHolder.containerLinearLayout.removeAllViews();
             for (int i = 0; i < genericViewHolder.partogramItemData.getParamInfoList().size(); i++) {
                 ParamInfo paramInfo = genericViewHolder.partogramItemData.getParamInfoList().get(i);
-                if (paramInfo.getParamDateType().equalsIgnoreCase(PartogramConstants.INPUT_TXT_TYPE) || paramInfo.getParamDateType().equalsIgnoreCase(PartogramConstants.INPUT_DOUBLE_4_DIG_TYPE) || paramInfo.getParamDateType().equalsIgnoreCase(PartogramConstants.INPUT_INT_1_DIG_TYPE) || paramInfo.getParamDateType().equalsIgnoreCase(PartogramConstants.INPUT_INT_2_DIG_TYPE) || paramInfo.getParamDateType().equalsIgnoreCase(PartogramConstants.INPUT_INT_3_DIG_TYPE)) {
+                Log.d("STAGE3_DEBUG",
+                        "Name: " + paramInfo.getParamName() +
+                                " Type: " + paramInfo.getParamDateType()
+                );
+                Log.d("OPTIONS_CHECK",
+                        paramInfo.getParamName() + " options: " + Arrays.toString(paramInfo.getOptions())
+                );
+                if (paramInfo.getParamDateType().equalsIgnoreCase(PartogramConstants.INPUT_TXT_TYPE) || paramInfo.getParamDateType().equalsIgnoreCase(PartogramConstants.INPUT_DOUBLE_4_DIG_TYPE) || paramInfo.getParamDateType().equalsIgnoreCase(PartogramConstants.INPUT_INT_1_DIG_TYPE) || paramInfo.getParamDateType().equalsIgnoreCase(PartogramConstants.INPUT_INT_2_DIG_TYPE) || paramInfo.getParamDateType().equalsIgnoreCase(PartogramConstants.INPUT_INT_3_DIG_TYPE) || paramInfo.getParamDateType().equalsIgnoreCase(PartogramConstants.INPUT_INT_4_DIG_TYPE)) {
                     View tempView = View.inflate(mContext, R.layout.parto_lbl_etv_view_ezazi, null);
                     tempView.setTag(genericViewHolder.containerLinearLayout);
                     showUserInputBox(tempView, position, i, paramInfo.getParamDateType());
@@ -142,23 +173,32 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
                     genericViewHolder.containerLinearLayout.addView(tempView);
                 } else if (paramInfo.getParamDateType().equalsIgnoreCase(PartogramConstants.RADIO_SELECT_TYPE)) {
                     View tempView = null;
-                    if (!paramInfo.getConceptUUID().isEmpty() && paramInfo.getConceptUUID().equals(UuidDictionary.IV_FLUIDS)) {
+                   String conceptId =  paramInfo.getConceptUUID();
+                    if (conceptId != null && conceptId.equals(UuidDictionary.IV_FLUIDS)) {
                         tempView = View.inflate(mContext, R.layout.parto_lbl_radio_view_ezazi, null);
-                    } else if (!paramInfo.getConceptUUID().isEmpty() && paramInfo.getConceptUUID().equals(UuidDictionary.OXYTOCIN_UL_DROPS_MIN)) {
+                    } else if (conceptId != null && conceptId.equals(UuidDictionary.OXYTOCIN_UL_DROPS_MIN)) {
                         tempView = View.inflate(mContext, R.layout.parto_lbl_radio_view_oxytocin, null);
-                    } else if (!paramInfo.getConceptUUID().isEmpty() && paramInfo.getConceptUUID().equals(UuidDictionary.MEDICINE)) {
+                    } else if (conceptId != null && !paramInfo.getConceptUUID().isEmpty() && paramInfo.getConceptUUID().equals(UuidDictionary.MEDICINE)) {
                         tempView = View.inflate(mContext, R.layout.parto_labl_radio_view_medicine, null);
-                    } else if (!paramInfo.getConceptUUID().isEmpty() && paramInfo.getConceptUUID().equals(UuidDictionary.PLAN)) {
+                    } else if (conceptId != null && !paramInfo.getConceptUUID().isEmpty() && paramInfo.getConceptUUID().equals(UuidDictionary.PLAN)) {
                         tempView = View.inflate(mContext, R.layout.parto_labl_radio_view_plan, null);
-                    } else if (!paramInfo.getConceptUUID().isEmpty() && paramInfo.getConceptUUID().equals(UuidDictionary.ASSESSMENT)) {
+                    } else if (conceptId != null && !paramInfo.getConceptUUID().isEmpty() && paramInfo.getConceptUUID().equals(UuidDictionary.ASSESSMENT)) {
                         tempView = View.inflate(mContext, R.layout.parto_labl_radio_view_assessment, null);
+                    }else{
+                        tempView = View.inflate(mContext, R.layout.parto_lbl_radio_view_ezazi, null);
                     }
                     if (tempView != null) {
                         showRadioOptionBox(tempView, position, i);
                         genericViewHolder.containerLinearLayout.addView(tempView);
                     }
 
-                } /*else if (paramInfo.getParamDateType().equalsIgnoreCase(PartogramConstants.RADIO_SELECT_TYPE_OXYTOCIN)) {
+                }  else if (paramInfo.getParamDateType().equalsIgnoreCase(PartogramConstants.DROPDOWN_MULTI_SELECT_TYPE)) {
+                    View tempView = View.inflate(mContext, R.layout.parto_lbl_multiselect_dropdown_view_ezazi, null);
+                    multiSelectHandler.bind(tempView, paramInfo);
+                    genericViewHolder.containerLinearLayout.addView(tempView);
+                }
+
+                /*else if (paramInfo.getParamDateType().equalsIgnoreCase(PartogramConstants.RADIO_SELECT_TYPE_OXYTOCIN)) {
                     View tempView = View.inflate(mContext, R.layout.parto_lbl_radio_view_oxytocin, null);
                     showRadioOptionBoxForOxytocin(tempView, position, i, paramInfo.getParamDateType());
                     genericViewHolder.containerLinearLayout.addView(tempView);
@@ -280,6 +320,9 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
             } else if (paramDateType.equalsIgnoreCase(PartogramConstants.INPUT_INT_2_DIG_TYPE)) {
                 dataEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(2)});
                 dataEditText.setInputType(InputType.TYPE_CLASS_NUMBER);
+            } else if (paramDateType.equalsIgnoreCase(PartogramConstants.INPUT_INT_4_DIG_TYPE)) {
+                dataEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(4)});
+                dataEditText.setInputType(InputType.TYPE_CLASS_NUMBER);
             } else {
                 dataEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(3)});
                 dataEditText.setInputType(InputType.TYPE_CLASS_NUMBER);
@@ -288,7 +331,6 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
 
         showDataRangeMessage(dataEditText, position, positionChild);
     }
-
     private void showDataRangeMessage(EditText dataEditText, int position, int positionChild) {
         isToastShownContraction = false;
         isToastShownTemperature = false;
@@ -339,7 +381,6 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         });
 
     }
-
     private void validatedTemperature(String value, ParamInfo info, EditText dataEditText) {
         //if (!value.trim().isEmpty() && value.length() == 2 && !value.startsWith(".") && info.getParamName().equalsIgnoreCase(PartogramConstants.Params.TEMPERATURE.value)) {
 
@@ -355,7 +396,7 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         // }
     }
 
-    private void showRadioOptionBox(final View tempView, final int position, final int positionChild) {
+    /*private void showRadioOptionBox(final View tempView, final int position, final int positionChild) {
         ParamInfo info = mItemList.get(position).getParamInfoList().get(positionChild);
         TextView paramNameTextView = tempView.findViewById(R.id.tvParamName);
         String title = info.getParamName();
@@ -381,8 +422,69 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
                 showRadioOptionBoxForAssessment(tempView, info, selected, title);
                 break;
         }
-    }
+    }*/
+    private void showRadioOptionBox(final View tempView,
+                                    final int position,
+                                    final int positionChild) {
 
+        ParamInfo info = mItemList.get(position).getParamInfoList().get(positionChild);
+        Log.d("RADIO_DEBUG", "Param = " + info.getParamName()
+                + " | concept = " + info.getConceptUUID()
+                + " | raw DB value = " + info.getCapturedValue());
+        TextView paramNameTextView = tempView.findViewById(R.id.tvParamName);
+        RadioGroup paramRadio = tempView.findViewById(R.id.radioYesNoGroup);
+        TextView selected = tempView.findViewById(R.id.tvSelectedValue);
+
+        paramNameTextView.setText(info.getParamName());
+
+        //fr general radio buttons- with yes no option
+        radioHandler.restoreRadioState(paramRadio, info);
+        radioHandler.syncRadioState(info, paramRadio, selected);
+
+
+        selected.setTag(info.getCapturedValue());
+        selected.setText(info.getCapturedValue());
+
+        // existing concept logic (UNCHANGED)
+        switch (info.getConceptUUID()) {
+            case UuidDictionary.IV_FLUIDS:
+                showRadioOptionBoxForIVFluid(tempView, info, selected, info.getParamName());
+                break;
+
+            case UuidDictionary.OXYTOCIN_UL_DROPS_MIN:
+                showRadioOptionBoxForOxytocin(tempView, info, selected, info.getParamName());
+                break;
+
+            case UuidDictionary.MEDICINE:
+                showRadioOptionBoxForMedicine(tempView, info, selected, info.getParamName());
+                break;
+
+            case UuidDictionary.PLAN:
+                showRadioOptionBoxForPlan(tempView, info, selected, info.getParamName());
+                break;
+
+            case UuidDictionary.ASSESSMENT:
+                showRadioOptionBoxForAssessment(tempView, info, selected, info.getParamName());
+                break;
+        }
+
+        //  attach listener (NOT only generic)
+        if (radioHandler.isGenericConcept(info.getConceptUUID())) {
+            handleGenericRadioCheckListener(paramRadio, info, new OnRadioCheckedListener() {
+
+                @Override
+                public void onCheckedYes() {
+                    info.setCapturedValue("Y");
+                    selected.setText("YES");
+                }
+
+                @Override
+                public void onCheckedNo() {
+                    info.setCapturedValue("N");
+                    selected.setText("NO");
+                }
+            });        }
+    }
     private void showRadioOptionBoxForMedicine(View tempView, ParamInfo info, TextView selected, String title) {
         PartoLablRadioViewMedicineBinding binding = PartoLablRadioViewMedicineBinding.bind(tempView);
 
@@ -728,7 +830,7 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
                     showIVFluidDialog(ivFluidInfo.getParamName(), ivFluidInfo, tempView);
                 } else {
                     final String[] items = mItemList.get(position).getParamInfoList().get(positionChild).getOptions();
-
+                    Log.d(TAG, "showListOptions: items : "+items.toString());
                     ArrayList<SingChoiceItem> choiceItems = new ArrayList<>();
                     for (int i = 0; i < items.length; i++) {
                         SingChoiceItem item = new SingChoiceItem();
@@ -861,6 +963,7 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
 
     private void handleRadioCheckListener(final View tempView, final ParamInfo info, OnRadioCheckedListener listener) {
         RadioGroup radioGroup = tempView.findViewById(R.id.radioYesNoGroup);
+
         if (info.getCapturedValue() != null && !TextUtils.isEmpty(info.getCapturedValue()) && !info.getCapturedValue().equalsIgnoreCase("NO")) {
             radioGroup.check(R.id.radioYes);
             info.setCheckedRadioOption(ParamInfo.RadioOptions.YES);
@@ -1209,5 +1312,279 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
     private void setupAssessmentCountView(TextView textView, List<ObsDTO> updated) {
         if (updated.size() == 0) textView.setText(mContext.getString(R.string.lbl_add));
         else textView.setText("" + updated.size());
+    }
+    public static void logLargeString(String tag, String message) {
+        if (message == null) return;
+
+        int maxLogSize = 2000; // safe chunk
+        for (int i = 0; i <= message.length() / maxLogSize; i++) {
+            int start = i * maxLogSize;
+            int end = Math.min((i + 1) * maxLogSize, message.length());
+            Log.d(tag, message.substring(start, end));
+        }
+    }
+
+    private void handleGenericRadioCheckListener(final RadioGroup radioGroup,
+                                                 final ParamInfo info,
+                                                 final OnRadioCheckedListener listener) {
+        String value = info.getCapturedValue();
+        radioGroup.clearCheck();
+
+        if ("YES".equalsIgnoreCase(value)) {
+            radioGroup.check(R.id.radioYes);
+            info.setCheckedRadioOption(ParamInfo.RadioOptions.YES);
+            listener.onCheckedYes();
+
+        } else if ("NO".equalsIgnoreCase(value)) {
+            radioGroup.check(R.id.radioNo);
+            info.setCheckedRadioOption(ParamInfo.RadioOptions.NO);
+            listener.onCheckedNo();
+        } else {
+            info.setCheckedRadioOption(null);
+        }
+
+        radioGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            if (checkedId == R.id.radioYes) {
+                info.setCapturedValue("YES");
+                info.setCheckedRadioOption(ParamInfo.RadioOptions.YES);
+                listener.onCheckedYes();
+
+            } else if (checkedId == R.id.radioNo) {
+                info.setCapturedValue("NO");
+                info.setCheckedRadioOption(ParamInfo.RadioOptions.NO);
+                listener.onCheckedNo();
+            }
+        });
+
+        for (int i = 0; i < radioGroup.getChildCount(); i++) {
+            radioGroup.getChildAt(i).setEnabled(
+                    accessMode != PartogramConstants.AccessMode.READ
+            );
+        }
+    }
+
+    @SuppressLint("SetTextI18n")
+    private void showMultiSelectDropdown(final View tempView,
+                                         final int position,
+                                         final int positionChild) {
+
+        TextView tvParamName          = tempView.findViewById(R.id.tvParamName);
+        TextView tvSelected           = tempView.findViewById(R.id.tvSelectedValues);
+        EditText etOther              = tempView.findViewById(R.id.etOtherText);
+        ConstraintLayout clOtherContainer = tempView.findViewById(R.id.clOtherContainer);
+
+        ParamInfo info = mItemList.get(position).getParamInfoList().get(positionChild);
+
+        // ── access-mode guard ────────────────────────────────────────────────────
+        boolean isEditable = accessMode != PartogramConstants.AccessMode.READ;
+        tvSelected.setEnabled(isEditable);
+        etOther.setEnabled(isEditable);
+
+        tvParamName.setText(info.getParamName());
+
+        // ── restore previously saved state on bind ───────────────────────────────
+        restoreMultiSelectState(info, tvSelected, etOther, clOtherContainer);
+
+        // ── open multi-choice dialog on tap ──────────────────────────────────────
+        tvSelected.setOnClickListener(v -> {
+            if (!isEditable) return;
+
+            String[] options = info.getOptions();
+            ArrayList<String> preSelected = buildPreSelectedList(info, options);
+
+            MultiChoiceDialogFragment<String> dialog =
+                    new MultiChoiceDialogFragment.Builder<String>(mContext)
+                            .title(R.string.select)
+                            .positiveButtonLabel(R.string.save_button)
+                            .build();
+            dialog.isSearchable(true);
+
+            ArrayList<String> optionList = new ArrayList<>(Arrays.asList(options));
+            GenericMultiChoiceAdapter adapter = new GenericMultiChoiceAdapter(
+                    mContext,
+                    optionList,
+                    mContext.getString(R.string.none_option));
+
+            dialog.setAdapter(adapter);
+
+            // ── pre-tick previously selected items ───────────────────────────
+            for (int i = 0; i < options.length; i++) {
+                String opt = options[i];
+                boolean shouldSelect;
+                if (opt.equalsIgnoreCase(AppConstants.OTHER_OPTION)) {
+                    String saved = info.getCapturedValue();
+                    shouldSelect = saved != null
+                            && saved.contains(AppConstants.OTHER_OPTION + "|");
+                } else {
+                    shouldSelect = preSelected.contains(opt);
+                }
+                if (shouldSelect) {
+                    adapter.selectItem(i);
+                }
+            }
+
+            dialog.setListener(selectedItems -> {
+                boolean otherPicked = selectedItems.contains(AppConstants.OTHER_OPTION);
+
+                // ── show / hide "Other" free-text row ────────────────────────
+                if (otherPicked) {
+                    clOtherContainer.setVisibility(View.VISIBLE);
+                    // pre-fill with already-typed text if present
+                    String existingOtherText = extractOtherFreeText(info.getCapturedValue());
+                    if (!existingOtherText.isEmpty()
+                            && TextUtils.isEmpty(etOther.getText())) {
+                        etOther.setText(existingOtherText);
+                    }
+                } else {
+                    clOtherContainer.setVisibility(View.GONE);
+                    etOther.setText("");
+                }
+
+                // ── update chip display text ──────────────────────────────────
+                String displayText = selectedItems.isEmpty()
+                        ? ""
+                        : String.join(", ", selectedItems);
+                tvSelected.setText(displayText);
+
+                // ── persist to capturedValue ──────────────────────────────────
+                saveMultiSelectValue(info, selectedItems,
+                        etOther.getText().toString().trim());
+            });
+
+            dialog.show(
+                    ((AppCompatActivity) mContext).getSupportFragmentManager(),
+                    MultiChoiceDialogFragment.class.getCanonicalName());
+        });
+
+        // ── "Other" EditText: update capturedValue live as user types ────────────
+        etOther.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                List<String> currentLabels = getCurrentLabelsFromView(tvSelected);
+                saveMultiSelectValue(info, currentLabels, s.toString().trim());
+            }
+        });
+    }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Restores UI state from info.getCapturedValue() when the row is bound.
+     * Stored format: "Label1,Label2,Other|<free text>"
+     */
+    private void restoreMultiSelectState(ParamInfo info,
+                                         TextView tvSelected,
+                                         EditText etOther,
+                                         ConstraintLayout clOtherContainer) {
+        String saved = info.getCapturedValue();
+        if (TextUtils.isEmpty(saved)) return;
+
+        List<String> displayParts = new ArrayList<>();
+        String otherFreeText = "";
+
+        for (String token : saved.split(",", -1)) {
+            token = token.trim();
+            if (token.startsWith(AppConstants.OTHER_OPTION + "|")) {
+                otherFreeText = token.substring(
+                        (AppConstants.OTHER_OPTION + "|").length());
+                displayParts.add(otherFreeText.isEmpty()
+                        ? AppConstants.OTHER_OPTION
+                        : AppConstants.OTHER_OPTION + ": " + otherFreeText);
+            } else if (!token.isEmpty()) {
+                displayParts.add(token);
+            }
+        }
+
+        tvSelected.setText(String.join(", ", displayParts));
+
+        if (!otherFreeText.isEmpty()) {
+            clOtherContainer.setVisibility(View.VISIBLE);
+            etOther.setText(otherFreeText);
+        } else {
+            clOtherContainer.setVisibility(View.GONE);
+        }
+    }
+
+    /**
+     * Builds plain label list from capturedValue for pre-ticking the dialog.
+     * "Other|<text>" → "Other" so the checkbox gets ticked correctly.
+     */
+    private ArrayList<String> buildPreSelectedList(ParamInfo info, String[] options) {
+        ArrayList<String> result = new ArrayList<>();
+        String saved = info.getCapturedValue();
+        if (TextUtils.isEmpty(saved)) return result;
+
+        for (String token : saved.split(",", -1)) {
+            token = token.trim();
+            if (token.startsWith(AppConstants.OTHER_OPTION + "|")) {
+                result.add(AppConstants.OTHER_OPTION);
+            } else if (!token.isEmpty()) {
+                result.add(token);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Serialises selected labels into capturedValue.
+     * Format: "Label1,Label2,Other|<free text>"
+     * "Other" with no free text is stored as "Other|"
+     */
+    private void saveMultiSelectValue(ParamInfo info,
+                                      List<String> selectedLabels,
+                                      String otherFreeText) {
+        if (selectedLabels == null || selectedLabels.isEmpty()) {
+            info.setCapturedValue("");
+            return;
+        }
+        List<String> parts = new ArrayList<>();
+        for (String label : selectedLabels) {
+            if (label.equalsIgnoreCase(AppConstants.OTHER_OPTION)) {
+                parts.add(AppConstants.OTHER_OPTION + "|" + otherFreeText);
+            } else {
+                parts.add(label);
+            }
+        }
+        info.setCapturedValue(String.join(",", parts));
+    }
+
+    /**
+     * Parses the current tvSelected display text back into plain labels.
+     * "Other: <text>" → "Other" so saveMultiSelectValue gets a clean label list.
+     */
+    private List<String> getCurrentLabelsFromView(TextView tvSelected) {
+        String text = tvSelected.getText().toString().trim();
+        if (TextUtils.isEmpty(text)) return new ArrayList<>();
+
+        List<String> labels = new ArrayList<>();
+        for (String part : text.split(",")) {
+            part = part.trim();
+            if (part.startsWith(AppConstants.OTHER_OPTION)) {
+                labels.add(AppConstants.OTHER_OPTION);
+            } else if (!part.isEmpty()) {
+                labels.add(part);
+            }
+        }
+        return labels;
+    }
+
+    /**
+     * Extracts the free text typed after "Other|" in capturedValue.
+     * Returns empty string if not found.
+     */
+    private String extractOtherFreeText(String capturedValue) {
+        if (TextUtils.isEmpty(capturedValue)) return "";
+        for (String token : capturedValue.split(",", -1)) {
+            token = token.trim();
+            if (token.startsWith(AppConstants.OTHER_OPTION + "|")) {
+                return token.substring((AppConstants.OTHER_OPTION + "|").length());
+            }
+        }
+        return "";
     }
 }

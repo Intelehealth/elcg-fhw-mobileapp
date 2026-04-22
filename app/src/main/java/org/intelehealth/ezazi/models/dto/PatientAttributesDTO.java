@@ -71,7 +71,11 @@ public class PatientAttributesDTO implements Serializable {
         SECONDARY_DOCTOR("SecondaryDoctor"),
         REGISTRATION_NUMBER("Ezazi Registration Number"),
         PROFILE_IMG_TIMESTAMP("ProfileImageTimestamp"),
-        ALTERNATE_NO("AlternateNo");
+        ALTERNATE_NO("AlternateNo"),
+        GRAVIDA("Gravida"),
+        lmp("Last Menstrual Period (LMP)"),
+        EDD("Estimated Date of Delivery (EDD)"),
+        HOSPITAL_ID("Hospital ID");
         public String value;
 
         Columns(String value) {

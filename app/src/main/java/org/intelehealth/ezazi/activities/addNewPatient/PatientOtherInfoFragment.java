@@ -1,5 +1,9 @@
 package org.intelehealth.ezazi.activities.addNewPatient;
 
+import static org.intelehealth.klivekit.utils.DateTimeUtils.getMaxEDDDate;
+import static org.intelehealth.klivekit.utils.DateTimeUtils.getMinEDDDate;
+import static org.intelehealth.klivekit.utils.DateTimeUtils.normalize;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
@@ -66,6 +70,7 @@ import org.intelehealth.ezazi.utilities.SessionManager;
 import org.intelehealth.ezazi.utilities.StringUtils;
 import org.intelehealth.ezazi.utilities.UuidGenerator;
 import org.intelehealth.ezazi.utilities.exception.DAOException;
+import org.intelehealth.ezazi.utilities.validations.FormValidationHelper;
 import org.intelehealth.klivekit.utils.DateTimeUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -94,7 +99,7 @@ public class PatientOtherInfoFragment extends Fragment {
     Context mContext;
     TextInputEditText mAdmissionDateTextView, mAdmissionTimeTextView,
             mTotalBirthEditText, mTotalMiscarriageEditText, mActiveLaborDiagnosedDateTextView,
-            mActiveLaborDiagnosedTimeTextView, mMembraneRupturedDateTextView, mMembraneRupturedTimeTextView, etBedNumber, etHospitalOther;
+            mActiveLaborDiagnosedTimeTextView, mMembraneRupturedDateTextView, mMembraneRupturedTimeTextView, etBedNumber, etHospitalOther, mGravidaEdittext, mHospitalId;
     MaterialButton btnBack, btnNext;
     TextView optionHospital, optionMaternity, optionOther;
     Intent i_privacy;
@@ -151,7 +156,12 @@ public class PatientOtherInfoFragment extends Fragment {
     private EditText etHighRisk;
     private TextView tvErrorHighRisk;
     private boolean isParityWarningDialogShown = false;
-
+    boolean isGravidaManuallyEdited = false;
+    boolean isGravidaEdited = false;
+    private String mLmpDate = "", mEDD = "";
+    private TextInputEditText mLmpDateTextView, mEDDTextView;
+    private TextView tvErrorLmpDate, tvErrorEDD,tvErrorGravida, tvErrorHospitalId;
+    private MaterialCardView cardGravida, cardLMP, cardEdd, cardHospitalId;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_patient_other_info, container, false);
@@ -195,8 +205,15 @@ public class PatientOtherInfoFragment extends Fragment {
         cardOtherRisk = view.findViewById(R.id.cardOtherRiskFactor);
         etHospitalOther = view.findViewById(R.id.et_hospital_other);
         scrollviewOtherInfo = view.findViewById(R.id.scroll_other_info);
+        mGravidaEdittext = view.findViewById(R.id.et_gravida);
 
         etHospitalOther.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
+        tvErrorLmpDate = view.findViewById(R.id.tv_lmp_error);
+        tvErrorEDD = view.findViewById(R.id.tv_edd_error);
+        mLmpDateTextView = view.findViewById(R.id.et_lmp);
+        mEDDTextView = view.findViewById(R.id.et_edd);
+        mHospitalId = view.findViewById(R.id.et_hospital_id);
+        tvErrorHospitalId = view.findViewById(R.id.tv_hospital_id_error);
 
         handleValidations();
 
@@ -275,6 +292,10 @@ public class PatientOtherInfoFragment extends Fragment {
         isUnknownChecked = patientAttributesModel.isMembraneCheckboxChecked();
         etHospitalOther.setText(patientAttributesModel.getOtherHospitalString());
         hideAllErrorFields();
+        mGravidaEdittext.setText(patientAttributesModel.getGravida());
+        mLmpDateTextView.setText(patientAttributesModel.getLmp());
+        mEDDTextView.setText(patientAttributesModel.getEdd());
+        mHospitalId.setText(patientAttributesModel.getHospitalId());
 
         if (isUnknownChecked) {
             mUnknownMembraneRupturedCheckBox.setChecked(true);
@@ -308,6 +329,11 @@ public class PatientOtherInfoFragment extends Fragment {
         tvErrorRiskFactor.setVisibility(View.GONE);
         tvErrorRiskFactor.setVisibility(View.GONE);
         tvErrorHospitalOther.setVisibility(View.GONE);
+        tvErrorGravida.setVisibility(View.GONE);
+        tvErrorLmpDate.setVisibility(View.GONE);
+        tvErrorEDD.setVisibility(View.GONE);
+        tvErrorHospital.setVisibility(View.GONE);
+
     }
 
     private void handleValidations() {
@@ -328,6 +354,7 @@ public class PatientOtherInfoFragment extends Fragment {
         tvErrorRiskFactor = view.findViewById(R.id.tv_error_risk_factor);
         tvErrorHospital = view.findViewById(R.id.tv_error_hospital);
         tvErrorHospitalOther = view.findViewById(R.id.tv_error_hospital_other);
+        tvErrorGravida = view.findViewById(R.id.tv_gravida_error);
 
 
         cardAdmissionDate = view.findViewById(R.id.card_date_admission);
@@ -344,6 +371,10 @@ public class PatientOtherInfoFragment extends Fragment {
         layoutErrorLabourOnset = view.findViewById(R.id.card_labour_onset);
         cardOptions = view.findViewById(R.id.card_options);
         cardHospitalOther = view.findViewById(R.id.card_hospital_other);
+        cardGravida = view.findViewById(R.id.card_gravida);
+        cardLMP = view.findViewById(R.id.card_lmp);
+        cardEdd = view.findViewById(R.id.card_edd);
+        cardHospitalId = view.findViewById(R.id.card_hospital_id);
 
 
         mAdmissionDateTextView.addTextChangedListener(new MyTextWatcher(mAdmissionDateTextView));
@@ -392,6 +423,23 @@ public class PatientOtherInfoFragment extends Fragment {
             }
         });
 
+
+        mGravidaEdittext.addTextChangedListener(new MyTextWatcher(mGravidaEdittext));
+        mLmpDateTextView.addTextChangedListener(new MyTextWatcher(mLmpDateTextView));
+        mEDDTextView.addTextChangedListener(new MyTextWatcher(mEDDTextView));
+        mHospitalId.addTextChangedListener(new MyTextWatcher(mHospitalId));
+
+        /*mGravidaEdittext.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                if(!mGravidaEdittext.getText().toString().isEmpty()){
+
+                }
+            }
+        });*/
+        scrollviewOtherInfo.setOnTouchListener((v, event) -> {
+            recoverGravidaIfNeeded();
+            return false;
+        });
     }
 
     private void handleOptionsForMaternity() {
@@ -493,7 +541,7 @@ public class PatientOtherInfoFragment extends Fragment {
 
     private void handleAllClickListeners() {
 
-        TextInputLayout etLayoutAdmissionDate, etLayoutAdmissionTime, etLabourDiagnosedDate, etLabourDiagnosedTime, etLayoutSacRupturedDate, etLayoutSacRupturedTime, etLayoutRiskFactors, etLayoutPrimaryDoctor, etLayoutSecondaryDoctor;
+        TextInputLayout etLayoutAdmissionDate, etLayoutAdmissionTime, etLabourDiagnosedDate, etLabourDiagnosedTime, etLayoutSacRupturedDate, etLayoutSacRupturedTime, etLayoutRiskFactors, etLayoutPrimaryDoctor, etLayoutSecondaryDoctor, etLayoutLmp, etLayoutEdd;
         etLayoutAdmissionDate = view.findViewById(R.id.etLayout_admission_date);
         etLayoutAdmissionTime = view.findViewById(R.id.etLayout_admission_time);
         etLabourDiagnosedDate = view.findViewById(R.id.etLayout_labor_diagnosed_date);
@@ -504,6 +552,10 @@ public class PatientOtherInfoFragment extends Fragment {
         etLayoutPrimaryDoctor = view.findViewById(R.id.etLayout_primary_doctor);
         etLayoutSecondaryDoctor = view.findViewById(R.id.etLayout_secondary_doctor);
         layoutSacRuptured = view.findViewById(R.id.card_sac_ruptured);
+        View layoutLmpEdd  = view.findViewById(R.id.view_lmp_edd_layout);
+
+        etLayoutLmp = layoutLmpEdd.findViewById(R.id.etLayout_lmp);
+        etLayoutEdd = layoutLmpEdd.findViewById(R.id.etLayout_edd);
 
 
         etLayoutAdmissionDate.setEndIconOnClickListener(v -> {
@@ -605,6 +657,15 @@ public class PatientOtherInfoFragment extends Fragment {
         });
         mSecondaryDoctorTextView.setOnClickListener(v -> {
             selectSecondaryDoctor();
+        });
+
+        etLayoutLmp.setEndIconOnClickListener(v -> {
+            selectDateForAll("lmpDate");
+
+        });
+        etLayoutEdd.setEndIconOnClickListener(v -> {
+            selectDateForAll("edd");
+
         });
 
         i_privacy = getActivity().getIntent();
@@ -771,7 +832,9 @@ public class PatientOtherInfoFragment extends Fragment {
             isParityWarningDialogShown = true;
             showParityWarningDialog();
         }else{
-            savePatientsDataInDb();
+            //if (validateGravida()) {
+                savePatientsDataInDb();
+            //}
         }
     }
 
@@ -1042,6 +1105,36 @@ public class PatientOtherInfoFragment extends Fragment {
 //            tvErrorBedNumber.setVisibility(View.GONE);
 //            cardBedNumber.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
 //        }
+        //gravida
+        String error = validateGravida();
+        if (error != null) {
+            FormValidationHelper.applyFieldValidation(mContext, mGravidaEdittext, tvErrorGravida, cardGravida, error);
+            errorDetailsList.add(new ErrorManagerModel(mGravidaEdittext,tvErrorGravida, error, cardGravida));
+        }
+        //lmp
+        String lmpValue = mLmpDateTextView.getText().toString();
+        String lmpError = validateLMPValue(lmpValue);
+        /*
+        if (lmpError != null) {
+            errorDetailsList.add(new ErrorManagerModel(mLmpDateTextView, tvErrorLmpDate, lmpError, cardLMP));
+        }*/
+        if(lmpValue.isEmpty()){
+            FormValidationHelper.applyFieldValidation(mContext, mLmpDateTextView, tvErrorLmpDate, cardLMP, lmpError);
+            errorDetailsList.add(new ErrorManagerModel(mLmpDateTextView, tvErrorLmpDate, lmpError, cardLMP));
+        }
+
+        //edd
+        String eddValue = mEDDTextView.getText().toString().trim();
+        //String eddError = validateEDD(eddValue);
+        if (eddValue.isEmpty()) {
+            FormValidationHelper.applyFieldValidation(mContext, mEDDTextView, tvErrorEDD, cardEdd, getString(R.string.this_field_is_mandatory));
+            errorDetailsList.add(new ErrorManagerModel(mEDDTextView, tvErrorEDD, getString(R.string.this_field_is_mandatory), cardEdd));
+        }
+        //hospital id
+        if (TextUtils.isEmpty(mHospitalId.getText().toString())) {
+            FormValidationHelper.applyFieldValidation(mContext, mHospitalId, tvErrorHospitalId, cardHospitalId, getString(R.string.this_field_is_mandatory));
+            errorDetailsList.add(new ErrorManagerModel(mHospitalId, tvErrorHospitalId, getString(R.string.this_field_is_mandatory), cardHospitalId));
+        }
 
         Log.e(TAG, "areValidFields: size of error =>" + errorDetailsList.size());
         if (errorDetailsList.size() > 0) {
@@ -1383,6 +1476,19 @@ public class PatientOtherInfoFragment extends Fragment {
                 if (name.equalsIgnoreCase("Ezazi Registration Number")) {
                     patient1.seteZaziRegNumber(idCursor1.getString(idCursor1.getColumnIndexOrThrow("value")));
                 }
+                if (name.equalsIgnoreCase("Gravida")) {
+                    patient1.setGravida(idCursor1.getString(idCursor1.getColumnIndexOrThrow("value")));
+                }
+                if (name.equalsIgnoreCase("Last Menstrual Period (LMP)")) {
+                    patient1.setLmp(idCursor1.getString(idCursor1.getColumnIndexOrThrow("value")));
+                }
+                if (name.equalsIgnoreCase("Estimated Date of Delivery (EDD)")) {
+                    patient1.setEdd(idCursor1.getString(idCursor1.getColumnIndexOrThrow("value")));
+                }
+                if (name.equalsIgnoreCase("Hospital ID")) {
+                    patient1.setHospitalId(idCursor1.getString(idCursor1.getColumnIndexOrThrow("value")));
+                }
+
                 /*end*/
 
             } while (idCursor1.moveToNext());
@@ -1472,6 +1578,23 @@ public class PatientOtherInfoFragment extends Fragment {
             etBedNumber.setText(getBedNumber(patient.getUuid()));
         } catch (DAOException e) {
             e.printStackTrace();
+        }
+
+        if (patient.getGravida() != null) {
+           String gravida = patient.getGravida();
+            mGravidaEdittext.setText(gravida);
+        }
+        if (patient.getLmp() != null) {
+            String lmp = patient.getLmp();
+            mLmpDateTextView.setText(lmp);
+        }
+        if (patient.getEdd() != null) {
+            String edd = patient.getEdd();
+            mEDDTextView.setText(edd);
+        }
+        if (patient.getHospitalId() != null) {
+            String hospitalId = patient.getHospitalId();
+            mHospitalId.setText(hospitalId);
         }
     }
 
@@ -1602,6 +1725,8 @@ public class PatientOtherInfoFragment extends Fragment {
                         tvErrorTotalBirth.setVisibility(View.GONE);
                         cardTotalBirth.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
                         //cardTotalMiscarraige.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+                        mTotalBirthCount = val;
+                        updateGravida();
 
                         if (!mTotalBirthEditText.getText().toString().isEmpty() && !mTotalMiscarriageEditText.getText().toString().isEmpty()) {
                             tvErrorTotalBirth.setVisibility(View.GONE);
@@ -1624,7 +1749,8 @@ public class PatientOtherInfoFragment extends Fragment {
                         //cardTotalBirth.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
 
                     } else {
-
+                        mTotalMiscarriageCount = val;
+                        updateGravida();
                         // tvErrorTotalBirth.setVisibility(View.GONE);
                         tvErrorTotalMiscarriage.setVisibility(View.GONE);
                         cardTotalMiscarraige.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
@@ -1791,6 +1917,28 @@ public class PatientOtherInfoFragment extends Fragment {
                         cardHospitalOther.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
 
                     }
+                }else if (this.editText.getId() == R.id.et_gravida) {
+                    String error = validateGravida();
+                    FormValidationHelper.applyFieldValidation(mContext, mGravidaEdittext, tvErrorGravida, cardGravida, error);
+                }else if (this.editText.getId() == R.id.et_lmp) {
+                    if (val.isEmpty()) {
+                        FormValidationHelper.applyFieldValidation(mContext, mLmpDateTextView, tvErrorLmpDate, cardLMP, getString(R.string.this_field_is_mandatory));
+                    }
+                   /* String lmpValue = mLmpDateTextView.getText().toString();
+                    String lmpError = validateLMPValue(lmpValue);
+                    FormValidationHelper.applyFieldValidation(mContext, mLmpDateTextView, tvErrorLmpDate, cardLMP, lmpError);*/
+                }
+                else if (this.editText.getId() == R.id.et_edd) {
+                   /* String eddValue = mEDDTextView.getText().toString();
+                    String eddError = validateEDD(eddValue);
+                    FormValidationHelper.applyFieldValidation(mContext, mEDDTextView, tvErrorEDD, cardEdd, eddError);*/
+                    if (val.isEmpty()) {
+                        FormValidationHelper.applyFieldValidation(mContext, mEDDTextView, tvErrorEDD, cardEdd, getString(R.string.this_field_is_mandatory));
+                    }
+                } else if (this.editText.getId() == R.id.et_hospital_id) {
+                    if (val.isEmpty()) {
+                    FormValidationHelper.applyFieldValidation(mContext, mHospitalId, tvErrorHospitalId, cardHospitalId, getString(R.string.this_field_is_mandatory));
+                    }
                 }
             }
 
@@ -1875,6 +2023,39 @@ public class PatientOtherInfoFragment extends Fragment {
             dialog.setMinDate(minCal.getTimeInMillis());
             dialog.setMaxDate(System.currentTimeMillis());
         }
+        else if(whichDate.equals("lmpDate")){
+            /*Calendar minCal = Calendar.getInstance();
+            minCal.add(Calendar.WEEK_OF_YEAR, -44);
+
+            minCal.set(Calendar.HOUR_OF_DAY, 0);
+            minCal.set(Calendar.MINUTE, 0);
+            minCal.set(Calendar.SECOND, 0);
+            minCal.set(Calendar.MILLISECOND, 0);
+
+            Calendar maxCal = Calendar.getInstance();
+            maxCal.set(Calendar.HOUR_OF_DAY, 23);
+            maxCal.set(Calendar.MINUTE, 59);
+            maxCal.set(Calendar.SECOND, 59);
+            maxCal.set(Calendar.MILLISECOND, 999);
+
+            dialog.setMinDate(minCal.getTimeInMillis());
+            dialog.setMaxDate(maxCal.getTimeInMillis());
+            dialog.setDefaultDate(System.currentTimeMillis());*/
+            dialog.setMaxDate(System.currentTimeMillis());
+        }
+        else if (whichDate.equals("edd")) {
+           /* // Allow selection within reasonable range (optional wider range)
+            Calendar minCal = Calendar.getInstance();
+            minCal.add(Calendar.WEEK_OF_YEAR, -3);   // 3 weeks before today
+            Calendar maxCal = Calendar.getInstance();
+            maxCal.add(Calendar.WEEK_OF_YEAR, 3);    // 3 weeks after today
+            dialog.setMinDate(minCal.getTimeInMillis());
+            dialog.setMaxDate(maxCal.getTimeInMillis());*/
+            Calendar minCal = getMinEDDDate();
+            Calendar maxCal = getMaxEDDDate();
+            dialog.setMinDate(minCal.getTimeInMillis());
+            dialog.setMaxDate(maxCal.getTimeInMillis());
+        }
 
         dialog.setListener((day, month, year, value) -> {
             Log.e(TAG, "Date = >" + value);
@@ -1895,6 +2076,29 @@ public class PatientOtherInfoFragment extends Fragment {
                 } else if (whichDate.equals("sacRupturedDate")) {
                     mMembraneRupturedDate = selectedDate;
                     mMembraneRupturedDateTextView.setText(selectedDate);
+                }else if (whichDate.equals("lmpDate")) {
+
+
+                   /* if (error != null) return;*/
+                    mLmpDate = selectedDate;
+                    mLmpDateTextView.setText(selectedDate);
+                    if(mLmpDateTextView.getText().toString().isEmpty()){
+                        FormValidationHelper.applyFieldValidation(mContext, mLmpDateTextView, tvErrorLmpDate, cardLMP, getString(R.string.this_field_is_mandatory));
+                    }else{
+                        tvErrorLmpDate.setVisibility(View.GONE);
+                        cardLMP.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+                    }
+                    // Auto-calculate EDD here if needed
+                    calculateEDDFromLMP(selectedDate);
+                }
+                else if (whichDate.equals("edd")) {
+
+                    /*if (!validateEDD(selectedDate)) {
+                        return;
+                    }*/
+
+                    mEDD = selectedDate;
+                    mEDDTextView.setText(selectedDate);
                 }
             }
         });
@@ -2143,6 +2347,7 @@ public class PatientOtherInfoFragment extends Fragment {
             patientAttributesDTO.setPatientuuid(uuid);
             patientAttributesDTO.setPersonAttributeTypeUuid(patientsDAO.getUuidForAttribute(PatientAttributesDTO.Columns.PROFILE_IMG_TIMESTAMP.value));
             patientAttributesDTO.setValue(AppConstants.dateAndTimeUtils.currentDateTime());
+            patientAttributesDTOList.add(patientAttributesDTO);
 
             //House Hold Registration
 //            if (sessionManager.getHouseholdUuid().equals("")){
@@ -2169,7 +2374,36 @@ public class PatientOtherInfoFragment extends Fragment {
 //
 //            }
 
+            //Newly added fields
+            // Gravida, Lmp, Edd, hospital id
+            patientAttributesDTO = new PatientAttributesDTO();
+            patientAttributesDTO.setUuid(UUID.randomUUID().toString());
+            patientAttributesDTO.setPatientuuid(uuid);
+            patientAttributesDTO.setPersonAttributeTypeUuid(patientsDAO.getUuidForAttribute(PatientAttributesDTO.Columns.GRAVIDA.value));
+            patientAttributesDTO.setValue(mGravidaEdittext.getText().toString());
             patientAttributesDTOList.add(patientAttributesDTO);
+
+            patientAttributesDTO = new PatientAttributesDTO();
+            patientAttributesDTO.setUuid(UUID.randomUUID().toString());
+            patientAttributesDTO.setPatientuuid(uuid);
+            patientAttributesDTO.setPersonAttributeTypeUuid(patientsDAO.getUuidForAttribute(PatientAttributesDTO.Columns.lmp.value));
+            patientAttributesDTO.setValue(mLmpDate);
+            patientAttributesDTOList.add(patientAttributesDTO);
+
+            patientAttributesDTO = new PatientAttributesDTO();
+            patientAttributesDTO.setUuid(UUID.randomUUID().toString());
+            patientAttributesDTO.setPatientuuid(uuid);
+            patientAttributesDTO.setPersonAttributeTypeUuid(patientsDAO.getUuidForAttribute(PatientAttributesDTO.Columns.EDD.value));
+            patientAttributesDTO.setValue(mEDD);
+            patientAttributesDTOList.add(patientAttributesDTO);
+
+            patientAttributesDTO = new PatientAttributesDTO();
+            patientAttributesDTO.setUuid(UUID.randomUUID().toString());
+            patientAttributesDTO.setPatientuuid(uuid);
+            patientAttributesDTO.setPersonAttributeTypeUuid(patientsDAO.getUuidForAttribute(PatientAttributesDTO.Columns.HOSPITAL_ID.value));
+            patientAttributesDTO.setValue(mHospitalId.getText().toString());
+            patientAttributesDTOList.add(patientAttributesDTO);
+
             Logger.logD(TAG, "buPatientAttrite list size" + patientAttributesDTOList.size());
             patientDTO.setPatientAttributesDTOList(patientAttributesDTOList);
             patientDTO.setSyncd(false);
@@ -2340,5 +2574,253 @@ public class PatientOtherInfoFragment extends Fragment {
         }
 
         return true;
+    }
+    private int parseSafe(String value) {
+        try {
+            if (value == null || value.trim().isEmpty()) return 0;
+            return Integer.parseInt(value);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+    private void updateGravida() {
+
+        //if (isGravidaEdited) return;
+
+        int gravida = calculateGravida();
+        mGravidaEdittext.setText(String.valueOf(gravida));
+
+        String gravidaError = validateGravida();
+        if (gravidaError != null) {
+            mGravidaEdittext.requestFocus();
+            errorDetailsList.add(new ErrorManagerModel(mGravidaEdittext,tvErrorGravida, gravidaError, cardGravida));
+        } else {
+            tvErrorGravida.setVisibility(View.GONE);
+            cardGravida.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+        }
+    }
+    private int calculateGravida() {
+
+        int birth = parseSafe(mTotalBirthCount);
+        int abortion = parseSafe(mTotalMiscarriageCount);
+
+        return birth + abortion + 1;
+    }
+    private String validateGravida() {
+
+        String val = mGravidaEdittext.getText().toString().trim();
+
+        // If empty → auto update
+        if (val.isEmpty()) {
+            updateGravida();
+            val = mGravidaEdittext.getText().toString().trim(); // re-read value
+        }
+
+        if (val.isEmpty()) {
+            return getString(R.string.error_gravida_required);
+        }
+
+        int g;
+        try {
+            g = Integer.parseInt(val);
+        } catch (Exception e) {
+            return getString(R.string.invalid_number_error);
+        }
+
+        if (g < 0) {
+            return getString(R.string.error_gravida_negative);
+        }
+
+        if (g > 20) {
+            return getString(R.string.error_gravida_max_limit);
+        }
+
+        return null; // VALID
+    }
+   /* private void calculateEDDFromLMP(String lmpDateStr) {
+
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+            Date lmpDate = sdf.parse(lmpDateStr);
+
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(lmpDate);
+
+            // Add 280 days (40 weeks)
+            cal.add(Calendar.DAY_OF_YEAR, 280);
+
+            String eddDate = sdf.format(cal.getTime());
+
+            mEDD = eddDate;
+            mEDDTextView.setText(eddDate);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }*/
+   private void calculateEDDFromLMP(String lmpDateStr) {
+
+       try {
+           if (lmpDateStr == null || lmpDateStr.trim().isEmpty()) return;
+
+           SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+           Date lmpDate = sdf.parse(lmpDateStr);
+
+           if (lmpDate == null) return;
+
+           Calendar cal = Calendar.getInstance();
+           cal.setTime(lmpDate);
+
+           // Naegele's rule: +280 days
+           cal.add(Calendar.DAY_OF_YEAR, 280);
+
+           String eddDate = sdf.format(cal.getTime());
+
+           mEDD = eddDate;
+           mEDDTextView.setText(eddDate);
+
+           //remove error
+           //String eddError = validateEDD(eddDate);
+           String eddError = "";
+           if(mEDDTextView.getText().toString().isEmpty()){
+               eddError= getString(R.string.this_field_is_mandatory);
+               FormValidationHelper.applyFieldValidation(
+                       mContext,
+                       mEDDTextView,
+                       tvErrorEDD,
+                       cardEdd,
+                       eddError
+               );
+           }else{
+               tvErrorEDD.setVisibility(View.GONE);
+               cardEdd.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+           }
+
+       } catch (Exception e) {
+           e.printStackTrace();
+       }
+   }
+    private boolean validateLMP(String dateStr) {
+
+        if (dateStr == null || dateStr.trim().isEmpty()) {
+            tvErrorLmpDate.setText(getString(R.string.this_field_is_mandatory));
+            tvErrorLmpDate.setVisibility(View.VISIBLE);
+            return false;
+        }
+
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+            Date selectedDate = sdf.parse(dateStr);
+
+            Calendar now = Calendar.getInstance();
+
+            //  Future check
+            if (selectedDate.after(now.getTime())) {
+                tvErrorLmpDate.setText(getString(R.string.lmp_future_not_allowed));
+                tvErrorLmpDate.setVisibility(View.VISIBLE);
+                return false;
+            }
+
+            //  44 weeks range check
+            Calendar minCal = Calendar.getInstance();
+            minCal.add(Calendar.WEEK_OF_YEAR, -44);
+
+            if (selectedDate.before(minCal.getTime())) {
+                tvErrorLmpDate.setText(getString(R.string.lmp_range_invalid));
+                tvErrorLmpDate.setVisibility(View.VISIBLE);
+                return false;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        tvErrorLmpDate.setVisibility(View.GONE);
+        return true;
+    }
+    private void recoverGravidaIfNeeded() {
+
+        String val = mGravidaEdittext.getText().toString().trim();
+
+        if (val.isEmpty()) {
+            mGravidaEdittext.setText(String.valueOf(calculateGravida()));
+        }
+    }
+    private String validateLMPValue(String dateStr) {
+
+        if (dateStr == null || dateStr.trim().isEmpty()) {
+            return getString(R.string.this_field_is_mandatory);
+        }
+
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+            Date selectedDate = sdf.parse(dateStr);
+
+            Calendar now = Calendar.getInstance();
+
+            // Future check
+            if (selectedDate.after(now.getTime())) {
+                return getString(R.string.lmp_future_not_allowed);
+            }
+
+            // 44 weeks back check
+            Calendar minCal = Calendar.getInstance();
+            minCal.add(Calendar.WEEK_OF_YEAR, -44);
+
+            if (selectedDate.before(minCal.getTime())) {
+                return getString(R.string.lmp_range_invalid);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return getString(R.string.lmp_range_invalid);
+        }
+
+        return null; // valid
+    }
+    private boolean isActiveLabour() {
+        return mActiveLaborDiagnosedDate != null
+                && !mActiveLaborDiagnosedDate.trim().isEmpty();
+    }
+    private String validateEDD(String eddDate) {
+
+        if (eddDate == null || eddDate.trim().isEmpty()) {
+            return getString(R.string.this_field_is_mandatory);
+        }
+
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+            Date selected = sdf.parse(eddDate);
+
+            if (selected == null) {
+                return getString(R.string.edd_error);
+            }
+
+            Calendar selectedCal = Calendar.getInstance();
+            selectedCal.setTime(selected);
+            selectedCal = normalize(selectedCal);
+
+            // Apply ±3 weeks ONLY if active labour
+            if (isActiveLabour()) {
+
+                Calendar today = normalize(Calendar.getInstance());
+
+                Calendar minCal = (Calendar) today.clone();
+                minCal.add(Calendar.WEEK_OF_YEAR, -3);
+
+                Calendar maxCal = (Calendar) today.clone();
+                maxCal.add(Calendar.WEEK_OF_YEAR, 3);
+
+                if (selectedCal.before(minCal) || selectedCal.after(maxCal)) {
+                    return getString(R.string.edd_error);
+                }
+            }
+
+        } catch (Exception e) {
+            return getString(R.string.invalid_number_error);
+        }
+
+        return null;
     }
 }

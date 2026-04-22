@@ -28,6 +28,7 @@ import org.intelehealth.ezazi.database.dao.VisitsDAO;
 import org.intelehealth.ezazi.models.dto.EncounterDTO;
 import org.intelehealth.ezazi.models.dto.ObsDTO;
 import org.intelehealth.ezazi.models.dto.VisitDTO;
+import org.intelehealth.ezazi.partogram.utils.Stage3EncounterHelper;
 import org.intelehealth.ezazi.services.firebase_services.FirebaseRealTimeDBUtils;
 import org.intelehealth.ezazi.syncModule.SyncUtils;
 import org.intelehealth.ezazi.utilities.NotificationUtils;
@@ -36,10 +37,14 @@ import org.intelehealth.ezazi.utilities.UuidDictionary;
 import org.intelehealth.ezazi.utilities.exception.DAOException;
 import org.intelehealth.klivekit.utils.DateTimeUtils;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.UUID;
 
 public class CardGenerationEngine {
@@ -100,6 +105,8 @@ public class CardGenerationEngine {
                     log.put("latestEncounterName", latestEncounterName);
                     log.put("minutes", String.valueOf(minutes));
                     FirebaseRealTimeDBUtils.logData(log);
+                    Log.v(TAG, "latestEncounterName : " + latestEncounterName);
+                    Log.v(TAG, "latestencountertime : " + latestEncounterTime);
 
                     if (latestEncounterName.toLowerCase().contains("stage1")) {
                         if (minutes >= 30) {
@@ -136,6 +143,28 @@ public class CardGenerationEngine {
                         } else if (minutes == 14) {
                             SyncUtils syncUtils = new SyncUtils();
                             syncUtils.syncBackground();
+                        }
+                    }else if (latestEncounterName.toLowerCase().contains("stage3")) {
+                        Log.d(TAG, "scanForNewCardEligibility: in stage 3");
+                        int requiredMinutes = Stage3EncounterHelper.INSTANCE.getRequiredIntervalMinutes(latestEncounterName);
+
+                        long now = System.currentTimeMillis();
+                        long lastTimeMillis = convertUtcToMillis(latestEncounterTime);
+
+                        //long now = System.currentTimeMillis();
+                        long diffMinutes = (now - lastTimeMillis) / (60 * 1000);
+
+                        if (diffMinutes >= requiredMinutes) {
+                            String nextEncounterTypeName = Stage3EncounterHelper.INSTANCE.getNextStage3Encounter(latestEncounterName);
+
+                            if (nextEncounterTypeName == null) {
+                                closeReachToLimitVisit(visitUid);
+                            } else {
+                                createNewEncounter(visitUid, nextEncounterTypeName);
+                            }
+
+                        } else if (diffMinutes == requiredMinutes - 1) {
+                            new SyncUtils().syncBackground();
                         }
                     }
                 }
@@ -368,5 +397,22 @@ public class CardGenerationEngine {
 
         return stageNumber == 1 && hourNumber == 15 && cardNumber == 2;
     }
+    private static long convertUtcToMillis(String lastTime) {
 
+        SimpleDateFormat sdf =
+                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC")); // IMPORTANT
+
+        try {
+            Date date = sdf.parse(lastTime);
+            if (date != null) {
+                return date.getTime();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Date parse error: " + lastTime, e);
+        }
+
+        return 0;
+    }
 }

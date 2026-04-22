@@ -16,8 +16,10 @@ public class SyncUtils {
 
 
     private static final String TAG = SyncUtils.class.getSimpleName();
+
     /**
      * This method will be responsible for initial sync/setup
+     *
      * @param fromActivity
      */
     public void initialSync(String fromActivity) {
@@ -27,6 +29,7 @@ public class SyncUtils {
         syncDAO.pullData(IntelehealthApplication.getAppContext(), fromActivity);
         Logger.logD(TAG, "Pull ended");
     }
+
     public void syncBackground() {
         SyncDAO syncDAO = new SyncDAO();
         ImagesPushDAO imagesPushDAO = new ImagesPushDAO();
@@ -66,6 +69,27 @@ public class SyncUtils {
 
     }
 
+    public boolean periodicSync() {
+        try {
+            SyncDAO syncDAO = new SyncDAO();
+            boolean pushSuccess = syncDAO.pushDataApiPeriodicSync();
+            boolean pullSuccess = syncDAO.pullDataBackgroundSync(IntelehealthApplication.getAppContext());
+
+            ImagesPushDAO imagesPushDAO = new ImagesPushDAO();
+            boolean isImagesPushSuccessful = imagesPushDAO.patientProfileImagesPushSync();
+            boolean isDeleteImageSuccessful = imagesPushDAO.deleteObsImageSync();
+
+            Thread.sleep(3000);
+            boolean areImagesPushed = imagesPushDAO.obsImagesPushSync();
+            new NotificationUtils().clearAllNotifications(IntelehealthApplication.getAppContext());
+
+            return pushSuccess && pullSuccess && isImagesPushSuccessful && isDeleteImageSuccessful && areImagesPushed;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
+    }
+
     public boolean syncForeground(String fromActivity) {
         boolean isSynced = false;
         SyncDAO syncDAO = new SyncDAO();
@@ -89,7 +113,7 @@ public class SyncUtils {
         imagesPushDAO.patientProfileImagesPush();
 
 //        imagesPushDAO.obsImagesPush();
-        
+
         /*
          * Handler is added for pushing image in sync foreground
          * to fix the issue of Phy exam and additional images not showing up sometimes

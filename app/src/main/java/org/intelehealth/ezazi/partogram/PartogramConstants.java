@@ -6,6 +6,7 @@ import org.intelehealth.ezazi.partogram.model.ParamInfo;
 import org.intelehealth.ezazi.utilities.SessionManager;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -28,6 +29,10 @@ public class PartogramConstants {
 
     public static final int STAGE_1 = 1;
     public static final int STAGE_2 = 2;
+
+    public static final int STAGE_3 = 3;
+
+    public static String INPUT_INT_4_DIG_TYPE = "J";
 
     public enum AccessMode {
         WRITE, EDIT, READ
@@ -79,7 +84,29 @@ public class PartogramConstants {
         SUPERVISOR_DOCTOR("Supervisor Doctor", "7a9cb7bc-9ab9-4ff0-ae82-7a1bd2cca93e"),
         PRESCRIBED_OXYTOCIN("Prescribed Oxytocin (U/L, drops/min)", "6eef8ae6-e6b3-46f1-a58c-393bd6d0e8c8"),
         PRESCRIBED_MEDICINE("Prescribed Medicine", "ce75ed49-0eac-44f0-ac91-bcf9c5d1d700"),
-        PRESCRIBED_IV_FLUID("Prescribed IV Fluids", "0c21f925-d225-48ce-9e98-bb1cc5638e04");
+        PRESCRIBED_IV_FLUID("Prescribed IV Fluids", "0c21f925-d225-48ce-9e98-bb1cc5638e04"),
+
+        RESPIRATORY_RATE_MOTHER("Respiratory Rate (per min)", "5242AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
+        BLOOD_LOSS_MOTHER("Blood loss (ml)", "585c2f4a-16d3-4fd7-8b50-2927e14ca379"),
+        UTERUS_CONTRACTED_MOTHER("Uterus contracted", "13de11c4-76cc-4851-8b37-513cee310c93"),
+        URINE_PASSED_MOTHER("Urine passed in 2 hours", "cb6ee6f9-6476-4b44-adac-8e85798a716c"),
+        HEMATOMA_MOTHER("Hematoma", "afd25b45-cb3f-4e77-8c3d-8b8f6cc83944"),
+        ONGOING_COMPLICATIONS_MOTHER("Any signs of ongoing complications", "caa174fc-5889-443e-b53d-701fb2e85c23"),
+        ASSESSMENT_MOTHER("Assessment", "67a050c1-35e5-451c-a4ab-fff9d57b0db1"),
+        PLAN_MOTHER("Plan", "5991aeaf-c4c3-457d-ada1-334d90c545fc"),
+        GRUNTING_NEWBORN("Grunting", "694d18a3-8163-43ba-9ac8-cf07a8c84b6b"),
+        CHEST_INDRAWING_NEWBORN("Chest indrawing", "5d9c44df-eb2b-435b-aac9-ee6b83ee6d27"),
+        FAST_BREATHING_NEWBORN("Fast breathing", "9d2ebbfd-538f-11e6-9cfe-86f436325720"),
+        RESPIRATORY_RATE_NEWBORN("Respiratory Rate (per min)", "e642e4a6-2799-488f-9f95-eec27a3bb756"),
+        SPO2_NEWBORN("SPO2 (%)", "ef9490bc-b039-45bc-98a8-34d55b750e04"),
+        FEET_WARM_NEWBORN("Feet (warm)", "d16058b1-8756-4db2-bf71-834466e1f436"),
+        TEMPERATURE_NEWBORN("Temperature (°F)", "5c74ba33-b194-4a1a-b6e8-cfca07d2a593"),
+        SKIN_COLOR_NEWBORN("Colour of the skin (Cyanosed)", "641cf6ac-ce38-42ca-9672-d30dce1c56de"),
+        UC_OOZING_NEWBORN("Umbilical cord oozing", "995ab5c8-76a0-4e3c-ac70-2270fdbc14a8"),
+        SUCKING_FEEDING_NEWBORN("Suckling & Feeding", "1a49a4ef-ad20-4cd8-b176-06eb6fbf9971"),
+        ONGOING_COMPLICATIONS_NEWBORN("Any signs of ongoing complications", "820ae093-d3ab-402a-9a81-279963cf9dc8"),
+        ASSESSMENT_NEWBORN("Assessment", "15fc4eca-7635-4e7c-baa4-20c250cfe62a"),
+        PLAN_NEWBORN("Plan", "a79853d9-e45e-41b2-8473-b19e5cae66cb");
 
         public final String value;
         public final String conceptId;
@@ -92,6 +119,7 @@ public class PartogramConstants {
 
     public static TreeMap<String, List<ParamInfo>> getSectionParamInfoMasterMap(int stage) {
         TreeMap<String, List<ParamInfo>> sectionParamInfoMap = new TreeMap<>();
+
         sessionManager = new SessionManager(IntelehealthApplication.getAppContext());
         //Supportive care
         List<ParamInfo> stringList = new ArrayList<ParamInfo>();
@@ -444,6 +472,377 @@ public class PartogramConstants {
         stringList.add(paramInfo);
         sectionParamInfoMap.put("Action", stringList);//Actions
 
+        //for stage 3
+        if (stage == STAGE_3) {
+            return getStage3SectionMap();
+        }
+
         return sectionParamInfoMap;
     }
+
+    private static TreeMap<String, List<ParamInfo>> getStage3SectionMap() {
+
+        TreeMap<String, List<ParamInfo>> sectionMap =
+                new TreeMap<>((a, b) -> {
+
+                    if (a.equals("Woman Monitoring")) return -1;
+                    if (b.equals("Woman Monitoring")) return 1;
+
+                    return a.compareTo(b);
+                });
+        // ─── SECTION 1: WOMAN MONITORING ───────────────────────────────────────────
+
+        List<ParamInfo> womanList = new ArrayList<>();
+        ParamInfo paramInfo;
+
+        // Pulse
+        paramInfo = new ParamInfo();
+        paramInfo.setParamSectionName("Woman Monitoring");
+        paramInfo.setParamName(Params.PULSE.value);
+        paramInfo.setParamDateType(INPUT_INT_3_DIG_TYPE);
+        paramInfo.setConceptUUID(Params.PULSE.conceptId);
+        paramInfo.setEachEncounterField(true);
+        /*paramInfo.setFifteenMinField(true);
+        paramInfo.setHalfHourField(true);
+        paramInfo.setOnlyOneHourField(true);*/
+        womanList.add(paramInfo);
+
+        // Systolic BP
+        paramInfo = new ParamInfo();
+        paramInfo.setParamSectionName("Woman Monitoring");
+        paramInfo.setParamName(Params.SYSTOLIC_BP.value);
+        paramInfo.setParamDateType(INPUT_INT_3_DIG_TYPE);
+        paramInfo.setConceptUUID(Params.SYSTOLIC_BP.conceptId);
+        paramInfo.setEachEncounterField(true);
+        /*paramInfo.setFifteenMinField(true);
+        paramInfo.setHalfHourField(true);
+        paramInfo.setOnlyOneHourField(true);*/
+        womanList.add(paramInfo);
+
+        // Diastolic BP
+        paramInfo = new ParamInfo();
+        paramInfo.setParamSectionName("Woman Monitoring");
+        paramInfo.setParamName(Params.DIASTOLIC_BP.value);
+        paramInfo.setParamDateType(INPUT_INT_3_DIG_TYPE);
+        paramInfo.setConceptUUID(Params.DIASTOLIC_BP.conceptId);
+        paramInfo.setEachEncounterField(true);
+        /*paramInfo.setFifteenMinField(true);
+        paramInfo.setHalfHourField(true);
+        paramInfo.setOnlyOneHourField(true);*/
+        womanList.add(paramInfo);
+
+        // Temperature (°F)
+        paramInfo = new ParamInfo();
+        paramInfo.setParamSectionName("Woman Monitoring");
+        paramInfo.setParamName("Temperature (°F)");
+        paramInfo.setParamDateType(INPUT_DOUBLE_4_DIG_TYPE);
+        paramInfo.setConceptUUID(Params.TEMPERATURE.conceptId);
+        paramInfo.setEachEncounterField(true);
+        /*paramInfo.setFifteenMinField(true);
+        paramInfo.setHalfHourField(true);
+        paramInfo.setOnlyOneHourField(true);*/
+        womanList.add(paramInfo);
+
+        // Respiratory Rate
+        paramInfo = new ParamInfo();
+        paramInfo.setParamSectionName("Woman Monitoring");
+        paramInfo.setParamName(Params.RESPIRATORY_RATE_MOTHER.value);
+        paramInfo.setParamDateType(INPUT_INT_3_DIG_TYPE);
+        paramInfo.setConceptUUID(Params.RESPIRATORY_RATE_MOTHER.conceptId);
+        paramInfo.setEachEncounterField(true);
+        /*paramInfo.setFifteenMinField(true);
+        paramInfo.setHalfHourField(true);
+        paramInfo.setOnlyOneHourField(true);*/
+        womanList.add(paramInfo);
+
+        // Blood Loss
+        paramInfo = new ParamInfo();
+        paramInfo.setParamSectionName("Woman Monitoring");
+        paramInfo.setParamName(Params.BLOOD_LOSS_MOTHER.value);
+        paramInfo.setParamDateType(INPUT_INT_4_DIG_TYPE);
+        paramInfo.setConceptUUID(Params.BLOOD_LOSS_MOTHER.conceptId);
+        paramInfo.setEachEncounterField(true);
+        /*paramInfo.setFifteenMinField(true);
+        paramInfo.setHalfHourField(true);
+        paramInfo.setOnlyOneHourField(true);*/
+        womanList.add(paramInfo);
+
+        // Uterus Contracted
+        paramInfo = new ParamInfo();
+        paramInfo.setParamSectionName("Woman Monitoring");
+        paramInfo.setParamName(Params.UTERUS_CONTRACTED_MOTHER.value);
+        paramInfo.setParamDateType(RADIO_SELECT_TYPE);
+        paramInfo.setOptions(new String[]{"Yes", "No"});
+        paramInfo.setValues(new String[]{"Y", "N"});
+        paramInfo.setConceptUUID(Params.UTERUS_CONTRACTED_MOTHER.conceptId);
+        paramInfo.setEachEncounterField(true);
+        /*paramInfo.setFifteenMinField(true);
+        paramInfo.setHalfHourField(true);
+        paramInfo.setOnlyOneHourField(true);*/
+        womanList.add(paramInfo);
+
+        // Urine Passed
+        paramInfo = new ParamInfo();
+        paramInfo.setParamSectionName("Woman Monitoring");
+        paramInfo.setParamName(Params.URINE_PASSED_MOTHER.value);
+        paramInfo.setParamDateType(RADIO_SELECT_TYPE);
+        paramInfo.setOptions(new String[]{"Yes", "No"});
+        paramInfo.setConceptUUID(Params.URINE_PASSED_MOTHER.conceptId);
+        paramInfo.setEachEncounterField(true);
+        /*paramInfo.setFifteenMinField(true);
+        paramInfo.setHalfHourField(true);
+        paramInfo.setOnlyOneHourField(true);*/
+        womanList.add(paramInfo);
+
+        // Hematoma
+        paramInfo = new ParamInfo();
+        paramInfo.setParamSectionName("Woman Monitoring");
+        paramInfo.setParamName(Params.HEMATOMA_MOTHER.value);
+        paramInfo.setParamDateType(RADIO_SELECT_TYPE);
+        paramInfo.setOptions(new String[]{"Yes", "No"});
+        paramInfo.setValues(new String[]{"Y", "N"});
+        paramInfo.setConceptUUID(Params.HEMATOMA_MOTHER.conceptId);
+        paramInfo.setEachEncounterField(true);
+      /*  paramInfo.setFifteenMinField(true);
+        paramInfo.setHalfHourField(true);
+        paramInfo.setOnlyOneHourField(true);*/
+        womanList.add(paramInfo);
+
+        // Ongoing Complications (Mother)
+        paramInfo = new ParamInfo();
+        paramInfo.setParamSectionName("Woman Monitoring");
+        paramInfo.setParamName(Params.ONGOING_COMPLICATIONS_MOTHER.value);
+        paramInfo.setParamDateType(DROPDOWN_MULTI_SELECT_TYPE);
+        paramInfo.setOptions(new String[]{
+                "Vaginal bleeding (≥300 ml)",
+                "Fever (Temp ≥99.5 °F)",
+                "High blood pressure",
+                "Moderate pallor",
+                "Severe pallor",
+                AppConstants.OTHER_OPTION
+        });
+        paramInfo.setConceptUUID(Params.ONGOING_COMPLICATIONS_MOTHER.conceptId);
+        paramInfo.setEachEncounterField(true);
+       /* paramInfo.setFifteenMinField(true);
+        paramInfo.setHalfHourField(true);
+        paramInfo.setOnlyOneHourField(true);*/
+        womanList.add(paramInfo);
+
+        // Assessment (Mother)
+        paramInfo = new ParamInfo();
+        paramInfo.setParamSectionName("Woman Monitoring");
+        paramInfo.setParamName(Params.ASSESSMENT_MOTHER.value);
+        paramInfo.setParamDateType(INPUT_TXT_TYPE);
+        paramInfo.setConceptUUID(Params.ASSESSMENT_MOTHER.conceptId);
+        paramInfo.setEachEncounterField(true);
+       /* paramInfo.setFifteenMinField(true);
+        paramInfo.setHalfHourField(true);
+        paramInfo.setOnlyOneHourField(true);*/
+        womanList.add(paramInfo);
+
+        // Plan (Mother)
+        paramInfo = new ParamInfo();
+        paramInfo.setParamSectionName("Woman Monitoring");
+        paramInfo.setParamName(Params.PLAN_MOTHER.value);
+        paramInfo.setParamDateType(INPUT_TXT_TYPE);
+        paramInfo.setConceptUUID(Params.PLAN_MOTHER.conceptId);
+        paramInfo.setEachEncounterField(true);
+       /* paramInfo.setFifteenMinField(true);
+        paramInfo.setHalfHourField(true);
+        paramInfo.setOnlyOneHourField(true);*/
+        womanList.add(paramInfo);
+
+        sectionMap.put("Woman Monitoring", womanList);
+
+        // ─── SECTION 2: NEWBORN MONITORING ─────────────────────────────────────────
+
+        List<ParamInfo> newbornList = new ArrayList<>();
+        ParamInfo newbornParam;
+
+        String[] yesNo = {"Yes", "No"};
+
+        // 1 Grunting
+        newbornParam = new ParamInfo();
+        newbornParam.setParamSectionName("Newborn Monitoring");
+        newbornParam.setParamName(Params.GRUNTING_NEWBORN.value);
+        newbornParam.setParamDateType(RADIO_SELECT_TYPE);
+        newbornParam.setOptions(new String[]{"Yes", "No"});
+        newbornParam.setValues(new String[]{"Y", "N"});
+        newbornParam.setConceptUUID(Params.GRUNTING_NEWBORN.conceptId);
+        newbornParam.setEachEncounterField(true);
+       /* //newbornParam.setFifteenMinField(true);
+        newbornParam.setHalfHourField(true);
+        newbornParam.setOnlyOneHourField(true);*/
+        newbornList.add(newbornParam);
+
+        // 2 Chest Indrawing
+        newbornParam = new ParamInfo();
+        newbornParam.setParamSectionName("Newborn Monitoring");
+        newbornParam.setParamName(Params.CHEST_INDRAWING_NEWBORN.value);
+        newbornParam.setParamDateType(RADIO_SELECT_TYPE);
+        newbornParam.setOptions(new String[]{"Yes", "No"});
+        newbornParam.setValues(new String[]{"Y", "N"});
+        newbornParam.setConceptUUID(Params.CHEST_INDRAWING_NEWBORN.conceptId);
+        newbornParam.setEachEncounterField(true);
+        /*//newbornParam.setFifteenMinField(true);
+        newbornParam.setHalfHourField(true);
+        newbornParam.setOnlyOneHourField(true);*/
+        newbornList.add(newbornParam);
+
+        //3 Fast Breathing
+        newbornParam = new ParamInfo();
+        newbornParam.setParamSectionName("Newborn Monitoring");
+        newbornParam.setParamName(Params.FAST_BREATHING_NEWBORN.value);
+        newbornParam.setParamDateType(RADIO_SELECT_TYPE);
+        newbornParam.setOptions(new String[]{"Yes", "No"});
+        newbornParam.setValues(new String[]{"Y", "N"});
+        newbornParam.setConceptUUID(Params.FAST_BREATHING_NEWBORN.conceptId);
+        newbornParam.setEachEncounterField(true);
+       /* //newbornParam.setFifteenMinField(true);
+        //newbornParam.setHalfHourField(true);
+        //newbornParam.setOnlyOneHourField(true);*/
+        newbornList.add(newbornParam);
+
+        //4 Respiratory Rate (per min)
+        newbornParam = new ParamInfo();
+        newbornParam.setParamSectionName("Newborn Monitoring");
+        newbornParam.setParamName(Params.RESPIRATORY_RATE_NEWBORN.value);
+        newbornParam.setParamDateType(INPUT_INT_3_DIG_TYPE);
+        newbornParam.setConceptUUID(Params.RESPIRATORY_RATE_NEWBORN.conceptId);
+        newbornParam.setEachEncounterField(true);
+        /*//newbornParam.setFifteenMinField(true);
+        newbornParam.setHalfHourField(true);
+        newbornParam.setOnlyOneHourField(true);*/
+        newbornList.add(newbornParam);
+
+        //5 SPO2 (%)
+
+        newbornParam = new ParamInfo();
+        newbornParam.setParamSectionName("Newborn Monitoring");
+        newbornParam.setParamName(Params.SPO2_NEWBORN.value);
+        newbornParam.setParamDateType(INPUT_INT_3_DIG_TYPE);
+        newbornParam.setConceptUUID(Params.SPO2_NEWBORN.conceptId);
+        newbornParam.setEachEncounterField(true);
+        /*//newbornParam.setFifteenMinField(true);
+        newbornParam.setHalfHourField(true);
+        newbornParam.setOnlyOneHourField(true);*/
+        newbornList.add(newbornParam);
+
+        //6 Feet Warm
+        newbornParam = new ParamInfo();
+        newbornParam.setParamSectionName("Newborn Monitoring");
+        newbornParam.setParamName(Params.FEET_WARM_NEWBORN.value);
+        newbornParam.setParamDateType(RADIO_SELECT_TYPE);
+        newbornParam.setOptions(new String[]{"Yes", "No"});
+        newbornParam.setValues(new String[]{"Y", "N"});
+        newbornParam.setConceptUUID(Params.FEET_WARM_NEWBORN.conceptId);
+        newbornParam.setEachEncounterField(true);
+        /*//newbornParam.setFifteenMinField(true);
+        newbornParam.setHalfHourField(true);
+        newbornParam.setOnlyOneHourField(true);*/
+        newbornList.add(newbornParam);
+
+        // 7 Temperature (°F)
+        newbornParam = new ParamInfo();
+        newbornParam.setParamSectionName("Newborn Monitoring");
+        newbornParam.setParamName(Params.TEMPERATURE_NEWBORN.value);
+        newbornParam.setParamDateType(INPUT_DOUBLE_4_DIG_TYPE);
+        newbornParam.setConceptUUID(Params.TEMPERATURE_NEWBORN.conceptId);
+        newbornParam.setEachEncounterField(true);
+       /* //newbornParam.setFifteenMinField(true);
+        newbornParam.setHalfHourField(true);
+        newbornParam.setOnlyOneHourField(true);*/
+        newbornList.add(newbornParam);
+
+        //8 Colour of the skin (Cyanosed)
+        newbornParam = new ParamInfo();
+        newbornParam.setParamSectionName("Newborn Monitoring");
+        newbornParam.setParamName(Params.SKIN_COLOR_NEWBORN.value);
+        newbornParam.setParamDateType(RADIO_SELECT_TYPE);
+        newbornParam.setOptions(new String[]{"Yes", "No"});
+        newbornParam.setValues(new String[]{"Y", "N"});
+        newbornParam.setConceptUUID(Params.SKIN_COLOR_NEWBORN.conceptId);
+        newbornParam.setEachEncounterField(true);
+       /* //newbornParam.setFifteenMinField(true);
+        newbornParam.setHalfHourField(true);
+        newbornParam.setOnlyOneHourField(true);*/
+        newbornList.add(newbornParam);
+
+        //9 Umbilical Cord Oozing
+        newbornParam = new ParamInfo();
+        newbornParam.setParamSectionName("Newborn Monitoring");
+        newbornParam.setParamName(Params.UC_OOZING_NEWBORN.value);
+        newbornParam.setParamDateType(RADIO_SELECT_TYPE);
+        newbornParam.setOptions(new String[]{"Yes", "No"});
+        newbornParam.setValues(new String[]{"Y", "N"});
+        newbornParam.setConceptUUID(Params.UC_OOZING_NEWBORN.conceptId);
+        newbornParam.setEachEncounterField(true);
+      /*  //newbornParam.setFifteenMinField(true);
+        newbornParam.setHalfHourField(true);
+        newbornParam.setOnlyOneHourField(true);*/
+        newbornList.add(newbornParam);
+
+        //10 Suckling & Feeding
+        newbornParam = new ParamInfo();
+        newbornParam.setParamSectionName("Newborn Monitoring");
+        newbornParam.setParamName(Params.SUCKING_FEEDING_NEWBORN.value);
+        newbornParam.setParamDateType(RADIO_SELECT_TYPE);
+        newbornParam.setOptions(new String[]{"Yes", "No"});
+        newbornParam.setValues(new String[]{"Y", "N"});
+        newbornParam.setConceptUUID(Params.SUCKING_FEEDING_NEWBORN.conceptId);
+        newbornParam.setEachEncounterField(true);
+        /*//newbornParam.setFifteenMinField(true);
+        newbornParam.setHalfHourField(true);
+        newbornParam.setOnlyOneHourField(true);*/
+        newbornList.add(newbornParam);
+
+        //11 Any signs of ongoing complications
+        newbornParam = new ParamInfo();
+        newbornParam.setParamSectionName("Newborn Monitoring");
+        newbornParam.setParamName(Params.ONGOING_COMPLICATIONS_NEWBORN.value);
+        newbornParam.setParamDateType(DROPDOWN_MULTI_SELECT_TYPE);
+        newbornParam.setOptions(new String[]{
+                "Respiratory distress",
+                "Hypothermia",
+                "Sepsis",
+                "Poor feeding",
+                AppConstants.OTHER_OPTION
+        });
+        newbornParam.setConceptUUID(Params.ONGOING_COMPLICATIONS_NEWBORN.conceptId);
+        newbornParam.setEachEncounterField(true);
+       /* newbornParam.setFifteenMinField(true);
+        newbornParam.setHalfHourField(true);
+        newbornParam.setOnlyOneHourField(true);*/
+        newbornList.add(newbornParam);
+
+        //12 Assessment (Newborn)
+        newbornParam = new ParamInfo();
+        newbornParam.setParamSectionName("Newborn Monitoring");
+        newbornParam.setParamName(Params.ASSESSMENT_NEWBORN.value);
+        newbornParam.setParamDateType(INPUT_TXT_TYPE);
+        newbornParam.setConceptUUID(Params.ASSESSMENT_NEWBORN.conceptId);
+        newbornParam.setEachEncounterField(true);
+       /* //newbornParam.setFifteenMinField(true);
+        newbornParam.setHalfHourField(true);
+        newbornParam.setOnlyOneHourField(true);*/
+        newbornList.add(newbornParam);
+
+        //13 Plan (Newborn)
+        newbornParam = new ParamInfo();
+        newbornParam.setParamSectionName("Newborn Monitoring");
+        newbornParam.setParamName(Params.PLAN_NEWBORN.value);
+        newbornParam.setParamDateType(INPUT_TXT_TYPE);
+        newbornParam.setConceptUUID(Params.PLAN_NEWBORN.conceptId);
+        newbornParam.setEachEncounterField(true);
+        //newbornParam.setFifteenMinField(true);
+       // newbornParam.setHalfHourField(true);
+        //newbornParam.setOnlyOneHourField(true);
+        newbornList.add(newbornParam);
+
+
+        sectionMap.put("Newborn Monitoring", newbornList);
+
+        return sectionMap;
+    }
+
 }

@@ -33,5 +33,6 @@
     <dimen name="timeTextview_margin_start">30dp</dimen>
 
     <dimen name="timeTextview_min_width">100dip</dimen>
-
+    <dimen name="margin_top_parto_labels">16dp</dimen>
+    <dimen name="margin_top_parto_section_labels">20dp</dimen>
 </resources>

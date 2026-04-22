@@ -47,13 +47,35 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnShiftToPostnatalWard"
+        style="@style/Theme.EZazi.Button.Icon.Blue"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="@dimen/std_14dp"
+        android:paddingBottom="@dimen/std_14dp"
+        android:contentDescription="@string/content_view_more"
+        android:layout_margin="@dimen/std_8dp"
+        android:text="@string/shift_to_postnatal_ward"
+        android:textColor="@color/newPrimaryColor"
+        app:icon="@drawable/icon_postnatal_ward"
+        app:iconPadding="@dimen/std_8dp"
+        app:iconSize="@dimen/std_22dp"
+        app:iconTint="?colorPrimary"
+        app:layout_constraintBottom_toTopOf="@+id/container"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/layout_decision_pending" />
+
     <View
         android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginHorizontal="@dimen/screen_padding"
         android:background="@drawable/container_bg"
-        app:layout_constraintTop_toBottomOf="@id/layout_decision_pending" />
+        app:layout_constraintTop_toBottomOf="@id/btnShiftToPostnatalWard" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerview_timeline"

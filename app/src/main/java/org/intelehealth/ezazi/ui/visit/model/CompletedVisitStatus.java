@@ -61,7 +61,8 @@ public enum CompletedVisitStatus {
         private final String uuid;
         private final String sortValue;
 
-        public final String label = "Stage 2 Newborn Details";
+        //public final String label = "Stage 2 Newborn Details";
+        public final String label = "Stage-3 & Early Postpartum";
 
         Labour(String uuid, String value, String sortValue) {
             this.uuid = uuid;

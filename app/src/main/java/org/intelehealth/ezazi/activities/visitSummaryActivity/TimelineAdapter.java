@@ -1,9 +1,13 @@
 package org.intelehealth.ezazi.activities.visitSummaryActivity;
 
 import static org.intelehealth.ezazi.partogram.PartogramConstants.TIMELINE_MODE;
+import static org.intelehealth.ezazi.utilities.UuidDictionary.STAGE1_HOUR1_1;
+import static org.intelehealth.ezazi.utilities.UuidDictionary.STAGE3_HOUR1_1;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -37,6 +41,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -101,6 +107,7 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
     @Override
     public void onBindViewHolder(@NonNull TimelineViewHolder holder, int position) {
         if (encounterDTOList.size() > 0) {
+            Log.d(TAG, "onBindViewHolder: stage no : "+encounterDTOList.get(position).getEncounterTypeUuid());
             if (encounterDTOList.get(position).getEncounterTime() != null &&
                     !encounterDTOList.get(position).getEncounterTime().equalsIgnoreCase("")) {
 
@@ -112,6 +119,10 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
                         .equalsIgnoreCase("558cc1b8-c352-4b27-9ec2-131fc19c26f0")) {
                     holder.stage1start.setVisibility(View.VISIBLE);
                     holder.stage1start.setText(context.getResources().getText(R.string.stage_2));
+                }else if (encounterDTOList.get(position).getEncounterTypeUuid()
+                        .equalsIgnoreCase(STAGE3_HOUR1_1)) {
+                    holder.stage1start.setVisibility(View.VISIBLE);
+                    holder.stage1start.setText(context.getResources().getText(R.string.stage_3));
                 } else {
                     holder.stage1start.setVisibility(View.GONE);
                 }
@@ -128,7 +139,7 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
                 // check for this enc any obs created if yes than show submitted...
                 obsDAO = new ObsDAO();
                 submitted = obsDAO.checkObsAddedOrNt(encounterDTOList.get(position).getUuid(), sessionManager.getCreatorID());
-                Log.d(TAG, "onBindViewHolder: submitted : "+submitted);
+                Log.d(TAG, "onBindViewHolder: submitted : " + submitted);
 //                try {
                 Date timeDateType = DateTimeUtils.utcToLocalDate(time, AppConstants.UTC_FORMAT);
 
@@ -319,18 +330,16 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
             ivEdit.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if(handleNoInternetCase()){
-                        nextIntent(PartogramConstants.AccessMode.EDIT);
-                    }
+                    nextIntent(PartogramConstants.AccessMode.EDIT);
                 }
             });
             cardview.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     //if(handleNoInternetCase()) {
-                        PartogramConstants.AccessMode mode = (PartogramConstants.AccessMode) view.getTag();
-                        nextIntent(mode);
-                   // }
+                    PartogramConstants.AccessMode mode = (PartogramConstants.AccessMode) view.getTag();
+                    nextIntent(mode);
+                    // }
                 }
             });
         }
@@ -354,6 +363,25 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
                 String stagePart = parts[0];         // "Stage1"
                 String stageNumber = stagePart.replace("Stage", "");  // "1"
                 if(!stageNumber.isEmpty()) stage = Integer.parseInt(stageNumber);
+            }else if (encounterName.toLowerCase().contains("stage3")) {
+                String[] name = encounterName.split("_");
+                stage = 3;
+
+                // Stage3_HourX_Y
+                if (name.length >= 3) {
+
+                    int hourNumber = Integer.parseInt(name[1].replace("Hour", ""));
+
+                    if (hourNumber == 1) {
+                       // type = FIFTEEN_MIN;
+
+                    } else if (hourNumber == 2) {
+                     //   type = HALF_HOUR;
+
+                    } else if (hourNumber == 3 || hourNumber == 4) {
+                      //  type = HOURLY;
+                    }
+                }
             }else{
                 if(encounterName!=null && !encounterName.isEmpty()){
                     String[] name = encounterName.split("_");
@@ -370,7 +398,7 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
                             type = FIFTEEN_MIN;
                         }
                     }
-            }
+                }
 
                 /*if (Integer.parseInt(name[2]) == 1) {
                     type = HOURLY;
@@ -379,22 +407,22 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
                 } else {
                     type = FIFTEEN_MIN;
                 }*/
-                }
-                Log.d("final list print", "nextIntent: whole list : " + new Gson().toJson(encounterDTOList));
-                Log.d("final", "nextIntent: encountertype : " + encounterType);
-                Intent i1 = new Intent(context, PartogramDataCaptureActivity.class);
-                i1.putExtra("patientUuid", patientUuid);
-                i1.putExtra("name", patientName);
-                i1.putExtra("visitUuid", visitUuid);
-                i1.putExtra("encounterUuid", encounterDTOList.get(getAbsoluteAdapterPosition()).getUuid());
-                i1.putExtra("type", type);
-                i1.putExtra("stage", stage);
-                i1.putExtra("encounterName", encounterDTOList.get(getAbsoluteAdapterPosition()).getEncounterTypeName());
-                i1.putExtra("encounterType", encounterType);
+            }
+            Log.d("final list print", "nextIntent: whole list : " + new Gson().toJson(encounterDTOList));
+            Log.d("final", "nextIntent: encountertype : " + encounterType);
+            Intent i1 = new Intent(context, PartogramDataCaptureActivity.class);
+            i1.putExtra("patientUuid", patientUuid);
+            i1.putExtra("name", patientName);
+            i1.putExtra("visitUuid", visitUuid);
+            i1.putExtra("encounterUuid", encounterDTOList.get(getAbsoluteAdapterPosition()).getUuid());
+            i1.putExtra("type", type);
+            i1.putExtra("stage", stage);
+            i1.putExtra("encounterName", encounterDTOList.get(getAbsoluteAdapterPosition()).getEncounterTypeName());
+            i1.putExtra("encounterType", encounterType);
 
-                i1.putExtra(TIMELINE_MODE, mode);
-                context.startActivity(i1);
-           // }
+            i1.putExtra(TIMELINE_MODE, mode);
+            context.startActivity(i1);
+            // }
         }
 
     }
@@ -424,12 +452,13 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
         else if (status == EncounterDTO.Status.MISSED) return R.string.you_have_missed_obs;
         else return R.string.you_have_captured_obs;
     }
+
     private boolean handleNoInternetCase() {
-        boolean isInternetAvailable=true;
+        boolean isInternetAvailable = true;
         if (!NetworkConnection.isOnline(context)) {
             isInternetAvailable = false;
             AppDialogUtils.showSingleButtonDialog(
-                    (FragmentActivity)context,
+                    (FragmentActivity) context,
                     context.getString(R.string.no_internet_timeline_screen_title),
                     context.getString(R.string.no_internet_timeline_screen_body),
                     context.getString(R.string.ok),

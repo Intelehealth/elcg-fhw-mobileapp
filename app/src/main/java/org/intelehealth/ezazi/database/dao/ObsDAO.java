@@ -756,7 +756,7 @@ public class ObsDAO {
 
     public EncounterDTO.Type getEncounterType(String encounterUuid, String creatorID) {
         EncounterDTO.Type type = EncounterDTO.Type.NORMAL;
-        db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
+        db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
 
         Cursor idCursor = db.rawQuery("SELECT value FROM tbl_obs where encounteruuid = ? " +
                         "AND voided='0' AND (conceptuuid = ? OR conceptuuid = ?) ",
@@ -1113,10 +1113,10 @@ public class ObsDAO {
         return isExist;
     }
 
-    public List<ObsDTO> getLatestObsByVisitAndConcepts(
+    public List<ObsDTO> getLatestObsByVisitAndConceptsOriginal(
             String visitUuid,
             Set<String> riskConcepts
-    ) {
+    ) { // commented as combined with stage 3 logic
 
         if (riskConcepts == null || riskConcepts.isEmpty()) {
             return Collections.emptyList();
@@ -1291,5 +1291,125 @@ public class ObsDAO {
         idCursor.close();
 
         return value;
+    }
+    public List<ObsDTO> getObsRecordByEncounterUuid(String encounterUuid) {
+        List<ObsDTO> obsDTOList = new ArrayList<>();
+        db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
+        Cursor idCursor = db.rawQuery("SELECT * FROM tbl_obs where encounteruuid = ? " + " AND voided='0' " + " ORDER BY created_date DESC",
+                new String[]{encounterUuid});
+        ObsDTO obsDTO = new ObsDTO();
+        if (idCursor.getCount() != 0) {
+            while (idCursor.moveToNext()) {
+                obsDTO = new ObsDTO();
+                obsDTO.setUuid(idCursor.getString(idCursor.getColumnIndexOrThrow("uuid")));
+                obsDTO.setEncounteruuid(idCursor.getString(idCursor.getColumnIndexOrThrow("encounteruuid")));
+                obsDTO.setConceptuuid(idCursor.getString(idCursor.getColumnIndexOrThrow("conceptuuid")));
+                obsDTO.setValue(idCursor.getString(idCursor.getColumnIndexOrThrow("value")));
+                obsDTO.setComment(idCursor.getString(idCursor.getColumnIndexOrThrow("comment")));
+                obsDTO.setCreatedDate(idCursor.getString(idCursor.getColumnIndexOrThrow("created_date")));
+                obsDTO.setCreatorUuid(idCursor.getString(idCursor.getColumnIndexOrThrow("creatoruuid")));
+                obsDTOList.add(obsDTO);
+            }
+        }
+        idCursor.close();
+
+        return obsDTOList;
+    }
+
+    public List<ObsDTO> getLatestObsByVisitAndConcepts(String visitUuid, Set<String> riskConcepts) {
+        if (riskConcepts == null || riskConcepts.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<String, ObsDTO> resultMap = new LinkedHashMap<>();
+        db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
+
+        StringBuilder inClause = new StringBuilder();
+        for (int i = 0; i < riskConcepts.size(); i++) {
+            inClause.append("?");
+            if (i < riskConcepts.size() - 1) inClause.append(",");
+        }
+
+        String query =
+                "SELECT o.comment, o.conceptuuid, o.encounteruuid, o.value " +
+                        "FROM tbl_obs o " +
+                        "INNER JOIN tbl_encounter e ON o.encounteruuid = e.uuid " +
+                        "LEFT JOIN tbl_uuid_dictionary ud ON e.encounter_type_uuid = ud.uuid " +
+                        "WHERE e.visituuid = ? " +
+                        "AND o.voided = '0' " +
+                        "AND e.voided IN ('0','false','FALSE') " +
+                        "AND o.conceptuuid IN (" + inClause + ") " +
+                        "AND (" +
+                        "    CASE " +
+                        "        WHEN (" +
+                        "            SELECT ud2.name " +
+                        "            FROM tbl_encounter e2 " +
+                        "            LEFT JOIN tbl_uuid_dictionary ud2 ON e2.encounter_type_uuid = ud2.uuid " +
+                        "            WHERE e2.visituuid = e.visituuid " +
+                        "            AND e2.voided IN ('0','false','FALSE') " +
+                        "            AND ud2.name LIKE 'Stage%' " +
+                        "            ORDER BY e2.encounter_time DESC " +
+                        "            LIMIT 1 " +
+                        "        ) LIKE 'Stage3_%' " +
+                        "        THEN (" +
+                        "            ud.name LIKE 'Stage3_%' " +
+                        "            OR (ud.name = 'LCG_SOS' AND EXISTS (" +
+                        "                SELECT 1 FROM tbl_obs sos_o " +
+                        "                WHERE sos_o.encounteruuid = o.encounteruuid " +
+                        "                AND sos_o.conceptuuid = '2c3fb8df-b844-4e4c-8852-40917a98eef8' " +
+                        "                AND sos_o.value LIKE 'Stage3_%'" +
+                        "            ))" +
+                        "        ) " +
+                        "        ELSE (" +
+                        "            ud.name LIKE 'Stage1_%' OR ud.name LIKE 'Stage2_%' " +
+                        "            OR (ud.name = 'LCG_SOS' AND EXISTS (" +
+                        "                SELECT 1 FROM tbl_obs sos_o " +
+                        "                WHERE sos_o.encounteruuid = o.encounteruuid " +
+                        "                AND sos_o.conceptuuid = '2c3fb8df-b844-4e4c-8852-40917a98eef8' " +
+                        "                AND (sos_o.value LIKE 'Stage1_%' OR sos_o.value LIKE 'Stage2_%')" +
+                        "            ))" +
+                        "        ) " +
+                        "    END " +
+                        ") " +
+                        "ORDER BY e.encounter_time DESC, o.created_date DESC";
+
+        List<String> argsList = new ArrayList<>();
+        argsList.add(visitUuid);
+        argsList.addAll(riskConcepts);
+
+        Cursor cursor = db.rawQuery(query, argsList.toArray(new String[0]));
+
+        try {
+            while (cursor.moveToNext()) {
+
+                String conceptUuid =
+                        cursor.getString(cursor.getColumnIndexOrThrow("conceptuuid"));
+
+                if (resultMap.containsKey(conceptUuid)) continue;
+
+                String comment =
+                        cursor.getString(cursor.getColumnIndexOrThrow("comment"));
+
+                if (comment == null || comment.trim().isEmpty()) continue;
+
+                String value = cursor.getString(cursor.getColumnIndexOrThrow("value"));
+                if (value == null || value.trim().isEmpty()) continue;
+
+                ObsDTO obs = new ObsDTO();
+                obs.setConceptuuid(conceptUuid);
+                obs.setComment(comment);
+                obs.setValue(value);
+                obs.setEncounteruuid(
+                        cursor.getString(cursor.getColumnIndexOrThrow("encounteruuid")));
+
+                resultMap.put(conceptUuid, obs);
+
+                if (resultMap.size() == riskConcepts.size()) break;
+            }
+        } finally {
+            cursor.close();
+        }
+
+        return new ArrayList<>(resultMap.values());
     }
 }

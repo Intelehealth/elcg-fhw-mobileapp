@@ -848,5 +848,8 @@
     <string name="enter_sex_of_baby">बाळाचे लिंग प्रविष्ट करा</string>
     <string name="enter_baby_status">बाळाची स्थिती प्रविष्ट करा</string>
     <string name="enter_mother_status">मदर स्टेटस एंटर करा</string>
+    <string name="prolonged_labour_detected">Prolonged labour detected: Active stage exceeded safe duration.</string>
+    <string name="second_stage_prolonged">Second stage prolonged. Immediate attention required.</string>
+    <string name="shift_to_postnatal_ward">Shift to Postnatal Ward</string>
 
 </resources>

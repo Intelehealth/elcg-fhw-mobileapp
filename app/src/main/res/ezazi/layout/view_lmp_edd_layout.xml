@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <TextView
+        android:id="@+id/textView4"
+        style="@style/LabelStyleAddPatient"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="start"
+        android:text="@string/last_menstrual_period_title"
+        android:textColor="@color/colorBlack"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/card_lmp"
+        style="@style/Theme.EZazi.Material.CardView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/etLayout_lmp"
+            style="@style/Theme.EZazi.Input.Add.Patient"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/list_container_padding"
+            app:endIconDrawable="@drawable/ic_calendar_new"
+            app:endIconMode="custom">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_lmp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clickable="false"
+                android:cursorVisible="false"
+                android:editable="false"
+                android:focusable="false"
+                android:gravity="center_vertical"
+                android:hint="@string/date"
+                android:imeOptions="actionNext"
+                android:importantForAutofill="no"
+                android:inputType="none"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:textSize="@dimen/input_inner_size" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <TextView
+        android:id="@+id/tv_lmp_error"
+        style="@style/Textview_Validation_Error"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_marginTop="@dimen/validation_error_tv_margin_top"
+        android:layout_marginEnd="@dimen/admission_date_margin_end"
+        android:gravity="end"
+        android:lineSpacingExtra="0sp"
+        android:text="This field is mandatory"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/textView5"
+        style="@style/LabelStyleAddPatient"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/titles_margin_top"
+        android:gravity="start"
+        android:text="@string/edd_title"
+        android:textColor="@color/colorBlack"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/card_date" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/card_edd"
+        style="@style/Theme.EZazi.Material.CardView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/etLayout_edd"
+            style="@style/Theme.EZazi.Input.Add.Patient"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/list_container_padding"
+            app:endIconDrawable="@drawable/ic_calendar_new"
+            app:endIconMode="custom">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_edd"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clickable="false"
+                android:cursorVisible="false"
+                android:editable="false"
+                android:focusable="false"
+                android:gravity="center_vertical"
+                android:hint="@string/date"
+                android:imeOptions="actionNext"
+                android:importantForAutofill="no"
+                android:inputType="none"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:textSize="@dimen/input_inner_size" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+    <TextView
+        android:id="@+id/tv_edd_error"
+        style="@style/Textview_Validation_Error"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_marginTop="@dimen/validation_error_tv_margin_top"
+        android:layout_marginEnd="@dimen/admission_date_margin_end"
+        android:gravity="end"
+        android:lineSpacingExtra="0sp"
+        android:text="This field is mandatory"
+        android:visibility="gone" />
+
+</LinearLayout>
+
+
