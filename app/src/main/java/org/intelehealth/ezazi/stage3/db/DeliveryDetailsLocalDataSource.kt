@@ -6,6 +6,7 @@ import org.intelehealth.ezazi.database.dao.VisitsDAO
 import org.intelehealth.ezazi.models.dto.EncounterDTO
 import org.intelehealth.ezazi.models.dto.ObsDTO
 import org.intelehealth.ezazi.partogram.CardGenerationEngine
+import org.intelehealth.ezazi.utilities.exception.DAOException
 
 class DeliveryDetailsLocalDataSource(
     private val obsDAO: ObsDAO,
@@ -24,6 +25,7 @@ class DeliveryDetailsLocalDataSource(
         return visitDAO.updateVisitDecisionPendingFlag(visitUuid, value)
     }
 
+    @Throws(DAOException::class)
     fun createStage3FirstEncounter(visitUuid: String, encounterTypeName: String): Boolean {
         return encounterDAO.createStage3FirstEncounter(visitUuid, encounterTypeName)
     }

@@ -891,7 +891,7 @@ public class EncounterDAO {
             return false;
         }
         SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
-        db.beginTransaction();
+        //db.beginTransaction();
 
         try {
             // ---------------- ENCOUNTER ----------------
@@ -911,6 +911,7 @@ public class EncounterDAO {
             boolean encounterInserted = insertStage3Encounter(encounterDTO);
 
             if (!encounterInserted) {
+                Log.e(TAG, "createStage3FirstEncounter: encounter insert returned false");
                 return false;
             }
 
@@ -921,17 +922,19 @@ public class EncounterDAO {
 
             boolean obsResult = obsDAO.insertObs(obsDTO);
             if (!obsResult) {
+                Log.e(TAG, "createStage3FirstEncounter: obs insert returned false for encounter: " + encounterDTO.getUuid());
                 return false;
             }
 
-            db.setTransactionSuccessful();
+            //db.setTransactionSuccessful();
             return true;
 
         } catch (Exception e) {
+            Log.e(TAG, "createStage3FirstEncounter: exception: " + e.getMessage());
             return false;
 
         } finally {
-            db.endTransaction();
+            //db.endTransaction();
         }
     }
     public boolean insertStage3Encounter(EncounterDTO encounter) throws DAOException {
