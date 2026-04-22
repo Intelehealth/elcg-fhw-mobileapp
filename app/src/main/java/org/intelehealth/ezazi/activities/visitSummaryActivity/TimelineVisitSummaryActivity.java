@@ -663,7 +663,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
                     }).buildDialog();
                 }else if (stageNo == 3) {
                     new CompleteVisitOnEnd3StageDialog(this, visitUuid, () -> {
-                        showToastAndUploadVisit(true, getResources().getString(R.string.data_added_successfully));
+                        showToastAndUploadVisit(true, getResources().getString(R.string.data_saved_visit_closed));
                     }).buildDialog();
                 }
 

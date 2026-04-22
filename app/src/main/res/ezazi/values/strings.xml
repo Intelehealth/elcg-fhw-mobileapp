@@ -241,5 +241,9 @@
     <string name="label_women">Mother</string>
     <string name="label_newborn">Newborn</string>
     <string name="select_valid_date">Select valid date</string>
+    <string name="mother_final_outcome">Mother – Final Outcome</string>
+    <string name="newborn_final_outcome">Newborn – Final Outcome</string>
+    <string name="complete_case">Complete Case</string>
+    <string name="data_saved_visit_closed">Data saved and visit closed successfully.</string>
 
 </resources>

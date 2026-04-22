@@ -83,79 +83,79 @@ object ValidateStage3Fields {
                     // ===============================
                     // WOMAN MONITORING - Vital Signs
                     // ===============================
-                    "5087AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" -> // STAGE3_WOMAN_PULSE
+                    PartogramConstants.Params.PULSE.conceptId -> // STAGE3_WOMAN_PULSE
                         values[KEY_WOMAN_PULSE] = info.capturedValue ?: ""
-                    "5085AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" -> // STAGE3_WOMAN_SYSTOLIC_BP
+                    PartogramConstants.Params.SYSTOLIC_BP.conceptId -> // STAGE3_WOMAN_SYSTOLIC_BP
                         values[KEY_WOMAN_SYS_BP] = info.capturedValue ?: ""
-                    "5086AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" -> // STAGE3_WOMAN_DIASTOLIC_BP
+                    PartogramConstants.Params.DIASTOLIC_BP.conceptId -> // STAGE3_WOMAN_DIASTOLIC_BP
                         values[KEY_WOMAN_DIA_BP] = info.capturedValue ?: ""
-                    "5088AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" -> // STAGE3_WOMAN_TEMPERATURE
+                    PartogramConstants.Params.TEMPERATURE.conceptId -> // STAGE3_WOMAN_TEMPERATURE
                         values[KEY_WOMAN_TEMP] = info.capturedValue ?: ""
-                    "5242AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" -> // STAGE3_RESPIRATORY_RATE_MOTHER
+                    PartogramConstants.Params.RESPIRATORY_RATE_MOTHER.conceptId -> // STAGE3_RESPIRATORY_RATE_MOTHER
                         values[KEY_WOMAN_RR] = info.capturedValue ?: ""
-                    "585c2f4a-16d3-4fd7-8b50-2927e14ca379" -> // STAGE3_BLOOD_LOSS_MOTHER
+                    PartogramConstants.Params.BLOOD_LOSS_MOTHER.conceptId -> // STAGE3_BLOOD_LOSS_MOTHER
                         values[KEY_BLOOD_LOSS] = info.capturedValue ?: ""
 
                     // ===============================
                     // WOMAN MONITORING - Clinical Checks
                     // ===============================
-                    "13de11c4-76cc-4851-8b37-513cee310c93" -> // STAGE3_UTERUS_CONTRACTED_MOTHER
+                    PartogramConstants.Params.UTERUS_CONTRACTED_MOTHER.conceptId -> // STAGE3_UTERUS_CONTRACTED_MOTHER
                         values[KEY_UTERUS_CONTRACTED] = info.capturedValue ?: ""
-                    "cb6ee6f9-6476-4b44-adac-8e85798a716c" -> // STAGE3_URINE_PASSED_MOTHER
+                    PartogramConstants.Params.URINE_PASSED_MOTHER.conceptId -> // STAGE3_URINE_PASSED_MOTHER
                         values[KEY_URINE_PASSED] = info.capturedValue ?: ""
-                    "afd25b45-cb3f-4e77-8c3d-8b8f6cc83944" -> // STAGE3_HEMATOMA_MOTHER
+                    PartogramConstants.Params.HEMATOMA_MOTHER.conceptId -> // STAGE3_HEMATOMA_MOTHER
                         values[KEY_HEMATOMA] = info.capturedValue ?: ""
-                    "caa174fc-5889-443e-b53d-701fb2e85c23" -> // STAGE3_ONGOING_COMPLICATIONS_MOTHER
+                    PartogramConstants.Params.ONGOING_COMPLICATIONS_MOTHER.conceptId -> // STAGE3_ONGOING_COMPLICATIONS_MOTHER
                         values[KEY_COMPLICATIONS_MOTHER] = info.capturedValue ?: ""
 
                     // ===============================
                     // WOMAN MONITORING - Documentation
                     // ===============================
-                    "67a050c1-35e5-451c-a4ab-fff9d57b0db1" -> // STAGE3_ASSESSMENT_MOTHER
+                    PartogramConstants.Params.ASSESSMENT_MOTHER.conceptId-> // STAGE3_ASSESSMENT_MOTHER
                         values[KEY_ASSESSMENT_MOTHER] = info.capturedValue ?: ""
-                    "5991aeaf-c4c3-457d-ada1-334d90c545fc" -> // STAGE3_PLAN_MOTHER
+                    PartogramConstants.Params.PLAN_MOTHER.conceptId -> // STAGE3_PLAN_MOTHER
                         values[KEY_PLAN_MOTHER] = info.capturedValue ?: ""
 
                     // ===============================
                     // NEWBORN MONITORING - Breathing & Vitals
                     // ===============================
-                    "694d18a3-8163-43ba-9ac8-cf07a8c84b6b" -> // STAGE3_GRUNTING_NEWBORN
+                    PartogramConstants.Params.GRUNTING_NEWBORN.conceptId -> // STAGE3_GRUNTING_NEWBORN
                         values[KEY_GRUNTING] = info.capturedValue ?: ""
-                    "5d9c44df-eb2b-435b-aac9-ee6b83ee6d27" -> // STAGE3_CHEST_INDRAWING_NEWBORN
+                    PartogramConstants.Params.CHEST_INDRAWING_NEWBORN.conceptId -> // STAGE3_CHEST_INDRAWING_NEWBORN
                         values[KEY_CHEST_INDRAWING] = info.capturedValue ?: ""
-                    "9d2ebbfd-538f-11e6-9cfe-86f436325720" -> // STAGE3_FAST_BREATHING_NEWBORN
+                    PartogramConstants.Params.FAST_BREATHING_NEWBORN.conceptId -> // STAGE3_FAST_BREATHING_NEWBORN
                         values[KEY_FAST_BREATHING] = info.capturedValue ?: ""
-                    "e642e4a6-2799-488f-9f95-eec27a3bb756" -> // STAGE3_RESPIRATORY_RATE_NEWBORN
+                    PartogramConstants.Params.RESPIRATORY_RATE_NEWBORN.conceptId -> // STAGE3_RESPIRATORY_RATE_NEWBORN
                         values[KEY_NEWBORN_RR] = info.capturedValue ?: ""
-                    "ef9490bc-b039-45bc-98a8-34d55b750e04" -> // STAGE3_SPO2_NEWBORN
+                    PartogramConstants.Params.SPO2_NEWBORN.conceptId -> // STAGE3_SPO2_NEWBORN
                         values[KEY_NEWBORN_SPO2] = info.capturedValue ?: ""
 
                     // ===============================
                     // NEWBORN MONITORING - Thermoregulation & Circulation
                     // ===============================
-                    "d16058b1-8756-4db2-bf71-834466e1f436" -> // STAGE3_FEET_WARM_NEWBORN
+                    PartogramConstants.Params.FEET_WARM_NEWBORN.conceptId -> // STAGE3_FEET_WARM_NEWBORN
                         values[KEY_FEET_WARM] = info.capturedValue ?: ""
-                    "5c74ba33-b194-4a1a-b6e8-cfca07d2a593" -> // STAGE3_TEMPERATURE_NEWBORN
+                    PartogramConstants.Params.TEMPERATURE_NEWBORN.conceptId -> // STAGE3_TEMPERATURE_NEWBORN
                         values[KEY_NEWBORN_TEMP] = info.capturedValue ?: ""
-                    "641cf6ac-ce38-42ca-9672-d30dce1c56de" -> // STAGE3_SKIN_COLOR_NEWBORN
+                    PartogramConstants.Params.SKIN_COLOR_NEWBORN.conceptId -> // STAGE3_SKIN_COLOR_NEWBORN
                         values[KEY_SKIN_COLOR_CYANOSIS] = info.capturedValue ?: ""
 
                     // ===============================
                     // NEWBORN MONITORING - Umbilical & Feeding
                     // ===============================
-                    "995ab5c8-76a0-4e3c-ac70-2270fdbc14a8" -> // STAGE3_UC_OOZING_NEWBORN
+                    PartogramConstants.Params.UC_OOZING_NEWBORN.conceptId -> // STAGE3_UC_OOZING_NEWBORN
                         values[KEY_UMBILICAL_CORD_OOZING] = info.capturedValue ?: ""
-                    "1a49a4ef-ad20-4cd8-b176-06eb6fbf9971" -> // STAGE3_SUCKING_FEEDING_NEWBORN
+                    PartogramConstants.Params.SUCKING_FEEDING_NEWBORN.conceptId -> // STAGE3_SUCKING_FEEDING_NEWBORN
                         values[KEY_SUCKLING_FEEDING] = info.capturedValue ?: ""
 
                     // ===============================
                     // NEWBORN MONITORING - Complications & Documentation
                     // ===============================
-                    "820ae093-d3ab-402a-9a81-279963cf9dc8" -> // STAGE3_ONGOING_COMPLICATIONS_NEWBORN
+                    PartogramConstants.Params.ONGOING_COMPLICATIONS_NEWBORN.conceptId -> // STAGE3_ONGOING_COMPLICATIONS_NEWBORN
                         values[KEY_COMPLICATIONS_NEWBORN] = info.capturedValue ?: ""
-                    "15fc4eca-7635-4e7c-baa4-20c250cfe62a" -> // STAGE3_ASSESSMENT_NEWBORN
+                    PartogramConstants.Params.ASSESSMENT_NEWBORN.conceptId -> // STAGE3_ASSESSMENT_NEWBORN
                         values[KEY_ASSESSMENT_NEWBORN] = info.capturedValue ?: ""
-                    "a79853d9-e45e-41b2-8473-b19e5cae66cb" -> // STAGE3_PLAN_NEWBORN
+                    PartogramConstants.Params.PLAN_NEWBORN.conceptId -> // STAGE3_PLAN_NEWBORN
                         values[KEY_PLAN_NEWBORN] = info.capturedValue ?: ""
                 }
             }
@@ -226,7 +226,7 @@ object ValidateStage3Fields {
         }
 
         // Temperature: MINIMUM_TEMPERATURE_CELSIUS - MAXIMUM_TEMPERATURE_CELSIUS °C
-        if (temp.isNotEmpty()) {
+      /*  if (temp.isNotEmpty()) {
             val minTemp = MINIMUM_TEMPERATURE_CELSIUS.toDouble()
             val maxTemp = MAXIMUM_TEMPERATURE_CELSIUS.toDouble()
 
@@ -237,7 +237,7 @@ object ValidateStage3Fields {
                     arrayOf(minTemp, maxTemp)
                 )
             }
-        }
+        }*/
 
         /*// Respiratory Rate: 10-60 breaths/min
         if (rr.isNotEmpty()) {
