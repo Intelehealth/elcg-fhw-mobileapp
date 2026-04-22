@@ -498,7 +498,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
 
                         // Multi-select: save exactly like a plain text obs.
                         // capturedValue already holds the serialised comma-separated string.
-                        if (!TextUtils.isEmpty(info.getCapturedValue())) {
+                        //if (!TextUtils.isEmpty(info.getCapturedValue())) {
                             info.setCreatedDate(
                                     DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
                             ObsDTO obsDTO = buildObservation(info);
@@ -512,10 +512,31 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                             } else {
                                 obsDTOList.add(obsDTO);
                             }
+                        //}
+                    }else if (PartogramConstants.RADIO_SELECT_TYPE.equalsIgnoreCase(info.getParamDateType())) {
+                          // addGeneralRadioValuesOrNormalObs(info, obsDAO, mEncounterUUID, obsDTOList);
+                           String value = info.getCapturedValue();
+                            ObsDTO obsDTOData = buildObservation(info);
+                            String uuid = obsDAO.getObsuuid(mEncounterUUID, info.getConceptUUID());
+                            obsDTOData.setUuid(uuid);
+                            if (value != null && !value.isEmpty()) {
+
+                                if (value.equalsIgnoreCase("Yes")) {
+                                    obsDTOData.setValue("Y");
+                                } else if (value.equalsIgnoreCase("No")) {
+                                    obsDTOData.setValue("N");
+                                } else {
+                                    obsDTOData.setValue(value);
+                                }
+
+                                if (uuid != null && !uuid.isEmpty()) {
+                                    obsDTOList.add(obsDTOData);
+                                } else {
+                                    if (info.getCapturedValue() != null && !info.getCapturedValue().isEmpty()) {
+                                        obsDTOList.add(obsDTOData);
+                                    }
+                                }
                         }
-                    }else {
-                        if (PartogramConstants.RADIO_SELECT_TYPE.equalsIgnoreCase(info.getParamDateType())) {
-                            addGeneralRadioValuesOrNormalObs(info, obsDAO, mEncounterUUID, obsDTOList);
                         } else {
                             //  EXISTING NORMAL EDITTEXT FLOW
                             info.setCreatedDate(DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
@@ -533,7 +554,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                                 }
                             }
                         }
-                    } /*else {
+                     /*else {
                         info.setCreatedDate(DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
                         ObsDTO obsDTOData = buildObservation(info);
 
@@ -689,7 +710,12 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
         obsDTOData.setEncounteruuid(mEncounterUUID);
         obsDTOData.setConceptuuid(info.getConceptUUID());
         obsDTOData.setValue(info.getCapturedValue());
-        obsDTOData.setComment(PartogramAlertEngine.getAlertNameUpdated(info));
+        if (mStageNumber == 1 || mStageNumber == 2) {
+            obsDTOData.setComment(PartogramAlertEngine.getAlertNameUpdated(info));
+        }else if(mStageNumber == 3){
+            obsDTOData.setComment(PartogramAlertEngine.getStage3AlertName(info));
+        }
+        //obsDTOData.setComment(PartogramAlertEngine.getAlertNameUpdated(info));
         obsDTOData.setCreatorUuid(new SessionManager(this).getCreatorID());
         obsDTOData.setCreatedDate(info.getCreatedDate());
         return obsDTOData;
@@ -704,9 +730,6 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
 
                 ObsDTO obsDTO = mObsDTOList.get(i);
                 for (int j = 0; j < mItemList.size(); j++) {
-                    Log.d("RADIO_DB", "concept=" + obsDTO.getConceptuuid()
-                            + " value=" + obsDTO.getValue()
-                            + " created=" + obsDTO.getCreatedDate(true));
                     for (int k = 0; k < mItemList.get(j).getParamInfoList().size(); k++) {
                         ParamInfo info = mItemList.get(j).getParamInfoList().get(k);
                         if (obsDTO.getConceptuuid().equals(info.getConceptUUID())) {
@@ -754,8 +777,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                             } else if (obsDTO.getConceptuuid().equals(UuidDictionary.ASSESSMENT)) {
                                 info.setCapturedValue(ParamInfo.RadioOptions.YES.name());
                                 info.collectAllAssessmentsInList(obsDTO);
-                            } else {
-                                Log.d(TAG, "setEditData:savecheck: " + obsDTO.createdDate());
+                            } else if(ValidateStage3Fields.INSTANCE.isRadioSelectField(obsDTO.getConceptuuid())){
                                 //info.setCreatedDate(obsDTO.getCreatedDate());
                                 info.setCapturedValue(obsDTO.getValue());
                                 if (radioHandler.isGenericConcept(info.getConceptUUID())) {
@@ -769,6 +791,9 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                                         info.setCheckedRadioOption(null);
                                     }
                                 }
+                            }
+                            else{
+                                info.setCapturedValue(obsDTO.getValue());
                             }
                             break;
                         }
@@ -1115,32 +1140,30 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
             List<ObsDTO> obsDTOList
     ) {
         try{
-            // General RADIO HANDLING
-                String uuid = obsDAO.getObsuuid(encounterUUID, info.getConceptUUID());
-                ObsDTO obs = new ObsDTO();
-                obs.setUuid(uuid);
-                obs.setEncounteruuid(encounterUUID);
-                obs.setConceptuuid(info.getConceptUUID());
-                obs.setCreatorUuid(new SessionManager(this).getCreatorID());
+            String value = info.getCapturedValue();
+            /*if (value == null || value.isEmpty()) {
+                return; // radio never empty in real case
+            }*/
+            String uuid = obsDAO.getObsuuid(encounterUUID, info.getConceptUUID());
 
-                String value = info.getCapturedValue();
+            ObsDTO obs = new ObsDTO();
+            obs.setUuid(uuid);
+            obs.setEncounteruuid(encounterUUID);
+            obs.setConceptuuid(info.getConceptUUID());
+            obs.setCreatorUuid(new SessionManager(this).getCreatorID());
+            obs.setCreatedDate(
+                    DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT)
+            );
 
-                if (value != null && !value.isEmpty()) {
+            if (value.equalsIgnoreCase("Yes")) {
+                obs.setValue("Y");
+            } else if (value.equalsIgnoreCase("No")) {
+                obs.setValue("N");
+            } else {
+                obs.setValue(value);
+            }
 
-                    if (value.equalsIgnoreCase("Yes")) {
-                        obs.setValue("Y");
-                    } else if (value.equalsIgnoreCase("No")) {
-                        obs.setValue("N");
-                    } else {
-                        obs.setValue(value);
-                    }
-
-                    obs.setCreatedDate(
-                            DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT)
-                    );
-
-                    obsDTOList.add(obs);
-                }
+            obsDTOList.add(obs);
 
         }catch (Exception e){
             e.printStackTrace();
