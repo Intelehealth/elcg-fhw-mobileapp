@@ -158,9 +158,6 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
     SyncUtils syncUtils = new SyncUtils();
 
 
-    int STAGE_1_DURATION = 30;
-    int STAGE_2_DURATION = 15;
-
     private final BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -228,7 +225,6 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         encounterDAO = new EncounterDAO();
 
         initUI();
-        setupShiftToPostnatalWardBtn();
         calculateStageDurationsAndShowDialog();
 
         fabSOS.setOnClickListener(view -> {
@@ -274,10 +270,13 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 
     private void setupShiftToPostnatalWardBtn() {
        try {
+           Log.d("CCCCC", "called"+stageNo);
            String providerId = sessionManager.getProviderID();
            String ward = providerDAO.checkNurseWard(providerId);
            Boolean isVisitActive = visitsDAO.isVisitActive(visitUuid, providerId);
-           if(((ward.isEmpty() || ward.equals("Labor Ward")) && isVisitActive)){
+           if(((ward.isEmpty() || ward.equals("Labor Ward"))
+                   && isVisitActive
+                   && stageNo == 3)){
                btnShiftToPostnatalWard.setVisibility(View.VISIBLE);
            }else{
                btnShiftToPostnatalWard.setVisibility(View.GONE);
@@ -1591,6 +1590,9 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
             fabSOS.setVisibility(View.GONE);
             fabPrescription.setVisibility(View.GONE);
         }
+
+        //setting shift to postnatal button visibility here bcs we are getting last stage here
+        setupShiftToPostnatalWardBtn();
     }
 
 }
