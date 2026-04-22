@@ -11,6 +11,7 @@ import org.intelehealth.ezazi.app.AppConstants.MINIMUM_BP_DSYS
 import org.intelehealth.ezazi.app.AppConstants.MINIMUM_BP_SYS
 import org.intelehealth.ezazi.app.AppConstants.MINIMUM_PULSE
 import org.intelehealth.ezazi.app.AppConstants.MINIMUM_TEMPERATURE_CELSIUS
+import org.intelehealth.ezazi.partogram.PartogramConstants
 import org.intelehealth.ezazi.partogram.model.PartogramItemData
 
 /**
@@ -320,6 +321,22 @@ object ValidateStage3Fields {
             true
         }
     }
+    private val radioTypeConcepts = setOf(
+        PartogramConstants.Params.UTERUS_CONTRACTED_MOTHER.conceptId,
+        PartogramConstants.Params.URINE_PASSED_MOTHER.conceptId,
+        PartogramConstants.Params.HEMATOMA_MOTHER.conceptId,
+        PartogramConstants.Params.GRUNTING_NEWBORN.conceptId,
+        PartogramConstants.Params.CHEST_INDRAWING_NEWBORN.conceptId,
+        PartogramConstants.Params.FAST_BREATHING_NEWBORN.conceptId,
+        PartogramConstants.Params.FEET_WARM_NEWBORN.conceptId,
+        PartogramConstants.Params.SKIN_COLOR_NEWBORN.conceptId,
+        PartogramConstants.Params.UC_OOZING_NEWBORN.conceptId,
+        PartogramConstants.Params.SUCKING_FEEDING_NEWBORN.conceptId
+    )
+
+    fun isRadioSelectField(conceptId: String?): Boolean {
+        return conceptId != null && radioTypeConcepts.contains(conceptId)
+    }
 }
 
 // ============================================================
@@ -352,3 +369,4 @@ private const val KEY_SUCKLING_FEEDING = "suckling_feeding"
 private const val KEY_COMPLICATIONS_NEWBORN = "complications_newborn"
 private const val KEY_ASSESSMENT_NEWBORN = "assessment_newborn"
 private const val KEY_PLAN_NEWBORN = "plan_newborn"
+

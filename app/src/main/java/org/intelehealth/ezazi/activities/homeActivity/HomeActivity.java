@@ -1,6 +1,5 @@
 package org.intelehealth.ezazi.activities.homeActivity;
 
-import static org.intelehealth.ezazi.activities.homeActivity.RiskConcepts.RISK_CONCEPTS;
 import static org.intelehealth.ezazi.app.AppConstants.EVENT_SHIFT_CHANGED;
 import static org.intelehealth.ezazi.app.AppConstants.SHIFTED_DATA;
 import static org.intelehealth.ezazi.utilities.StringUtils.en__as_dob;

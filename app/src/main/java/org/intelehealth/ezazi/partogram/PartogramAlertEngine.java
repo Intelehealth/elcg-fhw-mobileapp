@@ -381,4 +381,106 @@ public class PartogramAlertEngine {
         }
         return alert;
     }
+    public static String getStage3AlertName(ParamInfo paramInfo) {
+        String alert = "G";
+        try {
+            // EARLY POSTPARTUM – WOMAN
+            if (paramInfo.getParamSectionName().equalsIgnoreCase("Woman Monitoring")) {
+
+                if (paramInfo.getParamName().equalsIgnoreCase("Pulse")&& isValidCapturedValue(paramInfo.getCapturedValue())) {
+
+                    int val = Integer.parseInt(paramInfo.getCapturedValue());
+                    if (val < 60 || val >= 120) alert = "R";
+
+                } else if (paramInfo.getParamName().equalsIgnoreCase("Systolic BP") && isValidCapturedValue(paramInfo.getCapturedValue())) {
+
+                    int val = Integer.parseInt(paramInfo.getCapturedValue());
+                    if (val < 80 || val >= 140) alert = "R";
+
+                } else if (paramInfo.getParamName().equalsIgnoreCase("Diastolic BP")) {
+
+                    int val = Integer.parseInt(paramInfo.getCapturedValue());
+                    if (val >= 90) alert = "R";
+
+                } else if (paramInfo.getParamName().equalsIgnoreCase("Temperature (°F)")) {
+
+                    double val = Double.parseDouble(paramInfo.getCapturedValue());
+                    if (val < 95 || val >= 99.5) alert = "R";
+
+                } else if (paramInfo.getParamName().equalsIgnoreCase("Respiratory Rate (per min)")) {
+
+                    int val = Integer.parseInt(paramInfo.getCapturedValue());
+                    if (val > 30) alert = "R";
+
+                } else if (paramInfo.getParamName().equalsIgnoreCase("Blood loss (ml)")) {
+
+                    int val = Integer.parseInt(paramInfo.getCapturedValue());
+                    if (val >= 500) alert = "R";
+
+                } else if (paramInfo.getParamName().equalsIgnoreCase("Uterus contracted")) {
+
+                    if (paramInfo.getCapturedValue().equalsIgnoreCase("N")) alert = "R";
+
+                } else if (paramInfo.getParamName().equalsIgnoreCase("Urine passed in 2 hours")) {
+
+                    if (paramInfo.getCapturedValue().equalsIgnoreCase("N")) alert = "R";
+
+                } else if (paramInfo.getParamName().equalsIgnoreCase("Hematoma")) {
+
+                    if (paramInfo.getCapturedValue().equalsIgnoreCase("Y")) alert = "R";
+                } else if (paramInfo.getParamName().equalsIgnoreCase("Any signs of ongoing complications")) {
+
+                    if (paramInfo.getCapturedValue() !=null && !paramInfo.getCapturedValue().isEmpty()) alert = "R";
+                }
+            }
+
+            // EARLY POSTPARTUM – NEWBORN
+            else if (paramInfo.getParamSectionName().equalsIgnoreCase("Newborn Monitoring")) {
+
+               if (paramInfo.getParamName().equalsIgnoreCase("Grunting")
+                        || paramInfo.getParamName().equalsIgnoreCase("Chest indrawing")
+                        || paramInfo.getParamName().equalsIgnoreCase("Fast breathing")
+                        || paramInfo.getParamName().equalsIgnoreCase("Colour of the skin (Cyanosed)")
+                        || paramInfo.getParamName().equalsIgnoreCase("Umbilical cord oozing")) {
+
+                    if (paramInfo.getCapturedValue().equalsIgnoreCase("Y")) {
+                        alert = "R";
+                    }
+
+                } else if (paramInfo.getParamName().equalsIgnoreCase("Respiratory Rate (per min)")) {
+
+                    int val = Integer.parseInt(paramInfo.getCapturedValue());
+                    if (val > 60) alert = "R";
+
+                } else if (paramInfo.getParamName().equalsIgnoreCase("SPO2 (%)")) {
+
+                    int val = Integer.parseInt(paramInfo.getCapturedValue());
+                    if (val < 92) alert = "R";
+
+                } else if (paramInfo.getParamName().equalsIgnoreCase("Feet (warm)")) {
+
+                    if (paramInfo.getCapturedValue().equalsIgnoreCase("N")) alert = "R";
+
+                } else if (paramInfo.getParamName().equalsIgnoreCase("Temperature (°F)")) {
+
+                    double val = Double.parseDouble(paramInfo.getCapturedValue());
+                    if (val < 97.7 || val > 99.5) alert = "R";
+
+                } else if (paramInfo.getParamName().equalsIgnoreCase("Suckling & Feeding")) {
+
+                    if (paramInfo.getCapturedValue().equalsIgnoreCase("N")) alert = "R";
+                }else if (paramInfo.getParamName().equalsIgnoreCase("Any signs of ongoing complications")) {
+
+                    if (paramInfo.getCapturedValue() !=null && !paramInfo.getCapturedValue().isEmpty()) alert = "R";
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return alert;
+    }
+    public static boolean isValidCapturedValue(String capturedValue) {
+        return capturedValue != null && !capturedValue.trim().isEmpty();
+    }
 }

@@ -5,6 +5,7 @@ import kotlinx.coroutines.withContext
 import org.intelehealth.ezazi.activities.homeActivity.riskscores.AlertScoreCalculator
 import org.intelehealth.ezazi.activities.homeActivity.riskscores.CervixHistoryResolver
 import org.intelehealth.ezazi.activities.homeActivity.riskscores.CervixPlotEvaluator
+import org.intelehealth.ezazi.database.dao.EncounterDAO
 import org.intelehealth.ezazi.database.dao.ObsDAO
 import org.intelehealth.ezazi.models.ActivePatientModel
 import org.intelehealth.ezazi.partogram.PartogramConstants
@@ -16,27 +17,27 @@ object VisitAlertProcessor {
         visits: List<ActivePatientModel>,
     ): List<ActivePatientModel> = withContext(Dispatchers.IO) {
         val obsDAO = ObsDAO()
+        val encounterDAO = EncounterDAO()
+
         visits.forEach { visit ->
 
             val obsList =
                 obsDAO.getLatestObsByVisitAndConcepts(
                     visit.uuid,
-                    RiskConcepts.RISK_CONCEPTS
+                    RiskConcepts.ALL_RISK_CONCEPTS
                 )
-
             var totalScore = 0.0
 
-            obsList.forEach { obs -> totalScore += AlertScoreCalculator.calculateUpdated(obs, visit)
+            obsList.forEach { obs -> totalScore += AlertScoreCalculator.calculateUpdated(obs, visit) }
+
+            if(!encounterDAO.isStage3Started(visit.uuid)){
+                val cervixObs = obsDAO.getCervixObsByVisit(visit.uuid, PartogramConstants.Params.CERVIX_PLOT.conceptId)
+
+                val cervixState = CervixHistoryResolver.resolve(cervixObs)
+
+                val cervixScore = cervixState?.let { CervixPlotEvaluator.calculateScore(listOf(it)) } ?: 0.0
+                totalScore += cervixScore
             }
-
-            val cervixObs = obsDAO.getCervixObsByVisit(visit.uuid, PartogramConstants.Params.CERVIX_PLOT.conceptId)
-
-            val cervixState = CervixHistoryResolver.resolve(cervixObs)
-
-            val cervixScore = cervixState?.let { CervixPlotEvaluator.calculateScore(listOf(it)) } ?: 0.0
-
-
-            totalScore += cervixScore
 
             visit.alertFlagTotal = totalScore
 
