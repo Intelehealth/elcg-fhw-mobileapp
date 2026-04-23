@@ -165,4 +165,7 @@
     <string name="active_labour_diagnosis">Active labour diagnosis must be within last 15 hours</string>
     <string name="select_valid_date">Select valid date</string>
 
+    <string name="no_internet">No Internet Connection</string>
+    <string name="back_online">Back Online</string>
+
 </resources>
