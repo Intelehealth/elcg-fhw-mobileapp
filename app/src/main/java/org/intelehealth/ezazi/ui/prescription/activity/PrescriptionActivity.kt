@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import org.intelehealth.ezazi.R
 import org.intelehealth.ezazi.databinding.ActivityPrescriptionEzaziBinding
+import org.intelehealth.ezazi.optimized_sync.network.NetworkStatus
 import org.intelehealth.ezazi.ui.prescription.fragment.PrescriptionFragment
 import org.intelehealth.ezazi.ui.prescription.model.PrescriptionArg
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity
@@ -58,5 +59,17 @@ class PrescriptionActivity : BaseActionBarActivity() {
                 putExtra(PrescriptionFragment.EXT_VISIT_ID, visitId)
             }.also { context.startActivity(it) }
         }
+    }
+
+    override fun onNetworkAvailable(status: NetworkStatus) {
+        super.onNetworkAvailable(status)
+    }
+
+    override fun onNetworkChanged(status: NetworkStatus) {
+        super.onNetworkChanged(status)
+    }
+
+    override fun onNetworkLost() {
+        super.onNetworkLost()
     }
 }

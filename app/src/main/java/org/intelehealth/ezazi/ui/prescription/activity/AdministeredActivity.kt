@@ -9,6 +9,7 @@ import androidx.core.content.IntentCompat
 import androidx.lifecycle.ViewModelProvider
 import org.intelehealth.ezazi.R
 import org.intelehealth.ezazi.databinding.ActivityAdministeredBinding
+import org.intelehealth.ezazi.optimized_sync.network.NetworkStatus
 import org.intelehealth.ezazi.ui.prescription.data.MedicineSingleton
 import org.intelehealth.ezazi.ui.prescription.fragment.PrescriptionFragment
 import org.intelehealth.ezazi.ui.prescription.fragment.PrescriptionFragment.PrescriptionType.ASSESSMENT
@@ -113,5 +114,17 @@ class AdministeredActivity : BaseActionBarActivity(), TitleChangeListener {
         supportActionBar?.let {
             it.title = getString(titleResId)
         }
+    }
+
+    override fun onNetworkAvailable(status: NetworkStatus) {
+        super.onNetworkAvailable(status)
+    }
+
+    override fun onNetworkChanged(status: NetworkStatus) {
+        super.onNetworkChanged(status)
+    }
+
+    override fun onNetworkLost() {
+        super.onNetworkLost()
     }
 }
