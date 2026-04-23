@@ -803,7 +803,6 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
         }
         enableProperPadding(HomeActivity.this);
         calculateRiskForAllVisits();
-        handleCurrentInternetStatus();
     }
 
     private void showPatientChoiceDialog(ArrayList<MultiChoiceItem> items) {

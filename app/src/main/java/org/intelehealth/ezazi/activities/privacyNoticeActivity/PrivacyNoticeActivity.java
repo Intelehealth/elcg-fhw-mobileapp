@@ -54,7 +54,6 @@ public class PrivacyNoticeActivity extends BaseActionBarActivity implements View
         super.onCreate(savedInstanceState);
         setupActionBar();
         enableProperPadding(PrivacyNoticeActivity.this);
-        initializeNetworkBannerComponents();
 
         sessionManager = new SessionManager(this);
         privacy_textview = findViewById(R.id.privacy_text);

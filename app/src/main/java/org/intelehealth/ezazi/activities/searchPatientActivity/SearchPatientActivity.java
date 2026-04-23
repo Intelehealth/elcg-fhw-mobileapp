@@ -97,8 +97,6 @@ public class SearchPatientActivity extends BaseActionBarActivity implements Sear
         progressBar = findViewById(R.id.searchPatientProgress);
         // Get the intent, verify the action and get the query
 
-        initializeNetworkBannerComponents();
-
         //toolbar views
         searchView = findViewById(R.id.searchView);
         searchView.setOnQueryTextListener(this);

@@ -1,8 +1,10 @@
 package org.intelehealth.ezazi.ui.shared;
 
+import android.os.Bundle;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
+import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.appcompat.widget.Toolbar;
 
@@ -22,10 +24,15 @@ public abstract class BaseActionBarActivity extends BaseActivity {
     private FrameLayout flInternetStatus;
     private TextView tvInternetStatus;
 
-    protected void initializeNetworkBannerComponents() {
+    private void initializeNetworkBannerComponents() {
         flInternetStatus = findViewById(R.id.fl_connection_bar);
         tvInternetStatus = findViewById(R.id.tv_connection_status);
-        handleCurrentInternetStatus();
+    }
+
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        initializeNetworkBannerComponents();
     }
 
     protected void setupActionBar() {

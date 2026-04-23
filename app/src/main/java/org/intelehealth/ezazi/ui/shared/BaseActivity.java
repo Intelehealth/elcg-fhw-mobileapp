@@ -153,6 +153,7 @@ public class BaseActivity extends AppCompatActivity implements SocketManager.Not
     protected void onStart() {
         super.onStart();
         networkManager.startListening();
+        handleCurrentInternetStatus();
     }
 
     @Override

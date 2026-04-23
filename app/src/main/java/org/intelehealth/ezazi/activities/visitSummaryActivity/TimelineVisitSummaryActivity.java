@@ -60,6 +60,7 @@ import org.intelehealth.ezazi.enums.StageEnum;
 import org.intelehealth.ezazi.models.dto.EncounterDTO;
 import org.intelehealth.ezazi.models.dto.ObsDTO;
 import org.intelehealth.ezazi.models.dto.PatientAttributesDTO;
+import org.intelehealth.ezazi.optimized_sync.network.NetworkStatus;
 import org.intelehealth.ezazi.services.firebase_services.FirebaseRealTimeDBUtils;
 import org.intelehealth.ezazi.syncModule.SyncUtils;
 import org.intelehealth.ezazi.ui.dialog.AppDialogUtils;
@@ -92,6 +93,7 @@ import org.intelehealth.klivekit.chat.model.ItemHeader;
 import org.intelehealth.klivekit.model.RtcArgs;
 import org.intelehealth.klivekit.socket.SocketManager;
 import org.intelehealth.klivekit.utils.DateTimeUtils;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -202,7 +204,6 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         setupActionBar();
         enableProperPadding(TimelineVisitSummaryActivity.this);
         encounterDAO = new EncounterDAO();
-
         initUI();
 
         calculateStageDurationsAndShowDialog();
@@ -1363,5 +1364,20 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
                     return null;
                 }
         );
+    }
+
+    @Override
+    public void onNetworkAvailable(@NotNull NetworkStatus status) {
+        super.onNetworkAvailable(status);
+    }
+
+    @Override
+    public void onNetworkChanged(@NotNull NetworkStatus status) {
+        super.onNetworkChanged(status);
+    }
+
+    @Override
+    public void onNetworkLost() {
+        super.onNetworkLost();
     }
 }
