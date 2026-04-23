@@ -27,6 +27,7 @@ import org.intelehealth.ezazi.stage3.db.SaveDeliveryDetailsUseCase
 import org.intelehealth.ezazi.stage3.factory.DeliveryDetailsViewModelFactory
 import org.intelehealth.ezazi.stage3.models.DeliveryDetails
 import org.intelehealth.ezazi.stage3.viewmodel.DeliveryDetailsViewModel
+import org.intelehealth.ezazi.syncModule.SyncUtils
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment
 import org.intelehealth.ezazi.utilities.SessionManager
 import org.intelehealth.ezazi.utilities.UuidDictionary
@@ -55,7 +56,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
 
         val encounterDto = createEncounterDto()
 
-        val repository = DeliveryDetailsRepository(DeliveryDetailsLocalDataSource(ObsDAO(), EncounterDAO(), VisitsDAO()), DeliveryDetailsObsMapper())
+        val repository = DeliveryDetailsRepository(DeliveryDetailsLocalDataSource(ObsDAO(), EncounterDAO(), VisitsDAO()), DeliveryDetailsObsMapper(), SyncUtils())
         val useCase = SaveDeliveryDetailsUseCase(repository)
 
         val factory = DeliveryDetailsViewModelFactory(useCase)
