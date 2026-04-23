@@ -22,7 +22,7 @@ public abstract class BaseActionBarActivity extends BaseActivity {
     private FrameLayout flInternetStatus;
     private TextView tvInternetStatus;
 
-    protected void initializeNetworkBanner() {
+    protected void initializeNetworkBannerComponents() {
         flInternetStatus = findViewById(R.id.fl_connection_bar);
         tvInternetStatus = findViewById(R.id.tv_connection_status);
         handleCurrentInternetStatus();

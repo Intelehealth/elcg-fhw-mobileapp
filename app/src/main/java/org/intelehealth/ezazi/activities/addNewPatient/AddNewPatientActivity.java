@@ -29,7 +29,7 @@ public class AddNewPatientActivity extends BaseActionBarActivity {
         initUI();
         setupActionBar();
         enableProperPadding(AddNewPatientActivity.this);
-        initializeNetworkBanner();
+        initializeNetworkBannerComponents();
     }
 
     @Override

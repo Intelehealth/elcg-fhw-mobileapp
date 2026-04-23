@@ -149,7 +149,7 @@ public class PatientDetailActivity extends BaseActionBarActivity {
         super.onCreate(savedInstanceState);
         setupActionBar();
         enableProperPadding(PatientDetailActivity.this);
-        initializeNetworkBanner();
+        initializeNetworkBannerComponents();
 
         sessionManager = new SessionManager(this);
         String language = sessionManager.getAppLanguage();
