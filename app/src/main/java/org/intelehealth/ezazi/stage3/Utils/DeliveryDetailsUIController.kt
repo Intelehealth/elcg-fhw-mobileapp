@@ -245,11 +245,13 @@ class DeliveryDetailsUIController(
         val dialog = ThemeTimePickerDialog.Builder(context)
             .title(R.string.current_time)
             .positiveButtonLabel(R.string.ok)
+            .use24Hour(true)
             .build()
 
         dialog.setListener { hours, minutes, amPm, value ->
 
-            val timeString = String.format("%02d:%02d %s", hours, minutes, amPm)
+            //val timeString = String.format("%02d:%02d %s", hours, minutes, amPm)
+            val timeString = value
 
             when (forWhichParameter) {
 
