@@ -46,6 +46,8 @@ class DeliveryDetailsUIController(
         setupPlacentaAndMembranesDropdown();
         setupResuscitationDropdown()
         handleTextwatcher()
+        setupApgar1MinDropdown()
+        setupApgar5MinDropdown()
     }
     private fun setupPlacentaAndMembranesDropdown() {
         val placentaAndMembranesOptions = context.resources.getStringArray(R.array.placenta_and_membranes)
@@ -187,8 +189,8 @@ class DeliveryDetailsUIController(
         binding.etDateOfDelivery.addTextChangedListener(ClearErrorTextWatcher(binding.etlDateOfDelivery))
         binding.etTimeOfDelivery.addTextChangedListener(ClearErrorTextWatcher(binding.etlTimeOfDelivery))
         binding.etTimeOfPlacentaDelivery.addTextChangedListener(ClearErrorTextWatcher(binding.etlTimeOfPlacentaDelivery))
-        binding.etApgar1.addTextChangedListener(ClearErrorTextWatcher(binding.etlApgar1))
-        binding.etApgar5.addTextChangedListener(ClearErrorTextWatcher(binding.etlApgar5))
+        //binding.etApgar1.addTextChangedListener(ClearErrorTextWatcher(binding.etlApgar1))
+        //binding.etApgar5.addTextChangedListener(ClearErrorTextWatcher(binding.etlApgar5))
         binding.etBirthWeightGrams.addTextChangedListener(ClearErrorTextWatcher(binding.etlBirthWeightGrams))
         binding.etModeOfDeliveryOtherOption.addTextChangedListener(ClearErrorTextWatcher(binding.etlModeOfDeliveryOtherOption))
     }
@@ -296,9 +298,17 @@ class DeliveryDetailsUIController(
     }
 
     private fun clearLiveBirthFields() {
-        binding.etApgar1.text?.clear()
-        binding.etApgar5.text?.clear()
-        binding.etBirthWeightGrams.text?.clear()
+        binding.autotvApgar1.text?.clear()
+        binding.autotvApgar5.text?.clear()
+        //binding.etBirthWeightGrams.text?.clear()
+        binding.autotvResuscitation.text?.clear()
+        binding.autotvSkinToSkinContact.text?.clear()
+        binding.autotvBreastfeedWithin1Hour.text?.clear()
+        deliveryDetails.apgarScore1Min =null
+        deliveryDetails.apgarScore5Min =null
+        deliveryDetails.skinToSkinContact =null
+        deliveryDetails.resuscitation =null
+        deliveryDetails.breastfeedWithin1Hour =null
     }
     private fun setupDegreeOfPerinealTearDropdown() {
         val modeOfDeliveryList = context.resources.getStringArray(R.array.perineal_tear_degree)
@@ -509,4 +519,33 @@ class DeliveryDetailsUIController(
             clearLiveBirthFields()
 
     }
+    private fun setupApgar1MinDropdown() {
+        val apgarScoresList = context.resources.getStringArray(R.array.apgar_scores)
+        val apgarScoreAdapter = ArrayAdapter(context, R.layout.spinner_textview, apgarScoresList)
+
+        binding.autotvApgar1.setDropDownBackgroundResource(R.drawable.rounded_corner_white_with_gray_stroke)
+        binding.autotvApgar1.setAdapter(apgarScoreAdapter)
+
+        binding.autotvApgar1.setOnItemClickListener { parent, _, position, _ ->
+            Utils.hideKeyboard(context as AppCompatActivity)
+            deliveryDetails.apgarScore1Min = parent.getItemAtPosition(position).toString()
+            binding.autotvApgar1.tag = deliveryDetails.apgarScore1Min
+            clearTextInputError(binding.etlApgar1)
+        }
+    }
+    private fun setupApgar5MinDropdown() {
+        val apgarScoresList = context.resources.getStringArray(R.array.apgar_scores)
+        val apgarScoreAdapter= ArrayAdapter(context, R.layout.spinner_textview, apgarScoresList)
+
+        binding.autotvApgar5.setDropDownBackgroundResource(R.drawable.rounded_corner_white_with_gray_stroke)
+        binding.autotvApgar5.setAdapter(apgarScoreAdapter)
+
+        binding.autotvApgar5.setOnItemClickListener { parent, _, position, _ ->
+            Utils.hideKeyboard(context as AppCompatActivity)
+            deliveryDetails.apgarScore5Min = parent.getItemAtPosition(position).toString()
+            binding.autotvApgar5.tag = deliveryDetails.apgarScore5Min
+            clearTextInputError(binding.etlApgar5)
+        }
+    }
+
 }

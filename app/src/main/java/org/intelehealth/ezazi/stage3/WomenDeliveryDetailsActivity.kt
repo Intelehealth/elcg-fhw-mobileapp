@@ -2,12 +2,14 @@ package org.intelehealth.ezazi.stage3
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.textfield.TextInputLayout
+import com.google.gson.Gson
 import org.intelehealth.ezazi.R
 import org.intelehealth.ezazi.activities.visitSummaryActivity.TimelineVisitSummaryActivity
 import org.intelehealth.ezazi.app.AppConstants
@@ -162,8 +164,8 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
 
         //  LIVE BIRTH VALIDATION
         if (deliveryDetails.typeOfBirth.equals("Live Birth", true)) {
-            val apgar1 = binding.etApgar1.text.toString()
-            val apgar5 = binding.etApgar5.text.toString()
+            val apgar1 = binding.autotvApgar1.text.toString()
+            val apgar5 = binding.autotvApgar5.text.toString()
 
             if (apgar1.isEmpty()) {
                 setFieldError(binding.etlApgar1, getString(R.string.this_field_is_mandatory))
@@ -275,8 +277,8 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
 
             typeOfBirth = binding.actvTypeOfBirth.text.toString().trim()
             babyGender = binding.actvSex.text.toString().trim()
-            apgarScore1Min = binding.etApgar1.text.toString().trim()
-            apgarScore5Min = binding.etApgar5.text.toString().trim()
+            apgarScore1Min = binding.autotvApgar1.text.toString().trim()
+            apgarScore5Min = binding.autotvApgar5.text.toString().trim()
             resuscitation = binding.autotvResuscitation.text.toString().trim()
             birthWeightGrams = binding.etBirthWeightGrams.text.toString().trim()
             skinToSkinContact = binding.autotvSkinToSkinContact.text.toString().trim()
