@@ -47,6 +47,7 @@ import org.intelehealth.ezazi.executor.TaskCompleteListener;
 import org.intelehealth.ezazi.executor.TaskExecutor;
 import org.intelehealth.ezazi.models.dto.PatientAttributesDTO;
 import org.intelehealth.ezazi.models.dto.PatientDTO;
+import org.intelehealth.ezazi.optimized_sync.network.NetworkStatus;
 import org.intelehealth.ezazi.partogram.PartogramDataCaptureActivity;
 import org.intelehealth.ezazi.ui.patient.PatientDataBinder;
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
@@ -56,6 +57,7 @@ import org.intelehealth.ezazi.utilities.Logger;
 import org.intelehealth.ezazi.utilities.SessionManager;
 import org.intelehealth.ezazi.utilities.StringUtils;
 import org.intelehealth.ezazi.utilities.exception.DAOException;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -95,6 +97,7 @@ public class SearchPatientActivity extends BaseActionBarActivity implements Sear
         progressBar = findViewById(R.id.searchPatientProgress);
         // Get the intent, verify the action and get the query
 
+        initializeNetworkBannerComponents();
 
         //toolbar views
         searchView = findViewById(R.id.searchView);
@@ -287,13 +290,12 @@ public class SearchPatientActivity extends BaseActionBarActivity implements Sear
 //        recyclerView.setVisibility(View.VISIBLE);
 //        Log.d(TAG, "bindAdapter: adapter" + searchPatientAdapter.getItemCount());
 //
-////        new PatientStageBinder().bindStage(patients, results -> runOnUiThread(() -> {
-////            searchPatientAdapter = new SearchPatientAdapter(results, SearchPatientActivity.this);
-////            recyclerView.setAdapter(searchPatientAdapter);
-////        }));
+
+    /// /        new PatientStageBinder().bindStage(patients, results -> runOnUiThread(() -> {
+    /// /            searchPatientAdapter = new SearchPatientAdapter(results, SearchPatientActivity.this);
+    /// /            recyclerView.setAdapter(searchPatientAdapter);
+    /// /        }));
 //    }
-
-
     private void firstQuery() {
         try {
             offset = 0;
@@ -704,7 +706,8 @@ public class SearchPatientActivity extends BaseActionBarActivity implements Sear
 //                            model.setPhonenumber(StringUtils.mobileNumberEmpty(phoneNumber(model.getUuid())));
 //                            String bedNod = getPatientBedNot(model.getUuid());
 //                            model.setBedNo(bedNod);
-////                            model.setStage(getStage(model.getUuid()));
+
+    /// /                            model.setStage(getStage(model.getUuid()));
 //
 //                            modelList.add(model);
 //                        } while (searchCursor.moveToNext());
@@ -738,7 +741,6 @@ public class SearchPatientActivity extends BaseActionBarActivity implements Sear
 //        }
 //        return modelList;
 //    }
-
     private String getPatientBedNot(String patientUuid) {
         PatientsDAO patientsDAO = new PatientsDAO();
         return patientsDAO.getPatientAttributeValue(patientUuid, PatientAttributesDTO.Columns.BED_NUMBER);
@@ -919,6 +921,21 @@ public class SearchPatientActivity extends BaseActionBarActivity implements Sear
     protected void onPause() {
         super.onPause();
         unregisterReceiver(screenRefreshReceiver);
+    }
+
+    @Override
+    public void onNetworkAvailable(@NotNull NetworkStatus status) {
+        super.onNetworkAvailable(status);
+    }
+
+    @Override
+    public void onNetworkChanged(@NotNull NetworkStatus status) {
+        super.onNetworkChanged(status);
+    }
+
+    @Override
+    public void onNetworkLost() {
+        super.onNetworkLost();
     }
 }
 
