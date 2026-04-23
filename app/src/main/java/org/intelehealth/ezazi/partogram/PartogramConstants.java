@@ -786,9 +786,9 @@ public class PartogramConstants {
         newbornParam = new ParamInfo();
         newbornParam.setParamSectionName("Newborn Monitoring");
         newbornParam.setParamName(Params.SUCKING_FEEDING_NEWBORN.value);
-        newbornParam.setParamDateType(RADIO_SELECT_TYPE);
-        newbornParam.setOptions(new String[]{"Yes", "No"});
-        newbornParam.setValues(new String[]{"Y", "N"});
+        newbornParam.setParamDateType(DROPDOWN_SINGLE_SELECT_TYPE);
+        newbornParam.setOptions(new String[]{"Not yet breastfed", "Yes", "No"});
+        newbornParam.setValues(new String[]{"Not yet breastfed", "Y", "N"});
         newbornParam.setConceptUUID(Params.SUCKING_FEEDING_NEWBORN.conceptId);
         newbornParam.setEachEncounterField(true);
         /*//newbornParam.setFifteenMinField(true);

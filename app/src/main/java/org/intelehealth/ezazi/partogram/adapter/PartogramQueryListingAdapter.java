@@ -819,10 +819,17 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         dropdownTextView.setTag(info);
         dropdownTextView.setEnabled(accessMode != PartogramConstants.AccessMode.READ);
         paramNameTextView.setText(mItemList.get(position).getParamInfoList().get(positionChild).getParamName());
-        if (mItemList.get(position).getParamInfoList().get(positionChild).getCapturedValue() != null && !mItemList.get(position).getParamInfoList().get(positionChild).getCapturedValue().isEmpty()) {
+       /* if (mItemList.get(position).getParamInfoList().get(positionChild).getCapturedValue() != null && !mItemList.get(position).getParamInfoList().get(positionChild).getCapturedValue().isEmpty()) {
             dropdownTextView.setText(mItemList.get(position).getParamInfoList().get(positionChild).getOptions()[Arrays.asList(mItemList.get(position).getParamInfoList().get(positionChild).getValues()).indexOf(mItemList.get(position).getParamInfoList().get(positionChild).getCapturedValue())]);
+        }*/
+        String capturedValue = info.getCapturedValue();
+        if (capturedValue != null && !capturedValue.isEmpty()) {
+            int idx = Arrays.asList(info.getValues()).indexOf(capturedValue);
+            if (idx >= 0) {
+                dropdownTextView.setText(info.getOptions()[idx]);
+            }
+            // if idx == -1, capturedValue not found in values[] — just leave display blank
         }
-
         dropdownTextView.setOnClickListener(v -> {
             if (v.getTag() instanceof ParamInfo) {
                 ParamInfo ivFluidInfo = (ParamInfo) v.getTag();
