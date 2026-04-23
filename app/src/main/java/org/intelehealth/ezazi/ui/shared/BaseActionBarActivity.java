@@ -1,14 +1,14 @@
 package org.intelehealth.ezazi.ui.shared;
 
-import android.os.Bundle;
-import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.TextView;
 
-import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import org.intelehealth.ezazi.R;
+import org.intelehealth.ezazi.optimized_sync.network.NetworkStatus;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
@@ -18,6 +18,15 @@ import java.util.Objects;
  * Mob   : +919727206702
  **/
 public abstract class BaseActionBarActivity extends BaseActivity {
+
+    private FrameLayout flInternetStatus;
+    private TextView tvInternetStatus;
+
+    protected void initializeNetworkBanner() {
+        flInternetStatus = findViewById(R.id.fl_connection_bar);
+        tvInternetStatus = findViewById(R.id.tv_connection_status);
+        handleCurrentInternetStatus();
+    }
 
     protected void setupActionBar() {
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -31,7 +40,22 @@ public abstract class BaseActionBarActivity extends BaseActivity {
 
     protected abstract @StringRes int getScreenTitle();
 
-    protected void onBackNavigate(){
+    protected void onBackNavigate() {
         onBackPressed();
+    }
+
+    @Override
+    public void onNetworkAvailable(@NotNull NetworkStatus status) {
+        updateConnectionBanner(status.getHasInternet(), flInternetStatus, tvInternetStatus);
+    }
+
+    @Override
+    public void onNetworkChanged(@NotNull NetworkStatus status) {
+        updateConnectionBanner(status.getHasInternet(), flInternetStatus, tvInternetStatus);
+    }
+
+    @Override
+    public void onNetworkLost() {
+        updateConnectionBanner(false, flInternetStatus, tvInternetStatus);
     }
 }
