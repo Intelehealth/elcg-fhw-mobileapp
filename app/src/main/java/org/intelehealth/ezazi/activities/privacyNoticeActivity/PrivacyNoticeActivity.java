@@ -1,19 +1,14 @@
 package org.intelehealth.ezazi.activities.privacyNoticeActivity;
 
-import static android.text.Layout.JUSTIFICATION_MODE_INTER_WORD;
-
 import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
 
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.graphics.text.LineBreaker;
-import android.os.Build;
 import android.os.Bundle;
 import android.text.SpannableString;
 import android.text.util.Linkify;
 import android.util.Log;
 import android.view.View;
-import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -24,10 +19,11 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.activities.addNewPatient.AddNewPatientActivity;
 import org.intelehealth.ezazi.app.AppConstants;
+import org.intelehealth.ezazi.optimized_sync.network.NetworkStatus;
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
 import org.intelehealth.ezazi.utilities.FileUtils;
 import org.intelehealth.ezazi.utilities.SessionManager;
-import org.intelehealth.ezazi.utilities.TextThemeUtils;
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -58,6 +54,8 @@ public class PrivacyNoticeActivity extends BaseActionBarActivity implements View
         super.onCreate(savedInstanceState);
         setupActionBar();
         enableProperPadding(PrivacyNoticeActivity.this);
+        initializeNetworkBannerComponents();
+
         sessionManager = new SessionManager(this);
         privacy_textview = findViewById(R.id.privacy_text);
 //        privacy_textview.setAutoLinkMask(Linkify.ALL);
@@ -129,6 +127,20 @@ public class PrivacyNoticeActivity extends BaseActionBarActivity implements View
             Toast.makeText(PrivacyNoticeActivity.this,
                     getString(R.string.please_read_out_privacy_consent_first), Toast.LENGTH_SHORT).show();
         }
+    }
 
+    @Override
+    public void onNetworkAvailable(@NotNull NetworkStatus status) {
+        super.onNetworkAvailable(status);
+    }
+
+    @Override
+    public void onNetworkChanged(@NotNull NetworkStatus status) {
+        super.onNetworkChanged(status);
+    }
+
+    @Override
+    public void onNetworkLost() {
+        super.onNetworkLost();
     }
 }
