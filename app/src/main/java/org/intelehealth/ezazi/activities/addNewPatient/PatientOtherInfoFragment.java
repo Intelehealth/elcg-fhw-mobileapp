@@ -494,7 +494,7 @@ public class PatientOtherInfoFragment extends Fragment {
             Date parsed = in24.parse(timeStr.trim());
             if (parsed != null) return out12.format(parsed);
         } catch (Exception ignored) {}
-        return timeStr; // unchanged if we couldn't parse
+        return timeStr; // Hunchanged if we couldn't parse
     }
 
     /** Parses Gregorian dd/MM/yyyy — returns null safely, never throws. */
@@ -813,7 +813,7 @@ public class PatientOtherInfoFragment extends Fragment {
             }
         }
 
-        // 11. LMP (optional field — validate only if entered)
+        // 11. LMP
         if (!TextUtils.isEmpty(mLmpDate)) {
             Date lmp = parseGregDate(mLmpDate);
             if (lmp != null) {
@@ -831,8 +831,14 @@ public class PatientOtherInfoFragment extends Fragment {
                 }
             }
         }
+        else
+        {
+            tvErrorLmpDate.setText(getString(R.string.select_valid_date));
+            tvErrorLmpDate.setVisibility(View.VISIBLE);
+            isValid = false;
+        }
 
-        // 12. EDD (optional field — validate only if entered)
+        // 12. EDD
         if (!TextUtils.isEmpty(mEDD)) {
             Date edd = parseGregDate(mEDD);
             if (edd != null) {
@@ -844,6 +850,12 @@ public class PatientOtherInfoFragment extends Fragment {
                     isValid = false;
                 }
             }
+        }
+        else
+        {
+            tvErrorEDD.setText(getString(R.string.select_valid_date));
+            tvErrorEDD .setVisibility(View.VISIBLE);
+            isValid = false;
         }
 
         // 13. Primary Doctor

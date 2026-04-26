@@ -101,7 +101,13 @@ public class PatientPersonalInfoFragment extends Fragment {
     };
 
     // ── State ─────────────────────────────────────────────────────────────────
-    private boolean isDobFromCalendar = false;
+    /**
+     * Re-entrancy guard for programmatic edits to mDOB / mAge.
+     * Set to true whenever we are programmatically updating one field as a
+     * consequence of the other, so that MyTextWatcher skips its reactive logic
+     * and we do not get infinite ping-pong or stale overwrites.
+     */
+    private boolean isSyncing = false;
     private int selectedBsYear  = 0;
     private int selectedBsMonth = 0;
     private int selectedBsDay   = 0;
@@ -351,35 +357,41 @@ public class PatientPersonalInfoFragment extends Fragment {
 
     /**
      * Called when the user confirms a BS date in the picker.
-     * Converts to Gregorian, validates age ≥ 13, populates UI fields.
+     * Converts to Gregorian, validates age ≥ 13, populates:
+     *   - mDOB field (BS display string)
+     *   - mAge field (years only, since mAge is numeric-only)
+     *   - tvAgeDob  (full "X years Y months Z days" breakdown)
      */
     private void onBsDateSelected(int bsYear, int bsMonth, int bsDay) {
         Date gregDate = NepaliDateConverter.bsToGregorian(bsYear, bsMonth, bsDay);
 
-        int ageYears = calcAgeYears(gregDate);
-        if (ageYears < 13) {
+        AgeYmd ymd = calcAgeYmd(gregDate);
+        if (ymd.years < 13) {
             showAgeError();
             return;
         }
 
-        selectedBsYear    = bsYear;
-        selectedBsMonth   = bsMonth;
-        selectedBsDay     = bsDay;
-        isDobFromCalendar = true;
+        selectedBsYear  = bsYear;
+        selectedBsMonth = bsMonth;
+        selectedBsDay   = bsDay;
 
         dobToDb = toGregorianDbFormat(gregDate);
         patient1.setDate_of_birth(dobToDb);
         patientDTO.setDateofbirth(dobToDb);
 
         String bsDisplay = formatBsDate(bsYear, bsMonth, bsDay);
-        mDOB.setText(bsDisplay);
-        tvDobForDb.setText(bsDisplay);
-        setSelectedDob(mContext, bsDisplay);
 
-        // ── FIX (Bug #2): age field shows only years (it is an input field).
-        // The detail screen shows the full "X years - Y months - Z days" string.
-        mAgeYears = ageYears;
-        mAge.setText(String.valueOf(mAgeYears));
+        isSyncing = true;
+        try {
+            mDOB.setText(bsDisplay);
+            tvDobForDb.setText(bsDisplay);
+            setSelectedDob(mContext, bsDisplay);
+
+            mAgeYears = ymd.years;
+            mAge.setText(String.valueOf(mAgeYears));
+        } finally {
+            isSyncing = false;
+        }
 
         tvErrorDob.setVisibility(View.GONE);
         tvErrorAge.setVisibility(View.GONE);
@@ -392,15 +404,15 @@ public class PatientPersonalInfoFragment extends Fragment {
     // ═════════════════════════════════════════════════════════════════════════
 
     /**
-     * Calculates an approximate DOB from an integer age and populates the DOB field.
+     * Calculates an approximate DOB from an integer age and populates the DOB
+     * and breakdown fields. Because mAge accepts only a whole-year integer,
+     * the best we can do is assume exactly {@code ageInYears} years on today's
+     * date, giving a breakdown of "{ageInYears} years, 0 months, 0 days".
      *
      * Strategy: subtract exactly {@code ageInYears} from today's date.
-     * This gives a DOB whose calcAgeYears() will always return exactly
-     * {@code ageInYears}, because Calendar.add(YEAR, -n) produces the
+     * This gives a DOB whose calcAgeYmd() will return exactly
+     * {@code (ageInYears, 0, 0)}, because Calendar.add(YEAR, -n) produces the
      * exact anniversary date n years ago.
-     *
-     * Example: today = 2026-04-15, age = 25 → DOB = 2001-04-15
-     *   calcAgeYears(2001-04-15) on 2026-04-15 = 25 ✓
      */
     private void calculateDobFromAge(int ageInYears) {
         Calendar birthGreg = Calendar.getInstance();
@@ -413,13 +425,21 @@ public class PatientPersonalInfoFragment extends Fragment {
         selectedBsDay   = bs[2];
 
         String bsDisplay = formatBsDate(bs[0], bs[1], bs[2]);
-        mDOB.setText(bsDisplay);
-        tvDobForDb.setText(bsDisplay);
-
         dobToDb = toGregorianDbFormat(birthDate);
         patient1.setDate_of_birth(dobToDb);
         patientDTO.setDateofbirth(dobToDb);
-        setSelectedDob(mContext, bsDisplay);
+
+        isSyncing = true;
+        try {
+            mDOB.setText(bsDisplay);
+            tvDobForDb.setText(bsDisplay);
+            setSelectedDob(mContext, bsDisplay);
+        } finally {
+            isSyncing = false;
+        }
+
+        tvErrorDob.setVisibility(View.GONE);
+        cardDob.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
 
         Log.d(TAG, "calculateDobFromAge → BS: " + bsDisplay + " | DB: " + dobToDb);
     }
@@ -434,34 +454,58 @@ public class PatientPersonalInfoFragment extends Fragment {
     }
 
     /**
-     * Full completed years of age from a Gregorian birth date to today.
-     *
-     * ── FIX (Bug #3 – leap-year off-by-one in calcAgeYears) ─────────────────
-     * The original code used DAY_OF_YEAR for the "birthday not yet passed"
-     * check. This is wrong across leap/non-leap year boundaries:
-     *
-     *   DOB  = 2000-03-01  →  DAY_OF_YEAR = 61  (2000 is a leap year)
-     *   Today = 2001-03-01  →  DAY_OF_YEAR = 60  (2001 is not a leap year)
-     *   Raw diff = 1 year.  60 < 61 → age-- → 0  ← WRONG (should be 1)
-     *
-     * Fix: compare MONTH + DAY_OF_MONTH instead of DAY_OF_YEAR.
-     * ────────────────────────────────────────────────────────────────────────
+     * Immutable value object for a full age breakdown.
      */
-    private int calcAgeYears(Date birthDate) {
+    private static class AgeYmd {
+        final int years;
+        final int months;
+        final int days;
+        AgeYmd(int years, int months, int days) {
+            this.years = years; this.months = months; this.days = days;
+        }
+    }
+
+    /**
+     * Computes the full "X years Y months Z days" breakdown of age from
+     * a Gregorian birth date to today.
+     *
+     * Month/day rollover is handled correctly: if the current day-of-month is
+     * before the birth day-of-month, we borrow from months (and days are
+     * computed as "days ago, plus days-in-previous-month"). If the current
+     * month is before the birth month, we borrow from years.
+     */
+    private AgeYmd calcAgeYmd(Date birthDate) {
         Calendar birth = Calendar.getInstance();
         birth.setTime(birthDate);
         Calendar now = Calendar.getInstance();
 
-        int age = now.get(Calendar.YEAR) - birth.get(Calendar.YEAR);
+        int years  = now.get(Calendar.YEAR)         - birth.get(Calendar.YEAR);
+        int months = now.get(Calendar.MONTH)        - birth.get(Calendar.MONTH);
+        int days   = now.get(Calendar.DAY_OF_MONTH) - birth.get(Calendar.DAY_OF_MONTH);
 
-        // ── FIX: use MONTH + DAY_OF_MONTH, not DAY_OF_YEAR ───────────────────
-        boolean birthdayNotYetThisYear =
-                now.get(Calendar.MONTH) < birth.get(Calendar.MONTH)
-                        || (now.get(Calendar.MONTH) == birth.get(Calendar.MONTH)
-                        && now.get(Calendar.DAY_OF_MONTH) < birth.get(Calendar.DAY_OF_MONTH));
+        if (days < 0) {
+            // Borrow days from the previous month
+            months -= 1;
+            Calendar prev = (Calendar) now.clone();
+            prev.add(Calendar.MONTH, -1);
+            days += prev.getActualMaximum(Calendar.DAY_OF_MONTH);
+        }
+        if (months < 0) {
+            // Borrow months from the year
+            years  -= 1;
+            months += 12;
+        }
+        if (years < 0) {
+            // Birth date in the future — clamp to zero across the board
+            years = months = days = 0;
+        }
+        return new AgeYmd(years, months, days);
+    }
 
-        if (birthdayNotYetThisYear) age--;
-        return age;
+    /** Formats an AgeYmd as "X years Y months Z days". */
+    private String formatAgeBreakdown(AgeYmd ymd) {
+        return String.format(Locale.ENGLISH, "%d years %d months %d days",
+                ymd.years, ymd.months, ymd.days);
     }
 
     /** Formats a Date as yyyy-MM-dd (Gregorian) for DB storage. */
@@ -493,8 +537,14 @@ public class PatientPersonalInfoFragment extends Fragment {
     }
 
     private void showAgeError() {
-        mAge.setText("");
-        mDOB.setText("");
+        isSyncing = true;
+        try {
+            mAge.setText("");
+            mDOB.setText("");
+
+        } finally {
+            isSyncing = false;
+        }
         tvErrorAge.setVisibility(View.VISIBLE);
         tvErrorAge.setText(getString(R.string.patient_age_validation));
         cardAge.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
@@ -534,13 +584,22 @@ public class PatientPersonalInfoFragment extends Fragment {
 
                 if (patientDTO.getDateofbirth() != null && !patientDTO.getDateofbirth().isEmpty()) {
                     dobToDb = patientDTO.getDateofbirth();
+                    AgeYmd ymd = null;
                     try {
                         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
                         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
                         Date d = sdf.parse(dobToDb);
-                        mAgeYears = calcAgeYears(d);
-                        mAge.setText(String.valueOf(mAgeYears));
+                        if (d != null) {
+                            ymd = calcAgeYmd(d);
+                            mAgeYears = ymd.years;
+                        }
                     } catch (Exception ignored) {}
+                    isSyncing = true;
+                    try {
+                        mAge.setText(String.valueOf(mAgeYears));
+                    } finally {
+                        isSyncing = false;
+                    }
                 }
 
                 if (patientDTO.getPatientPhoto() != null && !patientDTO.getPatientPhoto().trim().isEmpty()) {
@@ -656,15 +715,24 @@ public class PatientPersonalInfoFragment extends Fragment {
         if (gregDob != null && !gregDob.isEmpty()) {
             dobToDb = gregDob;
             String bsDisplay = gregDbDateToBsDisplay(gregDob);
-            mDOB.setText(bsDisplay);
-            tvDobForDb.setText(bsDisplay);
+            AgeYmd ymd = null;
             try {
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
                 sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
                 Date d = sdf.parse(gregDob);
-                mAgeYears = calcAgeYears(d);
+                if (d != null) {
+                    ymd = calcAgeYmd(d);
+                    mAgeYears = ymd.years;
+                }
             } catch (Exception ignored) {}
-            mAge.setText(String.valueOf(mAgeYears));
+            isSyncing = true;
+            try {
+                mDOB.setText(bsDisplay);
+                tvDobForDb.setText(bsDisplay);
+                mAge.setText(String.valueOf(mAgeYears));
+            } finally {
+                isSyncing = false;
+            }
         }
 
         if (mCurrentPhotoPath != null && !mCurrentPhotoPath.isEmpty()) {
@@ -974,6 +1042,10 @@ public class PatientPersonalInfoFragment extends Fragment {
                         empty ? R.color.error_red : R.color.colorScrollbar));
 
             } else if (id == R.id.et_dob) {
+                // DOB is populated exclusively via the picker or programmatic sync.
+                // Any raw text-change here is just a re-entrant echo or a clear.
+                // Skip all reactive logic when we're syncing.
+                if (isSyncing) return;
                 boolean empty = val.isEmpty();
                 tvErrorDob.setVisibility(empty ? View.VISIBLE : View.GONE);
                 if (empty) tvErrorDob.setText(getString(R.string.select_dob));
@@ -981,29 +1053,40 @@ public class PatientPersonalInfoFragment extends Fragment {
                         empty ? R.color.error_red : R.color.colorScrollbar));
 
             } else if (id == R.id.et_age) {
+                // If we got here because onBsDateSelected / calculateDobFromAge
+                // just wrote into mAge, do NOT re-back-calculate DOB.
+                if (isSyncing) return;
+
                 if (val.isEmpty()) {
-                    mDOB.setText("");
-                    tvDobForDb.setText("");
+                    // User cleared the field — clear the downstream DOB + breakdown.
+                    // Do NOT surface the mandatory-error here: that should only
+                    // show on submit (areValidFields handles it).
+                    isSyncing = true;
+                    try {
+                        mDOB.setText("");
+                        tvDobForDb.setText("");
+                    } finally {
+                        isSyncing = false;
+                    }
                     dobToDb = "";
                     selectedBsYear = selectedBsMonth = selectedBsDay = 0;
-                    isDobFromCalendar = false;
-                    tvErrorAge.setVisibility(View.VISIBLE);
-                    tvErrorAge.setText(getString(R.string.patient_age_validation));
-                    cardAge.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
-                } else {
-                    int age;
-                    try { age = Integer.parseInt(val); } catch (NumberFormatException e) { return; }
-                    if (age < 13) {
-                        showAgeError();
-                    } else {
-                        tvErrorAge.setVisibility(View.GONE);
-                        cardAge.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
-                        // Back-calculate DOB only when user is typing age directly (not after picker)
-                        if (!isDobFromCalendar || mDOB.getText().toString().isEmpty()) {
-                            calculateDobFromAge(age);
-                        }
-                    }
+                    tvErrorAge.setVisibility(View.GONE);
+                    cardAge.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+                    return;
                 }
+
+                int age;
+                try {
+                    age = Integer.parseInt(val);
+                } catch (NumberFormatException e) {
+                    return;
+                }
+
+                // Valid age (>=13): back-calculate DOB + breakdown.
+                tvErrorAge.setVisibility(View.GONE);
+                cardAge.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+                mAgeYears = age;
+                calculateDobFromAge(age);
 
             } else if (id == R.id.et_mobile_no) {
                 if (!val.isEmpty() && val.length() != 10) {

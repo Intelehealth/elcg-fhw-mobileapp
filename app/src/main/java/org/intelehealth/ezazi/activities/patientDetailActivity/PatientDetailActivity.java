@@ -472,9 +472,9 @@ public class PatientDetailActivity extends BaseActionBarActivity {
         if (gregDob != null && !gregDob.isEmpty()) {
             String bsDobDisplay = gregDobToBsDisplay(gregDob);
             if (!bsDobDisplay.isEmpty()) {
-                dobView.setText(bsDobDisplay);
+                dobView.setText(bsDobDisplay + " BS");
             } else {
-                dobView.setText(DateAndTimeUtils.getFormatedDateOfBirthAsView(gregDob));
+                dobView.setText(DateAndTimeUtils.getFormatedDateOfBirthAsView(gregDob) + " BS");
                 Log.w(TAG, "setDisplay: BS conversion failed, showing Gregorian DOB");
             }
         } else {
