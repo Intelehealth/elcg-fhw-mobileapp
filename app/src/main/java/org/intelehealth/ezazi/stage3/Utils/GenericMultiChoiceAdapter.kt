@@ -52,12 +52,21 @@ class GenericMultiChoiceAdapter(
         if (!noneOptionText.isNullOrEmpty() &&
             clickedText.equals(noneOptionText, ignoreCase = true)
         ) {
+            // If "None" clicked → clear everything and select only it
             clearSelection()
             selectItem(checkedPosition)
         } else {
+            // If any other clicked → remove "None" if selected
             if (!noneOptionText.isNullOrEmpty()) {
-                removeSelection(getItem(0))
+                val noneIndex = searchableList.indexOfFirst {
+                    it.equals(noneOptionText, ignoreCase = true)
+                }
+
+                if (noneIndex != -1) {
+                    removeSelection(getItem(noneIndex))
+                }
             }
+
             selectItem(checkedPosition)
         }
 

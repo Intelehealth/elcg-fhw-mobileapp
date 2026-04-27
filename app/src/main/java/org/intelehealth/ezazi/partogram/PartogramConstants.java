@@ -91,7 +91,7 @@ public class PartogramConstants {
         UTERUS_CONTRACTED_MOTHER("Uterus contracted", "13de11c4-76cc-4851-8b37-513cee310c93"),
         URINE_PASSED_MOTHER("Urine passed in 2 hours", "cb6ee6f9-6476-4b44-adac-8e85798a716c"),
         HEMATOMA_MOTHER("Hematoma", "afd25b45-cb3f-4e77-8c3d-8b8f6cc83944"),
-        ONGOING_COMPLICATIONS_MOTHER("Any signs of ongoing complications", "caa174fc-5889-443e-b53d-701fb2e85c23"),
+        ONGOING_COMPLICATIONS_MOTHER("Any signs of ongoing \ncomplications", "caa174fc-5889-443e-b53d-701fb2e85c23"),
         ASSESSMENT_MOTHER("Assessment", "67a050c1-35e5-451c-a4ab-fff9d57b0db1"),
         PLAN_MOTHER("Plan", "5991aeaf-c4c3-457d-ada1-334d90c545fc"),
         GRUNTING_NEWBORN("Grunting", "694d18a3-8163-43ba-9ac8-cf07a8c84b6b"),
@@ -104,7 +104,7 @@ public class PartogramConstants {
         SKIN_COLOR_NEWBORN("Colour of the skin (Cyanosed)", "641cf6ac-ce38-42ca-9672-d30dce1c56de"),
         UC_OOZING_NEWBORN("Umbilical cord oozing", "995ab5c8-76a0-4e3c-ac70-2270fdbc14a8"),
         SUCKING_FEEDING_NEWBORN("Suckling & Feeding", "1a49a4ef-ad20-4cd8-b176-06eb6fbf9971"),
-        ONGOING_COMPLICATIONS_NEWBORN("Any signs of ongoing complications", "820ae093-d3ab-402a-9a81-279963cf9dc8"),
+        ONGOING_COMPLICATIONS_NEWBORN("Any signs of ongoing \ncomplications", "820ae093-d3ab-402a-9a81-279963cf9dc8"),
         ASSESSMENT_NEWBORN("Assessment", "15fc4eca-7635-4e7c-baa4-20c250cfe62a"),
         PLAN_NEWBORN("Plan", "a79853d9-e45e-41b2-8473-b19e5cae66cb");
 
@@ -612,7 +612,10 @@ public class PartogramConstants {
         paramInfo = new ParamInfo();
         paramInfo.setParamSectionName("Woman Monitoring");
         paramInfo.setParamName(Params.ONGOING_COMPLICATIONS_MOTHER.value);
-        paramInfo.setParamDateType(DROPDOWN_MULTI_SELECT_TYPE);
+        paramInfo.setParamDateType(RADIO_SELECT_TYPE);
+        paramInfo.setOptions(new String[]{"Yes", "No"});
+        paramInfo.setValues(new String[]{"Y", "N"});
+      /*  paramInfo.setParamDateType(DROPDOWN_MULTI_SELECT_TYPE);
         paramInfo.setOptions(new String[]{
                 "Vaginal bleeding (≥300 ml)",
                 "Fever (Temp ≥99.5 °F)",
@@ -620,7 +623,7 @@ public class PartogramConstants {
                 "Moderate pallor",
                 "Severe pallor",
                 AppConstants.OTHER_OPTION
-        });
+        });*/
         paramInfo.setConceptUUID(Params.ONGOING_COMPLICATIONS_MOTHER.conceptId);
         paramInfo.setEachEncounterField(true);
        /* paramInfo.setFifteenMinField(true);
@@ -786,9 +789,9 @@ public class PartogramConstants {
         newbornParam = new ParamInfo();
         newbornParam.setParamSectionName("Newborn Monitoring");
         newbornParam.setParamName(Params.SUCKING_FEEDING_NEWBORN.value);
-        newbornParam.setParamDateType(RADIO_SELECT_TYPE);
-        newbornParam.setOptions(new String[]{"Yes", "No"});
-        newbornParam.setValues(new String[]{"Y", "N"});
+        newbornParam.setParamDateType(DROPDOWN_SINGLE_SELECT_TYPE);
+        newbornParam.setOptions(new String[]{"Not yet breastfed", "Yes", "No"});
+        newbornParam.setValues(new String[]{"Not yet breastfed", "Y", "N"});
         newbornParam.setConceptUUID(Params.SUCKING_FEEDING_NEWBORN.conceptId);
         newbornParam.setEachEncounterField(true);
         /*//newbornParam.setFifteenMinField(true);
@@ -800,14 +803,17 @@ public class PartogramConstants {
         newbornParam = new ParamInfo();
         newbornParam.setParamSectionName("Newborn Monitoring");
         newbornParam.setParamName(Params.ONGOING_COMPLICATIONS_NEWBORN.value);
-        newbornParam.setParamDateType(DROPDOWN_MULTI_SELECT_TYPE);
+        newbornParam.setParamDateType(RADIO_SELECT_TYPE);
+        newbornParam.setOptions(new String[]{"Yes", "No"});
+        newbornParam.setValues(new String[]{"Y", "N"});
+         /*newbornParam.setParamDateType(DROPDOWN_MULTI_SELECT_TYPE);
         newbornParam.setOptions(new String[]{
                 "Respiratory distress",
                 "Hypothermia",
                 "Sepsis",
                 "Poor feeding",
                 AppConstants.OTHER_OPTION
-        });
+        });*/
         newbornParam.setConceptUUID(Params.ONGOING_COMPLICATIONS_NEWBORN.conceptId);
         newbornParam.setEachEncounterField(true);
        /* newbornParam.setFifteenMinField(true);

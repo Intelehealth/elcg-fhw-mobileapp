@@ -156,6 +156,8 @@ public class UuidDictionary {
     //provider ward type either it can be ward or postnatal
     //added it to filter based on the ward
     public static final String PROVIDER_WARD = "af56439d-5e7f-42e7-9249-6a894b07eb51";
+    public static final String ONGOING_COMPLICATIONS_MOTHER =  "caa174fc-5889-443e-b53d-701fb2e85c23";
+    public static final String ONGOING_COMPLICATIONS_NEWBORN = "820ae093-d3ab-402a-9a81-279963cf9dc8";
 
 
 

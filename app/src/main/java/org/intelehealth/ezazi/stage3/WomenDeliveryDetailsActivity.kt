@@ -2,12 +2,14 @@ package org.intelehealth.ezazi.stage3
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.textfield.TextInputLayout
+import com.google.gson.Gson
 import org.intelehealth.ezazi.R
 import org.intelehealth.ezazi.activities.visitSummaryActivity.TimelineVisitSummaryActivity
 import org.intelehealth.ezazi.app.AppConstants
@@ -25,6 +27,7 @@ import org.intelehealth.ezazi.stage3.db.SaveDeliveryDetailsUseCase
 import org.intelehealth.ezazi.stage3.factory.DeliveryDetailsViewModelFactory
 import org.intelehealth.ezazi.stage3.models.DeliveryDetails
 import org.intelehealth.ezazi.stage3.viewmodel.DeliveryDetailsViewModel
+import org.intelehealth.ezazi.syncModule.SyncUtils
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment
 import org.intelehealth.ezazi.utilities.SessionManager
 import org.intelehealth.ezazi.utilities.UuidDictionary
@@ -53,7 +56,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
 
         val encounterDto = createEncounterDto()
 
-        val repository = DeliveryDetailsRepository(DeliveryDetailsLocalDataSource(ObsDAO(), EncounterDAO(), VisitsDAO()), DeliveryDetailsObsMapper())
+        val repository = DeliveryDetailsRepository(DeliveryDetailsLocalDataSource(ObsDAO(), EncounterDAO(), VisitsDAO()), DeliveryDetailsObsMapper(), SyncUtils())
         val useCase = SaveDeliveryDetailsUseCase(repository)
 
         val factory = DeliveryDetailsViewModelFactory(useCase)
@@ -162,8 +165,8 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
 
         //  LIVE BIRTH VALIDATION
         if (deliveryDetails.typeOfBirth.equals("Live Birth", true)) {
-            val apgar1 = binding.etApgar1.text.toString()
-            val apgar5 = binding.etApgar5.text.toString()
+            val apgar1 = binding.autotvApgar1.text.toString()
+            val apgar5 = binding.autotvApgar5.text.toString()
 
             if (apgar1.isEmpty()) {
                 setFieldError(binding.etlApgar1, getString(R.string.this_field_is_mandatory))
@@ -275,8 +278,8 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
 
             typeOfBirth = binding.actvTypeOfBirth.text.toString().trim()
             babyGender = binding.actvSex.text.toString().trim()
-            apgarScore1Min = binding.etApgar1.text.toString().trim()
-            apgarScore5Min = binding.etApgar5.text.toString().trim()
+            apgarScore1Min = binding.autotvApgar1.text.toString().trim()
+            apgarScore5Min = binding.autotvApgar5.text.toString().trim()
             resuscitation = binding.autotvResuscitation.text.toString().trim()
             birthWeightGrams = binding.etBirthWeightGrams.text.toString().trim()
             skinToSkinContact = binding.autotvSkinToSkinContact.text.toString().trim()
