@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <dimen name="home_logo_width">@dimen/std_100dp</dimen>
+    <dimen name="home_logo_height">@dimen/std_60dp</dimen>
+
+</resources>

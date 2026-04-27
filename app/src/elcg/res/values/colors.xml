@@ -4,7 +4,7 @@
     <color name="colorPrimary">#1F6F78</color>
     <color name="colorPrimarynew">#1F6F78</color>
     <color name="colorPrimaryDark">#15565D</color>
-    <color name="colorPrimaryLight">#4FA3A9</color>
+    <color name="colorPrimaryLight">#1F6F78</color>
     <color name="intro_next">#2014EB</color>
     <color name="colorAccent">#ED1A56</color>
     <color name="primary_text">#212121</color>
@@ -53,8 +53,8 @@
 
     <color name="transparent_tab">#75000000</color>
 
-    <color name="newPrimaryColor">#2e1e91</color>
-    <color name="newPrimaryColorLight">#33229F</color>
+    <color name="newPrimaryColor">#15565D</color>
+    <color name="newPrimaryColorLight">#1F6F78</color>
     <color name="light_blue_600">#FF039BE5</color>
     <color name="light_blue_900">#FF01579B</color>
     <color name="light_blue_A200">#FF40C4FF</color>
@@ -76,7 +76,7 @@
     <color name="colorSelectedListItem">#D7D4EA</color>
     <color name="colorScrollbar">#C0C0C0</color>
     <color name="colorGrayBorder">#997F7B92</color>
-    <color name="colorIconButtonBg">#302E1E91</color>
+    <color name="colorIconButtonBg">#E6F4F5</color>
     <color name="colorEmergencyBg">#FFD7E2</color>
     <color name="colorStageText">#8D8D8D</color>
     <color name="colorStageStroke">#2E1E9166</color>
