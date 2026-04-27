@@ -246,5 +246,7 @@
     <string name="complete_case">Select reason to complete case</string>
     <string name="data_saved_visit_closed">Data saved and visit closed successfully.</string>
     <string name="newborn_status">Newborn Status</string>
+    <string name="complications_if_any">Complications (if any)</string>
+    <string name="str_check_nepal">Nepal</string>
 
 </resources>

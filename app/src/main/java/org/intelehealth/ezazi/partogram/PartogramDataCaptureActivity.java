@@ -514,8 +514,25 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                             }
                         //}
                     }else if (PartogramConstants.RADIO_SELECT_TYPE.equalsIgnoreCase(info.getParamDateType())) {
-                          // addGeneralRadioValuesOrNormalObs(info, obsDAO, mEncounterUUID, obsDTOList);
-                           String value = info.getCapturedValue();
+                        if (UuidDictionary.ONGOING_COMPLICATIONS_MOTHER.equals(info.getConceptUUID())
+                                || UuidDictionary.ONGOING_COMPLICATIONS_NEWBORN.equals(info.getConceptUUID())) {
+
+                            String capturedJson = info.getCapturedValue();
+                            if (!TextUtils.isEmpty(capturedJson)) {
+                                info.setCreatedDate(
+                                        DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
+                                ObsDTO obsDTO = buildObservation(info);
+                                // buildObservation sets value = info.getCapturedValue()
+                                // which is already the JSON string — store it as-is.
+                                String uuid = obsDAO.getObsuuid(mEncounterUUID, info.getConceptUUID());
+                                obsDTO.setUuid(uuid);
+                                obsDTOList.add(obsDTO);
+                            }
+                            // skip the generic radio handling below
+                            continue; // (use 'break' if this is inside a switch; use label if needed)
+                        } else {
+                            // addGeneralRadioValuesOrNormalObs(info, obsDAO, mEncounterUUID, obsDTOList);
+                            String value = info.getCapturedValue();
                             ObsDTO obsDTOData = buildObservation(info);
                             String uuid = obsDAO.getObsuuid(mEncounterUUID, info.getConceptUUID());
                             obsDTOData.setUuid(uuid);
@@ -536,8 +553,9 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                                         obsDTOList.add(obsDTOData);
                                     }
                                 }
+                            }
                         }
-                        } else {
+                    } else {
                             //  EXISTING NORMAL EDITTEXT FLOW
                             info.setCreatedDate(DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
 
@@ -777,7 +795,15 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                             } else if (obsDTO.getConceptuuid().equals(UuidDictionary.ASSESSMENT)) {
                                 info.setCapturedValue(ParamInfo.RadioOptions.YES.name());
                                 info.collectAllAssessmentsInList(obsDTO);
-                            } else if(ValidateStage3Fields.INSTANCE.isRadioSelectField(obsDTO.getConceptuuid())){
+                            } else if (UuidDictionary.ONGOING_COMPLICATIONS_MOTHER.equals(obsDTO.getConceptuuid())
+                                || UuidDictionary.ONGOING_COMPLICATIONS_NEWBORN.equals(obsDTO.getConceptuuid())) {
+                            String storedValue = obsDTO.getValue();
+                                Log.d(TAG, "setEditData: storedValue kz : "+storedValue);
+
+                                if (!TextUtils.isEmpty(storedValue)) {
+                                info.setCapturedValue(storedValue);
+                            }
+                        }else if(ValidateStage3Fields.INSTANCE.isRadioSelectField(obsDTO.getConceptuuid())){
                                 //info.setCreatedDate(obsDTO.getCreatedDate());
                                 info.setCapturedValue(obsDTO.getValue());
                                 if (radioHandler.isGenericConcept(info.getConceptUUID())) {
