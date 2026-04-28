@@ -1,15 +1,13 @@
-package org.intelehealth.ezazi.stage3
+package org.intelehealth.ezazi.stage3.activities
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.textfield.TextInputLayout
-import com.google.gson.Gson
 import org.intelehealth.ezazi.R
 import org.intelehealth.ezazi.activities.visitSummaryActivity.TimelineVisitSummaryActivity
 import org.intelehealth.ezazi.app.AppConstants
@@ -239,6 +237,8 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
         viewModel.saveResult.observe(this) { success ->
             if (success) {
                 Toast.makeText(this, getString(R.string.delivery_outcome_msg), Toast.LENGTH_SHORT).show()
+                val syncUtils = SyncUtils()
+                syncUtils.syncForeground("visitSummary")
                 finish()
             } else {
                 Toast.makeText(this, getString(R.string.failed_to_save_details), Toast.LENGTH_SHORT).show()
