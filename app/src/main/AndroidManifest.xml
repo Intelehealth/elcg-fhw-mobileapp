@@ -49,6 +49,13 @@
         android:usesCleartextTraffic="true"
         tools:ignore="UnusedAttribute, LockedOrientationActivity, DiscouragedApi"
         tools:replace="allowBackup">
+        <activity
+            android:name=".stage3.postpartum.ViewPostPartumReportActivity"
+            android:exported="false"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/title_activity_post_partum"
+            android:screenOrientation="landscape"
+            android:theme="@style/AppTheme.NoActionBar" />
 
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"
@@ -56,12 +63,12 @@
             tools:node="merge" />
 
         <activity
-            android:name=".stage3.WomenDeliveryDetailsActivity"
+            android:name=".stage3.activities.WomenDeliveryDetailsActivity"
             android:configChanges="orientation|keyboardHidden|screenSize|uiMode"
             android:exported="true"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustNothing"
-            android:theme="@style/AppTheme.NoActionBar"/>
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustNothing" />
         <activity
             android:name=".partogram.PartogramBaseActivity"
             android:exported="false" />
@@ -122,7 +129,6 @@
                 <action android:name="org.intelehealth.app.RTC_MESSAGING_EVENT" />
             </intent-filter>
         </receiver>
-
         <receiver
             android:name=".optimized_sync.BootCompleteReceiver"
             android:enabled="true"

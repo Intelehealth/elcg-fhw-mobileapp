@@ -1,6 +1,7 @@
 package org.intelehealth.ezazi.database.dao;
 
 import static org.intelehealth.ezazi.utilities.UuidDictionary.BIRTH_OUTCOME;
+import static org.intelehealth.ezazi.utilities.UuidDictionary.DELIVERY_OUTCOME_STAGE3;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.END_2ND_STAGE_OTHER;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.LABOUR_OTHER;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.LCG_SOS;
@@ -1411,5 +1412,30 @@ public class ObsDAO {
         }
 
         return new ArrayList<>(resultMap.values());
+    }
+    public boolean isStage3ObsForVisitExist(String visitId) {
+        String query =
+                "SELECT EXISTS ( " +
+                        "SELECT 1 " +
+                        "FROM tbl_encounter e " +
+                        "INNER JOIN tbl_obs o " +
+                        "ON o.encounteruuid = e.uuid " +
+                        "AND o.voided = '0' " +
+                        "WHERE e.visituuid = ? " +
+                        "AND e.encounter_type_uuid = ? " +
+                        ") AS has_obs";
+
+        db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
+        Cursor cursor = db.rawQuery(query, new String[]{visitId, DELIVERY_OUTCOME_STAGE3});
+        boolean result = false;
+
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                result = cursor.getInt(0) == 1;
+            }
+            cursor.close();
+        }
+
+        return result;
     }
 }

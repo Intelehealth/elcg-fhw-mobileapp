@@ -26,14 +26,15 @@ import android.os.Vibrator;
 import android.telephony.TelephonyManager;
 import android.text.Html;
 import android.util.Log;
+import android.view.ContextThemeWrapper;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.RelativeLayout;
+import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -48,12 +49,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.github.ajalt.timberkt.Timber;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textview.MaterialTextView;
 import com.google.gson.Gson;
 
 import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.activities.epartogramActivity.EpartogramViewActivity;
 import org.intelehealth.ezazi.activities.homeActivity.HomeActivity;
-import org.intelehealth.ezazi.activities.setupActivity.SetupActivity;
 import org.intelehealth.ezazi.app.AppConstants;
 import org.intelehealth.ezazi.app.IntelehealthApplication;
 import org.intelehealth.ezazi.database.dao.EncounterDAO;
@@ -70,7 +71,8 @@ import org.intelehealth.ezazi.models.dto.ObsDTO;
 import org.intelehealth.ezazi.models.dto.PatientAttributesDTO;
 import org.intelehealth.ezazi.models.dto.ProviderDTO;
 import org.intelehealth.ezazi.services.firebase_services.FirebaseRealTimeDBUtils;
-import org.intelehealth.ezazi.stage3.WomenDeliveryDetailsActivity;
+import org.intelehealth.ezazi.stage3.activities.WomenDeliveryDetailsActivity;
+import org.intelehealth.ezazi.stage3.postpartum.ViewPostPartumReportActivity;
 import org.intelehealth.ezazi.syncModule.SyncUtils;
 import org.intelehealth.ezazi.ui.dialog.AppDialogUtils;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
@@ -85,7 +87,6 @@ import org.intelehealth.ezazi.ui.rtc.activity.EzaziChatActivity;
 import org.intelehealth.ezazi.ui.rtc.activity.EzaziVideoCallActivity;
 import org.intelehealth.ezazi.ui.rtc.call.CallInitializer;
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
-import org.intelehealth.ezazi.ui.visit.activity.VisitLabourActivity;
 import org.intelehealth.ezazi.ui.visit.data.VisitRepository;
 import org.intelehealth.ezazi.ui.visit.dialog.CompleteVisitOnEnd2StageDialog;
 import org.intelehealth.ezazi.ui.visit.dialog.CompleteVisitOnEnd3StageDialog;
@@ -104,8 +105,8 @@ import org.intelehealth.klivekit.chat.model.ItemHeader;
 import org.intelehealth.klivekit.model.RtcArgs;
 import org.intelehealth.klivekit.socket.SocketManager;
 import org.intelehealth.klivekit.utils.DateTimeUtils;
-import org.w3c.dom.Text;
 
+import java.lang.reflect.Field;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -113,7 +114,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -524,7 +524,8 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         }
     }*/
 
-    @Override
+    //for india - regular 2 stages
+    /*@Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.timeline_menu, menu);
@@ -533,9 +534,18 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
             onOptionsItemSelected(menu.findItem(R.id.action_view_partogram));
         });
         return true;
+    }*/
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.timeline_menu, menu);
+        //Button btn = menu.findItem(R.id.action_view_partogram).getActionView().findViewById(R.id.btnViewPartogram);
+        LinearLayout btn = menu.findItem(R.id.action_view_partogram).getActionView().findViewById(R.id.layoutActionMenuViewReports);
+        btn.setOnClickListener(view -> showViewDropdownMenu(view));
+        return true;
     }
 
-    @SuppressLint("NonConstantResourceId")
+    /*@SuppressLint("NonConstantResourceId")
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
@@ -557,7 +567,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         }
 
         return true;
-    }
+    }*/
 
     private void showRequireTabletView() {
         new ConfirmationDialogFragment.Builder(this).content(getString(R.string.this_option_available_tablet_device)).positiveButtonLabel(R.string.ok).hideNegativeButton(true).build().show(getSupportFragmentManager(), "ConfirmationDialogFragment");
@@ -1536,11 +1546,11 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
                   }
           );
       }*/
-    private void showNoDataDialogForViewLcg() {
+    private void showNoDataDialogForViewLcg(String title, String message) {
         AppDialogUtils.showSingleButtonDialog(
                 this,
-                getString(R.string.no_data_for_view_lcg_title),
-                getString(R.string.no_data_for_view_lcg_body),
+                title,
+                message,
                 getString(R.string.ok),
                 () -> {
                     return null;
@@ -1592,5 +1602,53 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
             fabPrescription.setVisibility(View.GONE);
         }
     }
+    private void showPostpartumReport() {
+        Intent intent = new Intent(context, ViewPostPartumReportActivity.class);
+        intent.putExtra("patientuuid", patientUuid);
+        intent.putExtra("visituuid", visitUuid);
+        startActivity(intent);
+    }
+    private void showViewDropdownMenu(View anchor) {
+        PopupMenu popup = new PopupMenu(
+                new ContextThemeWrapper(this, R.style.RoundedPopupMenu),
+                anchor,
+                Gravity.END
+        );
+        popup.getMenuInflater().inflate(R.menu.menu_view_options_partogram, popup.getMenu());
 
+        try {
+            Field field = PopupMenu.class.getDeclaredField("mPopup");
+            field.setAccessible(true);
+            Object menuHelper = field.get(popup);
+            menuHelper.getClass()
+                    .getDeclaredMethod("setForceShowIcon", boolean.class)
+                    .invoke(menuHelper, true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        popup.setOnMenuItemClickListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.action_view_lcg) {
+                boolean doesVisitHasData = obsDAO.getObsCountForVisit(visitUuid);
+                if (doesVisitHasData) {
+                    showEpartogram();
+                } else {
+                    showNoDataDialogForViewLcg(getString(R.string.no_data_for_view_lcg_title), getString(R.string.no_data_for_view_lcg_body));
+                }
+                return true;
+            } else if (id == R.id.action_view_postpartum) {
+                boolean doesVisitHasStage3Data = obsDAO.isStage3ObsForVisitExist(visitUuid);
+                if(doesVisitHasStage3Data){
+                    showPostpartumReport();
+                }else {
+                    showNoDataDialogForViewLcg(getString(R.string.no_data_for_view_lcg_title), getString(R.string.no_data_for_view_postpartum_report));
+                }
+                return true;
+            }
+            return false;
+        });
+
+        popup.show();
+    }
 }

@@ -249,6 +249,6 @@
     <string name="complications_if_any">Complications (if any)</string>
     <string name="str_check_nepal">Nepal</string>
     <string name="province">Province</string>
-
-
+    <string name="no_data_for_view_postpartum_report">No postpartum observations found. Please record observations to view the Postpartum details.
+</string>
 </resources>
