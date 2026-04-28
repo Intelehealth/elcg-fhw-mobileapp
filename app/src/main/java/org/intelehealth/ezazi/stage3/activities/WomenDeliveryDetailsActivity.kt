@@ -2,6 +2,7 @@ package org.intelehealth.ezazi.stage3.activities
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -127,7 +128,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             setFieldError(binding.etlTimeOfPlacentaDelivery, getString(R.string.this_field_is_mandatory))
             return false
         }
-        // ADD after line 116:
+
         val deliveryTime = binding.etTimeOfDelivery.text.toString().trim()
         val placentaTime = binding.etTimeOfPlacentaDelivery.text.toString().trim()
         if (deliveryTime.isNotEmpty() && placentaTime.isNotEmpty()) {
@@ -432,11 +433,17 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
     }
     private fun isTimeAfterOrEqual(laterTime: String, earlierTime: String): Boolean {
         return try {
-            val format = java.text.SimpleDateFormat("hh:mm a", java.util.Locale.getDefault())
+            val format = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+            format.isLenient = false
+
             val t1 = format.parse(earlierTime)
             val t2 = format.parse(laterTime)
+
             t2 != null && t1 != null && !t2.before(t1)
-        } catch (e: Exception) { true } // don't block if parsing fails
+
+        } catch (e: Exception) {
+            false
+        }
     }
     private fun navigateToTimeline() {
         val patientUuid = intent?.getStringExtra("patientUuid")
