@@ -1,4 +1,4 @@
-package org.intelehealth.ezazi.stage3
+package org.intelehealth.ezazi.stage3.activities
 
 import android.content.Intent
 import android.os.Bundle
@@ -7,9 +7,10 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.textfield.TextInputLayout
-import com.google.gson.Gson
 import org.intelehealth.ezazi.R
 import org.intelehealth.ezazi.activities.visitSummaryActivity.TimelineVisitSummaryActivity
 import org.intelehealth.ezazi.app.AppConstants
@@ -45,6 +46,8 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityWomenDeliveryDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        setInsets()
         binding.bottomSheetAppBar.toolbar.setTitle(R.string.final_delivery_outcome_form)
 
         visitUuid = intent?.getStringExtra("visitUuid")
@@ -67,7 +70,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             val deliveryDetails = collectFormData()
             if (validateFields(deliveryDetails)) {
                 clearErrors()
-                viewModel.saveDelivery(encounterDto, deliveryDetails, SessionManager(this).creatorID, "Stage3_Hour1_1")
+               // viewModel.saveDelivery(encounterDto, deliveryDetails, SessionManager(this).creatorID, "Stage3_Hour1_1")
             }
         }
 
@@ -129,7 +132,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             setFieldError(binding.etlTimeOfPlacentaDelivery, getString(R.string.this_field_is_mandatory))
             return false
         }
-        // ADD after line 116:
+
         val deliveryTime = binding.etTimeOfDelivery.text.toString().trim()
         val placentaTime = binding.etTimeOfPlacentaDelivery.text.toString().trim()
         if (deliveryTime.isNotEmpty() && placentaTime.isNotEmpty()) {
@@ -239,6 +242,8 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
         viewModel.saveResult.observe(this) { success ->
             if (success) {
                 Toast.makeText(this, getString(R.string.delivery_outcome_msg), Toast.LENGTH_SHORT).show()
+                val syncUtils = SyncUtils()
+                syncUtils.syncForeground("visitSummary")
                 finish()
             } else {
                 Toast.makeText(this, getString(R.string.failed_to_save_details), Toast.LENGTH_SHORT).show()
@@ -432,11 +437,17 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
     }
     private fun isTimeAfterOrEqual(laterTime: String, earlierTime: String): Boolean {
         return try {
-            val format = java.text.SimpleDateFormat("hh:mm a", java.util.Locale.getDefault())
+            val format = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+            format.isLenient = false
+
             val t1 = format.parse(earlierTime)
             val t2 = format.parse(laterTime)
+
             t2 != null && t1 != null && !t2.before(t1)
-        } catch (e: Exception) { true } // don't block if parsing fails
+
+        } catch (e: Exception) {
+            false
+        }
     }
     private fun navigateToTimeline() {
         val patientUuid = intent?.getStringExtra("patientUuid")
@@ -470,4 +481,15 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             }
         dialog.show(supportFragmentManager, dialog::class.java.canonicalName)
     }
+    private fun setInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.layoutParentDeliveryOutcome)) { view, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(
+                systemBars.left,
+                systemBars.top,
+                systemBars.right,
+                systemBars.bottom
+            )
+            insets
+        }    }
 }

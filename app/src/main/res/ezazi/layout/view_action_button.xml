@@ -1,4 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    android:id="@+id/layoutActionMenuViewReports"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:minWidth="@dimen/small_btn_min_width"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:clipToPadding="false">
+<com.google.android.material.textview.MaterialTextView
+    android:layout_width="wrap_content"
+    android:includeFontPadding="false"
+    android:layout_height="wrap_content"
+    android:text="@string/action_view"
+    android:textSize="@dimen/card_content_sub_text_size"
+    android:textColor="@color/colorPrimary" />
+
+    <ImageView
+        android:layout_width="@dimen/action_menu_view_dropdown_size"
+        android:layout_height="@dimen/action_menu_view_dropdown_size"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginStart="2dp"
+        android:src="@drawable/ic_dropdown_spinner"
+        app:tint="@color/colorPrimary" />
+</LinearLayout>
+<!--
 <com.google.android.material.button.MaterialButton xmlns:android="http://schemas.android.com/apk/res/android"
     style="@style/Theme.EZazi.Button.Small"
     android:id="@+id/btnViewPartogram"
@@ -6,4 +33,4 @@
     android:layout_height="wrap_content"
     android:minWidth="@dimen/small_btn_min_width"
     android:text="@string/action_view"
-    android:visibility="visible" />
+    android:visibility="visible" />-->
