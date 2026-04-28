@@ -21,18 +21,10 @@ import java.util.Objects;
  **/
 public abstract class BaseActionBarActivity extends BaseActivity {
 
-    private FrameLayout flInternetStatus;
-    private TextView tvInternetStatus;
-
-    private void initializeNetworkBannerComponents() {
-        flInternetStatus = findViewById(R.id.fl_connection_bar);
-        tvInternetStatus = findViewById(R.id.tv_connection_status);
-    }
-
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        initializeNetworkBannerComponents();
+        super.initializeNetworkBannerComponents();
     }
 
     protected void setupActionBar() {
@@ -53,16 +45,16 @@ public abstract class BaseActionBarActivity extends BaseActivity {
 
     @Override
     public void onNetworkAvailable(@NotNull NetworkStatus status) {
-        updateConnectionBanner(status.getHasInternet(), flInternetStatus, tvInternetStatus);
+        super.onNetworkAvailable(status);
     }
 
     @Override
     public void onNetworkChanged(@NotNull NetworkStatus status) {
-        updateConnectionBanner(status.getHasInternet(), flInternetStatus, tvInternetStatus);
+        super.onNetworkChanged(status);
     }
 
     @Override
     public void onNetworkLost() {
-        updateConnectionBanner(false, flInternetStatus, tvInternetStatus);
+        super.onNetworkLost();
     }
 }

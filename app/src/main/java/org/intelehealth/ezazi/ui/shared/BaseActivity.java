@@ -59,6 +59,9 @@ public class BaseActivity extends AppCompatActivity implements SocketManager.Not
     private static final String TAG = "BaseActivity";
     private NetworkConnectivityManager networkManager;
 
+    private FrameLayout flInternetStatus;
+    private TextView tvInternetStatus;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
 //        hideBottomSystemTaskbar();
@@ -91,6 +94,11 @@ public class BaseActivity extends AppCompatActivity implements SocketManager.Not
             }
             return view.onApplyWindowInsets(windowInsets);
         });
+    }
+
+    protected void initializeNetworkBannerComponents() {
+        flInternetStatus = findViewById(R.id.fl_connection_bar);
+        tvInternetStatus = findViewById(R.id.tv_connection_status);
     }
 
     @Override
@@ -200,14 +208,17 @@ public class BaseActivity extends AppCompatActivity implements SocketManager.Not
 
     @Override
     public void onNetworkAvailable(@NotNull NetworkStatus status) {
+        updateConnectionBanner(status.getHasInternet(), flInternetStatus, tvInternetStatus);
     }
 
     @Override
     public void onNetworkLost() {
+        updateConnectionBanner(false, flInternetStatus, tvInternetStatus);
     }
 
     @Override
     public void onNetworkChanged(@NotNull NetworkStatus status) {
+        updateConnectionBanner(status.getHasInternet(), flInternetStatus, tvInternetStatus);
     }
 
     private boolean sessionExperiencedHardwareDrop = false;
@@ -247,6 +258,7 @@ public class BaseActivity extends AppCompatActivity implements SocketManager.Not
                     .withEndAction(() -> {
                         if (flInternetStatus.getAlpha() == 0f) {
                             flInternetStatus.setVisibility(View.GONE);
+                            sessionExperiencedHardwareDrop = false;
                         }
                     });
 

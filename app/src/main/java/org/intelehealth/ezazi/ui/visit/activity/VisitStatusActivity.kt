@@ -26,6 +26,8 @@ class VisitStatusActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityVisitStatusBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        super.initializeNetworkBannerComponents()
+
         setupActionBar()
         initializeInternetUI()
         setupTabs()
@@ -62,14 +64,14 @@ class VisitStatusActivity : BaseActivity() {
     }
 
     override fun onNetworkAvailable(status: NetworkStatus) {
-        updateConnectionBanner(status.hasInternet, flInternetStatus, tvInternetStatus)
+        super.onNetworkAvailable(status)
     }
 
     override fun onNetworkChanged(status: NetworkStatus) {
-        updateConnectionBanner(status.hasInternet, flInternetStatus, tvInternetStatus)
+        super.onNetworkChanged(status)
     }
 
     override fun onNetworkLost() {
-        updateConnectionBanner(false, flInternetStatus, tvInternetStatus)
+        super.onNetworkLost()
     }
 }

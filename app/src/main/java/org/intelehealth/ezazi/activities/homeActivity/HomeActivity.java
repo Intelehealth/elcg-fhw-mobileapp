@@ -366,6 +366,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_ezazi);
+        super.initializeNetworkBannerComponents();
         sessionManager = new SessionManager(this);
         OptimizedSyncWorker.enqueuePeriodicWork(this);
 
@@ -2437,16 +2438,16 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
 
     @Override
     public void onNetworkAvailable(@NotNull NetworkStatus status) {
-        updateConnectionBanner(status.getHasInternet(), flInternetStatus, tvInternetStatus);
+        super.onNetworkAvailable(status);
     }
 
     @Override
     public void onNetworkChanged(@NotNull NetworkStatus status) {
-        updateConnectionBanner(status.getHasInternet(), flInternetStatus, tvInternetStatus);
+        super.onNetworkChanged(status);
     }
 
     @Override
     public void onNetworkLost() {
-        updateConnectionBanner(false, flInternetStatus, tvInternetStatus);
+        super.onNetworkLost();
     }
 }
