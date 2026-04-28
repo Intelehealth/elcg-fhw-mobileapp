@@ -7,6 +7,8 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.textfield.TextInputLayout
 import org.intelehealth.ezazi.R
@@ -44,6 +46,8 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityWomenDeliveryDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        setInsets()
         binding.bottomSheetAppBar.toolbar.setTitle(R.string.final_delivery_outcome_form)
 
         visitUuid = intent?.getStringExtra("visitUuid")
@@ -66,7 +70,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             val deliveryDetails = collectFormData()
             if (validateFields(deliveryDetails)) {
                 clearErrors()
-                viewModel.saveDelivery(encounterDto, deliveryDetails, SessionManager(this).creatorID, "Stage3_Hour1_1")
+               // viewModel.saveDelivery(encounterDto, deliveryDetails, SessionManager(this).creatorID, "Stage3_Hour1_1")
             }
         }
 
@@ -477,4 +481,15 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             }
         dialog.show(supportFragmentManager, dialog::class.java.canonicalName)
     }
+    private fun setInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.layoutParentDeliveryOutcome)) { view, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(
+                systemBars.left,
+                systemBars.top,
+                systemBars.right,
+                systemBars.bottom
+            )
+            insets
+        }    }
 }
