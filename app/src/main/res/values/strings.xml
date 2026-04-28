@@ -1130,5 +1130,6 @@
     <string name="second_stage_prolonged">Second stage prolonged. Immediate attention required.</string>
     <string name="shift_to_postnatal_ward">Shift to Postnatal Ward</string>
     <string name="title_activity_post_partum">Post Partum View</string>
-
+    <string name="lbl_mother_outcome"><![CDATA[<b>Mother Outcome</b>: %1$s]]></string>
+    <string name="lbl_newborn_outcome"><![CDATA[<b>Newborn Outcome</b>: %1$s]]></string>
 </resources>

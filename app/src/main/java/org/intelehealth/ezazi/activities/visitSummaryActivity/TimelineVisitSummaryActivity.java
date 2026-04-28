@@ -25,6 +25,7 @@ import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.telephony.TelephonyManager;
 import android.text.Html;
+import android.text.SpannableStringBuilder;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.Gravity;
@@ -1587,19 +1588,8 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
                 endStageButton.setEnabled(false);
             }
 
-        } else {
-            VisitOutcome outcome = new ObsDAO().getCompletedVisitType(isVCEPresent);
-            endStageButton.setVisibility(View.INVISIBLE);
-            if (outcome != null && outcome.getOutcome() != null && !outcome.getOutcome().equalsIgnoreCase("")) {
-                outcomeTV.setVisibility(View.VISIBLE);
-                setOutcomeText(outcome.getOutcome());
-                outcomeTV.setGravity(Gravity.CENTER);
-                checkForOutOfTime(outcome);
-            }
-            fabc.setVisibility(View.GONE);
-            fabv.setVisibility(View.GONE);
-            fabSOS.setVisibility(View.GONE);
-            fabPrescription.setVisibility(View.GONE);
+        }else {
+            setVisitOutcome();
         }
     }
     private void showPostpartumReport() {
@@ -1650,5 +1640,34 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         });
 
         popup.show();
+    }
+    private void setVisitOutcome() {
+        VisitOutcome outcome = new ObsDAO().getCompletedVisitType(isVCEPresent);
+        Log.d(TAG, "setVisitOutcome:outcome :  "+new Gson().toJson(outcome));
+        endStageButton.setVisibility(View.INVISIBLE);
+        if (outcome != null && outcome.getOutcome() != null && !outcome.getOutcome().equalsIgnoreCase("")) {
+            outcomeTV.setVisibility(View.VISIBLE);
+
+            SpannableStringBuilder combinedOutcome = new SpannableStringBuilder();
+
+            // Mother outcome (existing business logic untouched)
+            String motherStr = getString(R.string.lbl_mother_outcome, outcome.getOutcome());
+            combinedOutcome.append(Html.fromHtml(motherStr, Html.FROM_HTML_MODE_COMPACT));
+
+            // Baby outcome - append in new line if present
+            if (outcome.getBabyOutcome() != null && !outcome.getBabyOutcome().isEmpty()) {
+                String babyStr = getString(R.string.lbl_newborn_outcome, outcome.getBabyOutcome());
+                combinedOutcome.append("\n");
+                combinedOutcome.append(Html.fromHtml(babyStr, Html.FROM_HTML_MODE_COMPACT));
+            }
+
+            outcomeTV.setText(combinedOutcome);
+            outcomeTV.setGravity(Gravity.CENTER);
+            checkForOutOfTime(outcome);
+        }
+        fabc.setVisibility(View.GONE);
+        fabv.setVisibility(View.GONE);
+        fabSOS.setVisibility(View.GONE);
+        fabPrescription.setVisibility(View.GONE);
     }
 }

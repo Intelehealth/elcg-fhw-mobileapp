@@ -9,6 +9,8 @@ import static org.intelehealth.ezazi.utilities.UuidDictionary.MISSED_ENCOUNTER;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.ENCOUNTER_TYPE;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.MOTHER_DECEASED;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.MOTHER_DECEASED_FLAG;
+import static org.intelehealth.ezazi.utilities.UuidDictionary.NEONATAL_DEATH;
+import static org.intelehealth.ezazi.utilities.UuidDictionary.NEWBORN_DISCHARGE_TYPE;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.OUT_OF_TIME;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.REFER_TYPE;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.SOS_STAGE_HOUR;
@@ -812,7 +814,7 @@ public class ObsDAO {
 //                .where("E.uuid = '" + encounterUuid + "' AND E.encounter_type_uuid = '" + UuidDictionary.ENCOUNTER_VISIT_COMPLETE + "'")
 //                .build();
 //        Log.e(TAG, "getCompletedVisitType: " + query);
-        String query = "SELECT value, conceptuuid FROM tbl_obs WHERE encounteruuid = ? AND conceptuuid IN (?,?,?,?,?,?,?)";
+        String query = "SELECT value, conceptuuid FROM tbl_obs WHERE encounteruuid = ? AND conceptuuid IN (?,?,?,?,?,?,?, ?, ?)";
         final Cursor idCursor = db.rawQuery(query, new String[]{encounterUuid,
                 UuidDictionary.BIRTH_OUTCOME,
                 UuidDictionary.REFER_TYPE,
@@ -820,7 +822,9 @@ public class ObsDAO {
                 UuidDictionary.MOTHER_DECEASED,
                 UuidDictionary.END_2ND_STAGE_OTHER,
                 UuidDictionary.LABOUR_OTHER,
-                UuidDictionary.OUT_OF_TIME});
+                UuidDictionary.OUT_OF_TIME,
+                NEWBORN_DISCHARGE_TYPE,
+                NEONATAL_DEATH});
 
 
         //do some insertions or whatever you need
@@ -867,6 +871,15 @@ public class ObsDAO {
         Log.e(TAG, "findOutcome: " + outcomeMap.toString());
 
         VisitOutcome visitOutcome = new VisitOutcome();
+
+        // BABY outcome
+        // BABY outcome
+        if (outcomeMap.containsKey(NEWBORN_DISCHARGE_TYPE)) {
+            visitOutcome.setBabyOutcome(outcomeMap.get(NEWBORN_DISCHARGE_TYPE));
+        } else if (outcomeMap.containsKey(NEONATAL_DEATH)) {
+            visitOutcome.setBabyOutcome(outcomeMap.get(NEONATAL_DEATH));
+        }
+
         if (outcomeMap.containsKey(BIRTH_OUTCOME) && outcomeMap.containsKey(MOTHER_DECEASED_FLAG)) {
             String birthOutcome = outcomeMap.get(BIRTH_OUTCOME);
             String motherFlag = outcomeMap.get(MOTHER_DECEASED_FLAG);
