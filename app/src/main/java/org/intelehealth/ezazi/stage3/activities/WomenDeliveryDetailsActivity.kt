@@ -70,7 +70,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             val deliveryDetails = collectFormData()
             if (validateFields(deliveryDetails)) {
                 clearErrors()
-               // viewModel.saveDelivery(encounterDto, deliveryDetails, SessionManager(this).creatorID, "Stage3_Hour1_1")
+                viewModel.saveDelivery(encounterDto, deliveryDetails, SessionManager(this).creatorID, "Stage3_Hour1_1")
             }
         }
 

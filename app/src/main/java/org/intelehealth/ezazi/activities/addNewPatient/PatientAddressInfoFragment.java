@@ -637,7 +637,7 @@ public class PatientAddressInfoFragment extends Fragment {
             /*tvErrorState.setVisibility(View.VISIBLE);
             tvErrorState.setText(getString(R.string.select_state));
             cardState.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));*/
-            errorDetailsList.add(new ErrorManagerModel(autotvState, tvErrorState, getString(R.string.select_state), cardState));
+            errorDetailsList.add(new ErrorManagerModel(autotvState, tvErrorState, getString(R.string.select_province), cardState));
         } else {
             tvErrorState.setVisibility(View.GONE);
             cardState.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
@@ -671,7 +671,7 @@ public class PatientAddressInfoFragment extends Fragment {
             cardCityVillage.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
         }
         String postalCode = etPostalCode.getText().toString();
-        if (!postalCode.isEmpty() && postalCode.length() != 6) {
+        if (!postalCode.isEmpty() && postalCode.length() != 5) {  //5 for nepal. previously its 6
 
         /*    tvErrorPostalCode.setVisibility(View.VISIBLE);
             tvErrorPostalCode.setText(getString(R.string.enter_postal_limit));
@@ -743,7 +743,7 @@ public class PatientAddressInfoFragment extends Fragment {
                     if (val.isEmpty() || !isStateInList) {
 
                         tvErrorState.setVisibility(View.VISIBLE);
-                        tvErrorState.setText(getString(R.string.select_state));
+                        tvErrorState.setText(getString(R.string.select_province));
                         cardState.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
                     } else {
                         tvErrorState.setVisibility(View.GONE);
@@ -771,7 +771,7 @@ public class PatientAddressInfoFragment extends Fragment {
                         tvErrorCityVillage.setVisibility(View.GONE);
                         cardCityVillage.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
                     }
-                } else if (!val.isEmpty() && val.length() != 6) {
+                } else if (!val.isEmpty() && val.length() != 5) { //5 for nepal. previously its 6
 
                     tvErrorPostalCode.setVisibility(View.VISIBLE);
                     tvErrorPostalCode.setText(getString(R.string.enter_postal_limit));
@@ -911,13 +911,13 @@ public class PatientAddressInfoFragment extends Fragment {
         if (sourceList == null) sourceList = new ArrayList<>();
         mLastSelectedStateList = sourceList;
 
-        String[] provinceList = new String[sourceList.size() + 1];
+        String[] provinceList = new String[sourceList.size()];
         stateArr = new String[sourceList.size() + 1];
-        provinceList[0] = getResources().getString(R.string.select_spinner);
-        for (int i = 1; i <= sourceList.size(); i++) {
+        //provinceList[0] = getResources().getString(R.string.select_spinner);
+        for (int i = 0; i < sourceList.size(); i++) {
             String label = sessionManager.getAppLanguage().equals("en")
-                    ? sourceList.get(i - 1).getState()
-                    : sourceList.get(i - 1).getStateHindi();
+                    ? sourceList.get(i).getState()
+                    : sourceList.get(i).getStateHindi();
             provinceList[i] = label;
             stateArr[i] = label;
         }
