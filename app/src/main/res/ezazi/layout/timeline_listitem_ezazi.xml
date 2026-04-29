@@ -59,14 +59,17 @@
     <TextView
         android:id="@+id/txtEncounterDate"
         style="@style/Theme.EZazi.Caption"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:maxLines="2"
+        android:ellipsize="none"
+        android:padding="5dp"
         app:layout_constraintBottom_toTopOf="@id/tvElcgEncounter1Time"
         app:layout_constraintEnd_toStartOf="@id/guideline"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@id/cardElcgEncounter2"
         app:layout_constraintVertical_chainStyle="packed"
-        tools:text="23 Oct 2023" />
+        tools:text="23 Baisakh 2023 BS"/>
 
     <TextView
         android:id="@+id/tvElcgEncounter1Time"

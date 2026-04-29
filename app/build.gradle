@@ -20,12 +20,12 @@ static def getDateTime() {
 }
 
 android {
-    compileSdk 36
+    compileSdk 34
 
     defaultConfig {
         applicationId "org.intelehealth.ezazi"
         minSdk 26
-        targetSdk 36
+        targetSdk 34
         versionCode 18
         versionName '3.0'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
