@@ -314,6 +314,9 @@ public class PatientOtherInfoFragment extends Fragment {
             @Override public void afterTextChanged(Editable e) {
                 String v = e.toString().trim();
                 if (!v.isEmpty()) { mTotalBirthCount = v; updateGravida(); }
+                else {
+                    mGravidaEdittext.setText(null);
+                }
             }
         });
         mTotalMiscarriageEditText.addTextChangedListener(new TextWatcher() {
@@ -322,6 +325,9 @@ public class PatientOtherInfoFragment extends Fragment {
             @Override public void afterTextChanged(Editable e) {
                 String v = e.toString().trim();
                 if (!v.isEmpty()) { mTotalMiscarriageCount = v; updateGravida(); }
+                else {
+                    mGravidaEdittext.setText(null);
+                }
             }
         });
     }
@@ -692,7 +698,7 @@ public class PatientOtherInfoFragment extends Fragment {
                 isValid = false;
             } else if (isAfterToday(mAdmissionDateString)) {
                 // Date-level check — prevents tomorrow slipping through due to timezone offset
-                showError(tvErrorAdmissionDate, cardAdmissionDate, getString(R.string.select_valid_date));
+                showError(tvErrorAdmissionDate, cardAdmissionDate, getString(R.string.select_admission_date));
                 isValid = false;
             } else {
                 Calendar minAdm = Calendar.getInstance(); minAdm.add(Calendar.DAY_OF_MONTH, -10);
@@ -713,8 +719,30 @@ public class PatientOtherInfoFragment extends Fragment {
         } else if (!TextUtils.isEmpty(mAdmissionDateString)) {
             Date admDt = parseGregDateTime(mAdmissionDateString, mAdmissionTimeString);
             if (admDt != null && admDt.after(new Date())) {
-                showError(tvErrorAdmissionTime, cardAdmissionTime, getString(R.string.select_valid_date));
+                showError(tvErrorAdmissionTime, cardAdmissionTime, getString(R.string.select_admission_time));
                 isValid = false;
+            }
+        }
+
+        // 8. Sac Ruptured
+        if (!isUnknownChecked) {
+            if (TextUtils.isEmpty(mMembraneRupturedDate)) {
+                showError(tvErrorSacRupturedDate, cardSacRupturedDate, getString(R.string.select_sac_ruptured_date));
+                isValid = false;
+            } else if (isAfterToday(mMembraneRupturedDate)) {
+                showError(tvErrorSacRupturedDate, cardSacRupturedDate, getString(R.string.sac_ruptured_future_not_allowed));
+                isValid = false;
+            }
+            if (TextUtils.isEmpty(mMembraneRupturedTime)) {
+                showError(tvErrorSacRupturedTime, cardSacRupturedTime, getString(R.string.select_sac_ruptured_time));
+                isValid = false;
+            }
+            else if (!TextUtils.isEmpty(mMembraneRupturedTime)) {
+                Date rupDt = parseGregDateTime(mMembraneRupturedDate, mMembraneRupturedTime);
+                if (rupDt != null && rupDt.after(new Date())) {
+                    showError(tvErrorSacRupturedTime, cardSacRupturedTime, getString(R.string.select_sac_ruptured_time));
+                    isValid = false;
+                }
             }
         }
 
@@ -753,7 +781,7 @@ public class PatientOtherInfoFragment extends Fragment {
                     getString(R.string.active_labor_diagnosed_date_val_txt));
             isValid = false;
         } else if (isAfterToday(mActiveLaborDiagnosedDate)) {
-            showError(tvErrorLabourDiagnosedDate, cardDiagnosedDate, getString(R.string.select_valid_date));
+            showError(tvErrorLabourDiagnosedDate, cardDiagnosedDate, getString(R.string.active_labor_diagnosed_date_val_txt));
             isValid = false;
         }
 
@@ -775,20 +803,7 @@ public class PatientOtherInfoFragment extends Fragment {
             }
         }
 
-        // 8. Sac Ruptured
-        if (!isUnknownChecked) {
-            if (TextUtils.isEmpty(mMembraneRupturedDate)) {
-                showError(tvErrorSacRupturedDate, cardSacRupturedDate, getString(R.string.select_sac_ruptured_date));
-                isValid = false;
-            } else if (isAfterToday(mMembraneRupturedDate)) {
-                showError(tvErrorSacRupturedDate, cardSacRupturedDate, getString(R.string.select_valid_date));
-                isValid = false;
-            }
-            if (TextUtils.isEmpty(mMembraneRupturedTime)) {
-                showError(tvErrorSacRupturedTime, cardSacRupturedTime, getString(R.string.select_sac_ruptured_time));
-                isValid = false;
-            }
-        }
+
 
         // 9. Risk Factors
         View otherRF = view.findViewById(R.id.llViewOtherRiskFactor);
@@ -833,7 +848,7 @@ public class PatientOtherInfoFragment extends Fragment {
         }
         else
         {
-            tvErrorLmpDate.setText(getString(R.string.select_valid_date));
+            tvErrorLmpDate.setText(getString(R.string.select_lmp_date));
             tvErrorLmpDate.setVisibility(View.VISIBLE);
             isValid = false;
         }
@@ -853,7 +868,7 @@ public class PatientOtherInfoFragment extends Fragment {
         }
         else
         {
-            tvErrorEDD.setText(getString(R.string.select_valid_date));
+            tvErrorEDD.setText(getString(R.string.select_edd_date));
             tvErrorEDD .setVisibility(View.VISIBLE);
             isValid = false;
         }

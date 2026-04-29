@@ -166,6 +166,7 @@
     <string name="select_valid_date">Please select valid date</string>
     <string name="lmp_required">Please select LMP date</string>
     <string name="lmp_future_not_allowed">LMP cannot be a future date</string>
+    <string name="sac_ruptured_future_not_allowed">Ruptured Sac cannot be a future date</string>
     <string name="lmp_range_invalid">LMP cannot be more than 44 weeks ago</string>
 
     <!-- Woman Delivery Details -->

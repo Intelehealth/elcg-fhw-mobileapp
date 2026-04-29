@@ -997,10 +997,10 @@
     <string name="select_dob">Please select date of birth</string>
     <string name="select_age">Age must be greater than 9 years</string>
     <string name="mobile_no_length">Length must be 10 digits</string>
-    <string name="select_admission_date">Please select admission date</string>
-    <string name="select_admission_time">Please select admission time</string>
-    <string name="select_sac_ruptured_date">Select amniotic sac ruptured date</string>
-    <string name="select_sac_ruptured_time">Select amniotic sac ruptured time</string>
+    <string name="select_admission_date">Please select a valid admission date</string>
+    <string name="select_admission_time">Please select a valid admission time</string>
+    <string name="select_sac_ruptured_date">Select a valid amniotic sac ruptured date</string>
+    <string name="select_sac_ruptured_time">Select a valid amniotic sac ruptured time</string>
     <string name="enter_bed_no">Please enter bed number</string>
     <string name="select_country">Please select country</string>
     <string name="select_state">Please select state</string>
@@ -1118,7 +1118,7 @@
     <string name="error_gravida_max_limit">Gravida max limit is 20</string>
     <string name="last_menstrual_period_title">Last Menstrual Period*</string>
     <string name="edd_title">Estimated Date of Delivery*</string>
-    <string name="hospital_id_title">Hospital ID*</string>
+    <string name="hospital_id_title">Hospital ID</string>
     <string name="hospital_id_hint">Hospital ID</string>
     <string name="outcome_decision_stage_3">Please enter the outcome of Stage 3</string>
     <string name="end3StageButton">End Third Stage</string>
