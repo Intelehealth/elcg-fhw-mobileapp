@@ -141,42 +141,42 @@ class MultiSelectDropdownHandlerForDataCapture(
         etOtherText: EditText,
         clOngoingNextLayout: ConstraintLayout
     ) {
+        // ✅ Always reset to clean slate first — prevents stale state on re-bind
+        tvSelected.text = ""
+        clOtherContainer.visibility = View.GONE
+        etOtherText.setText("")
+
         val saved = info.capturedValue ?: return
         if (saved.isEmpty()) return
 
         try {
-            val json         = org.json.JSONObject(saved)
-            val yesNo        = json.optString("any ongoing complication", "")
+            val json          = org.json.JSONObject(saved)
+            val yesNo         = json.optString("any ongoing complication", "")
             val complications = json.optString("complications", "")
-            val otherValue   = json.optString("other value", "")
+            val otherValue    = json.optString("other value", "")
 
+            // Only restore dropdown/Other when YES — if NO, clean slate above is correct
             if (!"yes".equals(yesNo, ignoreCase = true)) return
 
-            // Restore dropdown display text
             if (complications.isNotEmpty()) tvSelected.text = complications
 
-            // Restore Other container + EditText
-            if (otherValue.isNotEmpty()) {
-                etOtherText.setText(otherValue)
-                etOtherText.setSelection(otherValue.length)
+            val hasOther = complications.split(",")
+                .map { it.trim() }
+                .any { it.equals(AppConstants.OTHER_OPTION, ignoreCase = true) }
+
+            if (hasOther) {
+                if (otherValue.isNotEmpty()) {
+                    etOtherText.setText(otherValue)
+                    etOtherText.setSelection(otherValue.length)
+                }
                 clOtherContainer.visibility = View.VISIBLE
                 clOtherContainer.requestLayout()
                 clOngoingNextLayout.requestLayout()
-            } else {
-                // Check if "Other" label is among the selected complications
-                val hasOther = complications.split(",")
-                    .map { it.trim() }
-                    .any { it.equals(AppConstants.OTHER_OPTION, ignoreCase = true) }
-                if (hasOther) {
-                    clOtherContainer.visibility = View.VISIBLE
-                    clOtherContainer.requestLayout()
-                    clOngoingNextLayout.requestLayout()
-                } else {
-                    clOtherContainer.visibility = View.GONE
-                }
             }
+            // else: Other not selected → container stays GONE from reset above
+
         } catch (e: org.json.JSONException) {
-            // Not JSON
+            // malformed JSON — clean slate already applied at the top
         }
     }
 

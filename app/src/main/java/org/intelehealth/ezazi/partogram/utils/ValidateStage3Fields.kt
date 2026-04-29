@@ -331,7 +331,6 @@ object ValidateStage3Fields {
         PartogramConstants.Params.FEET_WARM_NEWBORN.conceptId,
         PartogramConstants.Params.SKIN_COLOR_NEWBORN.conceptId,
         PartogramConstants.Params.UC_OOZING_NEWBORN.conceptId,
-        PartogramConstants.Params.SUCKING_FEEDING_NEWBORN.conceptId
     )
 
     fun isRadioSelectField(conceptId: String?): Boolean {

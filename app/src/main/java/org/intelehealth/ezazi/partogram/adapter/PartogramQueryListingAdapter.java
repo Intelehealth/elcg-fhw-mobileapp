@@ -48,6 +48,7 @@ import org.intelehealth.ezazi.partogram.model.PartogramItemData;
 import org.intelehealth.ezazi.partogram.utils.DataCaptureGenericRadioFieldHandler;
 import org.intelehealth.ezazi.partogram.utils.MultiSelectDropdownHandlerForDataCapture;
 import org.intelehealth.ezazi.stage3.Utils.GenericMultiChoiceAdapter;
+import org.intelehealth.ezazi.stage3.Utils.OngoingComplicationMotherAndBabyHandler;
 import org.intelehealth.ezazi.ui.dialog.CustomViewDialogFragment;
 import org.intelehealth.ezazi.ui.dialog.MultiChoiceDialogFragment;
 import org.intelehealth.ezazi.ui.dialog.SingleChoiceDialogFragment;
@@ -475,7 +476,12 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
 
             case UuidDictionary.ONGOING_COMPLICATIONS_MOTHER:
             case UuidDictionary.ONGOING_COMPLICATIONS_NEWBORN:
-                showOngoingComplicationsView(tempView, info);
+               // showOngoingComplicationsView(tempView, info);
+                OngoingComplicationMotherAndBabyHandler ongoingHandler = new OngoingComplicationMotherAndBabyHandler(
+                        accessMode,
+                        multiSelectHandler
+                );
+                ongoingHandler.bind(tempView,info);
                 return;
         }
 
@@ -1390,87 +1396,6 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
             radioGroup.getChildAt(i).setEnabled(
                     accessMode != PartogramConstants.AccessMode.READ
             );
-        }
-    }
-
-
-    private void showOngoingComplicationsView(View tempView, ParamInfo info) {
-        PartoLblRadioViewOngoingComplicationBinding binding =
-                PartoLblRadioViewOngoingComplicationBinding.bind(tempView);
-
-        RadioGroup radioGroup = tempView.findViewById(R.id.radioYesNoGroup);
-        radioGroup.setOnCheckedChangeListener(null); // disconnect during restore
-
-        String saved = info.getCapturedValue();
-        if (!TextUtils.isEmpty(saved)) {
-            try {
-                org.json.JSONObject json = new org.json.JSONObject(saved);
-                String yesNo = json.optString("any ongoing complication", "");
-                if ("yes".equalsIgnoreCase(yesNo)) {
-                    radioGroup.check(R.id.radioYes);
-                    info.setCheckedRadioOption(ParamInfo.RadioOptions.YES);
-                    binding.clOngoingNextLayout.setVisibility(View.VISIBLE);
-                    binding.clOngoingNextLayout.requestLayout();
-                } else {
-                    radioGroup.check(R.id.radioNo);
-                    info.setCheckedRadioOption(ParamInfo.RadioOptions.NO);
-                    binding.clOngoingNextLayout.setVisibility(View.GONE);
-                }
-            } catch (org.json.JSONException e) {
-                radioGroup.clearCheck();
-                binding.clOngoingNextLayout.setVisibility(View.GONE);
-            }
-        } else {
-            radioGroup.clearCheck();
-            binding.clOngoingNextLayout.setVisibility(View.GONE);
-        }
-
-        multiSelectHandler.bind(tempView, info);
-
-        handleRadioCheckListener(tempView, info, false, new OnRadioCheckedListener() {
-            @Override
-            public void onCheckedYes() {
-                binding.clOngoingNextLayout.setVisibility(View.VISIBLE);
-                binding.clOngoingNextLayout.requestLayout();
-                //  YES — preserve existing "other value" if present
-                persistOngoingJson(info, true);
-            }
-
-            @Override
-            public void onCheckedNo() {
-                binding.tvSelectedValue.setText("");
-                binding.clOngoingNextLayout.setVisibility(View.GONE);
-                binding.clOngoingNextLayout.requestLayout();
-                persistOngoingJson(info, false);
-            }
-        });
-    }
-    private void persistOngoingJson(ParamInfo info, boolean isYes) {
-        try {
-            org.json.JSONObject json = new org.json.JSONObject();
-            json.put("any ongoing complication", isYes ? "yes" : "no");
-            if (isYes) {
-                // Read complications from the existing saved value
-                String existing = info.getCapturedValue();
-                String complications = "";
-                String otherValue = "";
-                if (!TextUtils.isEmpty(existing)) {
-                    try {
-                        org.json.JSONObject existingJson = new org.json.JSONObject(existing);
-                        complications = existingJson.optString("complications", "");
-                        otherValue    = existingJson.optString("other value", "");
-                    } catch (org.json.JSONException ignored) {}
-                }
-                json.put("complications", complications);
-                if (!TextUtils.isEmpty(otherValue)) {
-                    json.put("other value", otherValue);
-                }
-            } else {
-                json.put("complications", "");
-            }
-            info.setCapturedValue(json.toString());
-        } catch (org.json.JSONException e) {
-            Log.e(TAG, "persistOngoingJson error", e);
         }
     }
 
