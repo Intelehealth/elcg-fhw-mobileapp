@@ -239,7 +239,6 @@
     <string name="error_placenta_time_after_delivery">Time of placenta delivery must be after time of delivery</string>
     <string name="label_women">Mother</string>
     <string name="label_newborn">Newborn</string>
-    <string name="select_valid_date">Select valid date</string>
     <string name="mother_final_outcome">Mother – Final Outcome</string>
     <string name="newborn_final_outcome">Newborn – Final Outcome</string>
     <string name="complete_case">Select reason to complete case</string>
