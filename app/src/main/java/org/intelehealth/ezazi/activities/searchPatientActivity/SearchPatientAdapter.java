@@ -29,6 +29,7 @@ import org.intelehealth.ezazi.models.dto.PatientDTO;
 import org.intelehealth.ezazi.utilities.DateAndTimeUtils;
 
 import org.intelehealth.ezazi.activities.patientDetailActivity.PatientDetailActivity;
+import org.intelehealth.ezazi.utilities.NepaliDateConverter;
 import org.intelehealth.klivekit.utils.DateTimeUtils;
 
 public class SearchPatientAdapter extends RecyclerView.Adapter<SearchPatientAdapter.Myholder> {
@@ -106,7 +107,7 @@ public class SearchPatientAdapter extends RecyclerView.Adapter<SearchPatientAdap
             tvPatientBedNo.setText("Bed No: " + patient.getBedNo());
             tvPatientStage.setText(patient.getStage());
             tvPatientNoOfAlert.setText("No of Alert: " + patient.getAlternateNo());
-            tvPatientRegOn.setText(patient.regDate());
+            tvPatientRegOn.setText(NepaliDateConverter.gregStringToBsDisplay(patient.regDate()));
             if (patient.getOpenmrsId() != null)
                 tvPatientId.setText(patient.getOpenmrsId());
             else

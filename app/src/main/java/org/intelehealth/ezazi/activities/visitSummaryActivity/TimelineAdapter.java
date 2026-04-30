@@ -32,6 +32,7 @@ import org.intelehealth.ezazi.models.dto.ObsDTO;
 import org.intelehealth.ezazi.partogram.PartogramConstants;
 import org.intelehealth.ezazi.partogram.PartogramDataCaptureActivity;
 import org.intelehealth.ezazi.ui.dialog.AppDialogUtils;
+import org.intelehealth.ezazi.utilities.NepaliDateConverter;
 import org.intelehealth.ezazi.utilities.NetworkConnection;
 import org.intelehealth.ezazi.utilities.SessionManager;
 import org.intelehealth.ezazi.utilities.UuidDictionary;
@@ -247,7 +248,8 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
                 }
 
                 encounterTimeAmPmFormat = DateTimeUtils.formatToLocalDate(timeDateType, DateTimeUtils.TIME_FORMAT);
-                encounterDate = DateTimeUtils.formatToLocalDate(timeDateType, DateTimeUtils.DD_MMM_YYYY);
+                // ── Convert encounter date from Gregorian → Nepali BS for display ──────
+                encounterDate = NepaliDateConverter.dateToBsDisplay(timeDateType);
                 Log.v("timeline", "AM Format: " + encounterTimeAmPmFormat);
 
                 if (submitted == EncounterDTO.Status.SUBMITTED) { // This so that once submitted it should be closed and not allowed to edit again.

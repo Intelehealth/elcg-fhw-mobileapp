@@ -163,11 +163,10 @@
     <string name="not_nurse_login_error">This number is linked to a Doctor account and cannot be used for Nurse login.</string>
     <string name="no_user_exist_reset_password"> Mobile number not registered. Please enter a registered number.</string>
     <string name="active_labour_diagnosis">Active labour diagnosis must be within last 15 hours</string>
-<!--
-    <string name="select_valid_date">Please select valid time</string>
--->
+    <string name="select_valid_date">Please select valid date</string>
     <string name="lmp_required">Please select LMP date</string>
     <string name="lmp_future_not_allowed">LMP cannot be a future date</string>
+    <string name="sac_ruptured_future_not_allowed">Ruptured Sac cannot be a future date</string>
     <string name="lmp_range_invalid">LMP cannot be more than 44 weeks ago</string>
 
     <!-- Woman Delivery Details -->
