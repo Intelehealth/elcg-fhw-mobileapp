@@ -170,11 +170,13 @@ public class AppConstants {
     }
 
     public static String getFirebaseRTDBRootRef() {
-        return BuildConfig.FB_RT_DB + "/" + FIREBASE_REAL_TIME_DB_BASE_REF;
+        return BuildConfig.FB_RT_INSTANCE.replaceAll("\\.", "_") + "/" + FIREBASE_REAL_TIME_DB_BASE_REF;
+
     }
 
     public static String getFirebaseRTDBRootRefForDeviceInfo() {
-        return BuildConfig.FB_RT_DB + "/" + FIREBASE_REAL_TIME_DB_BASE_REF_SAVE_DEVICE;
+        return BuildConfig.FB_RT_INSTANCE.replaceAll("\\.", "_") + "/" + FIREBASE_REAL_TIME_DB_BASE_REF_SAVE_DEVICE;
+
     }
 
     public static final String CURRENT_ENC_EDIT_INTENT_ACTION = "org.intelehealth.app.CURRENT_CARD_EDIT";

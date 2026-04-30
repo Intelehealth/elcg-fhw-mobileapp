@@ -1,3 +1,4 @@
+/*
 android {
     def dimen = "beta"
     flavorDimensions = [dimen]
@@ -61,4 +62,4 @@ android {
 //            isDefault = true
         }
     }
-}
+}*/
