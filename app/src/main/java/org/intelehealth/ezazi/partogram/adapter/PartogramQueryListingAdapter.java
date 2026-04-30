@@ -1398,5 +1398,4 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
             );
         }
     }
-
 }
