@@ -18,13 +18,12 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> <!-- <uses-permission android:name="android.permission.SEND_SMS" /> -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-
     <uses-permission
         android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"
         android:minSdkVersion="34" />
@@ -50,12 +49,26 @@
         android:usesCleartextTraffic="true"
         tools:ignore="UnusedAttribute, LockedOrientationActivity, DiscouragedApi"
         tools:replace="allowBackup">
+        <activity
+            android:name=".stage3.postpartum.ViewPostPartumReportActivity"
+            android:exported="false"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/title_activity_post_partum"
+            android:screenOrientation="landscape"
+            android:theme="@style/AppTheme.NoActionBar" />
 
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             android:foregroundServiceType="dataSync"
             tools:node="merge" />
 
+        <activity
+            android:name=".stage3.activities.WomenDeliveryDetailsActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize|uiMode"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustNothing" />
         <activity
             android:name=".partogram.PartogramBaseActivity"
             android:exported="false" />
@@ -116,7 +129,6 @@
                 <action android:name="org.intelehealth.app.RTC_MESSAGING_EVENT" />
             </intent-filter>
         </receiver>
-
         <receiver
             android:name=".optimized_sync.BootCompleteReceiver"
             android:enabled="true"
@@ -311,7 +323,6 @@
             android:foregroundServiceType="dataSync" />
 
         <receiver android:name=".utilities.NotificationReceiver" />
-
     </application>
 
 </manifest>

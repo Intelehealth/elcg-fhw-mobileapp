@@ -208,6 +208,15 @@ public class InteleHealthDatabaseHelper extends SQLiteOpenHelper {
             "sync TEXT DEFAULT 'false' " +
             ")";
 
+    //provider attribute table
+    public static final String CREATE_PROVIDER_ATTRIBUTE =
+            "CREATE TABLE IF NOT EXISTS tbl_provider_attribute (" +
+                    "uuid TEXT PRIMARY KEY," +
+                    "provideruuid TEXT," +
+                    "attributetypeuuid TEXT," +
+                    "value TEXT," +
+                    "voided TEXT" +
+                    ")";
 
     public InteleHealthDatabaseHelper(@Nullable Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -318,6 +327,24 @@ public class InteleHealthDatabaseHelper extends SQLiteOpenHelper {
             db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('d1fb190a-9ebb-448f-8d61-dfeeb20fd931','Encounter Status')");
             db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('6ce3e2eb-35d4-4aa2-aa77-6d1d3b3f524a','LCG_SOS')");
 
+            // ---------------- STAGE 3 ----------------
+
+            // 0–1 Hour (Every 15 mins → 4 encounters)
+            db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('e58b22d1-b09e-4cda-b05c-a45d1e63d390','Stage3_Hour1_1')");
+            db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('2c112cc2-3922-400e-9dd9-11b27fc76404','Stage3_Hour1_2')");
+            db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('83ddb485-4d99-4efa-b7c9-8a2aab14c868','Stage3_Hour1_3')");
+            db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('45d3680e-b368-4a05-8ae5-e0baa31b1973','Stage3_Hour1_4')");
+
+            // 1–2 Hour (Every 30 mins → 2 encounters)
+            db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('3d71ad42-7b6e-4687-b096-f0dd89e84647','Stage3_Hour2_1')");
+            db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('3b3960f4-c9d2-4d41-aed9-f376312fc33e','Stage3_Hour2_2')");
+
+            // 2–4 Hour (Every 1 hour → 2 encounters)
+            db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('0ca40a73-3581-47ae-9cb2-0c6cde17158e','Stage3_Hour3_1')");
+            db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('746e8cc9-e8e8-4055-87a2-2687888cf7f8','Stage3_Hour4_1')");
+
+            // DELIVERY_OUTCOME_STAGE3
+            db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('c5f95c0f-a499-4792-9ee0-ff138d8df425','DELIVERY_OUTCOME_STAGE3')");
         }
     }
 
@@ -338,6 +365,7 @@ public class InteleHealthDatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_VISIT_ATTRIBUTES);
         db.execSQL(CREATE_RTC_LOGS);
         db.execSQL(CREATE_APPOINTMENTS);
+        db.execSQL(CREATE_PROVIDER_ATTRIBUTE);
         uuidInsert(db);
         database = db;
 
@@ -353,7 +381,8 @@ public class InteleHealthDatabaseHelper extends SQLiteOpenHelper {
             case 3:
                 //upgrade logic from version 3 to 4
             case 4:
-                //upgrade logic from version 4
+                db.execSQL(CREATE_PROVIDER_ATTRIBUTE);
+                break;
             default:
                 throw new IllegalStateException(
                         "onUpgrade() with unknown oldVersion " + oldVersion);

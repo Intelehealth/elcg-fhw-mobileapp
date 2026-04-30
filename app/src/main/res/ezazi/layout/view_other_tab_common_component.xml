@@ -225,6 +225,78 @@
         android:text="@string/enter_hospital_other_error"
         android:visibility="gone" />
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/textView_hospital_id"
+            style="@style/LabelStyleAddPatient"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/titles_margin_top"
+            android:gravity="start"
+            android:text="@string/hospital_id_title"
+            android:textColor="@color/colorBlack"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/card_date" />
+
+        <LinearLayout
+            android:id="@+id/card_details_hospital_id"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/admission_date_margin_top"
+            android:orientation="vertical"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textView5">
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_hospital_id"
+                style="@style/Theme.EZazi.Material.CardView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Theme.EZazi.Input.Add.Patient"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/list_container_padding">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_hospital_id"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:hint="@string/hospital_id_hint"
+                        android:imeOptions="actionNext"
+                        android:importantForAutofill="no"
+                        android:digits="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+                        android:maxLength="10"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:textSize="@dimen/input_inner_size" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                android:id="@+id/tv_hospital_id_error"
+                style="@style/Textview_Validation_Error"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginTop="@dimen/validation_error_tv_margin_top"
+                android:layout_marginEnd="@dimen/admission_date_margin_end"
+                android:layout_weight="1"
+                android:gravity="end"
+                android:lineSpacingExtra="0sp"
+                android:text="This field is mandatory"
+                android:visibility="gone" />
+
+        </LinearLayout>
+    </LinearLayout>
+
     <TextView
         android:id="@+id/textView11"
         style="@style/LabelStyleAddPatient"

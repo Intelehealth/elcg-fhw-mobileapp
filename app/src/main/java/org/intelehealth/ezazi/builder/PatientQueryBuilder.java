@@ -140,7 +140,9 @@ public class PatientQueryBuilder extends QueryBuilder {
     private String getCurrentStageCase() {
         return "(SELECT CASE " +
                 "WHEN U.name LIKE '%Stage1%'  THEN 'Stage-1' " +
-                "WHEN U.name LIKE '%Stage2%'  THEN 'Stage-2' ELSE U.name " +
+                "WHEN U.name LIKE '%Stage2%'  THEN 'Stage-2' " +
+                "WHEN U.name LIKE '%Stage3%'  THEN 'Stage-3' " +
+                "ELSE U.name " +
                 "END Stage FROM tbl_encounter E, tbl_uuid_dictionary U " +
                 "WHERE E.visituuid =V.uuid  and E.voided = '0'  and U.uuid = E.encounter_type_uuid  ORDER BY U.name DESC LIMIT 1)  as stage ";
     }

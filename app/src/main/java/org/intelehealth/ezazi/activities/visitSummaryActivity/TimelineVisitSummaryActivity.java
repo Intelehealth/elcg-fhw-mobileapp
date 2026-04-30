@@ -1,7 +1,9 @@
 package org.intelehealth.ezazi.activities.visitSummaryActivity;
 
 
+import static org.intelehealth.ezazi.app.AppConstants.EVENT_SHIFT_CHANGED;
 import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
+import static org.intelehealth.ezazi.utilities.UuidDictionary.DELIVERY_OUTCOME_STAGE3;
 
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;
@@ -13,6 +15,7 @@ import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.drawable.Drawable;
+import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -22,13 +25,17 @@ import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.telephony.TelephonyManager;
 import android.text.Html;
+import android.text.SpannableStringBuilder;
 import android.util.Log;
+import android.view.ContextThemeWrapper;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -43,6 +50,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.github.ajalt.timberkt.Timber;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textview.MaterialTextView;
 import com.google.gson.Gson;
 
 import org.intelehealth.ezazi.R;
@@ -53,20 +61,26 @@ import org.intelehealth.ezazi.app.IntelehealthApplication;
 import org.intelehealth.ezazi.database.dao.EncounterDAO;
 import org.intelehealth.ezazi.database.dao.ObsDAO;
 import org.intelehealth.ezazi.database.dao.PatientsDAO;
+import org.intelehealth.ezazi.database.dao.ProviderDAO;
 import org.intelehealth.ezazi.database.dao.VisitAttributeListDAO;
 import org.intelehealth.ezazi.database.dao.VisitsDAO;
 import org.intelehealth.ezazi.databinding.DialogOutOfTimeEzaziBinding;
 import org.intelehealth.ezazi.enums.StageEnum;
+import org.intelehealth.ezazi.models.FamilyMemberRes;
 import org.intelehealth.ezazi.models.dto.EncounterDTO;
 import org.intelehealth.ezazi.models.dto.ObsDTO;
 import org.intelehealth.ezazi.models.dto.PatientAttributesDTO;
 import org.intelehealth.ezazi.optimized_sync.network.NetworkStatus;
+import org.intelehealth.ezazi.models.dto.ProviderDTO;
 import org.intelehealth.ezazi.services.firebase_services.FirebaseRealTimeDBUtils;
+import org.intelehealth.ezazi.stage3.activities.WomenDeliveryDetailsActivity;
+import org.intelehealth.ezazi.stage3.postpartum.ViewPostPartumReportActivity;
 import org.intelehealth.ezazi.syncModule.SyncUtils;
 import org.intelehealth.ezazi.ui.dialog.AppDialogUtils;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
 import org.intelehealth.ezazi.ui.dialog.CustomViewDialogFragment;
 import org.intelehealth.ezazi.ui.dialog.SingleChoiceDialogFragment;
+import org.intelehealth.ezazi.ui.dialog.model.MultiChoiceItem;
 import org.intelehealth.ezazi.ui.dialog.model.SingChoiceItem;
 import org.intelehealth.ezazi.ui.prescription.activity.PrescriptionActivity;
 import org.intelehealth.ezazi.ui.prescription.data.PrescriptionRepository;
@@ -75,9 +89,9 @@ import org.intelehealth.ezazi.ui.rtc.activity.EzaziChatActivity;
 import org.intelehealth.ezazi.ui.rtc.activity.EzaziVideoCallActivity;
 import org.intelehealth.ezazi.ui.rtc.call.CallInitializer;
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
-import org.intelehealth.ezazi.ui.visit.activity.VisitLabourActivity;
 import org.intelehealth.ezazi.ui.visit.data.VisitRepository;
 import org.intelehealth.ezazi.ui.visit.dialog.CompleteVisitOnEnd2StageDialog;
+import org.intelehealth.ezazi.ui.visit.dialog.CompleteVisitOnEnd3StageDialog;
 import org.intelehealth.ezazi.ui.visit.dialog.CompleteVisitOnEndStage1Dialog;
 import org.intelehealth.ezazi.ui.visit.model.CompletedVisitStatus;
 import org.intelehealth.ezazi.ui.visit.model.VisitOutcome;
@@ -95,6 +109,10 @@ import org.intelehealth.klivekit.socket.SocketManager;
 import org.intelehealth.klivekit.utils.DateTimeUtils;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.Field;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -124,7 +142,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
     private Button endStageButton;
     private int stageNo = 0;
     private String isVCEPresent = "";
-    private Button fabc, fabv, fabSOS, fabPrescription;
+    private Button fabc, fabv, fabSOS, fabPrescription, btnShiftToPostnatalWard;
     private TextView outcomeTV;
     public static final String TAG = "TimelineVisitSummary";
 
@@ -138,9 +156,10 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
     private List<ItemHeader> prescriptions;
     private ObsDAO obsDAO = new ObsDAO();
     private PatientsDAO patientsDAO = new PatientsDAO();
+    private ProviderDAO providerDAO = new ProviderDAO();
+    private VisitsDAO visitsDAO = new VisitsDAO();
+    SyncUtils syncUtils = new SyncUtils();
 
-    int STAGE_1_DURATION = 30;
-    int STAGE_2_DURATION = 15;
 
     private final BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
@@ -195,6 +214,9 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         ContextCompat.registerReceiver(TimelineVisitSummaryActivity.this, checkEncounterEditMode, new IntentFilter(AppConstants.CURRENT_ENC_EDIT_INTENT_ACTION), ContextCompat.RECEIVER_EXPORTED);
 
         manageVisibilityOfPendingFlag();
+        if (visitUuid != null && !visitUuid.isEmpty()) {
+            fetchAllEncountersFromVisitForTimelineScreen(visitUuid);
+        }
     }
 
     @Override
@@ -205,7 +227,6 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         enableProperPadding(TimelineVisitSummaryActivity.this);
         encounterDAO = new EncounterDAO();
         initUI();
-
         calculateStageDurationsAndShowDialog();
 
         fabSOS.setOnClickListener(view -> {
@@ -219,7 +240,6 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
             }
             showEmergencyDialog();
         });
-
         fabc.setOnClickListener(view -> {
             boolean isInternetAvailable = InternetDialogHelper.checkInternetOrShow(TimelineVisitSummaryActivity.this);
             if (isInternetAvailable) {
@@ -249,6 +269,157 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
             }
         });
     }
+
+    private void setupShiftToPostnatalWardBtn() {
+       try {
+           Log.d("CCCCC", "called"+stageNo);
+           String providerId = sessionManager.getProviderID();
+           String ward = providerDAO.checkNurseWard(providerId);
+           Boolean isVisitActive = visitsDAO.isVisitActive(visitUuid, providerId);
+           if(((ward.isEmpty() || ward.equals("Labor Ward"))
+                   && isVisitActive
+                   && stageNo == 3)){
+               btnShiftToPostnatalWard.setVisibility(View.VISIBLE);
+           }else{
+               btnShiftToPostnatalWard.setVisibility(View.GONE);
+           }
+       }catch (Exception e){
+           btnShiftToPostnatalWard.setVisibility(View.GONE);
+           e.printStackTrace();
+       }
+
+        btnShiftToPostnatalWard.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ArrayList<MultiChoiceItem> items = new ArrayList<>();
+                FamilyMemberRes patientNameInfo = null;
+                try {
+                    patientNameInfo = patientsDAO.getPatientNameInfo(patientUuid);
+                    patientNameInfo.setVisitUuid(visitUuid);
+                    items.add(patientNameInfo);
+                    showNextShiftNursesDialog(items);
+                } catch (DAOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+    }
+
+    private void showNextShiftNursesDialog(List<MultiChoiceItem> items) {
+        List<String> visitUuids = new ArrayList<>();
+        List<FamilyMemberRes> patients = new ArrayList<>();
+        Log.e(TAG, "Selected patients : " + items.size());
+        for (MultiChoiceItem item : items) {
+            if (item instanceof FamilyMemberRes) {
+                patients.add((FamilyMemberRes) item);
+                visitUuids.add(((FamilyMemberRes) item).getVisitUuid());
+                Log.e(TAG, "Visit Uuid =>" + ((FamilyMemberRes) item).getVisitUuid());
+            }
+        }
+        showNurseAssignDialog(visitUuids, patients);
+    }
+
+    private void showNurseAssignDialog(List<String> visitUUIDList, List<FamilyMemberRes> patientsList) {
+        try {
+            ProviderDAO providerDAO = new ProviderDAO();
+            String myCreatorUUID = new SessionManager(IntelehealthApplication.getAppContext()).getCreatorID();
+            List<ProviderDTO> mProviderNurseList = providerDAO.getNurseList(false);
+//            String[] nurseNames = new String[mProviderNurseList.size() - 1];
+//            String[] nurseUUID = new String[mProviderNurseList.size() - 1];
+
+            ArrayList<SingChoiceItem> choiceItems = new ArrayList<>();
+            for (int i = 0; i < mProviderNurseList.size(); i++) {
+                if (!mProviderNurseList.get(i).getUserUuid().equals(myCreatorUUID)) {
+                    SingChoiceItem item = new SingChoiceItem();
+                    item.setItem(mProviderNurseList.get(i).getGivenName() + " " + mProviderNurseList.get(i).getFamilyName());
+                    item.setItemId(mProviderNurseList.get(i).getUuid());
+                    item.setUserUuid(mProviderNurseList.get(i).getUserUuid());
+                    item.setItemIndex(i);
+                    choiceItems.add(item);
+                }
+            }
+
+            showNurseSelectionDialog(visitUUIDList, choiceItems, patientsList);
+        } catch (DAOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void showNurseSelectionDialog(List<String> visitUUIDList, ArrayList<SingChoiceItem> choiceItems, List<FamilyMemberRes> patientsList) {
+        SingleChoiceDialogFragment dialog = new SingleChoiceDialogFragment.Builder(this)
+                .title(R.string.select_nurse)
+                .positiveButtonLabel(R.string.save_button)
+                .content(choiceItems)
+                .build();
+
+        dialog.isSearchable(true);
+        dialog.setListener(item -> assignNurseToPatient(visitUUIDList, item.getItemId(), item.getUserUuid(), patientsList));
+
+        dialog.show(getSupportFragmentManager(), dialog.getClass().getCanonicalName());
+    }
+
+    private void assignNurseToPatient(List<String> visitUUIDList, String selectedNurseProviderUuid, String assigneeNurseUserUuid, List<FamilyMemberRes> patientsList) {
+        PatientsDAO patientsDAO = new PatientsDAO();
+        Log.e(TAG, "assignNurseToPatient: " + selectedNurseProviderUuid);
+        Log.e(TAG, "assignNurseToPatient: assigneeNurseUserUuid check2 :: " + assigneeNurseUserUuid);
+
+        VisitAttributeListDAO visitsAttrsDAO = new VisitAttributeListDAO();
+        for (int j = 0; j < visitUUIDList.size(); j++) {
+            try {
+                visitsAttrsDAO.updateVisitTypeAttributeUuid(visitUUIDList.get(j), selectedNurseProviderUuid);
+                new VisitsDAO().updateVisitSync(visitUUIDList.get(j), "0");
+            } catch (DAOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        ShiftChangeData shiftChangeData = new ShiftChangeData();
+        shiftChangeData.setToHwUserUuid(assigneeNurseUserUuid);
+        shiftChangeData.setProviderID(sessionManager.getProviderID());
+        shiftChangeData.setAssignorNurse(sessionManager.getChwname());
+        shiftChangeData.generatePatientsInfo(patientsList);
+        shiftChangeData.setTag("shiftChange");
+        Log.d("1122Shift", new Gson().toJson(shiftChangeData));
+
+
+
+        SocketManager.getInstance().emit(EVENT_SHIFT_CHANGED, new Gson().toJson(shiftChangeData));
+        //mPendingForLogout = true;
+        sync();
+        Toast.makeText(context, getString(R.string.patient_assigned_successfully), Toast.LENGTH_SHORT).show();
+        finish();
+
+    }
+
+    private void sync() {
+        if (isNetworkConnected()) {
+            Toast.makeText(context, getString(R.string.syncInProgress), Toast.LENGTH_LONG).show();
+            syncUtils.syncForeground("home");
+        } else {
+            showErrorOnNoInternetOnRefresh();
+            //Toast.makeText(context, context.getString(R.string.failed_synced), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void showErrorOnNoInternetOnRefresh() {
+        AppDialogUtils.showSingleButtonDialog(
+                this,
+                getString(R.string.no_internet_setup_screen_title),
+                getString(R.string.no_internet_setup_screen_body),
+                getString(R.string.ok),
+                () -> {
+                    //finish();
+                    return null;
+                }
+        );
+    }
+
+    private boolean isNetworkConnected() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnected();
+    }
+
 
     @Override
     protected int getScreenTitle() {
@@ -354,7 +525,8 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         }
     }*/
 
-    @Override
+    //for india - regular 2 stages
+    /*@Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.timeline_menu, menu);
@@ -363,9 +535,18 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
             onOptionsItemSelected(menu.findItem(R.id.action_view_partogram));
         });
         return true;
+    }*/
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.timeline_menu, menu);
+        //Button btn = menu.findItem(R.id.action_view_partogram).getActionView().findViewById(R.id.btnViewPartogram);
+        LinearLayout btn = menu.findItem(R.id.action_view_partogram).getActionView().findViewById(R.id.layoutActionMenuViewReports);
+        btn.setOnClickListener(view -> showViewDropdownMenu(view));
+        return true;
     }
 
-    @SuppressLint("NonConstantResourceId")
+    /*@SuppressLint("NonConstantResourceId")
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
@@ -387,7 +568,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         }
 
         return true;
-    }
+    }*/
 
     private void showRequireTabletView() {
         new ConfirmationDialogFragment.Builder(this).content(getString(R.string.this_option_available_tablet_device)).positiveButtonLabel(R.string.ok).hideNegativeButton(true).build().show(getSupportFragmentManager(), "ConfirmationDialogFragment");
@@ -413,6 +594,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         outcomeTV = findViewById(R.id.outcomeTV);
         fabc = findViewById(R.id.btnFlipCamera);
         fabPrescription = findViewById(R.id.btnPrescription);
+        btnShiftToPostnatalWard = findViewById(R.id.btnShiftToPostnatalWard);
         recyclerView = findViewById(R.id.recyclerview_timeline);
         endStageButton = findViewById(R.id.btnEndStage);
         LinearLayoutManager linearLayout = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, true);
@@ -439,58 +621,31 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
             providerID = intent.getStringExtra("providerID");
             whichScreenUserCameFromTag = intent.getStringExtra("tag");
 
-            hwHasEditAccess = new VisitsDAO().checkLoggedInUserAccessVisit(visitUuid, sessionManager.getProviderID());
+            //hwHasEditAccess = new VisitsDAO().checkLoggedInUserAccessVisit(visitUuid, sessionManager.getProviderID());
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            Handler mainHandler = new Handler(Looper.getMainLooper());
 
+            executor.execute(() -> {
+                hwHasEditAccess = new VisitsDAO().checkLoggedInUserAccessVisit(visitUuid, sessionManager.getProviderID());
+                /*mainHandler.post(() -> {
+                    // Update UI here
+                    updateUI(hasAccess);
+                });*/
+            });
             if (whichScreenUserCameFromTag != null && whichScreenUserCameFromTag.equalsIgnoreCase("new")) {
                 triggerAlarm_Stage1_every30mins(); // Notification to show every 30min.
             }
 
             showToastIfNoPrescription();
-            fetchAllEncountersFromVisitForTimelineScreen(visitUuid); // fetch all records...
+           // fetchAllEncountersFromVisitForTimelineScreen(visitUuid); // fetch all records... taken on -onresume
         }
 
         setTitle(patientName);
         encounterDAO = new EncounterDAO();
         Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
-        Log.d(TAG, "kkinitUI: visitUuid : " + visitUuid);
-        EncounterDTO encounterDTO = encounterDAO.getEncounterByVisitUUIDLimit1(visitUuid); // get latest encounter.
-        String latestEncounterName = encounterDAO.findCurrentStage(encounterDTO.getVisituuid());
-        if (isVCEPresent.equalsIgnoreCase("")) { // "" ie. not present
-            endStageButton.setEnabled(true);
-            endStageButton.setClickable(true);
-            endStageButton.setBackground(ContextCompat.getDrawable(context, R.drawable.ic_rectangle_76));
-            if (latestEncounterName.toLowerCase().contains("stage2")) {
-                stageNo = 2;
-                endStageButton.setText(context.getResources().getText(R.string.end2StageButton));
-            } else if (latestEncounterName.toLowerCase().contains("stage1")) {
-                stageNo = 1;
-                endStageButton.setText(context.getResources().getText(R.string.endStageButton));
-            } else {
-                stageNo = 0;
-            }
+        //moved this code to separate method
+        manageEndStageButtonText();
 
-            if (!hwHasEditAccess) {
-                fabc.setEnabled(false);
-                fabv.setEnabled(false);
-                fabSOS.setEnabled(false);
-                fabPrescription.setEnabled(false);
-                endStageButton.setEnabled(false);
-            }
-
-        } else {
-            VisitOutcome outcome = new ObsDAO().getCompletedVisitType(isVCEPresent);
-            endStageButton.setVisibility(View.INVISIBLE);
-            if (outcome != null && outcome.getOutcome() != null && !outcome.getOutcome().equalsIgnoreCase("")) {
-                outcomeTV.setVisibility(View.VISIBLE);
-                setOutcomeText(outcome.getOutcome());
-                outcomeTV.setGravity(Gravity.CENTER);
-                checkForOutOfTime(outcome);
-            }
-            fabc.setVisibility(View.GONE);
-            fabv.setVisibility(View.GONE);
-            fabSOS.setVisibility(View.GONE);
-            fabPrescription.setVisibility(View.GONE);
-        }
 
         // clicking on this open dialog to confirm and start stage 2 | If stage 2 already open then ends visit.
         endStageButton.setOnClickListener(v -> {
@@ -498,26 +653,31 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
                 // showEndShiftDialog(); //old flow
                 FragmentManager fragmentManager = getSupportFragmentManager();
 
-                new CompleteVisitOnEndStage1Dialog(this, visitUuid, (isEndStage1) -> {
-                    if (isEndStage1) {
-                        //for end stage 1 option
-                        cancelStage1ConfirmationDialog();
-                    } else {
-                        //for all refer options and mother deceased
-                        showToastAndUploadVisitForStage1(true, getResources().getString(R.string.data_added_successfully));
-                    }
-                }).buildDialogSingleSelection(fragmentManager); //for single selection
-                //buildDialog();  //for custom dialog
-            } else if (stageNo == 2) {
-                // show dialog and add birth outcome also show extra options like: Refer to other hospital & Self Discharge
-                new CompleteVisitOnEnd2StageDialog(this, visitUuid, (hasLabour, hasMotherDeceased) -> {
-                    if (!hasLabour) {
-                        showToastAndUploadVisit(true, getResources().getString(R.string.data_added_successfully));
-                    } else {
-                        showLabourBottomSheetDialog(hasMotherDeceased);
-                    }
-                }).buildDialog();
-            }
+                    new CompleteVisitOnEndStage1Dialog(this, visitUuid, (isEndStage1) -> {
+                        if (isEndStage1) {
+                            //for end stage 1 option
+                            cancelStage1ConfirmationDialog();
+                        } else {
+                            //for all refer options and mother deceased
+                            showToastAndUploadVisitForStage1(true, getResources().getString(R.string.data_added_successfully));
+                        }
+                    }).buildDialogSingleSelection(fragmentManager); //for single selection
+                    //buildDialog();  //for custom dialog
+                } else if (stageNo == 2) {
+                    // show dialog and add birth outcome also show extra options like: Refer to other hospital & Self Discharge
+                    new CompleteVisitOnEnd2StageDialog(this, visitUuid, (hasLabour, hasMotherDeceased) -> {
+                        if (!hasLabour) {
+                            showToastAndUploadVisit(true, getResources().getString(R.string.data_added_successfully));
+                        } else {
+                            showLabourBottomSheetDialog(hasMotherDeceased);
+                        }
+                    }).buildDialog();
+                }else if (stageNo == 3) {
+                    new CompleteVisitOnEnd3StageDialog(this, visitUuid, () -> {
+                        showToastAndUploadVisit(true, getResources().getString(R.string.data_saved_visit_closed));
+                    }).buildDialog();
+                }
+
         });
 
         mCountDownTimer.cancel();
@@ -553,6 +713,8 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
             tvPendingDecision.setText(getResources().getString(R.string.outcome_decision_stage_1));
         } else if (stageNo == 2) {
             tvPendingDecision.setText(getResources().getString(R.string.outcome_decision_stage_2));
+        }else if (stageNo == 3) {
+            tvPendingDecision.setText(getResources().getString(R.string.outcome_decision_stage_3));
         }
 //        new Thread(new Runnable() {
 //            @Override
@@ -574,7 +736,14 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
     }
 
     private void showLabourBottomSheetDialog(boolean hasMotherDeceased) {
-        VisitLabourActivity.startLabourCompleteActivity(this, visitUuid, hasMotherDeceased);
+        //VisitLabourActivity.startLabourCompleteActivity(this, visitUuid, hasMotherDeceased); // non nepal flow
+        Intent activity = new Intent(this, WomenDeliveryDetailsActivity.class);
+        activity.putExtra("patientNameTimeline", patientName);
+        activity.putExtra("patientUuid", patientUuid);
+        activity.putExtra("visitUuid", visitUuid);
+        activity.putExtra("providerID", providerID);
+        activity.putExtra("tag", "timline");
+        startActivity(activity);
     }
 
     private void checkForOutOfTime(VisitOutcome outcome) {
@@ -983,27 +1152,34 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         int stageOneDuration = 0;
         int stageTwoDuration = 0;
         //  encounterDAO = new EncounterDAO();
-        ArrayList<EncounterDTO> encounterListDTO = encounterDAO.getEncountersByVisitUUID(visitUuid);
-        for (int i = 0; i < encounterListDTO.size(); i++) {
-            String name = encounterDAO.getEncounterTypeNameByUUID(encounterListDTO.get(i).getEncounterTypeUuid());
-            EncounterDTO.Type type = new ObsDAO().getEncounterType(encounterListDTO.get(i).getUuid(), sessionManager.getCreatorID());
-            String obsValue = new ObsDAO().getEncounterTypeFromDb(encounterListDTO.get(i).getUuid());
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Handler mainHandler = new Handler(Looper.getMainLooper());
 
-            encounterListDTO.get(i).setEncounterTypeName(name);
-            encounterListDTO.get(i).setEncounterType(type);
-            encounterListDTO.get(i).setObsValue(obsValue);
+        executor.execute(() -> {
+            ArrayList<EncounterDTO> encounterListDTO = encounterDAO.getEncountersByVisitUUID(visitUuid);
+            for (int i = 0; i < encounterListDTO.size(); i++) {
+                String name = encounterDAO.getEncounterTypeNameByUUID(encounterListDTO.get(i).getEncounterTypeUuid());
+                EncounterDTO.Type type = obsDAO.getEncounterType(encounterListDTO.get(i).getUuid(), sessionManager.getCreatorID());
+                String obsValue = obsDAO.getEncounterTypeFromDb(encounterListDTO.get(i).getUuid());
+                encounterListDTO.get(i).setEncounterTypeName(name);
+                encounterListDTO.get(i).setEncounterType(type);
+                encounterListDTO.get(i).setObsValue(obsValue);
+            }
+            isVCEPresent = encounterDAO.getVisitCompleteEncounterByVisitUUID(visitUuid);
 
-            Log.d(TAG, "fetchAllEncountersFromVisitForTimelineScreen: obsValue : " + obsValue);
-        }
+            encounterListDTO.removeIf(dto -> dto.getEncounterTypeUuid().equalsIgnoreCase(DELIVERY_OUTCOME_STAGE3)); // remove this from timeline ui
+            Collections.reverse(encounterListDTO);
+            Log.d("TIMELINE", "Adapter set with size: " + encounterListDTO.size());
+            mainHandler.post(() -> {
+                adapter = new TimelineAdapter(context, intent, encounterListDTO, sessionManager, isVCEPresent, isNewEncounterCreated, isDecisionPending);
 
 
-        isVCEPresent = encounterDAO.getVisitCompleteEncounterByVisitUUID(visitUuid);
-        Log.d(TAG, "fetchAllEncountersFromVisitForTimelineScreen: isNewEncounterCreated : " + isNewEncounterCreated);
-        Log.d(TAG, "fetchAllEncountersFromVisitForTimelineScreen: encounterListDTO : " + new Gson().toJson(encounterListDTO));
-
-        adapter = new TimelineAdapter(context, intent, encounterListDTO, sessionManager, isVCEPresent, isNewEncounterCreated, isDecisionPending);
-        Collections.reverse(encounterListDTO);
-        recyclerView.setAdapter(adapter);
+                     /*   adapter = new TimelineAdapter(context, intent, encounterListDTO,
+                                sessionManager, vce, isNewEncounterCreated, isDecisionPending);*/
+                recyclerView.setAdapter(adapter);
+                manageEndStageButtonText();
+            });
+        });
     }
 
 
@@ -1014,8 +1190,9 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 
         executor.execute(() -> {
 
-            int stageOneDuration = 0;
-            int stageTwoDuration = 0;
+            ArrayList<EncounterDTO> stageOneList = new ArrayList<>();
+            ArrayList<EncounterDTO> stageTwoList = new ArrayList<>();
+
             int parityCount = 0;
 
             ArrayList<EncounterDTO> encounterListDTO =
@@ -1032,39 +1209,36 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
                 if (parityArray.length > 1) {
                     try {
                         parityCount = Integer.parseInt(parityArray[0].trim());
-                    } catch (NumberFormatException ignored) {
-                    }
+                    } catch (NumberFormatException ignored) {}
                 }
             }
-
-            //if total birth is 0 then not showing the dialog
-            if (parityCount > 0) return;
 
             for (EncounterDTO encounter : encounterListDTO) {
 
                 if (patientsDAO.checkStage(encounter.getEncounterTypeUuid(), StageEnum.ONE)) {
-                    stageOneDuration += STAGE_1_DURATION;
+                    stageOneList.add(encounter);
 
                 } else if (patientsDAO.checkStage(encounter.getEncounterTypeUuid(), StageEnum.TWO)) {
-                    stageTwoDuration += STAGE_2_DURATION;
+                    stageTwoList.add(encounter);
                 }
             }
 
-            // Adjusting durations
-            if (stageOneDuration > STAGE_1_DURATION) {
-                stageOneDuration -= STAGE_1_DURATION;
+            double stageOneDuration = calculateStageDiff(stageOneList);
+            double stageTwoDuration = 0.0;
+
+            if(!stageTwoList.isEmpty()){
+                stageOneDuration = 0;
+                stageTwoDuration = calculateStageDiff(stageTwoList);
             }
 
-            if (stageTwoDuration > STAGE_2_DURATION) {
-                stageOneDuration = 0;
-                stageTwoDuration -= STAGE_2_DURATION;
-            }
 
             String dialogMsg = "";
 
-            if (stageOneDuration >= 12 * 60) {
+            if ((parityCount == 0 && stageOneDuration >= 12 * 60)
+                    || (parityCount > 0 && stageOneDuration >= 10 * 60)) {
                 dialogMsg = getString(R.string.prolonged_labour_detected);
-            } else if (stageTwoDuration >= 3 * 60) {
+            } else if ((parityCount == 0 && stageTwoDuration >= 3 * 60)
+                    || (parityCount > 0 && stageTwoDuration >= 2 * 60)) {
                 dialogMsg = getString(R.string.second_stage_prolonged);
             }
 
@@ -1083,6 +1257,23 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
                 }
             });
         });
+    }
+
+    private double calculateStageDiff(ArrayList<EncounterDTO> encounterList) {
+
+        if (encounterList == null || encounterList.size() < 2) {
+            return 0;
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        LocalDateTime first = LocalDateTime.parse(
+                encounterList.get(0).getEncounterTime(), formatter);
+
+        LocalDateTime last = LocalDateTime.parse(
+                encounterList.get(encounterList.size() - 1).getEncounterTime(), formatter);
+
+        return Duration.between(first, last).toMinutes();
     }
 
 //    private void triggerAlarm_Stage2_every15mins(String visitUuid) { // TODO: change 1min to 15mins..... // visituuid : 0 - 5
@@ -1149,7 +1340,9 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
     @Override
     protected void onStart() { // when finish() called in Epartogram screen than onStart() is called here.
         super.onStart();
-        adapter.notifyDataSetChanged();
+        /*if (adapter != null) {
+            adapter.notifyDataSetChanged();
+        }*/
     }
 
     @Override
@@ -1354,16 +1547,131 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
                   }
           );
       }*/
-    private void showNoDataDialogForViewLcg() {
+    private void showNoDataDialogForViewLcg(String title, String message) {
         AppDialogUtils.showSingleButtonDialog(
                 this,
-                getString(R.string.no_data_for_view_lcg_title),
-                getString(R.string.no_data_for_view_lcg_body),
+                title,
+                message,
                 getString(R.string.ok),
                 () -> {
                     return null;
                 }
         );
+    }
+    private void manageEndStageButtonText(){
+        EncounterDTO encounterDTO = encounterDAO.getEncounterByVisitUUIDLimit1(visitUuid); // get latest encounter.
+        String latestEncounterName = encounterDAO.findCurrentStage(encounterDTO.getVisituuid());
+        Log.d(TAG, "initUI: latestEncounterName : "+latestEncounterName);
+        if (isVCEPresent.equalsIgnoreCase("")) { // "" ie. not present
+            endStageButton.setEnabled(true);
+            endStageButton.setClickable(true);
+            endStageButton.setBackground(ContextCompat.getDrawable(context, R.drawable.ic_rectangle_76));
+            if (latestEncounterName.toLowerCase().contains("stage3")) {
+                stageNo = 3;
+                endStageButton.setText(context.getResources().getText(R.string.end3StageButton));
+            }
+            else if (latestEncounterName.toLowerCase().contains("stage2")) {
+                stageNo = 2;
+                endStageButton.setText(context.getResources().getText(R.string.end2StageButton));
+            } else if (latestEncounterName.toLowerCase().contains("stage1")) {
+                stageNo = 1;
+                endStageButton.setText(context.getResources().getText(R.string.endStageButton));
+            } else {
+                stageNo = 0;
+            }
+
+            if (!hwHasEditAccess) {
+                fabc.setEnabled(false);
+                fabv.setEnabled(false);
+                fabSOS.setEnabled(false);
+                fabPrescription.setEnabled(false);
+                endStageButton.setEnabled(false);
+            }
+
+        }else {
+            setVisitOutcome();
+        }
+
+        //setting shift to postnatal button visibility here bcs we are getting last stage here
+        setupShiftToPostnatalWardBtn();
+    }
+    private void showPostpartumReport() {
+        Intent intent = new Intent(context, ViewPostPartumReportActivity.class);
+        intent.putExtra("patientuuid", patientUuid);
+        intent.putExtra("visituuid", visitUuid);
+        startActivity(intent);
+    }
+    private void showViewDropdownMenu(View anchor) {
+        PopupMenu popup = new PopupMenu(
+                new ContextThemeWrapper(this, R.style.RoundedPopupMenu),
+                anchor,
+                Gravity.END
+        );
+        popup.getMenuInflater().inflate(R.menu.menu_view_options_partogram, popup.getMenu());
+
+        try {
+            Field field = PopupMenu.class.getDeclaredField("mPopup");
+            field.setAccessible(true);
+            Object menuHelper = field.get(popup);
+            menuHelper.getClass()
+                    .getDeclaredMethod("setForceShowIcon", boolean.class)
+                    .invoke(menuHelper, true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        popup.setOnMenuItemClickListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.action_view_lcg) {
+                boolean doesVisitHasData = obsDAO.getObsCountForVisit(visitUuid);
+                if (doesVisitHasData) {
+                    showEpartogram();
+                } else {
+                    showNoDataDialogForViewLcg(getString(R.string.no_data_for_view_lcg_title), getString(R.string.no_data_for_view_lcg_body));
+                }
+                return true;
+            } else if (id == R.id.action_view_postpartum) {
+                boolean doesVisitHasStage3Data = obsDAO.isStage3ObsForVisitExist(visitUuid);
+                if(doesVisitHasStage3Data){
+                    showPostpartumReport();
+                }else {
+                    showNoDataDialogForViewLcg(getString(R.string.no_data_for_view_lcg_title), getString(R.string.no_data_for_view_postpartum_report));
+                }
+                return true;
+            }
+            return false;
+        });
+
+        popup.show();
+    }
+    private void setVisitOutcome() {
+        VisitOutcome outcome = new ObsDAO().getCompletedVisitType(isVCEPresent);
+        Log.d(TAG, "setVisitOutcome:outcome :  "+new Gson().toJson(outcome));
+        endStageButton.setVisibility(View.INVISIBLE);
+        if (outcome != null && outcome.getOutcome() != null && !outcome.getOutcome().equalsIgnoreCase("")) {
+            outcomeTV.setVisibility(View.VISIBLE);
+
+            SpannableStringBuilder combinedOutcome = new SpannableStringBuilder();
+
+            // Mother outcome (existing business logic untouched)
+            String motherStr = getString(R.string.lbl_mother_outcome, outcome.getOutcome());
+            combinedOutcome.append(Html.fromHtml(motherStr, Html.FROM_HTML_MODE_COMPACT));
+
+            // Baby outcome - append in new line if present
+            if (outcome.getBabyOutcome() != null && !outcome.getBabyOutcome().isEmpty()) {
+                String babyStr = getString(R.string.lbl_newborn_outcome, outcome.getBabyOutcome());
+                combinedOutcome.append("\n");
+                combinedOutcome.append(Html.fromHtml(babyStr, Html.FROM_HTML_MODE_COMPACT));
+            }
+
+            outcomeTV.setText(combinedOutcome);
+            outcomeTV.setGravity(Gravity.CENTER);
+            checkForOutOfTime(outcome);
+        }
+        fabc.setVisibility(View.GONE);
+        fabv.setVisibility(View.GONE);
+        fabSOS.setVisibility(View.GONE);
+        fabPrescription.setVisibility(View.GONE);
     }
 
     @Override

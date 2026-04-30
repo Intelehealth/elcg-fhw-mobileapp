@@ -1,9 +1,13 @@
 package org.intelehealth.ezazi.activities.visitSummaryActivity;
 
 import static org.intelehealth.ezazi.partogram.PartogramConstants.TIMELINE_MODE;
+import static org.intelehealth.ezazi.utilities.UuidDictionary.STAGE1_HOUR1_1;
+import static org.intelehealth.ezazi.utilities.UuidDictionary.STAGE3_HOUR1_1;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,6 +32,7 @@ import org.intelehealth.ezazi.models.dto.ObsDTO;
 import org.intelehealth.ezazi.partogram.PartogramConstants;
 import org.intelehealth.ezazi.partogram.PartogramDataCaptureActivity;
 import org.intelehealth.ezazi.ui.dialog.AppDialogUtils;
+import org.intelehealth.ezazi.utilities.NepaliDateConverter;
 import org.intelehealth.ezazi.utilities.NetworkConnection;
 import org.intelehealth.ezazi.utilities.SessionManager;
 import org.intelehealth.ezazi.utilities.UuidDictionary;
@@ -37,6 +42,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -101,6 +108,7 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
     @Override
     public void onBindViewHolder(@NonNull TimelineViewHolder holder, int position) {
         if (encounterDTOList.size() > 0) {
+            Log.d(TAG, "onBindViewHolder: stage no : "+encounterDTOList.get(position).getEncounterTypeUuid());
             if (encounterDTOList.get(position).getEncounterTime() != null &&
                     !encounterDTOList.get(position).getEncounterTime().equalsIgnoreCase("")) {
 
@@ -112,6 +120,10 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
                         .equalsIgnoreCase("558cc1b8-c352-4b27-9ec2-131fc19c26f0")) {
                     holder.stage1start.setVisibility(View.VISIBLE);
                     holder.stage1start.setText(context.getResources().getText(R.string.stage_2));
+                }else if (encounterDTOList.get(position).getEncounterTypeUuid()
+                        .equalsIgnoreCase(STAGE3_HOUR1_1)) {
+                    holder.stage1start.setVisibility(View.VISIBLE);
+                    holder.stage1start.setText(context.getResources().getText(R.string.stage_3));
                 } else {
                     holder.stage1start.setVisibility(View.GONE);
                 }
@@ -236,7 +248,8 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
                 }
 
                 encounterTimeAmPmFormat = DateTimeUtils.formatToLocalDate(timeDateType, DateTimeUtils.TIME_FORMAT);
-                encounterDate = DateTimeUtils.formatToLocalDate(timeDateType, DateTimeUtils.DD_MMM_YYYY);
+                // ── Convert encounter date from Gregorian → Nepali BS for display ──────
+                encounterDate = NepaliDateConverter.dateToBsDisplay(timeDateType);
                 Log.v("timeline", "AM Format: " + encounterTimeAmPmFormat);
 
                 if (submitted == EncounterDTO.Status.SUBMITTED) { // This so that once submitted it should be closed and not allowed to edit again.
@@ -341,19 +354,38 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
             int type = 10;
             int stage = 1;
             String encounterName = encounterDTOList.get(getAbsoluteAdapterPosition()).getEncounterTypeName();
-            if (encounterDTOList.get(getAbsoluteAdapterPosition()).getEncounterTypeUuid().equals(UuidDictionary.LCG_SOS)) {
+            if(encounterDTOList.get(getAbsoluteAdapterPosition()).getEncounterTypeUuid().equals(UuidDictionary.LCG_SOS)){
                 type = HOURLY;
                 //encounterType = EncounterDTO.Type.SOS.name();
                 EncounterTypeResolver resolver = new EncounterTypeResolver();
                 EncounterDTO.Type enumOfTypes = resolver.resolve(encounterType);
                 encounterType = enumOfTypes.name();
-                String obsValue = encounterDTOList.get(getAbsoluteAdapterPosition()).getObsValue();
+                String obsValue =encounterDTOList.get(getAbsoluteAdapterPosition()).getObsValue();
                 String[] parts = obsValue.split("_");   // ["Stage1", "Hour1", "SOS1"]
                 String stagePart = parts[0];         // "Stage1"
                 String stageNumber = stagePart.replace("Stage", "");  // "1"
-                if (!stageNumber.isEmpty()) stage = Integer.parseInt(stageNumber);
-            } else {
-                if (encounterName != null && !encounterName.isEmpty()) {
+                if(!stageNumber.isEmpty()) stage = Integer.parseInt(stageNumber);
+            }else if (encounterName.toLowerCase().contains("stage3")) {
+                String[] name = encounterName.split("_");
+                stage = 3;
+
+                // Stage3_HourX_Y
+                if (name.length >= 3) {
+
+                    int hourNumber = Integer.parseInt(name[1].replace("Hour", ""));
+
+                    if (hourNumber == 1) {
+                       // type = FIFTEEN_MIN;
+
+                    } else if (hourNumber == 2) {
+                     //   type = HALF_HOUR;
+
+                    } else if (hourNumber == 3 || hourNumber == 4) {
+                      //  type = HOURLY;
+                    }
+                }
+            }else{
+                if(encounterName!=null && !encounterName.isEmpty()){
                     String[] name = encounterName.split("_");
                     if (encounterName.toLowerCase().contains("stage1")) {
                         //type = getAdapterPosition() % 2 != 0 ? HALF_HOUR : HOURLY; // card clicked is 30min OR 1 Hr

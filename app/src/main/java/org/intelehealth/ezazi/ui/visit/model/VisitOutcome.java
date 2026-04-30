@@ -48,6 +48,14 @@ public class VisitOutcome {
         return otherComment;
     }
 
+    public String getBabyOutcome() {
+        return babyOutcome;
+    }
+
+    public void setBabyOutcome(String babyOutcome) {
+        this.babyOutcome = babyOutcome;
+    }
+
     public void setOtherComment(String otherComment) {
         this.otherComment = otherComment;
     }
@@ -65,4 +73,6 @@ public class VisitOutcome {
     public String toString() {
         return new Gson().toJson(this);
     }
+
+    private String babyOutcome;        // NEWBORN_DISCHARGE_TYPE value
 }

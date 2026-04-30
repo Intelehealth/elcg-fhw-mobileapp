@@ -1,6 +1,5 @@
 package org.intelehealth.ezazi.activities.homeActivity;
 
-import static org.intelehealth.ezazi.activities.homeActivity.RiskConcepts.RISK_CONCEPTS;
 import static org.intelehealth.ezazi.app.AppConstants.EVENT_SHIFT_CHANGED;
 import static org.intelehealth.ezazi.app.AppConstants.SHIFTED_DATA;
 import static org.intelehealth.ezazi.utilities.StringUtils.en__as_dob;
@@ -119,6 +118,7 @@ import org.intelehealth.ezazi.ui.visit.activity.VisitStatusActivity;
 import org.intelehealth.ezazi.ui.visit.data.VisitRepository;
 import org.intelehealth.ezazi.utilities.FileUtils;
 import org.intelehealth.ezazi.utilities.Logger;
+import org.intelehealth.ezazi.utilities.NepaliDateConverter;
 import org.intelehealth.ezazi.utilities.NetworkConnection;
 import org.intelehealth.ezazi.utilities.NotificationUtils;
 import org.intelehealth.ezazi.utilities.OfflineLogin;
@@ -890,7 +890,9 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
         try {
             ProviderDAO providerDAO = new ProviderDAO();
             String myCreatorUUID = new SessionManager(IntelehealthApplication.getAppContext()).getCreatorID();
-            List<ProviderDTO> mProviderNurseList = providerDAO.getNurseList();
+            List<ProviderDTO> mProviderNurseList = providerDAO.getNurseList(
+                    true
+            );
 //            String[] nurseNames = new String[mProviderNurseList.size() - 1];
 //            String[] nurseUUID = new String[mProviderNurseList.size() - 1];
 
@@ -2030,55 +2032,80 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
     }
 
     private void setLastSyncTime(String lastSyncTime) {
-        String convertedString = getFullMonthName(lastSyncTime);
-        String status = lastSyncTime;
         tvLastSyncStatus = findViewById(R.id.tvLastSyncStatus);
-//        if (mLastUpdateMenuItem != null) {
-        if (sessionManager.getAppLanguage().equalsIgnoreCase("hi")) {
-            status = en__hi_dob(convertedString); //to show text of English into Hindi...
-//                tvLastSyncStatus.setText(sync_text);
-//                mLastUpdateMenuItem.setTitle(sync_text);
-        } else if (sessionManager.getAppLanguage().equalsIgnoreCase("or")) {
-            status = en__or_dob(convertedString); //to show text of English into Odiya...
-//                mLastUpdateMenuItem.setTitle(sync_text);
-        } else if (sessionManager.getAppLanguage().equalsIgnoreCase("bn")) {
-            status = en__bn_dob(convertedString); //to show text of English into Odiya...
-//                mLastUpdateMenuItem.setTitle(sync_text);
-        } else if (sessionManager.getAppLanguage().equalsIgnoreCase("gu")) {
-            status = en__gu_dob(convertedString); //to show text of English into Gujarati...
-//                mLastUpdateMenuItem.setTitle(sync_text);
-        } else if (sessionManager.getAppLanguage().equalsIgnoreCase("te")) {
-            status = en__te_dob(convertedString); //to show text of English into telugu...
-//                mLastUpdateMenuItem.setTitle(sync_text);
-        } else if (sessionManager.getAppLanguage().equalsIgnoreCase("mr")) {
-            status = en__mr_dob(convertedString); //to show text of English into telugu...
-//                mLastUpdateMenuItem.setTitle(sync_text);
-        } else if (sessionManager.getAppLanguage().equalsIgnoreCase("as")) {
-            status = en__as_dob(convertedString); //to show text of English into telugu...
-//                mLastUpdateMenuItem.setTitle(sync_text);
-        } else if (sessionManager.getAppLanguage().equalsIgnoreCase("ml")) {
-            status = en__ml_dob(convertedString); //to show text of English into telugu...
-//                mLastUpdateMenuItem.setTitle(sync_text);
-        } else if (sessionManager.getAppLanguage().equalsIgnoreCase("kn")) {
-            status = en__kn_dob(convertedString); //to show text of English into telugu...
-//                mLastUpdateMenuItem.setTitle(sync_text);
-        } else if (sessionManager.getAppLanguage().equalsIgnoreCase("ru")) {
-            status = en__ru_dob(convertedString); //to show text of English into Russian...
-//                mLastUpdateMenuItem.setTitle(sync_text);
-        } else if (sessionManager.getAppLanguage().equalsIgnoreCase("ta")) {
-            status = en__ta_dob(convertedString); //to show text of English into Tamil...
-//                mLastUpdateMenuItem.setTitle(sync_text);
-        } else {
-            status = lastSyncTime;
-//                mLastUpdateMenuItem.setTitle(lastSyncTime);
+
+        // ── Guard: nothing to display ─────────────────────────────────────────
+        if (lastSyncTime == null || lastSyncTime.trim().isEmpty()
+                || lastSyncTime.equalsIgnoreCase("- - - -")) {
+            tvLastSyncStatus.setText(lastSyncTime);
+            loadVisits();
+            return;
         }
 
-        tvLastSyncStatus.setText(status);
-//        }
+        // ── Convert the date portion to Nepali BS ─────────────────────────────
+        // lastSyncTime format: "Last synced\n28 Jun 2024 14:30"
+        // We split on the newline to isolate the label from the datetime value,
+        // then parse the date part ("28 Jun 2024") → BS, keeping the time ("14:30").
+        String bsLastSyncTime = convertSyncDateTimeToBS(lastSyncTime);
 
+        // ── Apply existing multi-language translation on top of BS date ───────
+        String convertedString = getFullMonthName(bsLastSyncTime);
+        String status;
+        String lang = sessionManager.getAppLanguage();
+        if      (lang.equalsIgnoreCase("hi")) status = en__hi_dob(convertedString);
+        else if (lang.equalsIgnoreCase("or")) status = en__or_dob(convertedString);
+        else if (lang.equalsIgnoreCase("bn")) status = en__bn_dob(convertedString);
+        else if (lang.equalsIgnoreCase("gu")) status = en__gu_dob(convertedString);
+        else if (lang.equalsIgnoreCase("te")) status = en__te_dob(convertedString);
+        else if (lang.equalsIgnoreCase("mr")) status = en__mr_dob(convertedString);
+        else if (lang.equalsIgnoreCase("as")) status = en__as_dob(convertedString);
+        else if (lang.equalsIgnoreCase("ml")) status = en__ml_dob(convertedString);
+        else if (lang.equalsIgnoreCase("kn")) status = en__kn_dob(convertedString);
+        else if (lang.equalsIgnoreCase("ru")) status = en__ru_dob(convertedString);
+        else if (lang.equalsIgnoreCase("ta")) status = en__ta_dob(convertedString);
+        else                                   status = bsLastSyncTime;
+
+        tvLastSyncStatus.setText(status);
         loadVisits();
     }
 
+    /**
+     * Converts the date part of a last-sync display string to Nepali BS format,
+     * preserving the label prefix and the HH:mm time suffix.
+     *
+     * Input example:  "Last synced\n28 Jun 2024 14:30"
+     * Output example: "Last synced\n15 Asar 2081 BS 14:30"
+     *
+     * Falls back to the original string safely if parsing fails
+     * (e.g. when the value is "- - - -" or an unexpected format).
+     */
+    private String convertSyncDateTimeToBS(String lastSyncTime) {
+        try {
+            // Split on newline to separate "Last synced" label from the datetime value
+            // Handle both "\n" and " \n" separators used in different call-sites
+            String[] parts = lastSyncTime.split("\n", 2);
+            if (parts.length < 2) return lastSyncTime; // no newline → nothing to convert
+
+            String label    = parts[0];          // e.g. "Last synced"
+            String datetime = parts[1].trim();   // e.g. "28 Jun 2024 14:30"
+
+            // Split datetime into date ("28 Jun 2024") and time ("14:30")
+            // Format is always "dd MMM yyyy HH:mm" → last token is HH:mm
+            int lastSpace = datetime.lastIndexOf(' ');
+            if (lastSpace < 0) return lastSyncTime;
+
+            String datePart = datetime.substring(0, lastSpace).trim();  // "28 Jun 2024"
+            String timePart = datetime.substring(lastSpace).trim();     // "14:30"
+
+            // Convert date portion to BS using NepaliDateConverter
+            String bsDate = NepaliDateConverter.gregStringToBsDisplay(datePart);
+
+            return label + "\n" + bsDate + " " + timePart;
+        } catch (Exception e) {
+            // Any unexpected input: fall back to original rather than crashing
+            return lastSyncTime;
+        }
+    }
     private void clearAppData() {
         try {
             // clearing app data
@@ -2147,107 +2174,6 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
         }
 
         return activePatientList;
-
-//        if (!activePatientList.isEmpty()) {
-//            for (ActivePatientModel activePatientModel : activePatientList)
-//                Logger.logD(TAG, activePatientModel.getFirst_name() + " " + activePatientModel.getLast_name());
-//
-//            ActivePatientAdapter mActivePatientAdapter = new ActivePatientAdapter(activePatientList, ActivePatientActivity.this, listPatientUUID);
-//            LinearLayoutManager linearLayoutManager = new LinearLayoutManager(ActivePatientActivity.this);
-//            recyclerView.setLayoutManager(linearLayoutManager);
-//           /* recyclerView.addItemDecoration(new
-//                    DividerItemDecoration(this,
-//                    DividerItemDecoration.VERTICAL));*/
-//            recyclerView.setAdapter(mActivePatientAdapter);
-//            mActivePatientAdapter.setActionListener(new ActivePatientAdapter.OnActionListener() {
-//                @Override
-//                public void onEndVisitClicked(ActivePatientModel activePatientModel, boolean hasPrescription) {
-//                    String encounterAdultIntialslocal = "";
-//                    String encounterVitalslocal = null;
-//                    String encounterIDSelection = "visituuid = ?";
-//
-//                    String visitUuid = activePatientModel.getUuid();
-//                    String visitnote = "", followupdate = "";
-//                    String[] encounterIDArgs = {visitUuid};
-//                    EncounterDAO encounterDAO = new EncounterDAO();
-//                    Cursor encounterCursor = db.query("tbl_encounter", null, encounterIDSelection, encounterIDArgs, null, null, null);
-//                    if (encounterCursor != null && encounterCursor.moveToFirst()) {
-//                        do {
-//                            if (encounterDAO.getEncounterTypeUuid("ENCOUNTER_VITALS").equalsIgnoreCase(encounterCursor.getString(encounterCursor.getColumnIndexOrThrow("encounter_type_uuid")))) {
-//                                encounterVitalslocal = encounterCursor.getString(encounterCursor.getColumnIndexOrThrow("uuid"));
-//                            }
-//                            if (encounterDAO.getEncounterTypeUuid("ENCOUNTER_ADULTINITIAL").equalsIgnoreCase(encounterCursor.getString(encounterCursor.getColumnIndexOrThrow("encounter_type_uuid")))) {
-//                                encounterAdultIntialslocal = encounterCursor.getString(encounterCursor.getColumnIndexOrThrow("uuid"));
-//                            }
-//
-//                            if (encounterDAO.getEncounterTypeUuid("ENCOUNTER_VISIT_NOTE").equalsIgnoreCase(encounterCursor.getString(encounterCursor.getColumnIndexOrThrow("encounter_type_uuid")))) {
-//                                visitnote = encounterCursor.getString(encounterCursor.getColumnIndexOrThrow("uuid"));
-//                            }
-//
-//                        } while (encounterCursor.moveToNext());
-//                    }
-//                    encounterCursor.close();
-//
-//                    String[] visitArgs = {visitnote, UuidDictionary.FOLLOW_UP_VISIT};
-//                    String[] columns = {"value", " conceptuuid"};
-//                    String visitSelection = "encounteruuid = ? AND conceptuuid = ? and voided!='1' ";
-//                    Cursor visitCursor = db.query("tbl_obs", columns, visitSelection, visitArgs, null, null, null);
-//                    if (visitCursor.moveToFirst()) {
-//                        do {
-////                            String dbConceptID = visitCursor.getString(visitCursor.getColumnIndex("conceptuuid"));
-//                            String dbValue = visitCursor.getString(visitCursor.getColumnIndex("value"));
-//                            followupdate = dbValue;
-//                        } while (visitCursor.moveToNext());
-//                    }
-//                    visitCursor.close();
-//
-//                    MaterialAlertDialogBuilder alertDialogBuilder = new MaterialAlertDialogBuilder(ActivePatientActivity.this);
-//                    if (hasPrescription) {
-//                        alertDialogBuilder.setMessage(ActivePatientActivity.this.getResources().getString(R.string.end_visit_msg));
-//                        alertDialogBuilder.setNegativeButton(ActivePatientActivity.this.getResources().getString(R.string.generic_cancel), new DialogInterface.OnClickListener() {
-//                            @Override
-//                            public void onClick(DialogInterface dialogInterface, int i) {
-//                                dialogInterface.dismiss();
-//                            }
-//                        });
-//                        String finalFollowupdate = followupdate;
-//                        String finalEncounterVitalslocal = encounterVitalslocal;
-//                        String finalEncounterAdultIntialslocal = encounterAdultIntialslocal;
-//                        alertDialogBuilder.setPositiveButton(ActivePatientActivity.this.getResources().getString(R.string.generic_ok), new DialogInterface.OnClickListener() {
-//                            @Override
-//                            public void onClick(DialogInterface dialog, int which) {
-//                                dialog.dismiss();
-//                                VisitUtils.endVisit(ActivePatientActivity.this,
-//                                        visitUuid,
-//                                        activePatientModel.getPatientuuid(),
-//                                        finalFollowupdate,
-//                                        finalEncounterVitalslocal,
-//                                        finalEncounterAdultIntialslocal,
-//                                        null,
-//                                        String.format("%s %s", activePatientModel.getFirst_name(), activePatientModel.getLast_name()),
-//                                        ""
-//                                );
-//                            }
-//                        });
-//                        AlertDialog alertDialog = alertDialogBuilder.show();
-//                        //alertDialog.show();
-//                        IntelehealthApplication.setAlertDialogCustomTheme(ActivePatientActivity.this, alertDialog);
-//
-//                    } else {
-//                        alertDialogBuilder.setMessage(ActivePatientActivity.this.getResources().getString(R.string.error_no_data));
-//                        alertDialogBuilder.setNeutralButton(ActivePatientActivity.this.getResources().getString(R.string.generic_ok), new DialogInterface.OnClickListener() {
-//                            @Override
-//                            public void onClick(DialogInterface dialog, int which) {
-//                                dialog.dismiss();
-//                            }
-//                        });
-//                        AlertDialog alertDialog = alertDialogBuilder.show();
-//                        //alertDialog.show();
-//                        IntelehealthApplication.setAlertDialogCustomTheme(ActivePatientActivity.this, alertDialog);
-//                    }
-//                }
-//            });
-//        }
     }
 
     /*EZAZI*/

@@ -148,6 +148,16 @@ public class UuidDictionary {
     public static final String SOS_STAGE_HOUR = "2c3fb8df-b844-4e4c-8852-40917a98eef8"; //Concept to specify the stage and hour when the SOS was raised
     public static final String VISIT_RISK = "0e798578-96c1-450b-9927-52e45485b151";
     public static final String STAGE1_HOUR1_1 = "ee560d18-34a1-4ad8-87c8-98aed99c663d";
+    public static final String DELIVERY_OUTCOME_STAGE3 = "c5f95c0f-a499-4792-9ee0-ff138d8df425";
+    public static final String STAGE3_HOUR1_1 = "e58b22d1-b09e-4cda-b05c-a45d1e63d390";
+    public static final String NEONATAL_DEATH = "dfa09987-96f2-46ae-846b-972f88b898a2";
+    public static final String NEWBORN_DISCHARGE_TYPE = "6f461764-e68b-47c0-9459-6f5c13292551";
+
+    //provider ward type either it can be ward or postnatal
+    //added it to filter based on the ward
+    public static final String PROVIDER_WARD = "af56439d-5e7f-42e7-9249-6a894b07eb51";
+    public static final String ONGOING_COMPLICATIONS_MOTHER =  "caa174fc-5889-443e-b53d-701fb2e85c23";
+    public static final String ONGOING_COMPLICATIONS_NEWBORN = "820ae093-d3ab-402a-9a81-279963cf9dc8";
 
 
 

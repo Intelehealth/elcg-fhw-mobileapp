@@ -1,0 +1,822 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layoutParentDeliveryOutcome"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true">
+
+        <!-- Toolbar -->
+
+        <include
+            android:id="@+id/bottomSheetAppBar"
+            layout="@layout/bottom_sheet_appbar" />
+
+            <!-- Scroll -->
+            <androidx.core.widget.NestedScrollView
+                android:id="@+id/scrollView"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:fillViewport="true"
+                app:layout_constraintTop_toBottomOf="@id/bottomSheetAppBar"
+                app:layout_constraintBottom_toTopOf="@id/btn_save"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/screen_padding">
+
+                    <!-- ================================================= -->
+                    <!-- SECTION 1 : WOMEN DELIVERY DETAILS -->
+                    <!-- ================================================= -->
+                    <com.google.android.material.textview.MaterialTextView
+                        style="@style/LabelStyleAddPatient"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="start"
+                        android:text="@string/section_one_women_delivery_details"
+                         />
+
+                    <!-- Date of Delivery -->
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/textView_date_of_delivery"
+                        style="@style/LabelStyleAddPatient"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/margin_top_parto_section_labels"
+                        android:gravity="start"
+                        android:text="@string/label_date_of_delivery"
+                         />
+
+                    <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
+                        android:id="@+id/etl_date_of_delivery"
+                        style="@style/Theme.EZazi.Input.Login"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/list_container_padding"
+                        app:endIconDrawable="@drawable/ic_calendar_new"
+                        app:endIconMode="custom">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_date_of_delivery"
+                            style="@style/Theme.EZazi.Input.EditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:clickable="false"
+                            android:cursorVisible="false"
+                            android:editable="false"
+                            android:focusable="false"
+                            android:hint="@string/date"
+                            android:imeOptions="actionNext"
+                            android:importantForAutofill="no"
+                            android:inputType="date"
+                            android:maxLines="1"
+                            android:minHeight="@dimen/max_input_height"
+                            android:singleLine="true"
+                            android:textSize="@dimen/input_inner_size" />
+                    </org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout>
+
+                    <!-- Time of Delivery -->
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/textView_time_of_delivery"
+                        style="@style/LabelStyleAddPatient"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="start"
+                        android:text="@string/label_time_of_delivery"
+                         />
+
+                    <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
+                        android:id="@+id/etl_time_of_delivery"
+                        style="@style/Theme.EZazi.Input.Login"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/list_container_padding"
+                        app:endIconDrawable="@drawable/ic_time_drawable"
+                        app:endIconMode="custom">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_time_of_delivery"
+                            style="@style/Theme.EZazi.Input.EditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:hint="@string/time"
+                            android:clickable="false"
+                            android:cursorVisible="false"
+                            android:editable="false"
+                            android:focusable="false"
+                            android:imeOptions="actionNext"
+                            android:importantForAutofill="no"
+                            android:inputType="time"
+                            android:maxLines="1"
+                            android:minHeight="@dimen/max_input_height"
+                            android:singleLine="true"
+                            android:textSize="@dimen/input_inner_size" />
+
+                    </org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout>
+
+                    <!-- Mode of Delivery -->
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/textView_mode_of_delivery"
+                        style="@style/LabelStyleAddPatient"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="start"
+                        android:text="@string/label_mode_of_delivery"
+                         />
+
+                    <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
+                        android:id="@+id/etl_mode_of_delivery"
+                        style="@style/Theme.EZazi.Input.Login.DropDown"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/list_container_padding">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/autotv_mode_of_delivery"
+                            style="@style/Theme.EZazi.Scrollbar.Thumb"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:clickable="false"
+                            android:cursorVisible="false"
+                            android:dropDownSelector="@color/white"
+                            android:editable="false"
+                            android:focusable="false"
+                            android:hint="@string/select_mode"
+                            android:inputType="none"
+                            android:maxLines="1"
+                            android:minHeight="@dimen/max_input_height"
+                            android:textAlignment="viewStart"
+                            android:textSize="@dimen/input_inner_size" />
+
+                    </org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout>
+
+                    <!-- Mode of Delivery - other option -->
+
+                    <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
+                        android:id="@+id/etl_mode_of_delivery_other_option"
+                        style="@style/Theme.EZazi.Input.Login"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/list_container_padding"
+                        android:layout_marginTop="-1dp"
+                        android:gravity="center_vertical"
+                        android:hint="@string/please_specify"
+                        android:visibility="gone">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_mode_of_delivery_other_option"
+                            style="@style/Theme.EZazi.Input.EditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:hint="@string/please_specify"
+                            android:imeOptions="actionNext"
+                            android:importantForAutofill="no"
+                            android:maxLines="1"
+                            android:minHeight="@dimen/max_input_height"
+                            android:nextFocusForward="@id/et_middle_name"
+                            android:singleLine="true"
+                            android:textSize="@dimen/input_inner_size" />
+                    </org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout>
+
+                    <!-- Perineal Tear -->
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/textView_perineal_tear"
+                        style="@style/LabelStyleAddPatient"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/label_perineal_tear"
+                         />
+
+                    <include
+                        layout="@layout/layout_radio_buttons_common"
+                        android:id="@+id/layout_perneal_tear_radio"/>
+                    <TextView
+                        android:id="@+id/tv_perineal_tear_validation_error"
+                        style="@style/Textview_Validation_Error"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:layout_marginTop="@dimen/validation_error_tv_margin_top"
+                        android:layout_marginEnd="@dimen/admission_date_margin_end"
+                        android:gravity="end"
+                        android:lineSpacingExtra="0sp"
+                        android:text="@string/this_field_is_mandatory"
+                        android:visibility="gone" />
+
+                    <!-- Degree of Perineal tear -->
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/textView_degree_of_perineal_tear"
+                        style="@style/LabelStyleAddPatient"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="start"
+                        android:text="@string/label_degree_of_perineal_tear"
+                        
+                        android:visibility="gone" />
+
+                    <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
+                        android:id="@+id/etl_degree_of_perineal_tear"
+                        style="@style/Theme.EZazi.Input.Login.DropDown"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/list_container_padding"
+                        android:visibility="gone">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/autotv_degree_of_perineal_tear"
+                            style="@style/Theme.EZazi.Scrollbar.Thumb"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:focusable="true"
+                            android:hint="@string/select_degree"
+                            android:inputType="none"
+                            android:minHeight="@dimen/max_input_height"
+                            android:textSize="@dimen/input_inner_size" />
+
+                    </org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout>
+
+                    <!-- ================================================= -->
+                    <!-- SECTION 2 : Placenta & Membrane Delivery Details -->
+                    <!-- ================================================= -->
+                    <com.google.android.material.textview.MaterialTextView
+                        style="@style/LabelStyleAddPatient"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:text="@string/section_two_placenta_and_membrane_delivery"
+                         />
+
+                    <!-- Check placenta & membranes -->
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/textView_placenta_membrane_status"
+                        style="@style/LabelStyleAddPatient"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/margin_top_parto_section_labels"
+                        android:text="@string/label_check_placenta_membranes"
+                         />
+
+                    <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
+                        android:id="@+id/etl_placenta_membrane_delivery"
+                        style="@style/Theme.EZazi.Input.Login.DropDown"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/list_container_padding">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/autotv_placenta_membrane_delivery"
+                            style="@style/Theme.EZazi.Scrollbar.Thumb"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:clickable="false"
+                            android:cursorVisible="false"
+                            android:dropDownSelector="@color/white"
+                            android:editable="false"
+                            android:focusable="false"
+                            android:hint="@string/select"
+                            android:inputType="none"
+                            android:maxLines="1"
+                            android:minHeight="@dimen/max_input_height"
+                            android:textAlignment="viewStart"
+                            android:textSize="@dimen/input_inner_size"/>
+
+                    </org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout>
+
+                    <!-- Time of placenta delivery -->
+                    <com.google.android.material.textview.MaterialTextView
+                        style="@style/LabelStyleAddPatient"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/time_placenta_delivery" />
+
+                    <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
+                        android:id="@+id/etl_time_of_placenta_delivery"
+                        style="@style/Theme.EZazi.Input.Login"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/list_container_padding"
+                        app:endIconDrawable="@drawable/ic_time_drawable"
+                        app:endIconMode="custom">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_time_of_placenta_delivery"
+                            style="@style/Theme.EZazi.Input.EditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:hint="@string/time"
+                            android:clickable="false"
+                            android:cursorVisible="false"
+                            android:editable="false"
+                            android:focusable="false"
+                            android:imeOptions="actionNext"
+                            android:importantForAutofill="no"
+                            android:inputType="time"
+                            android:maxLines="1"
+                            android:minHeight="@dimen/max_input_height"
+                            android:singleLine="true"
+                            android:textSize="@dimen/input_inner_size" />
+
+                    </org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout>
+
+                    <!-- Placental/Cord abnormality -->
+                    <com.google.android.material.textview.MaterialTextView
+                        style="@style/LabelStyleAddPatient"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/placental_cord_abnormality" />
+
+
+                    <include
+                        layout="@layout/layout_radio_buttons_common"
+                        android:id="@+id/layout_placental_abnormality_radio"/>
+
+                    <!-- placental_or_cord_abnormality- other option -->
+                    <TextView
+                        android:id="@+id/tv_cord_abnormality_validation_error"
+                        style="@style/Textview_Validation_Error"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:layout_marginTop="@dimen/validation_error_tv_margin_top"
+                        android:layout_marginEnd="@dimen/admission_date_margin_end"
+                        android:gravity="end"
+                        android:lineSpacingExtra="0sp"
+                        android:text="@string/this_field_is_mandatory"
+                        android:visibility="gone" />
+
+                    <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
+                        android:id="@+id/etl_placental_or_cord_abnormality_other_option"
+                        style="@style/Theme.EZazi.Input.Login"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/list_container_padding"
+                        android:gravity="center_vertical"
+                        android:hint="@string/please_specify"
+                        android:visibility="gone">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_placental_or_cord_abnormality_other_option"
+                            style="@style/Theme.EZazi.Input.EditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:hint="@string/please_specify"
+                            android:imeOptions="actionNext"
+                            android:importantForAutofill="no"
+                            android:maxLines="1"
+                            android:minHeight="@dimen/max_input_height"
+                            android:nextFocusForward="@id/et_middle_name"
+                            android:singleLine="true"
+                            android:textSize="@dimen/input_inner_size" />
+                    </org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout>
+
+                    <!-- Medications (AMTSL) -->
+                    <com.google.android.material.textview.MaterialTextView
+                        style="@style/LabelStyleAddPatient"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="@string/amtsl_label" />
+
+                    <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
+                        android:id="@+id/etl_amtsl"
+                        style="@style/Theme.EZazi.Input.Login.DropDown"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/list_container_padding">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/actv_amtsl"
+                            style="@style/Theme.EZazi.Scrollbar.Thumb"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:focusable="true"
+                            android:hint="@string/select"
+                            android:inputType="none"
+                            android:minHeight="@dimen/max_input_height"
+                            android:textSize="@dimen/input_inner_size" />
+                    </org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout>
+
+                    <!-- Medications (AMTSL) - other option -->
+
+                    <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
+                        android:id="@+id/etl_amtsl_other_option"
+                        style="@style/Theme.EZazi.Input.Login"
+                        android:visibility="gone"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/list_container_padding">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_amtsl_other_option"
+                            style="@style/Theme.EZazi.Input.EditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:hint="@string/please_specify"
+                            android:imeOptions="actionNext"
+                            android:importantForAutofill="no"
+                            android:inputType="text"
+                            android:maxLines="1"
+                            android:minHeight="@dimen/max_input_height"
+                            android:singleLine="true"
+                            android:textSize="@dimen/input_inner_size" />
+                    </org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout>
+
+
+                    <!-- ================================================= -->
+                    <!-- SECTION 3 : NEWBORN DETAILS -->
+                    <!-- ================================================= -->
+
+                    <com.google.android.material.textview.MaterialTextView
+                        style="@style/LabelStyleAddPatient"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/new_born_details"
+                         />
+
+                    <!-- Type of Birth -->
+                    <com.google.android.material.textview.MaterialTextView
+                        style="@style/LabelStyleAddPatient"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/margin_top_parto_section_labels"
+                        android:text="@string/label_type_of_birth" />
+
+                    <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
+                        android:id="@+id/etl_type_of_birth"
+                        style="@style/Theme.EZazi.Input.Login.DropDown"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/list_container_padding"
+                        android:layout_marginTop="10dp">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/actv_type_of_birth"
+                            style="@style/Theme.EZazi.Scrollbar.Thumb"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:focusable="true"
+                            android:hint="@string/select"
+                            android:inputType="none"
+                            android:minHeight="@dimen/max_input_height"
+                            android:textSize="@dimen/input_inner_size" />
+                    </org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout>
+
+                    <!-- Sex -->
+                    <com.google.android.material.textview.MaterialTextView
+                        style="@style/LabelStyleAddPatient"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/sex" />
+
+                    <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
+                        android:id="@+id/etl_sex"
+                        style="@style/Theme.EZazi.Input.Login.DropDown"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/list_container_padding">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/actv_sex"
+                            style="@style/Theme.EZazi.Scrollbar.Thumb"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:focusable="true"
+                            android:hint="@string/select_sex"
+                            android:inputType="none"
+                            android:minHeight="@dimen/max_input_height"
+                            android:textSize="@dimen/input_inner_size" />
+                    </org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout>
+
+                    <!-- Apgar Score 1 min -->
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/textView_apgar_1"
+                        style="@style/LabelStyleAddPatient"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/label_apgar_score_1_min"
+                         />
+
+                    <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
+                        android:id="@+id/etl_apgar_1"
+                        style="@style/Theme.EZazi.Input.Login.DropDown"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/list_container_padding">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/autotv_apgar1"
+                            style="@style/Theme.EZazi.Scrollbar.Thumb"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:hint="@string/select"
+                            android:imeOptions="actionNext"
+                            android:importantForAutofill="no"
+                            android:inputType="none"
+                            android:maxLength="2"
+                            android:maxLines="1"
+                            android:minHeight="@dimen/max_input_height"
+                            android:singleLine="true"
+                            android:textSize="@dimen/input_inner_size"
+                            android:dropDownHeight="200dp"
+                          />
+                    </org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout>
+
+                    <!-- Apgar Score 5 min -->
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/textView_apgar_5"
+                        style="@style/LabelStyleAddPatient"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/label_apgar_score_5_min"
+                         />
+
+                    <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
+                        android:id="@+id/etl_apgar_5"
+                        style="@style/Theme.EZazi.Input.Login.DropDown"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/list_container_padding">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/autotv_apgar5"
+                            style="@style/Theme.EZazi.Scrollbar.Thumb"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:hint="@string/select"
+                            android:imeOptions="actionNext"
+                            android:importantForAutofill="no"
+                            android:inputType="none"
+                            android:maxLength="2"
+                            android:maxLines="1"
+                            android:minHeight="@dimen/max_input_height"
+                            android:dropDownHeight="200dp"
+                            android:singleLine="true"
+                            android:textSize="@dimen/input_inner_size" />
+                    </org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout>
+
+                    <!-- Resuscitation -->
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/textView_resuscitation"
+                        style="@style/LabelStyleAddPatient"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/label_resuscitation"
+                         />
+
+                    <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
+                        android:id="@+id/etl_resuscitation"
+                        style="@style/Theme.EZazi.Input.Login.DropDown"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/list_container_padding">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/autotv_resuscitation"
+                            style="@style/Theme.EZazi.Scrollbar.Thumb"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:focusable="true"
+                            android:hint="@string/select"
+                            android:inputType="none"
+                            android:minHeight="@dimen/max_input_height"
+                            android:textSize="@dimen/input_inner_size" />
+
+                    </org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout>
+
+                    <!-- Birth Weight -->
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/textView_birth_weight_grams"
+                        style="@style/LabelStyleAddPatient"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/label_birth_weight"
+                         />
+
+                    <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
+                        android:id="@+id/etl_birth_weight_grams"
+                        style="@style/Theme.EZazi.Input.Login"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/list_container_padding">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_birth_weight_grams"
+                            style="@style/Theme.EZazi.Input.EditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:hint="@string/label_birth_weight"
+                            android:imeOptions="actionNext"
+                            android:importantForAutofill="no"
+                            android:inputType="number"
+                            android:maxLength="5"
+                            android:maxLines="1"
+                            android:minHeight="@dimen/max_input_height"
+                            android:singleLine="true"
+                            android:textSize="@dimen/input_inner_size" />
+                    </org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout>
+
+                    <!-- Skin to skin contact -->
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/textView_skin_to_skin_contact"
+                        style="@style/LabelStyleAddPatient"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="start"
+                        android:text="@string/label_skin_to_skin_contact"
+                         />
+
+
+                    <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
+                        android:id="@+id/etl_skin_to_skin_contact"
+                        style="@style/Theme.EZazi.Input.Login.DropDown"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/list_container_padding">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/autotv_skin_to_skin_contact"
+                            style="@style/Theme.EZazi.Scrollbar.Thumb"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:focusable="true"
+                            android:hint="@string/select_contact"
+                            android:inputType="none"
+                            android:minHeight="@dimen/max_input_height"
+                            android:textSize="@dimen/input_inner_size" />
+
+                    </org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout>
+
+                    <!-- label_breastfeed_within_1_hour -->
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/textView_label_breastfeed_within_1_hour"
+                        style="@style/LabelStyleAddPatient"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="start"
+                        android:text="@string/label_breastfeed_within_1_hour"
+                         />
+
+                    <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
+                        android:id="@+id/etl_breastfeed_within_1_hour"
+                        style="@style/Theme.EZazi.Input.Login.DropDown"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/list_container_padding">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/autotv_breastfeed_within_1_hour"
+                            style="@style/Theme.EZazi.Scrollbar.Thumb"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:focusable="true"
+                            android:hint="@string/select_breastfeeding"
+                            android:inputType="none"
+                            android:minHeight="@dimen/max_input_height"
+                            android:textSize="@dimen/input_inner_size" />
+
+                    </org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout>
+
+                    <!-- Gestation -->
+                    <com.google.android.material.textview.MaterialTextView
+                        style="@style/LabelStyleAddPatient"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/gestation_weeks" />
+
+                    <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
+                        android:id="@+id/etl_gestation"
+                        style="@style/Theme.EZazi.Input.Login.DropDown"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/list_container_padding">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/autotv_gestation"
+                            style="@style/Theme.EZazi.Scrollbar.Thumb"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:focusable="true"
+                            android:gravity="center_vertical"
+                            android:hint="@string/in_weeks"
+                            android:inputType="none"
+                            android:minHeight="@dimen/max_input_height"
+                            android:textSize="@dimen/input_inner_size" />
+                    </org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout>
+
+                    <!-- Congenital Anomalies -->
+                    <com.google.android.material.textview.MaterialTextView
+                        style="@style/LabelStyleAddPatient"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/congenital_anomalies" />
+
+                    <include
+                        layout="@layout/layout_radio_buttons_common"
+                        android:id="@+id/layout_congenital_anomalies_radio"/>
+
+                    <!--If yes  -  Congenital Anomalies -->
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/tv_congenital_yes"
+                        style="@style/LabelStyleAddPatient"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone"
+                        android:text="@string/specify_anomaly" />
+
+                    <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
+                        android:id="@+id/etl_congenital_yes_options"
+                        style="@style/Theme.EZazi.Input.Login.DropDown"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/list_container_padding"
+                        android:gravity="center_vertical"
+                        android:visibility="gone">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/autotv_congenital_yes_options"
+                            style="@style/Theme.EZazi.Scrollbar.Thumb"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:focusable="true"
+                            android:hint="@string/select"
+                            android:inputType="none"
+                            android:minHeight="@dimen/max_input_height"
+                            android:textSize="@dimen/input_inner_size" />
+                    </org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout>
+
+                    <!-- Congenital Anomalies - other option -->
+
+                    <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
+                        android:id="@+id/etl_congenital_yes_other_option"
+                        style="@style/Theme.EZazi.Input.Login"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/list_container_padding"
+                        android:layout_marginTop="-1dp"
+                        android:gravity="center_vertical"
+                        android:hint="@string/please_specify"
+                        android:visibility="gone">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_congenital_yes_other_option"
+                            style="@style/Theme.EZazi.Input.EditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:hint="@string/please_specify"
+                            android:imeOptions="actionNext"
+                            android:importantForAutofill="no"
+                            android:maxLines="1"
+                            android:minHeight="@dimen/max_input_height"
+                            android:nextFocusForward="@id/et_middle_name"
+                            android:singleLine="true"
+                            android:textSize="@dimen/input_inner_size" />
+                    </org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout>
+                    <TextView
+                        android:id="@+id/tv_congenital_validation_error"
+                        style="@style/Textview_Validation_Error"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:layout_marginTop="@dimen/validation_error_tv_margin_top"
+                        android:layout_marginEnd="@dimen/admission_date_margin_end"
+                        android:gravity="end"
+                        android:lineSpacingExtra="0sp"
+                        android:text="@string/this_field_is_mandatory"
+                        android:visibility="gone" />
+                </LinearLayout>
+
+            </androidx.core.widget.NestedScrollView>
+        <!-- Save Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_save"
+            style="@style/Theme.EZazi.Button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:layout_margin="@dimen/screen_padding"
+            android:layout_weight="1"
+            android:minHeight="@dimen/input_height"
+            android:text="@string/save_button"
+            android:layout_marginTop="20dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

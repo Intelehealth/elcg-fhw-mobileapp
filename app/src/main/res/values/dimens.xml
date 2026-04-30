@@ -166,4 +166,7 @@
     <dimen name="common_padding_medication">2dp</dimen>
     <dimen name="std_45dp">50dp</dimen>
 
+    <dimen name="margin_top_parto_labels">10dp</dimen>
+    <dimen name="margin_top_parto_section_labels">16dp</dimen>
+
 </resources>

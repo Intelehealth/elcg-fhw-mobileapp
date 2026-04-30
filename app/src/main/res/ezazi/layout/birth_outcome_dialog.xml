@@ -40,7 +40,7 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    tools:text="@string/stage_2_labour_complete" />
+                    tools:text="@string/stage_3_early_postpartum" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <com.google.android.material.textview.MaterialTextView
@@ -141,6 +141,16 @@
                     android:textSize="@dimen/input_inner_size" />
 
             </org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout>
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/tvStartStage3"
+                style="@style/Theme.EZazi.Text.Dialog.Content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dialog_input_margin_top"
+                android:background="@drawable/selector_dialog_list_item"
+                android:padding="@dimen/small_btn_horizontal_padding"
+                android:text="@{CompletedVisitStatus.SELF_DISCHARGE.label}"
+                tools:text="@string/stage_3" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </layout>

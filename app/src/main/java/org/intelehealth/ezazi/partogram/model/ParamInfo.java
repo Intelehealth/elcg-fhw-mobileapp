@@ -1,5 +1,6 @@
 package org.intelehealth.ezazi.partogram.model;
 
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -213,10 +214,25 @@ public class ParamInfo implements Serializable {
         return medication;
     }
 
-    public void saveJson() {
+    /*public void saveJson() {
         if ((getConceptUUID().equals(UuidDictionary.IV_FLUIDS) && getMedication().isValidIVFluid()) || (getConceptUUID().equals(UuidDictionary.OXYTOCIN_UL_DROPS_MIN) && getMedication().isValidOxytocin()))
             setCapturedValue(getMedication().toJson());
         else setCapturedValue(RadioOptions.NO.name());
+    }*/
+    public void saveJson() {
+
+        // 🔥 ONLY for IV FLUID / OXYTOCIN complex objects
+        if ((getConceptUUID().equals(UuidDictionary.IV_FLUIDS) && getMedication().isValidIVFluid())
+                || (getConceptUUID().equals(UuidDictionary.OXYTOCIN_UL_DROPS_MIN) && getMedication().isValidOxytocin())) {
+
+            setCapturedValue(getMedication().toJson());
+            return;
+        }
+
+        // 🔥 GENERIC RADIO / SIMPLE VALUES
+        if (TextUtils.isEmpty(getCapturedValue())) {
+            setCapturedValue(RadioOptions.NO.name()); // default only if empty
+        }
     }
 
 //    public void saveValueInJsonMap(String key, String value) {
@@ -584,4 +600,32 @@ public class ParamInfo implements Serializable {
         }
         return obsList;
     }
+
+    public ParamInfo() {
+    }
+
+    public ParamInfo(ParamInfo other) {
+
+        this.paramName = other.paramName;
+        this.paramDateType = other.paramDateType;
+        this.paramSectionName = other.paramSectionName;
+        this.currentStage = other.currentStage;
+      /*  this.isFifteenMinField = other.isFifteenMinField;
+        this.isHalfHourField = other.isHalfHourField;
+        this.isOnlyOneHourField = other.isOnlyOneHourField;*/
+        this.eachEncounterField = other.isEachEncounterField();
+        this.conceptUUID = other.conceptUUID;
+
+        if (other.options != null) {
+            this.options = other.options.clone();  // for String[]
+        } else {
+            this.options = null;
+        }
+        if (other.values != null) {
+            this.values = other.values.clone();
+        } else {
+            this.values = null;
+        }
+    }
+
 }
