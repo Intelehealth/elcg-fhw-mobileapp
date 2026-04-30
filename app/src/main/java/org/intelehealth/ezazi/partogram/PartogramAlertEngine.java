@@ -1,5 +1,10 @@
 package org.intelehealth.ezazi.partogram;
 
+import android.text.TextUtils;
+import android.util.Log;
+
+import com.google.gson.Gson;
+
 import org.intelehealth.ezazi.partogram.model.ParamInfo;
 
 public class PartogramAlertEngine {
@@ -192,6 +197,7 @@ public class PartogramAlertEngine {
 
     //ticket: EZ-753
     public static String getAlertNameUpdated(ParamInfo paramInfo) {
+
         if (paramInfo.getCapturedValue() == null || paramInfo.getCapturedValue().isEmpty()) {
             return "";
         }
@@ -382,6 +388,7 @@ public class PartogramAlertEngine {
         return alert;
     }
     public static String getStage3AlertName(ParamInfo paramInfo) {
+        Log.d("kaveri", "getStage3AlertName:paramInfo :  "+new Gson().toJson(paramInfo));
         String alert = "G";
         try {
             // EARLY POSTPARTUM – WOMAN
@@ -391,6 +398,7 @@ public class PartogramAlertEngine {
 
                     int val = Integer.parseInt(paramInfo.getCapturedValue());
                     if (val < 60 || val >= 120) alert = "R";
+
 
                 } else if (paramInfo.getParamName().equalsIgnoreCase("Systolic BP") && isValidCapturedValue(paramInfo.getCapturedValue())) {
 
@@ -428,9 +436,9 @@ public class PartogramAlertEngine {
                 } else if (paramInfo.getParamName().equalsIgnoreCase("Hematoma")) {
 
                     if (paramInfo.getCapturedValue().equalsIgnoreCase("Y")) alert = "R";
-                } else if (paramInfo.getParamName().equalsIgnoreCase("Any signs of ongoing complications")) {
+                } else if (paramInfo.getParamName().equalsIgnoreCase("Any signs of ongoing \ncomplications")) {
 
-                    if (paramInfo.getCapturedValue() !=null && !paramInfo.getCapturedValue().isEmpty()) alert = "R";
+                    if (paramInfo.getCapturedValue() !=null && !paramInfo.getCapturedValue().isEmpty() && isOngoingComplicationYes(paramInfo.getCapturedValue())) alert = "R";
                 }
             }
 
@@ -469,9 +477,9 @@ public class PartogramAlertEngine {
                 } else if (paramInfo.getParamName().equalsIgnoreCase("Suckling & Feeding")) {
 
                     if (paramInfo.getCapturedValue().equalsIgnoreCase("N")) alert = "R";
-                }else if (paramInfo.getParamName().equalsIgnoreCase("Any signs of ongoing complications")) {
+                }else if (paramInfo.getParamName().equalsIgnoreCase("Any signs of ongoing \ncomplications")) {
 
-                    if (paramInfo.getCapturedValue() !=null && !paramInfo.getCapturedValue().isEmpty()) alert = "R";
+                    if (paramInfo.getCapturedValue() !=null && !paramInfo.getCapturedValue().isEmpty() && isOngoingComplicationYes(paramInfo.getCapturedValue())) alert = "R";
                 }
             }
 
@@ -482,5 +490,17 @@ public class PartogramAlertEngine {
     }
     public static boolean isValidCapturedValue(String capturedValue) {
         return capturedValue != null && !capturedValue.trim().isEmpty();
+    }
+    private static boolean isOngoingComplicationYes(String value) {
+        if (TextUtils.isEmpty(value)) return false;
+        try {
+            org.json.JSONObject json = new org.json.JSONObject(value);
+            String yesNo = json.optString("any ongoing complication", "");
+
+            return "yes".equalsIgnoreCase(yesNo.trim());
+
+        } catch (org.json.JSONException e) {
+            return false;
+        }
     }
 }

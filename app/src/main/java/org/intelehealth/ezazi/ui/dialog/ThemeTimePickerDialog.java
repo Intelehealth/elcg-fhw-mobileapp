@@ -281,11 +281,30 @@ public class ThemeTimePickerDialog extends BaseDialogFragment<Void> implements T
     @Override
     public void onSubmit() {
         if (listener != null) {
+
+            int hours = getHours();
+            int minutes = getMinutes();
+
+            String formattedTime;
+
             if (is24Hour) {
-                // CHANGE: no AM/PM suffix in 24h mode
-                listener.onTimePick(getHours(), getMinutes(), "", getHours() + ":" + getMinutes());
+                // Return 24 hour format
+                formattedTime = String.format(Locale.getDefault(), "%02d:%02d", hours, minutes);
+                listener.onTimePick(hours, minutes, "", formattedTime);
+
             } else {
-                listener.onTimePick(getHours(), getMinutes(), strAmPm, getHours() + ":" + getMinutes() + " " + strAmPm);
+                // Convert 24h → 12h display format
+                String amPm;
+                int displayHour = hours;
+                if (hours >= 12) {
+                    amPm = "PM";
+                    if (hours > 12) displayHour = hours - 12;
+                } else {
+                    amPm = "AM";
+                    if (hours == 0) displayHour = 12;
+                }
+                formattedTime = String.format(Locale.getDefault(), "%02d:%02d %s", displayHour, minutes, amPm);
+                listener.onTimePick(displayHour, minutes, amPm, formattedTime);
             }
         }
     }

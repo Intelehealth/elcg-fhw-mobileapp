@@ -559,7 +559,7 @@
                             android:hint="@string/select"
                             android:imeOptions="actionNext"
                             android:importantForAutofill="no"
-                            android:inputType="number"
+                            android:inputType="none"
                             android:maxLength="2"
                             android:maxLines="1"
                             android:minHeight="@dimen/max_input_height"

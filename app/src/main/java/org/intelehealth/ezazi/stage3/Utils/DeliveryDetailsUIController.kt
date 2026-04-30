@@ -193,6 +193,7 @@ class DeliveryDetailsUIController(
         //binding.etApgar5.addTextChangedListener(ClearErrorTextWatcher(binding.etlApgar5))
         binding.etBirthWeightGrams.addTextChangedListener(ClearErrorTextWatcher(binding.etlBirthWeightGrams))
         binding.etModeOfDeliveryOtherOption.addTextChangedListener(ClearErrorTextWatcher(binding.etlModeOfDeliveryOtherOption))
+        binding.etAmtslOtherOption.addTextChangedListener(ClearErrorTextWatcher(binding.etlAmtslOtherOption))
     }
 
     private fun handleClickListeners() {
@@ -272,31 +273,58 @@ class DeliveryDetailsUIController(
         dialog.show(fragmentManager, "ThemeTimePickerDialog")
     }
     private fun showAmtslDialog() {
+
         val dialog = MultiChoiceDialogFragment.Builder<String>(context)
             .title(R.string.select)
             .positiveButtonLabel(R.string.save_button)
             .build()
+
         dialog.isSearchable(true)
 
-        val items = context.resources.getStringArray(R.array.amtsl_options).toList()
-        val adapter = GenericMultiChoiceAdapter(context, ArrayList(items),  context.getString(R.string.none_option))
-        dialog.setAdapter(adapter)
-        dialog.setListener { selectedItems ->
-            binding.etlAmtslOtherOption.visibility = View.GONE
-            if (selectedItems.isNotEmpty()) {
-                binding.etlAmtsl.error = null
-                binding.etlAmtsl.isErrorEnabled = false
-                val selectedText = selectedItems.joinToString(", ")
-                // Show "Other" layout if selected
-                if (selectedItems.contains(context.getString(R.string.other))) {
-                    binding.etlAmtslOtherOption.visibility = View.VISIBLE
-                }
-                binding.actvAmtsl.setText(selectedText, false)
+        val items = context.resources
+            .getStringArray(R.array.amtsl_options)
+            .toList()
+
+        val adapter = GenericMultiChoiceAdapter(
+            context,
+            ArrayList(items),
+            context.getString(R.string.none_option)
+        )
+
+        // ✅ NEW — Restore previously selected values
+        val alreadySelectedText = binding.actvAmtsl.text?.toString()?.trim()
+        val preSelected = if (alreadySelectedText.isNullOrEmpty())
+            emptyList()
+        else
+            alreadySelectedText.split(",").map { it.trim() }
+
+        items.forEachIndexed { index, item ->
+            if (preSelected.contains(item)) {
+                adapter.selectItem(index)
             }
         }
-        dialog.show(fragmentManager, MultiChoiceDialogFragment::class.java.canonicalName)
-    }
 
+        dialog.setAdapter(adapter)
+
+        dialog.setListener { selectedItems ->
+
+            val isOtherSelected =
+                selectedItems.contains(context.getString(R.string.other))
+
+            val selectedText = selectedItems.joinToString(", ")
+            binding.actvAmtsl.setText(selectedText, false)
+
+            if (isOtherSelected) {
+                binding.etlAmtslOtherOption.visibility = View.VISIBLE
+            } else {
+                binding.etlAmtslOtherOption.visibility = View.GONE
+                binding.etAmtslOtherOption.setText("")   // clear stale value
+            }
+        }
+
+        dialog.show(fragmentManager,
+            MultiChoiceDialogFragment::class.java.canonicalName)
+    }
     private fun clearLiveBirthFields() {
         binding.autotvApgar1.text?.clear()
         binding.autotvApgar5.text?.clear()
