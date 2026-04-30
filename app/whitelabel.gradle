@@ -1,0 +1,96 @@
+import java.text.DateFormat
+import java.text.SimpleDateFormat
+
+android {
+    def client = "client"
+    def server = "server"
+    flavorDimensions = [client, server]
+
+    DateFormat df = new SimpleDateFormat("yyyyMMddHHmm")
+    def date = df.format(new Date())
+
+    productFlavors {
+
+        ezazi {
+            dimension client
+            isDefault = true
+            archivesBaseName = "intelehealth-ezazi" + versionName + " - " + date
+        }
+
+        elcg {
+            dimension client
+            applicationId "org.intelehealth.elcg"
+            versionCode 1
+            versionName '1.0'
+            archivesBaseName = "intelehealth_elcg-" + versionName + " - " + date
+        }
+        // This flavor used to handle different type of endpoint
+        dev {
+            dimension server
+            buildConfigField "boolean", "ACTIVE_CRASH", "false"
+        }
+
+        staging {
+            dimension server
+            buildConfigField "boolean", "ACTIVE_CRASH", "true"
+        }
+
+        production {
+            dimension server
+            buildConfigField "boolean", "ACTIVE_CRASH", "true"
+        }
+    }
+
+    applicationVariants.configureEach {
+        def name = it.name
+        def domain
+
+        if (name.contains("ezazi")) {
+            domain = "EZAZI"
+        } else if (name.contains("elcg")) {
+            domain = "ELCG"
+        }  else {
+            domain = "EZAZI"
+        }
+
+        // Specific values
+        if (name.contains("Dev")) {
+            domain = domain.concat("_").concat("DEV")
+        } else if (name.contains("Staging")) {
+            domain = domain.concat("_").concat("STAGE")
+        } else if (name.contains("Production")) {
+            domain = domain.concat("_").concat("PROD")
+        }
+
+        buildVariantConfigField(domain, it)
+    }
+}
+
+// Generating different type of endpoint base on selected variant or app
+def buildVariantConfigField(clientServer, variant) {
+    clientServer = clientServer.concat("_")
+    def serverUrl = "SERVER_URL"
+    def realTimeFbUrl = "REAL_TIME_FB_URL"
+    def liveKitUrl = "LIVE_KIT_URL"
+    def socketUrl = "SOCKET_URL"
+    def fbRtDb = "FB_RT_INSTANCE"
+
+    def endPointPropertyFile = file('../endpoint.properties')
+    def property = new Properties()
+
+    if (endPointPropertyFile.canRead()) {
+        property.load(new FileInputStream(endPointPropertyFile))
+    }
+
+    def buildServerUrl = property[clientServer + serverUrl].toString()
+    def buildRealTimeFbUrl = property[clientServer + realTimeFbUrl].toString()
+    def buildLiveKitUrl = property[clientServer + liveKitUrl].toString()
+    def buildSocketUrl = property[clientServer + socketUrl].toString()
+    def buildFbRtDb = property[clientServer + fbRtDb].toString()
+
+    variant.buildConfigField "String", serverUrl, buildServerUrl
+    variant.buildConfigField "String", realTimeFbUrl, buildRealTimeFbUrl
+    variant.buildConfigField 'String', liveKitUrl, buildLiveKitUrl
+    variant.buildConfigField 'String', socketUrl, buildSocketUrl
+    variant.buildConfigField 'String', fbRtDb, buildFbRtDb
+}

@@ -12,7 +12,9 @@ import java.text.DateFormat
 import java.text.SimpleDateFormat
 
 apply from: "resdir.gradle"
-apply from: "environment.gradle"
+//apply from: "environment.gradle"
+apply from: "whitelabel.gradle"
+
 
 static def getDateTime() {
     DateFormat df = new SimpleDateFormat("yyyyMMddHHmm");
@@ -20,12 +22,12 @@ static def getDateTime() {
 }
 
 android {
-    compileSdk 36
+    compileSdk 34
 
     defaultConfig {
         applicationId "org.intelehealth.ezazi"
         minSdk 26
-        targetSdk 36
+        targetSdk 34
         versionCode 18
         versionName '3.0'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
