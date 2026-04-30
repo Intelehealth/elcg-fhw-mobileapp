@@ -40,8 +40,8 @@ class CompleteVisitOnEnd3StageDialog(
         setupNewbornOptions()
 
         showCustomViewDialog(
-            R.string.additional_information,
-            R.string.yes,
+            R.string.complete_case,
+            R.string.save_button,
             R.string.cancel,
             binding.root
         ) { saveStage3Outcome() }

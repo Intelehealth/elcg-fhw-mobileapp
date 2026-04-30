@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingVertical="@dimen/list_container_padding">
+
+        <!--  Radio options -->
+
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layoutOngoingComplicationRadio"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/white_child_container_bg"
+            android:padding="@dimen/screen_container_padding"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <TextView
+                android:id="@+id/tvParamName"
+                style="@style/LabelStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Ongoing Complications"
+                android:textSize="@dimen/caption"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@id/radioYesNoGroup"
+                app:layout_constraintBottom_toBottomOf="@id/radioYesNoGroup"
+                app:layout_constraintEnd_toStartOf="@id/radioYesNoGroup"/>
+
+            <RadioGroup
+                android:id="@+id/radioYesNoGroup"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintWidth_percent="@dimen/obs_input_min_width">
+
+                <RadioButton
+                    android:id="@+id/radioYes"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/yes"/>
+
+                <RadioButton
+                    android:id="@+id/radioNo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/screen_padding"
+                    android:text="@string/no"/>
+            </RadioGroup>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+        <!--  if yes -->
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/clOngoingNextLayout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/white_child_container_bg"
+            android:padding="@dimen/screen_container_padding"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/layoutOngoingComplicationRadio"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <TextView
+                android:id="@+id/tvOngoingSelectedLabel"
+                style="@style/LabelStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Select Complications"
+                android:textSize="@dimen/caption"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@id/tvSelectedValue"
+                app:layout_constraintBottom_toBottomOf="@id/tvSelectedValue"
+                app:layout_constraintEnd_toStartOf="@id/tvSelectedValue"/>
+
+            <TextView
+                android:id="@+id/tvSelectedValue"
+                style="@style/Theme.EZazi.EditText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:hint="@string/select"
+                android:clickable="true"
+                android:focusable="false"
+                android:gravity="center_vertical"
+                app:drawableEndCompat="@drawable/ic_baseline_expand_more_24"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintWidth_percent="@dimen/obs_input_min_width"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+        <!--  if other -->
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/clOtherContainer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:background="@drawable/white_child_container_bg"
+            android:padding="@dimen/screen_container_padding"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/clOngoingNextLayout">
+
+            <TextView
+                android:id="@+id/tvOtherLabel"
+                style="@style/LabelStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:paddingEnd="@dimen/std_8dp"
+                android:text="@string/other"
+                android:textSize="@dimen/caption"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/etOtherText"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <EditText
+                android:id="@+id/etOtherText"
+                style="@style/Theme.EZazi.EditText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:hint="@string/please_specify"
+                android:inputType="textCapSentences"
+                android:maxLength="200"
+                android:maxLines="1"
+                app:drawableEndCompat="@drawable/ic_space"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintWidth_percent="@dimen/obs_input_min_width" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

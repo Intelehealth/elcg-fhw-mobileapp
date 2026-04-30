@@ -88,16 +88,7 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
             patientUuid = intent.getStringExtra("patientUuid");
             visitUuid = intent.getStringExtra("visitUuid");
             patientName = intent.getStringExtra("patientNameTimeline");
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            Handler mainHandler = new Handler(Looper.getMainLooper());
-
-            executor.execute(() -> {
-                nurseHasEditAccess = new VisitsDAO().checkLoggedInUserAccessVisit(visitUuid, sessionManager.getProviderID());
-                /*mainHandler.post(() -> {
-                    // Update UI here
-                    updateUI(hasAccess);
-                });*/
-            });
+            nurseHasEditAccess = new VisitsDAO().checkLoggedInUserAccessVisit(visitUuid, sessionManager.getProviderID());
             Log.e("TimelineAdapter", "TimelineAdapter: nurseHasEditAccess=>" + nurseHasEditAccess);
 //            String time = intent.getStringExtra("encounter_time");
 //            SimpleDateFormat timeLineTime = new SimpleDateFormat("HH:mm a", Locale.ENGLISH);

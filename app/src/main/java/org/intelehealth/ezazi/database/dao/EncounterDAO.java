@@ -4,6 +4,7 @@ import static org.intelehealth.ezazi.utilities.UuidDictionary.DELIVERY_OUTCOME_S
 import static org.intelehealth.ezazi.utilities.UuidDictionary.ENCOUNTER_VISIT_COMPLETE;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.ENCOUNTER_VISIT_NOTE;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.LCG_SOS;
+import static org.intelehealth.ezazi.utilities.UuidDictionary.STAGE3_HOUR1_1;
 
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -890,7 +891,7 @@ public class EncounterDAO {
             return false;
         }
         SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
-        db.beginTransaction();
+        //db.beginTransaction();
 
         try {
             // ---------------- ENCOUNTER ----------------
@@ -910,6 +911,7 @@ public class EncounterDAO {
             boolean encounterInserted = insertStage3Encounter(encounterDTO);
 
             if (!encounterInserted) {
+                Log.e(TAG, "createStage3FirstEncounter: encounter insert returned false");
                 return false;
             }
 
@@ -920,17 +922,19 @@ public class EncounterDAO {
 
             boolean obsResult = obsDAO.insertObs(obsDTO);
             if (!obsResult) {
+                Log.e(TAG, "createStage3FirstEncounter: obs insert returned false for encounter: " + encounterDTO.getUuid());
                 return false;
             }
 
-            db.setTransactionSuccessful();
+            //db.setTransactionSuccessful();
             return true;
 
         } catch (Exception e) {
+            Log.e(TAG, "createStage3FirstEncounter: exception: " + e.getMessage());
             return false;
 
         } finally {
-            db.endTransaction();
+            //db.endTransaction();
         }
     }
     public boolean insertStage3Encounter(EncounterDTO encounter) throws DAOException {
@@ -965,5 +969,22 @@ public class EncounterDAO {
         }
         return isCreated;
     }
+    public boolean isStage3Started(String visitUuid) {
+       SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
+        String query =
+                "SELECT COUNT(*) FROM tbl_encounter " +
+                        "WHERE visituuid = ? " +
+                        "AND encounter_type_uuid = ? " +
+                        "AND voided IN ('0','false','FALSE')";
 
+        Cursor cursor = db.rawQuery(query, new String[]{visitUuid, STAGE3_HOUR1_1});
+        try {
+            if (cursor.moveToFirst()) {
+                return cursor.getInt(0) > 0;
+            }
+        } finally {
+            cursor.close();
+        }
+        return false;
+    }
 }

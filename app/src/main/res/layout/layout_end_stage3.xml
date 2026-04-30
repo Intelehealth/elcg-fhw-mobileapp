@@ -19,7 +19,7 @@
             android:focusable="true"
             android:focusableInTouchMode="true"
             android:orientation="vertical"
-            android:paddingVertical="@dimen/list_container_padding">
+            android:padding="@dimen/screen_container_padding">
 
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/textView_women_end_stage3_options"
@@ -27,7 +27,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="start"
-                android:text="@string/label_mode_of_delivery" />
+                android:text="@string/mother_status" />
 
             <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
                 android:id="@+id/etl_women_end_stage3_options"
@@ -61,7 +61,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="start"
-                android:text="@string/label_mode_of_delivery"
+                android:text="@string/newborn_status"
                 />
 
             <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout

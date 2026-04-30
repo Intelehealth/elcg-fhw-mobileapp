@@ -621,6 +621,11 @@ public class ParamInfo implements Serializable {
         } else {
             this.options = null;
         }
+        if (other.values != null) {
+            this.values = other.values.clone();
+        } else {
+            this.values = null;
+        }
     }
 
 }

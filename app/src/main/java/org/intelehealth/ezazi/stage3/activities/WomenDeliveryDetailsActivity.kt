@@ -1,11 +1,14 @@
-package org.intelehealth.ezazi.stage3
+package org.intelehealth.ezazi.stage3.activities
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.textfield.TextInputLayout
 import org.intelehealth.ezazi.R
@@ -25,6 +28,7 @@ import org.intelehealth.ezazi.stage3.db.SaveDeliveryDetailsUseCase
 import org.intelehealth.ezazi.stage3.factory.DeliveryDetailsViewModelFactory
 import org.intelehealth.ezazi.stage3.models.DeliveryDetails
 import org.intelehealth.ezazi.stage3.viewmodel.DeliveryDetailsViewModel
+import org.intelehealth.ezazi.syncModule.SyncUtils
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment
 import org.intelehealth.ezazi.utilities.SessionManager
 import org.intelehealth.ezazi.utilities.UuidDictionary
@@ -42,6 +46,8 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityWomenDeliveryDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        setInsets()
         binding.bottomSheetAppBar.toolbar.setTitle(R.string.final_delivery_outcome_form)
 
         visitUuid = intent?.getStringExtra("visitUuid")
@@ -53,7 +59,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
 
         val encounterDto = createEncounterDto()
 
-        val repository = DeliveryDetailsRepository(DeliveryDetailsLocalDataSource(ObsDAO(), EncounterDAO(), VisitsDAO()), DeliveryDetailsObsMapper())
+        val repository = DeliveryDetailsRepository(DeliveryDetailsLocalDataSource(ObsDAO(), EncounterDAO(), VisitsDAO()), DeliveryDetailsObsMapper(), SyncUtils())
         val useCase = SaveDeliveryDetailsUseCase(repository)
 
         val factory = DeliveryDetailsViewModelFactory(useCase)
@@ -64,7 +70,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             val deliveryDetails = collectFormData()
             if (validateFields(deliveryDetails)) {
                 clearErrors()
-                viewModel.saveDelivery(encounterDto, deliveryDetails, SessionManager(this).creatorID, "Stage3_Hour1_1")
+               // viewModel.saveDelivery(encounterDto, deliveryDetails, SessionManager(this).creatorID, "Stage3_Hour1_1")
             }
         }
 
@@ -126,7 +132,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             setFieldError(binding.etlTimeOfPlacentaDelivery, getString(R.string.this_field_is_mandatory))
             return false
         }
-        // ADD after line 116:
+
         val deliveryTime = binding.etTimeOfDelivery.text.toString().trim()
         val placentaTime = binding.etTimeOfPlacentaDelivery.text.toString().trim()
         if (deliveryTime.isNotEmpty() && placentaTime.isNotEmpty()) {
@@ -162,8 +168,8 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
 
         //  LIVE BIRTH VALIDATION
         if (deliveryDetails.typeOfBirth.equals("Live Birth", true)) {
-            val apgar1 = binding.etApgar1.text.toString()
-            val apgar5 = binding.etApgar5.text.toString()
+            val apgar1 = binding.autotvApgar1.text.toString()
+            val apgar5 = binding.autotvApgar5.text.toString()
 
             if (apgar1.isEmpty()) {
                 setFieldError(binding.etlApgar1, getString(R.string.this_field_is_mandatory))
@@ -236,6 +242,8 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
         viewModel.saveResult.observe(this) { success ->
             if (success) {
                 Toast.makeText(this, getString(R.string.delivery_outcome_msg), Toast.LENGTH_SHORT).show()
+                val syncUtils = SyncUtils()
+                syncUtils.syncForeground("visitSummary")
                 finish()
             } else {
                 Toast.makeText(this, getString(R.string.failed_to_save_details), Toast.LENGTH_SHORT).show()
@@ -275,8 +283,8 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
 
             typeOfBirth = binding.actvTypeOfBirth.text.toString().trim()
             babyGender = binding.actvSex.text.toString().trim()
-            apgarScore1Min = binding.etApgar1.text.toString().trim()
-            apgarScore5Min = binding.etApgar5.text.toString().trim()
+            apgarScore1Min = binding.autotvApgar1.text.toString().trim()
+            apgarScore5Min = binding.autotvApgar5.text.toString().trim()
             resuscitation = binding.autotvResuscitation.text.toString().trim()
             birthWeightGrams = binding.etBirthWeightGrams.text.toString().trim()
             skinToSkinContact = binding.autotvSkinToSkinContact.text.toString().trim()
@@ -429,11 +437,17 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
     }
     private fun isTimeAfterOrEqual(laterTime: String, earlierTime: String): Boolean {
         return try {
-            val format = java.text.SimpleDateFormat("hh:mm a", java.util.Locale.getDefault())
+            val format = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+            format.isLenient = false
+
             val t1 = format.parse(earlierTime)
             val t2 = format.parse(laterTime)
+
             t2 != null && t1 != null && !t2.before(t1)
-        } catch (e: Exception) { true } // don't block if parsing fails
+
+        } catch (e: Exception) {
+            false
+        }
     }
     private fun navigateToTimeline() {
         val patientUuid = intent?.getStringExtra("patientUuid")
@@ -467,4 +481,15 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             }
         dialog.show(supportFragmentManager, dialog::class.java.canonicalName)
     }
+    private fun setInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.layoutParentDeliveryOutcome)) { view, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(
+                systemBars.left,
+                systemBars.top,
+                systemBars.right,
+                systemBars.bottom
+            )
+            insets
+        }    }
 }

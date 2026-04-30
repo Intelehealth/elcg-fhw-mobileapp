@@ -1,6 +1,5 @@
 package org.intelehealth.ezazi.activities.homeActivity;
 
-import static org.intelehealth.ezazi.activities.homeActivity.RiskConcepts.RISK_CONCEPTS;
 import static org.intelehealth.ezazi.app.AppConstants.EVENT_SHIFT_CHANGED;
 import static org.intelehealth.ezazi.app.AppConstants.SHIFTED_DATA;
 import static org.intelehealth.ezazi.utilities.StringUtils.en__as_dob;
@@ -97,7 +96,6 @@ import org.intelehealth.ezazi.partogram.PartogramConstants;
 import org.intelehealth.ezazi.services.firebase_services.CallListenerBackgroundService;
 import org.intelehealth.ezazi.services.firebase_services.DeviceInfoUtils;
 import org.intelehealth.ezazi.services.firebase_services.TokenRefreshUtils;
-import org.intelehealth.ezazi.stage3.WomenDeliveryDetailsActivity;
 import org.intelehealth.ezazi.syncModule.SyncUtils;
 import org.intelehealth.ezazi.ui.dialog.AppDialogUtils;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;

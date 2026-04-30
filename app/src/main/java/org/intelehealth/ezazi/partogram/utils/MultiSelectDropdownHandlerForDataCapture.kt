@@ -14,7 +14,7 @@ import org.intelehealth.ezazi.partogram.PartogramConstants
 import org.intelehealth.ezazi.partogram.model.ParamInfo
 import org.intelehealth.ezazi.stage3.Utils.GenericMultiChoiceAdapter
 import org.intelehealth.ezazi.ui.dialog.MultiChoiceDialogFragment
-
+import org.intelehealth.ezazi.utilities.UuidDictionary
 
 class MultiSelectDropdownHandlerForDataCapture(
     private val context: Context,
@@ -22,198 +22,203 @@ class MultiSelectDropdownHandlerForDataCapture(
     private val accessMode: PartogramConstants.AccessMode
 ) {
 
-    // called from adapter's onBindViewHolder
+    private fun getComplicationOptions(conceptUUID: String?): Array<String> {
+        return when (conceptUUID) {
+            UuidDictionary.ONGOING_COMPLICATIONS_MOTHER -> arrayOf(
+                "Vaginal bleeding (≥300 ml)",
+                "Fever (Temp ≥99.5 °F)",
+                "High blood pressure",
+                "Moderate pallor",
+                "Severe pallor",
+                AppConstants.OTHER_OPTION
+            )
+            UuidDictionary.ONGOING_COMPLICATIONS_NEWBORN -> arrayOf(
+                "Respiratory distress",
+                "Hypothermia",
+                "Sepsis",
+                "Poor feeding",
+                AppConstants.OTHER_OPTION
+            )
+            else -> emptyArray()
+        }
+    }
 
-    fun bind(
-        tempView: View,
-        info: ParamInfo
-    ) {
-        val tvParamName       = tempView.findViewById<TextView>(R.id.tvParamName)
-        val tvSelected        = tempView.findViewById<TextView>(R.id.tvSelectedValues)
-        val etOther           = tempView.findViewById<EditText>(R.id.etOtherText)
-        val clOtherContainer  = tempView.findViewById<ConstraintLayout>(R.id.clOtherContainer)
+    fun bind(tempView: View, info: ParamInfo) {
+        val options            = getComplicationOptions(info.conceptUUID)
+        val tvSelected         = tempView.findViewById<TextView>(R.id.tvSelectedValue)
+        val clOtherContainer   = tempView.findViewById<ConstraintLayout>(R.id.clOtherContainer)
+        val etOtherText        = tempView.findViewById<EditText>(R.id.etOtherText)
+        val clOngoingNextLayout = tempView.findViewById<ConstraintLayout>(R.id.clOngoingNextLayout)
 
         val isEditable = accessMode != PartogramConstants.AccessMode.READ
-        tvSelected.isEnabled = isEditable
-        etOther.isEnabled    = isEditable
+        tvSelected.isEnabled   = isEditable
+        tvSelected.isClickable = isEditable
+        etOtherText.isEnabled  = isEditable
 
-        tvParamName.text = info.paramName
+        //  Restore saved state ──────────────────────────────────────────────
+        restoreState(info, tvSelected, clOtherContainer, etOtherText, clOngoingNextLayout)
 
-        // Restore saved state when row is bound
-        restoreState(info, tvSelected, etOther, clOtherContainer)
-
-        // Open dialog on tap
         tvSelected.setOnClickListener {
             if (!isEditable) return@setOnClickListener
-            showDialog(info, tvSelected, etOther, clOtherContainer)
+            showDialog(options, info, tvSelected, clOtherContainer, etOtherText)
         }
 
-        // Persist free-text as user types
-        etOther.addTextChangedListener(object : TextWatcher {
+        //  Other EditText
+        etOtherText.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
-                val currentLabels = labelsFromView(tvSelected)
-                saveValue(info, currentLabels, s?.toString()?.trim() ?: "")
+                persistValue(
+                    info,
+                    selectedLabelsFromView(tvSelected),
+                    s?.toString()?.trim() ?: ""
+                )
             }
         })
     }
 
-    // Dialog
+
     private fun showDialog(
+        options: Array<String>,
         info: ParamInfo,
         tvSelected: TextView,
-        etOther: EditText,
-        clOtherContainer: ConstraintLayout
+        clOtherContainer: ConstraintLayout,
+        etOtherText: EditText
     ) {
-        val options     = info.options
-        val preSelected = buildPreSelectedList(info)
-
-        val dialog = MultiChoiceDialogFragment.Builder<String>(context)
-            .title(R.string.select)
-            .positiveButtonLabel(R.string.save_button)
-            .build()
-        dialog.isSearchable(true)
+        val preSelected = selectedLabelsFromView(tvSelected)
 
         val adapter = GenericMultiChoiceAdapter(
             context,
             ArrayList(options.toList()),
             context.getString(R.string.none_option)
         )
-        dialog.setAdapter(adapter)
 
         // Pre-tick previously selected items
         options.forEachIndexed { index, opt ->
-            val shouldSelect = when {
-                opt.equals(AppConstants.OTHER_OPTION, ignoreCase = true) ->
-                    info.capturedValue?.contains(AppConstants.OTHER_OPTION + "|") == true
-                else ->
-                    preSelected.contains(opt)
-            }
-            if (shouldSelect) adapter.selectItem(index)
+            if (preSelected.contains(opt)) adapter.selectItem(index)
         }
+
+        val dialog = MultiChoiceDialogFragment.Builder<String>(context)
+            .title(R.string.select)
+            .positiveButtonLabel(R.string.save_button)
+            .build()
+        dialog.isSearchable(true)
+        dialog.setAdapter(adapter)
 
         dialog.setListener { selectedItems ->
             val otherPicked = selectedItems.contains(AppConstants.OTHER_OPTION)
 
+            // Show / hide Other free-text row
             if (otherPicked) {
-                clOtherContainer.visibility = View.VISIBLE
-                // Pre-fill already-typed free text if EditText is empty
-                val existing = extractOtherFreeText(info.capturedValue)
-                if (existing.isNotEmpty() && etOther.text.isNullOrEmpty()) {
-                    etOther.setText(existing)
+                // setText before VISIBLE so the container measures correct height
+                val existingOther = extractOtherText(info.capturedValue)
+                if (existingOther.isNotEmpty() && etOtherText.text.isNullOrEmpty()) {
+                    etOtherText.setText(existingOther)
+                    etOtherText.setSelection(existingOther.length)
                 }
+                clOtherContainer.visibility = View.VISIBLE
+                clOtherContainer.requestLayout()
             } else {
                 clOtherContainer.visibility = View.GONE
-                etOther.setText("")
+                clOtherContainer.requestLayout()
+                etOtherText.setText("")
             }
 
+            // Update display text in the dropdown TextView
             tvSelected.text = selectedItems.joinToString(", ")
-            saveValue(info, selectedItems, etOther.text?.toString()?.trim() ?: "")
+
+            // Persist
+            persistValue(info, selectedItems, etOtherText.text?.toString()?.trim() ?: "")
         }
 
         dialog.show(fragmentManager, MultiChoiceDialogFragment::class.java.canonicalName)
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // State restore
-    // ─────────────────────────────────────────────────────────────────────────
-
     private fun restoreState(
         info: ParamInfo,
         tvSelected: TextView,
-        etOther: EditText,
-        clOtherContainer: ConstraintLayout
+        clOtherContainer: ConstraintLayout,
+        etOtherText: EditText,
+        clOngoingNextLayout: ConstraintLayout
     ) {
-        val saved = info.capturedValue
-        if (saved.isNullOrEmpty()) return
+        val saved = info.capturedValue ?: return
+        if (saved.isEmpty()) return
 
-        val displayParts  = mutableListOf<String>()
-        var otherFreeText = ""
+        try {
+            val json         = org.json.JSONObject(saved)
+            val yesNo        = json.optString("any ongoing complication", "")
+            val complications = json.optString("complications", "")
+            val otherValue   = json.optString("other value", "")
 
-        saved.split(",").forEach { raw ->
-            val token = raw.trim()
-            when {
-                token.startsWith(AppConstants.OTHER_OPTION + "|") -> {
-                    otherFreeText = token.removePrefix(AppConstants.OTHER_OPTION + "|")
-                    displayParts += if (otherFreeText.isEmpty()) AppConstants.OTHER_OPTION
-                    else "${AppConstants.OTHER_OPTION}: $otherFreeText"
+            if (!"yes".equals(yesNo, ignoreCase = true)) return
+
+            // Restore dropdown display text
+            if (complications.isNotEmpty()) tvSelected.text = complications
+
+            // Restore Other container + EditText
+            if (otherValue.isNotEmpty()) {
+                etOtherText.setText(otherValue)
+                etOtherText.setSelection(otherValue.length)
+                clOtherContainer.visibility = View.VISIBLE
+                clOtherContainer.requestLayout()
+                clOngoingNextLayout.requestLayout()
+            } else {
+                // Check if "Other" label is among the selected complications
+                val hasOther = complications.split(",")
+                    .map { it.trim() }
+                    .any { it.equals(AppConstants.OTHER_OPTION, ignoreCase = true) }
+                if (hasOther) {
+                    clOtherContainer.visibility = View.VISIBLE
+                    clOtherContainer.requestLayout()
+                    clOngoingNextLayout.requestLayout()
+                } else {
+                    clOtherContainer.visibility = View.GONE
                 }
-                token.isNotEmpty() -> displayParts += token
             }
-        }
-
-        tvSelected.text = displayParts.joinToString(", ")
-
-        if (otherFreeText.isNotEmpty()) {
-            clOtherContainer.visibility = View.VISIBLE
-            etOther.setText(otherFreeText)
-        } else {
-            clOtherContainer.visibility = View.GONE
+        } catch (e: org.json.JSONException) {
+            // Not JSON
         }
     }
 
-
-
-     //* Builds plain label list from capturedValue for pre-ticking the dialog.
-     //* "Other|<text>" - "Other"
-
-    private fun buildPreSelectedList(info: ParamInfo): List<String> {
-        val saved = info.capturedValue ?: return emptyList()
-        return saved.split(",").mapNotNull { raw ->
-            val token = raw.trim()
-            when {
-                token.startsWith(AppConstants.OTHER_OPTION + "|") -> AppConstants.OTHER_OPTION
-                token.isNotEmpty() -> token
-                else -> null
-            }
-        }
-    }
-
-
-      //Serialises selected labels into capturedValue.
-      //Format: "Label1,Label2,Other|<free text>"
-
-    private fun saveValue(
+    // JSON format:
+    // {
+    //   "any ongoing complication": "yes",
+    //   "complications": "Fever, High blood pressure, Other",
+    //   "other value": "Some free text"       - only present when Other is selected
+    // }
+    private fun persistValue(
         info: ParamInfo,
         selectedLabels: List<String>,
         otherFreeText: String
     ) {
-        if (selectedLabels.isEmpty()) {
-            info.capturedValue = ""
-            return
-        }
-        info.capturedValue = selectedLabels.joinToString(",") { label ->
-            if (label.equals(AppConstants.OTHER_OPTION, ignoreCase = true))
-                "${AppConstants.OTHER_OPTION}|$otherFreeText"
-            else
-                label
-        }
-    }
-
-
-     //* Reads tvSelected display text back into plain labels.
-     //* "Other: <text>" → "Other"
-
-    private fun labelsFromView(tvSelected: TextView): List<String> {
-        val text = tvSelected.text?.toString()?.trim() ?: return emptyList()
-        return text.split(",").mapNotNull { part ->
-            val trimmed = part.trim()
-            when {
-                trimmed.startsWith(AppConstants.OTHER_OPTION) -> AppConstants.OTHER_OPTION
-                trimmed.isNotEmpty() -> trimmed
-                else -> null
+        try {
+            val json = org.json.JSONObject()
+            json.put("any ongoing complication", "yes")
+            json.put("complications", selectedLabels.joinToString(", "))
+            // Only write "other value" key when Other is actually selected
+            if (selectedLabels.any { it.equals(AppConstants.OTHER_OPTION, ignoreCase = true) }) {
+                json.put("other value", otherFreeText)
             }
+            info.capturedValue = json.toString()
+        } catch (e: org.json.JSONException) {
+            e.printStackTrace()
         }
     }
 
+    // Parse tvSelected display text into a plain label list
+    private fun selectedLabelsFromView(tvSelected: TextView): List<String> {
+        val text = tvSelected.text?.toString()?.trim() ?: return emptyList()
+        if (text.isEmpty()) return emptyList()
+        return text.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+    }
 
-     //* Extracts free text after "Other|" from capturedValue.
-
-    private fun extractOtherFreeText(capturedValue: String?): String {
+    // Extract the "other value" from saved JSON
+    private fun extractOtherText(capturedValue: String?): String {
         if (capturedValue.isNullOrEmpty()) return ""
-        return capturedValue.split(",").firstOrNull { token ->
-            token.trim().startsWith(AppConstants.OTHER_OPTION + "|")
-        }?.trim()?.removePrefix(AppConstants.OTHER_OPTION + "|") ?: ""
+        return try {
+            org.json.JSONObject(capturedValue).optString("other value", "")
+        } catch (e: org.json.JSONException) {
+            ""
+        }
     }
 }

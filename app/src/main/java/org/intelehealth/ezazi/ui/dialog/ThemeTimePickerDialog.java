@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Resources;
 import android.os.Build;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -36,6 +37,8 @@ public class ThemeTimePickerDialog extends BaseDialogFragment<Void> implements T
     private DialogTimePickerViewBinding timePickerBinding;
     private static final String TAG = "ThemeTimePickerDialog";
     private String strAmPm;
+    private boolean is24Hour = false;
+    private static final String ARG_IS_24_HOUR = "is_24_hour";
 
     private OnTimePickListener listener;
 
@@ -49,6 +52,9 @@ public class ThemeTimePickerDialog extends BaseDialogFragment<Void> implements T
 
     @Override
     View getContentView() {
+        if (getArguments() != null) {
+            is24Hour = getArguments().getBoolean(ARG_IS_24_HOUR, false);
+        }
         timePickerBinding = DialogTimePickerViewBinding.inflate(getLayoutInflater(), null, false);
         hideTimeHeaderLayout(timePickerBinding.timePickerClock);
         setupCurrentTime();
@@ -68,20 +74,30 @@ public class ThemeTimePickerDialog extends BaseDialogFragment<Void> implements T
         calendar.setTimeInMillis(System.currentTimeMillis());
         int hours = calendar.get(Calendar.HOUR_OF_DAY);
         int minutes = calendar.get(Calendar.MINUTE);
-        setAmPm(calendar);
+
+        // CHANGE: only set AM/PM in 12h mode
+        if (!is24Hour) {
+            setAmPm(calendar);
+            timePickerBinding.btnAm.setVisibility(View.VISIBLE);
+            timePickerBinding.btnPm.setVisibility(View.VISIBLE);
+        } else {
+            timePickerBinding.btnAm.setVisibility(View.GONE);
+            timePickerBinding.btnPm.setVisibility(View.GONE);
+        }
 
         setTimePickerHours(hours);
         setTimePickerMinutes(minutes);
-
         setHourTextValue(hours);
         setMinuteTextValue(minutes);
 
-        timePickerBinding.timePickerClock.setIs24HourView(false);
+        // drive the picker's own mode flag
+        timePickerBinding.timePickerClock.setIs24HourView(is24Hour);
         timePickerBinding.timePickerClock.setOnTimeChangedListener(this);
     }
 
     private void setHourTextValue(int hours) {
-        if (hours > 12) hours = hours - 12;
+        // skip the "−12" conversion in 24h mode
+        if (!is24Hour && hours > 12) hours = hours - 12;
         timePickerBinding.hours.setText(String.format(Locale.getDefault(), "%02d", hours));
     }
 
@@ -265,7 +281,12 @@ public class ThemeTimePickerDialog extends BaseDialogFragment<Void> implements T
     @Override
     public void onSubmit() {
         if (listener != null) {
-            listener.onTimePick(getHours(), getMinutes(), strAmPm, getHours() + ":" + getMinutes() + " " + strAmPm);
+            if (is24Hour) {
+                // CHANGE: no AM/PM suffix in 24h mode
+                listener.onTimePick(getHours(), getMinutes(), "", getHours() + ":" + getMinutes());
+            } else {
+                listener.onTimePick(getHours(), getMinutes(), strAmPm, getHours() + ":" + getMinutes() + " " + strAmPm);
+            }
         }
     }
 
@@ -306,9 +327,24 @@ public class ThemeTimePickerDialog extends BaseDialogFragment<Void> implements T
     public static class Builder extends BaseBuilder<Void, ThemeTimePickerDialog> {
 
         private OnTimePickListener listener;
+        private boolean use24Hour = false;
 
         public Builder(Context context) {
             super(context);
+        }
+
+        // ADD @Override with covariant return type
+        @Override
+        public Builder title(int resId) {
+            super.title(resId);
+            return this;
+        }
+
+        // ADD @Override with covariant return type
+        @Override
+        public Builder positiveButtonLabel(int resId) {
+            super.positiveButtonLabel(resId);
+            return this;
         }
 
         public Builder listener(OnTimePickListener listener) {
@@ -316,10 +352,17 @@ public class ThemeTimePickerDialog extends BaseDialogFragment<Void> implements T
             return this;
         }
 
+        public Builder use24Hour(boolean use24Hour) {
+            this.use24Hour = use24Hour;
+            return this;
+        }
+
         @Override
         public ThemeTimePickerDialog build() {
             ThemeTimePickerDialog fragment = new ThemeTimePickerDialog();
-            fragment.setArguments(bundle());
+            Bundle args = bundle();
+            args.putBoolean(ARG_IS_24_HOUR, use24Hour);
+            fragment.setArguments(args);
             fragment.setListener(listener);
             return fragment;
         }
