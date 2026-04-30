@@ -45,6 +45,7 @@ import org.intelehealth.ezazi.database.dao.VisitsDAO;
 import org.intelehealth.ezazi.models.Patient;
 import org.intelehealth.ezazi.models.dto.EncounterDTO;
 import org.intelehealth.ezazi.models.dto.VisitDTO;
+import org.intelehealth.ezazi.optimized_sync.network.NetworkStatus;
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
 import org.intelehealth.ezazi.utilities.DateAndTimeUtils;
 import org.intelehealth.ezazi.utilities.DownloadFilesUtils;
@@ -57,6 +58,7 @@ import org.intelehealth.ezazi.utilities.UrlModifiers;
 import org.intelehealth.ezazi.utilities.UuidDictionary;
 import org.intelehealth.ezazi.utilities.exception.DAOException;
 import org.intelehealth.klivekit.utils.DateTimeUtils;
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -1045,5 +1047,20 @@ public class PatientDetailActivity extends BaseActionBarActivity {
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
+    }
+
+    @Override
+    public void onNetworkAvailable(@NotNull NetworkStatus status) {
+        super.onNetworkAvailable(status);
+    }
+
+    @Override
+    public void onNetworkChanged(@NotNull NetworkStatus status) {
+        super.onNetworkChanged(status);
+    }
+
+    @Override
+    public void onNetworkLost() {
+        super.onNetworkLost();
     }
 }

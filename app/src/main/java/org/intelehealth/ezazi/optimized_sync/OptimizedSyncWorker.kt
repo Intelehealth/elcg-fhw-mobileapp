@@ -8,6 +8,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
+import org.intelehealth.ezazi.optimized_sync.network.NetworkConnectivityManager
 import org.intelehealth.ezazi.syncModule.SyncUtils
 import org.intelehealth.ezazi.utilities.SessionManager
 import java.lang.Exception
@@ -22,7 +23,7 @@ class OptimizedSyncWorker(
         val networkManager = NetworkConnectivityManager(context = context)
         val powerState = PowerStateProvider(context = context)
 
-        if (!networkManager.isNetworkUsable()) {
+        if (!networkManager.getCurrentStatus().hasInternet) {
             return Result.failure()
         }
 

@@ -250,4 +250,8 @@
     <string name="province">Province</string>
     <string name="no_data_for_view_postpartum_report">No postpartum observations found. Please record observations to view the Postpartum details.
 </string>
+
+    <string name="no_internet">No Internet Connection</string>
+    <string name="back_online">Back Online</string>
+
 </resources>

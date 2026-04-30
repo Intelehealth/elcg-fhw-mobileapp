@@ -8,6 +8,7 @@ import com.google.android.material.tabs.TabLayoutMediator
 import org.intelehealth.ezazi.R
 import org.intelehealth.ezazi.databinding.ActivityElcgViewBinding
 import org.intelehealth.ezazi.models.dto.EncounterDTO
+import org.intelehealth.ezazi.optimized_sync.network.NetworkStatus
 import org.intelehealth.ezazi.ui.elcg.adapter.ELCGTabPagerAdapter
 import org.intelehealth.ezazi.ui.elcg.data.ELCGDataSource
 import org.intelehealth.ezazi.ui.elcg.data.ELCGRepository
@@ -160,5 +161,17 @@ class WhoElcgActivity : BaseActionBarActivity() {
         private const val TO_COLLAPSED = 1
         private const val WAIT_FOR_SWITCH = 0
         private const val SWITCHED = 1
+    }
+
+    override fun onNetworkAvailable(status: NetworkStatus) {
+        super.onNetworkAvailable(status)
+    }
+
+    override fun onNetworkChanged(status: NetworkStatus) {
+        super.onNetworkChanged(status)
+    }
+
+    override fun onNetworkLost() {
+        super.onNetworkLost()
     }
 }

@@ -18,10 +18,11 @@
 
     <!--<include layout="@layout/content_home" />-->
     <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:color/transparent"
-        android:theme="@style/AppTheme.AppBarOverlay"
+        android:paddingVertical="5dp"
         app:elevation="0dp">
 
         <androidx.appcompat.widget.Toolbar
@@ -42,6 +43,8 @@
                 android:text="sfdfdfd" />
 
         </androidx.appcompat.widget.Toolbar>
+
+        <include layout="@layout/layout_connection_details_bar" />
 
     </com.google.android.material.appbar.AppBarLayout>
 

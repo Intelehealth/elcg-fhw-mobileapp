@@ -26,13 +26,15 @@
                 app:navigationIcon="@drawable/selector_actionbar_back"
                 app:popupTheme="@style/Theme.EZazi.PopupOverlay" />
 
+            <include layout="@layout/layout_connection_details_bar" />
+
             <com.google.android.material.tabs.TabLayout
                 android:id="@+id/tabsVisitStatus"
                 android:layout_width="match_parent"
                 android:layout_height="?actionBarSize"
+                app:tabGravity="fill"
                 app:tabIndicatorColor="@color/blinkCardColor"
                 app:tabMaxWidth="0dp"
-                app:tabGravity="fill"
                 app:tabMode="fixed" />
 
         </com.google.android.material.appbar.AppBarLayout>

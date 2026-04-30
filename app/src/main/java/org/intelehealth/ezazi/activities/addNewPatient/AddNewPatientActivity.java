@@ -10,8 +10,10 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 
 import org.intelehealth.ezazi.R;
+import org.intelehealth.ezazi.optimized_sync.network.NetworkStatus;
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
+import org.jetbrains.annotations.NotNull;
 
 public class AddNewPatientActivity extends BaseActionBarActivity {
     private static final String TAG = "AddNewPatientActivity";
@@ -152,4 +154,18 @@ public class AddNewPatientActivity extends BaseActionBarActivity {
 //        IntelehealthApplication.setAlertDialogCustomTheme(this, alertDialog);
     }
 
+    @Override
+    public void onNetworkAvailable(@NotNull NetworkStatus status) {
+        super.onNetworkAvailable(status);
+    }
+
+    @Override
+    public void onNetworkChanged(@NotNull NetworkStatus status) {
+        super.onNetworkChanged(status);
+    }
+
+    @Override
+    public void onNetworkLost() {
+        super.onNetworkLost();
+    }
 }

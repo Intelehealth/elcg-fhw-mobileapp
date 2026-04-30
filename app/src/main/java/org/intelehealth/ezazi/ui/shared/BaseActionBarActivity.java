@@ -1,14 +1,16 @@
 package org.intelehealth.ezazi.ui.shared;
 
 import android.os.Bundle;
-import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import org.intelehealth.ezazi.R;
+import org.intelehealth.ezazi.optimized_sync.network.NetworkStatus;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
@@ -18,6 +20,12 @@ import java.util.Objects;
  * Mob   : +919727206702
  **/
 public abstract class BaseActionBarActivity extends BaseActivity {
+
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        super.initializeNetworkBannerComponents();
+    }
 
     protected void setupActionBar() {
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -31,7 +39,22 @@ public abstract class BaseActionBarActivity extends BaseActivity {
 
     protected abstract @StringRes int getScreenTitle();
 
-    protected void onBackNavigate(){
+    protected void onBackNavigate() {
         onBackPressed();
+    }
+
+    @Override
+    public void onNetworkAvailable(@NotNull NetworkStatus status) {
+        super.onNetworkAvailable(status);
+    }
+
+    @Override
+    public void onNetworkChanged(@NotNull NetworkStatus status) {
+        super.onNetworkChanged(status);
+    }
+
+    @Override
+    public void onNetworkLost() {
+        super.onNetworkLost();
     }
 }

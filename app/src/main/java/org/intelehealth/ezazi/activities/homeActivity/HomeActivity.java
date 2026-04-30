@@ -49,6 +49,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -56,6 +57,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.StringRes;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.content.res.AppCompatResources;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.cardview.widget.CardView;
@@ -66,6 +68,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.gson.Gson;
@@ -92,6 +95,7 @@ import org.intelehealth.ezazi.models.dto.ObsDTO;
 import org.intelehealth.ezazi.models.dto.ProviderDTO;
 import org.intelehealth.ezazi.models.dto.VisitDTO;
 import org.intelehealth.ezazi.optimized_sync.OptimizedSyncWorker;
+import org.intelehealth.ezazi.optimized_sync.network.NetworkStatus;
 import org.intelehealth.ezazi.partogram.PartogramConstants;
 import org.intelehealth.ezazi.services.firebase_services.CallListenerBackgroundService;
 import org.intelehealth.ezazi.services.firebase_services.DeviceInfoUtils;
@@ -127,6 +131,7 @@ import org.intelehealth.klivekit.socket.SocketManager;
 import org.intelehealth.klivekit.utils.FirebaseUtils;
 import org.intelehealth.klivekit.utils.Manager;
 import org.intelehealth.klivekit.utils.RtcUtilsKt;
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -214,6 +219,8 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
     /*eZazi End*/
     private List<ActivePatientModel> visitsForRiskFactorCalculation;
 
+    private FrameLayout flInternetStatus;
+    private TextView tvInternetStatus;
 
     public static PendingIntent getPendingIntent(Context context, ShiftChangeData data) {
         Intent shiftChangeIntent = new Intent(context, HomeActivity.class);
@@ -359,6 +366,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_ezazi);
+        super.initializeNetworkBannerComponents();
         sessionManager = new SessionManager(this);
         OptimizedSyncWorker.enqueuePeriodicWork(this);
 
@@ -372,6 +380,9 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
 //        toolbar.setTitleTextAppearance(this, R.style.ToolbarTheme);
 //        toolbar.setTitleTextColor(Color.WHITE);
         DeviceInfoUtils.saveDeviceInfo(this);
+
+        flInternetStatus = findViewById(R.id.fl_connection_bar);
+        tvInternetStatus = findViewById(R.id.tv_connection_status);
 
         catchFCMMessageData();
         // Added by Mithun Vaghela
@@ -2351,5 +2362,18 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
         } while (!visitsForRiskFactorCalculation.isEmpty());
     }
 
+    @Override
+    public void onNetworkAvailable(@NotNull NetworkStatus status) {
+        super.onNetworkAvailable(status);
+    }
 
+    @Override
+    public void onNetworkChanged(@NotNull NetworkStatus status) {
+        super.onNetworkChanged(status);
+    }
+
+    @Override
+    public void onNetworkLost() {
+        super.onNetworkLost();
+    }
 }

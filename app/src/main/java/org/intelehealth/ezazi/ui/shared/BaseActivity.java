@@ -10,6 +10,9 @@ import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -30,6 +33,9 @@ import org.intelehealth.ezazi.app.AppConstants;
 import org.intelehealth.ezazi.database.dao.ProviderDAO;
 import org.intelehealth.ezazi.database.dao.SyncDAO;
 import org.intelehealth.ezazi.databinding.DialogShiftedPatientsBinding;
+import org.intelehealth.ezazi.optimized_sync.network.NetworkConnectivityListener;
+import org.intelehealth.ezazi.optimized_sync.network.NetworkConnectivityManager;
+import org.intelehealth.ezazi.optimized_sync.network.NetworkStatus;
 import org.intelehealth.ezazi.syncModule.SyncUtils;
 import org.intelehealth.ezazi.ui.dialog.CustomViewDialogFragment;
 import org.intelehealth.ezazi.ui.dialog.adapter.ShiftedPatientAdapter;
@@ -40,6 +46,7 @@ import org.intelehealth.ezazi.utilities.exception.DAOException;
 import org.intelehealth.klivekit.model.ChatMessage;
 import org.intelehealth.klivekit.model.RtcArgs;
 import org.intelehealth.klivekit.socket.SocketManager;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
@@ -48,13 +55,19 @@ import java.util.Objects;
  * Email : mithun@intelehealth.org
  * Mob   : +919727206702
  **/
-public class BaseActivity extends AppCompatActivity implements SocketManager.NotificationListener {
+public class BaseActivity extends AppCompatActivity implements SocketManager.NotificationListener, NetworkConnectivityListener {
     private static final String TAG = "BaseActivity";
+    private NetworkConnectivityManager networkManager;
+
+    private FrameLayout flInternetStatus;
+    private TextView tvInternetStatus;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
 //        hideBottomSystemTaskbar();
         super.onCreate(savedInstanceState);
+        networkManager = new NetworkConnectivityManager(BaseActivity.this);
+        networkManager.addListener(this);
         SocketManager.getInstance().setNotificationListener(this);
         showShiftedPatientDialog(getIntent());
     }
@@ -81,6 +94,11 @@ public class BaseActivity extends AppCompatActivity implements SocketManager.Not
             }
             return view.onApplyWindowInsets(windowInsets);
         });
+    }
+
+    protected void initializeNetworkBannerComponents() {
+        flInternetStatus = findViewById(R.id.fl_connection_bar);
+        tvInternetStatus = findViewById(R.id.tv_connection_status);
     }
 
     @Override
@@ -140,6 +158,13 @@ public class BaseActivity extends AppCompatActivity implements SocketManager.Not
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        networkManager.startListening();
+        handleCurrentInternetStatus();
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         //registerReceiver(shiftedPatientReceiver, new IntentFilter(AppConstants.getShiftedPatientReceiver()));
@@ -153,10 +178,103 @@ public class BaseActivity extends AppCompatActivity implements SocketManager.Not
         unregisterReceiver(shiftedPatientReceiver);
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        networkManager.stopListening();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        networkManager.removeListener(this);
+    }
+
+    protected void handleCurrentInternetStatus() {
+        NetworkStatus status = networkManager.getCurrentStatus();
+        if (status.isConnected()) {
+            onNetworkAvailable(status);
+        } else {
+            onNetworkLost();
+        }
+    }
+
     private final BroadcastReceiver shiftedPatientReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             showShiftedPatientDialog(intent);
         }
     };
+
+    @Override
+    public void onNetworkAvailable(@NotNull NetworkStatus status) {
+        updateConnectionBanner(status.getHasInternet(), flInternetStatus, tvInternetStatus);
+    }
+
+    @Override
+    public void onNetworkLost() {
+        updateConnectionBanner(false, flInternetStatus, tvInternetStatus);
+    }
+
+    @Override
+    public void onNetworkChanged(@NotNull NetworkStatus status) {
+        updateConnectionBanner(status.getHasInternet(), flInternetStatus, tvInternetStatus);
+    }
+
+    private boolean sessionExperiencedHardwareDrop = false;
+    private Runnable hideRunnable;
+
+    protected void updateConnectionBanner(boolean isOnline, FrameLayout flInternetStatus, TextView tvInternetStatus) {
+
+        if (flInternetStatus == null || tvInternetStatus == null) return;
+
+        // Cancel any pending hide + animations
+        if (hideRunnable != null) {
+            flInternetStatus.removeCallbacks(hideRunnable);
+            hideRunnable = null;
+        }
+
+        flInternetStatus.animate().cancel();
+        flInternetStatus.setAlpha(1f);
+
+        if (isOnline) {
+            // Skip "Back Online" on first launch
+            if (!sessionExperiencedHardwareDrop) {
+                flInternetStatus.setVisibility(View.GONE);
+                return;
+            }
+
+            // Show green banner
+            flInternetStatus.setVisibility(View.VISIBLE);
+            tvInternetStatus.setText(R.string.back_online);
+            tvInternetStatus.setBackgroundColor(
+                    ContextCompat.getColor(this, R.color.green)
+            );
+
+            // Prepare hide runnable
+            hideRunnable = () -> flInternetStatus.animate()
+                    .alpha(0f)
+                    .setDuration(300)
+                    .withEndAction(() -> {
+                        if (flInternetStatus.getAlpha() == 0f) {
+                            flInternetStatus.setVisibility(View.GONE);
+                            sessionExperiencedHardwareDrop = false;
+                        }
+                    });
+
+            // Schedule it
+            flInternetStatus.postDelayed(hideRunnable, 3000);
+
+        } else {
+            // Mark that we've seen a drop
+            sessionExperiencedHardwareDrop = true;
+
+            // Show red banner immediately
+            flInternetStatus.setVisibility(View.VISIBLE);
+            tvInternetStatus.setText(R.string.no_internet);
+            tvInternetStatus.setBackgroundColor(
+                    ContextCompat.getColor(this, R.color.red)
+            );
+        }
+    }
 }
