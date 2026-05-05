@@ -275,9 +275,9 @@ public class ProviderDAO {
 
             // Note:
             // - "Unassigned Ward" nurses are always included where applicable
-            String query = "select * from tbl_provider where role='Organizational: Nurse'";
+            String query = "select * from tbl_provider as p where p.role='Organizational: Nurse'";
             if(ward.equals("Labor Ward") && isFromHome){
-                query = "select p.*, pa.* from tbl_provider as p " +
+                query = "select p.* from tbl_provider as p " +
                         "left join tbl_provider_attribute as pa on  p.uuid = pa.provideruuid " +
                         "where p.role='Organizational: Nurse'" +
                         "and (pa.value is null or pa.value != 'Post Natal Ward') order by pa.value desc";
