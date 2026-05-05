@@ -53,6 +53,12 @@ dependencies {
     api 'androidx.fragment:fragment-ktx:1.6.2'
     // WebRtc
     api "io.livekit:livekit-android:1.2.1"
+    // LiveKit 1.2.1 depends on an old WebRTC build (io.github.webrtc-sdk:android:104.5112.10)
+    // which triggers Android 15+ 16KB page-size incompatibility warnings.
+    // Force a newer WebRTC build that is 16KB-page compatible while keeping LiveKit API unchanged.
+    constraints {
+        api("io.github.webrtc-sdk:android:137.7151.05")
+    }
     api "com.google.protobuf:protobuf-javalite:3.23.3"
 
     // Lifecycle

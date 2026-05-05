@@ -2,72 +2,60 @@ package org.intelehealth.ezazi.activities.epartogramActivity;
 
 import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
 
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.net.http.SslError;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
-import android.text.Html;
 import android.util.Log;
-import android.util.Xml;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.webkit.SslErrorHandler;
-import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.widget.Toast;
 
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import androidx.webkit.WebViewAssetLoader;
+import androidx.webkit.WebViewClientCompat;
 
 import com.github.ajalt.timberkt.Timber;
 
 import org.intelehealth.ezazi.BuildConfig;
 import org.intelehealth.ezazi.R;
-import org.intelehealth.ezazi.app.IntelehealthApplication;
-import org.intelehealth.ezazi.ui.elcg.HtmlJSInterface;
-import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
-import org.intelehealth.ezazi.ui.webviewreader.Lt;
-import org.intelehealth.ezazi.ui.webviewreader.WebArchiveReader;
-import org.intelehealth.ezazi.utilities.FileUtils;
+import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
 import org.intelehealth.ezazi.utilities.NetworkConnection;
-import org.intelehealth.ezazi.utilities.SessionManager;
 import org.intelehealth.ezazi.widget.materialprogressbar.CustomProgressDialog;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-
-import io.socket.utf8.UTF8;
-
 public class EpartogramViewActivity extends BaseActionBarActivity {
-    private WebView webView;
+
     private static final String TAG = "EpartogramViewActivity";
 
-    private String patientUuid, visitUuid;
-    private static final String URL = BuildConfig.SERVER_URL + "/intelehealth/index.html#/epartogram/";
-    //    https://ezazi.intelehealth.org/intelehealth/index.html#/dashboard/visit-summary/af35030a-cbf0-426c-9c61-4b9677ccb3b2
-    // "df07db0d-d9b9-4597-a9e5-d62d3cff3d45/705397d4-0c62-4f26-bd53-2dd8523d5d1b";
+    private static final String REMOTE_URL_PREFIX = BuildConfig.SERVER_URL + "/intelehealth/index.html#/epartogram/";
+    private static final String ASSET_DOMAIN = "appassets.androidplatform.net";
+    private static final String OFFLINE_URL_PREFIX = "https://" + ASSET_DOMAIN + "/assets/epartogram/index.html#/epartogram/";
+
+    private static final long PAGE_LOAD_TIMEOUT_MS = 20_000;
+
+    private WebView webView;
     private SwipeRefreshLayout mySwipeRefreshLayout;
     private ViewTreeObserver.OnScrollChangedListener mOnScrollChangedListener;
+    private CustomProgressDialog progressDialog;
 
-    private String webArchiveFileDir;
-    private SessionManager sessionManager;
+    private String patientUuid;
+    private String visitUuid;
 
-    private boolean isLoaded = false;
-    private Handler timeoutHandler;
+    private final Handler timeoutHandler = new Handler(Looper.getMainLooper());
     private boolean isPageLoaded = false;
     private boolean isErrorShown = false;
-    private CustomProgressDialog progressDialog;
+
+    private WebViewAssetLoader assetLoader;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -75,183 +63,145 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
         setContentView(R.layout.activity_epartogram_ezazi);
         super.onCreate(savedInstanceState);
         setupActionBar();
-        enableProperPadding(EpartogramViewActivity.this);
-        timeoutHandler = new Handler(Looper.getMainLooper());
+        enableProperPadding(this);
+
         progressDialog = new CustomProgressDialog(this);
         progressDialog.setCancelable(false);
         progressDialog.show();
 
-        sessionManager = new SessionManager(this);
-        webArchiveFileDir = FileUtils.getProjectCatchDir(this);
-        Timber.tag(TAG).d("webArchive =>%s", webArchiveFileDir);
-        Intent intent = this.getIntent();
+        Intent intent = getIntent();
         if (intent != null) {
             patientUuid = intent.getStringExtra("patientuuid");
             visitUuid = intent.getStringExtra("visituuid");
         }
-        Log.v("epartog", "epratog: " + "puid: " + patientUuid + "--" + " vuid: " + visitUuid);
+        Log.v(TAG, "patientUuid=" + patientUuid + " visitUuid=" + visitUuid);
 
         webView = findViewById(R.id.webview_epartogram);
-        mySwipeRefreshLayout = (SwipeRefreshLayout) this.findViewById(R.id.swipeContainer);
+        mySwipeRefreshLayout = findViewById(R.id.swipeContainer);
+
+        configureWebView();
+        attachBridge();
+
+        boolean online = NetworkConnection.isOnline(this);
+        if (online) {
+            loadWithTimeout(REMOTE_URL_PREFIX + visitUuid);
+        } else {
+            // Offline path always loads the bundled assets — the bridge supplies data from local DB.
+            webView.getSettings().setCacheMode(WebSettings.LOAD_DEFAULT);
+            loadWithTimeout(OFFLINE_URL_PREFIX + visitUuid);
+        }
+
+        mySwipeRefreshLayout.setOnRefreshListener(() -> webView.reload());
+    }
+
+    @SuppressLint("SetJavaScriptEnabled")
+    private void configureWebView() {
+        assetLoader = new WebViewAssetLoader.Builder()
+                .setDomain(ASSET_DOMAIN)
+                .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this))
+                .build();
 
         webView.clearCache(true);
         webView.clearHistory();
-
         webView.setSaveEnabled(true);
-//        HtmlJSInterface htmlJSInterface = new HtmlJSInterface();
-//        webView.addJavascriptInterface(htmlJSInterface, HtmlJSInterface.EXECUTOR_PAGE_SAVER);
 
-        webView.getSettings().setAllowFileAccess(true);
-
-        webView.getSettings().setUserAgentString("Android");
-//
-        webView.getSettings().setJavaScriptEnabled(true);
-        webView.getSettings().setLoadWithOverviewMode(true);
-        webView.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
-        webView.getSettings().setUseWideViewPort(true);
-        webView.getSettings().setDefaultTextEncodingName("UTF-8");
-
-        webView.getSettings().setSupportZoom(true);
-        webView.getSettings().setBuiltInZoomControls(true);
-        webView.getSettings().setDisplayZoomControls(false);
-        webView.getSettings().setDomStorageEnabled(true);
+        WebSettings settings = webView.getSettings();
+        settings.setJavaScriptEnabled(true);
+        settings.setDomStorageEnabled(true);
+        settings.setLoadWithOverviewMode(true);
+        settings.setUseWideViewPort(true);
+        settings.setSupportZoom(true);
+        settings.setBuiltInZoomControls(true);
+        settings.setDisplayZoomControls(false);
+        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
+        settings.setDefaultTextEncodingName("UTF-8");
+        settings.setUserAgentString("Android");
+        // WebViewAssetLoader serves over a virtual https origin; no need for setAllowFileAccess.
 
         webView.setScrollBarStyle(WebView.SCROLLBARS_OUTSIDE_OVERLAY);
         webView.setScrollbarFadingEnabled(false);
         webView.setVisibility(View.VISIBLE);
         webView.setWebViewClient(webViewClient);
-
-        if (NetworkConnection.isOnline(this)) {
-            Log.e(TAG, "onCreate: isOnline");
-            isPageLoaded = false;
-            progressDialog.show();
-
-            timeoutHandler.postDelayed(() -> {
-                if (!isPageLoaded) {
-                    Log.e(TAG, "Manual timeout triggered");
-                    webView.stopLoading();
-                    progressDialog.dismiss();
-                    handleError();
-                }
-            }, 20000);  // 20 seconds
-            //webView.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
-            webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
-            webView.loadUrl(URL + visitUuid);
-        } else if (!sessionManager.getLCGContentFile(visitUuid).isEmpty()) {
-            Log.e(TAG, "onCreate: isOnline");
-//            webView.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ONLY);
-//            String webArchiveFile = webArchiveFileDir + sessionManager.getLCGContentFile(visitUuid);
-//            Timber.tag(TAG).d("Offline => %s", webArchiveFile);
-//            webView.loadUrl("file://" + webArchiveFile);
-            showInternetRequireDialog();
-//            webView.loadData(htmlJSInterface.getHtml(), "text/html", null);
-//            webView.loadDataWithBaseURL(null, webArchiveFile, "text/html", "UTF-8", null);
-        } else {
-            webView.setVisibility(View.GONE);
-            //Toast.makeText(this, getString(R.string.please_connect_to_internet), Toast.LENGTH_LONG).show();
-            showPageLoadingErrorDialog();
-        }
-
-        Log.v("epartog", "webviewUrl: " + URL + visitUuid);
-        mySwipeRefreshLayout.setOnRefreshListener(() -> webView.reload());
     }
 
-    private final WebViewClient webViewClient = new WebViewClient() {
-//        @Override
-//        public boolean shouldOverrideUrlLoading(WebView view, String url) {
-//            String webArchiveFile = webArchiveFileDir + sessionManager.getLCGContentFile(visitUuid);
-//            Timber.tag(TAG).d("Offline => %s", webArchiveFile);
-//            webView.loadUrl("file://" + webArchiveFile);
-//            return true;
-//        }
+    private void attachBridge() {
+        EpartogramBridge bridge = new EpartogramBridge(new EpartogramRepository());
+        webView.addJavascriptInterface(bridge, EpartogramBridge.NAME);
+    }
+
+    private void loadWithTimeout(String url) {
+        isPageLoaded = false;
+        Timber.tag(TAG).d("Loading %s", url);
+        if (!progressDialog.isShowing()) progressDialog.show();
+        webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
+        webView.loadUrl(url);
+        timeoutHandler.postDelayed(() -> {
+            if (!isPageLoaded) {
+                Log.e(TAG, "Manual timeout triggered");
+                webView.stopLoading();
+                if (progressDialog.isShowing()) progressDialog.dismiss();
+                handleError();
+            }
+        }, PAGE_LOAD_TIMEOUT_MS);
+    }
+
+    private final WebViewClientCompat webViewClient = new WebViewClientCompat() {
+
+        @Override
+        public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+            // Routes https://appassets.androidplatform.net/assets/* to app/src/main/assets/*
+            return assetLoader.shouldInterceptRequest(request.getUrl());
+        }
+
+        // API < 21 fallback (kept because minSdk could be lowered; harmless on 26+)
+        @Override
+        public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
+            return assetLoader.shouldInterceptRequest(Uri.parse(url));
+        }
 
         @Override
         public void onPageStarted(WebView view, String url, Bitmap favicon) {
             super.onPageStarted(view, url, favicon);
-
             isPageLoaded = false;
-
-            timeoutHandler.postDelayed(() -> {
-                if (!isPageLoaded) {
-                    Log.e(TAG, "Server timeout detected");
-                    progressDialog.dismiss();
-                    handleError();
-                }
-            }, 20000); // 20 sec timeout
         }
+
         @Override
         public void onPageFinished(WebView view, String url) {
             mySwipeRefreshLayout.setRefreshing(false);
-            Log.d(TAG, "onPageFinished: kz 2");
             isPageLoaded = true;
             timeoutHandler.removeCallbacksAndMessages(null);
+            if (progressDialog.isShowing()) progressDialog.dismiss();
+        }
 
-            if (progressDialog.isShowing()) {
-                progressDialog.dismiss();
-            }
-            if (NetworkConnection.isOnline(EpartogramViewActivity.this)) {
-                String fileName = visitUuid + ".mht";
-                Timber.tag(TAG).d("fileName => %s", fileName);
-                sessionManager.setLCGContentFile(fileName, visitUuid);
-                String filePath = webArchiveFileDir + fileName;
-                File archive = new File(filePath);
-                if (archive.exists()) {
-                    if (archive.delete()) view.saveWebArchive(filePath);
-                } else view.saveWebArchive(filePath);
-
-//                view.loadUrl(HtmlJSInterface.jsFunction());
+        @Override
+        public void onReceivedError(WebView view, WebResourceRequest request, androidx.webkit.WebResourceErrorCompat error) {
+            if (request != null && request.isForMainFrame()) {
+                Log.e(TAG, "Main frame error: " + error.getErrorCode());
+                handleError();
             }
         }
 
         @Override
-        public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-            Log.i("WEB_VIEW_TEST", "error code:" + errorCode);
-            super.onReceivedError(view, errorCode, description, failingUrl);
-        }
-
-        @Override
-        public void onReceivedError(WebView view,
-                                    WebResourceRequest request,
-                                    WebResourceError error) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (request.isForMainFrame()) {
-                    Log.e(TAG, "Main frame error: " + error.getErrorCode());
+        public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                if (request.isForMainFrame() && errorResponse.getStatusCode() >= 400) {
+                    Log.e(TAG, "HTTP error: " + errorResponse.getStatusCode());
                     handleError();
                 }
             }
         }
 
         @Override
-        public void onReceivedHttpError(WebView view,
-                                        WebResourceRequest request,
-                                        WebResourceResponse errorResponse) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                if (request.isForMainFrame()) {
-                    Log.e(TAG, "HTTP error: " + errorResponse.getStatusCode());
-
-                    if (errorResponse.getStatusCode() >= 400) {
-                        handleError();
-                    }
-                }
-            }
-        }
-
-        @Override
-        public void onReceivedSslError(WebView view,
-                                       SslErrorHandler handler,
-                                       SslError error) {
-            handler.cancel(); // Important
+        public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+            handler.cancel();
             handleError();
         }
     };
 
     private void handleError() {
-        if (progressDialog != null && progressDialog.isShowing()) {
-            progressDialog.dismiss();
-        }
+        if (progressDialog != null && progressDialog.isShowing()) progressDialog.dismiss();
         if (isErrorShown) return;
         isErrorShown = true;
-
         webView.setVisibility(View.GONE);
         showPageLoadingErrorDialog();
     }
@@ -267,7 +217,6 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
         dialogFragment.setListener(new ConfirmationDialogFragment.OnConfirmationActionListener() {
             @Override
             public void onAccept() {
-                //webView.reload();
                 ConfirmationDialogFragment.OnConfirmationActionListener.super.onDecline();
                 finish();
             }
@@ -282,18 +231,6 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
         dialogFragment.show(getSupportFragmentManager(), dialogFragment.getClass().getCanonicalName());
     }
 
-    private void showInternetRequireDialog() {
-        ConfirmationDialogFragment dialogFragment = new ConfirmationDialogFragment.Builder(this)
-                .title(R.string.no_internet_timeline_screen_title)
-                .content(getString(R.string.no_internet_timeline_screen_body))
-                .positiveButtonLabel(R.string.ok)
-                .hideNegativeButton(true)
-                .build();
-
-        dialogFragment.setListener(EpartogramViewActivity.super::onBackNavigate);
-        dialogFragment.show(getSupportFragmentManager(), dialogFragment.getClass().getName());
-    }
-
     @Override
     protected int getScreenTitle() {
         return 0;
@@ -303,15 +240,8 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
     protected void onStart() {
         super.onStart();
         mySwipeRefreshLayout.getViewTreeObserver().addOnScrollChangedListener(mOnScrollChangedListener =
-                () -> {
-                    if (webView.getScrollY() == 0)
-                        mySwipeRefreshLayout.setEnabled(true);
-                    else
-                        mySwipeRefreshLayout.setEnabled(false);
-
-                });
+                () -> mySwipeRefreshLayout.setEnabled(webView.getScrollY() == 0));
     }
-
 
     @Override
     protected void onStop() {
