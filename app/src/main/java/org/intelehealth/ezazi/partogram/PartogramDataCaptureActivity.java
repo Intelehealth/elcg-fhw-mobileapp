@@ -454,8 +454,22 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                         obsDTOList.addAll(info.getPlansObsList(mEncounterUUID, new SessionManager(this).getCreatorID()));
 
                     } else if (info.getConceptUUID().equals(UuidDictionary.ASSESSMENT)) {
-                        obsDTOList.addAll(info.getAssessmentsObsList(mEncounterUUID, new SessionManager(this).getCreatorID()));
+                        if(mStageNumber == PartogramConstants.STAGE_3){
+                            info.setCreatedDate(DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
+                            ObsDTO obsDTO = buildObservation(info);
 
+                            String uuid = obsDAO.getObsuuid(mEncounterUUID, info.getConceptUUID());
+                            obsDTO.setUuid(uuid);
+
+                            // uuid not null → update; null → insert (same pattern as other fields)
+                            if (uuid != null && !uuid.isEmpty()) {
+                                obsDTOList.add(obsDTO);
+                            } else {
+                                obsDTOList.add(obsDTO);
+                            }
+                        }else{
+                            obsDTOList.addAll(info.getAssessmentsObsList(mEncounterUUID, new SessionManager(this).getCreatorID()));
+                        }
                     } else if (info.getConceptUUID().equals(UuidDictionary.OXYTOCIN_UL_DROPS_MIN)) {
                         isValidOxytocin = info.isValidJson();
                         String uuid = obsDAO.getObsuuid(mEncounterUUID, info.getConceptUUID());
@@ -795,8 +809,12 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                                 info.collectAllPlansInList(obsDTO);
                                 // }
                             } else if (obsDTO.getConceptuuid().equals(UuidDictionary.ASSESSMENT)) {
-                                info.setCapturedValue(ParamInfo.RadioOptions.YES.name());
-                                info.collectAllAssessmentsInList(obsDTO);
+                                if(mStageNumber == PartogramConstants.STAGE_3){
+                                    info.setCapturedValue(obsDTO.getValue());
+                                }else{
+                                    info.setCapturedValue(ParamInfo.RadioOptions.YES.name());
+                                    info.collectAllAssessmentsInList(obsDTO);
+                                }
                             } else if (UuidDictionary.ONGOING_COMPLICATIONS_MOTHER.equals(obsDTO.getConceptuuid())
                                 || UuidDictionary.ONGOING_COMPLICATIONS_NEWBORN.equals(obsDTO.getConceptuuid())) {
                             String storedValue = obsDTO.getValue();
