@@ -29,6 +29,7 @@ import com.google.gson.Gson;
 
 import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.activities.epartogramActivity.EpartogramViewActivity;
+import org.intelehealth.ezazi.activities.epartogramActivity.OfflineEPartogramViewActivity;
 import org.intelehealth.ezazi.activities.homeActivity.VisitAlertBridge;
 import org.intelehealth.ezazi.activities.splash_activity.SplashActivity;
 import org.intelehealth.ezazi.activities.visitSummaryActivity.TimelineVisitSummaryActivity;
@@ -107,7 +108,8 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
     private boolean isSynced = false;
     private VisitAttributeListDAO visitAttributeListDAO;
     private DataCaptureGenericRadioFieldHandler radioHandler;
-    private  boolean isLiveBirth =false;
+    private boolean isLiveBirth = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -148,7 +150,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
 
         if (mStageNumber == 3) {
             prepareDataForStage3();
-        }else {
+        } else {
             if (mQueryFor == HOURLY) {
                 prepareDataForHourly();
             } else if (mQueryFor == HALF_HOUR) {
@@ -202,7 +204,14 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
 
 //            boolean isTablet = getResources().getBoolean(R.bool.isTablet);
 //            if (isTablet) {
-                Intent intent = new Intent(this, EpartogramViewActivity.class);
+
+                Intent intent;
+                if (NetworkConnection.isOnline(PartogramDataCaptureActivity.this)) {
+                    intent = new Intent(this, EpartogramViewActivity.class);
+                } else {
+                    intent = new Intent(context, OfflineEPartogramViewActivity.class);
+                }
+
                 intent.putExtra("patientuuid", mPatientUuid);
                 intent.putExtra("visituuid", mVisitUUID);
                 startActivity(intent);
@@ -221,8 +230,8 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
 //            else {
 //                Toast.makeText(context, R.string.this_option_available_tablet_device, Toast.LENGTH_SHORT).show();
 //            }
-            } else{
-               InternetDialogHelper.showNoInternetDialog(PartogramDataCaptureActivity.this);
+            } else {
+                InternetDialogHelper.showNoInternetDialog(PartogramDataCaptureActivity.this);
             }
 
         });
@@ -232,7 +241,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
             @Override
             public void onClick(View view) {
                 boolean isInternetAvailable = InternetDialogHelper.checkInternetOrShow(PartogramDataCaptureActivity.this);
-                if(isInternetAvailable) {
+                if (isInternetAvailable) {
                     showDoctorSelectionDialog(true);
                 }
 //                EncounterDAO encounterDAO = new EncounterDAO();
@@ -264,7 +273,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
             @Override
             public void onClick(View view) {
                 boolean isInternetAvailable = InternetDialogHelper.checkInternetOrShow(PartogramDataCaptureActivity.this);
-                if(isInternetAvailable){
+                if (isInternetAvailable) {
                     showDoctorSelectionDialog(false);
                 }
 //                EncounterDAO encounterDAO = new EncounterDAO();
@@ -362,9 +371,9 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
 
     private void saveObs() throws DAOException {
 
-            // Stage 3 Validation (ONLY for Stage 3)
+        // Stage 3 Validation (ONLY for Stage 3)
         if (mStageNumber == PartogramConstants.STAGE_3) {
-            ValidateStage3Fields.ValidationResult result = ValidateStage3Fields.INSTANCE.validatePostpartumMonitoringFromParams(PartogramDataCaptureActivity.this, mItemList,isLiveBirth);
+            ValidateStage3Fields.ValidationResult result = ValidateStage3Fields.INSTANCE.validatePostpartumMonitoringFromParams(PartogramDataCaptureActivity.this, mItemList, isLiveBirth);
 
             if (!result.isValid()) {
                 // Format error message with parameters
@@ -495,27 +504,27 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                             }
                         }
 
-                    }else if (PartogramConstants.DROPDOWN_MULTI_SELECT_TYPE
+                    } else if (PartogramConstants.DROPDOWN_MULTI_SELECT_TYPE
                             .equalsIgnoreCase(info.getParamDateType())) {
 
                         // Multi-select: save exactly like a plain text obs.
                         // capturedValue already holds the serialised comma-separated string.
                         //if (!TextUtils.isEmpty(info.getCapturedValue())) {
-                            info.setCreatedDate(
-                                    DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
-                            ObsDTO obsDTO = buildObservation(info);
+                        info.setCreatedDate(
+                                DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
+                        ObsDTO obsDTO = buildObservation(info);
 
-                            String uuid = obsDAO.getObsuuid(mEncounterUUID, info.getConceptUUID());
-                            obsDTO.setUuid(uuid);
+                        String uuid = obsDAO.getObsuuid(mEncounterUUID, info.getConceptUUID());
+                        obsDTO.setUuid(uuid);
 
-                            // uuid not null → update; null → insert (same pattern as other fields)
-                            if (uuid != null && !uuid.isEmpty()) {
-                                obsDTOList.add(obsDTO);
-                            } else {
-                                obsDTOList.add(obsDTO);
-                            }
+                        // uuid not null → update; null → insert (same pattern as other fields)
+                        if (uuid != null && !uuid.isEmpty()) {
+                            obsDTOList.add(obsDTO);
+                        } else {
+                            obsDTOList.add(obsDTO);
+                        }
                         //}
-                    }else if (PartogramConstants.RADIO_SELECT_TYPE.equalsIgnoreCase(info.getParamDateType())) {
+                    } else if (PartogramConstants.RADIO_SELECT_TYPE.equalsIgnoreCase(info.getParamDateType())) {
                         if (UuidDictionary.ONGOING_COMPLICATIONS_MOTHER.equals(info.getConceptUUID())
                                 || UuidDictionary.ONGOING_COMPLICATIONS_NEWBORN.equals(info.getConceptUUID())) {
 
@@ -558,22 +567,22 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                             }
                         }
                     } else {
-                            //  EXISTING NORMAL EDITTEXT FLOW
-                            info.setCreatedDate(DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
+                        //  EXISTING NORMAL EDITTEXT FLOW
+                        info.setCreatedDate(DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
 
-                            ObsDTO obsDTOData = buildObservation(info);
+                        ObsDTO obsDTOData = buildObservation(info);
 
-                            String uuid = obsDAO.getObsuuid(mEncounterUUID, info.getConceptUUID());
-                            obsDTOData.setUuid(uuid);
+                        String uuid = obsDAO.getObsuuid(mEncounterUUID, info.getConceptUUID());
+                        obsDTOData.setUuid(uuid);
 
-                            if (uuid != null && !uuid.isEmpty()) {
+                        if (uuid != null && !uuid.isEmpty()) {
+                            obsDTOList.add(obsDTOData);
+                        } else {
+                            if (info.getCapturedValue() != null && !info.getCapturedValue().isEmpty()) {
                                 obsDTOList.add(obsDTOData);
-                            } else {
-                                if (info.getCapturedValue() != null && !info.getCapturedValue().isEmpty()) {
-                                    obsDTOList.add(obsDTOData);
-                                }
                             }
                         }
+                    }
                      /*else {
                         info.setCreatedDate(DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
                         ObsDTO obsDTOData = buildObservation(info);
@@ -626,8 +635,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
             showErrorDialogForValidations(getString(R.string.temp_error_new, AppConstants.MINIMUM_TEMPERATURE_CELSIUS, AppConstants.MAXIMUM_TEMPERATURE_CELSIUS));
         } else if (!isValidDuration) {
             showErrorDialogForValidations(getString(R.string.contraction_duration_err, AppConstants.MINIMUM_CONTRACTION_DURATION, AppConstants.MAXIMUM_CONTRACTION_DURATION));
-        }
-        else {
+        } else {
 
             try {
                 if (accessMode == PartogramConstants.AccessMode.EDIT) {
@@ -732,7 +740,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
         obsDTOData.setValue(info.getCapturedValue());
         if (mStageNumber == 1 || mStageNumber == 2) {
             obsDTOData.setComment(PartogramAlertEngine.getAlertNameUpdated(info));
-        }else if(mStageNumber == 3){
+        } else if (mStageNumber == 3) {
             obsDTOData.setComment(PartogramAlertEngine.getStage3AlertName(info));
         }
         //obsDTOData.setComment(PartogramAlertEngine.getAlertNameUpdated(info));
@@ -798,14 +806,14 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                                 info.setCapturedValue(ParamInfo.RadioOptions.YES.name());
                                 info.collectAllAssessmentsInList(obsDTO);
                             } else if (UuidDictionary.ONGOING_COMPLICATIONS_MOTHER.equals(obsDTO.getConceptuuid())
-                                || UuidDictionary.ONGOING_COMPLICATIONS_NEWBORN.equals(obsDTO.getConceptuuid())) {
-                            String storedValue = obsDTO.getValue();
-                                Log.d(TAG, "setEditData: storedValue kz : "+storedValue);
+                                    || UuidDictionary.ONGOING_COMPLICATIONS_NEWBORN.equals(obsDTO.getConceptuuid())) {
+                                String storedValue = obsDTO.getValue();
+                                Log.d(TAG, "setEditData: storedValue kz : " + storedValue);
 
                                 if (!TextUtils.isEmpty(storedValue)) {
-                                info.setCapturedValue(storedValue);
-                            }
-                        }else if(ValidateStage3Fields.INSTANCE.isRadioSelectField(obsDTO.getConceptuuid())){
+                                    info.setCapturedValue(storedValue);
+                                }
+                            } else if (ValidateStage3Fields.INSTANCE.isRadioSelectField(obsDTO.getConceptuuid())) {
                                 //info.setCreatedDate(obsDTO.getCreatedDate());
                                 info.setCapturedValue(obsDTO.getValue());
                                 if (radioHandler.isGenericConcept(info.getConceptUUID())) {
@@ -819,8 +827,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                                         info.setCheckedRadioOption(null);
                                     }
                                 }
-                            }
-                            else{
+                            } else {
                                 info.setCapturedValue(obsDTO.getValue());
                             }
                             break;
@@ -1050,6 +1057,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
             Toast.makeText(this, "Unable to upload the data!", Toast.LENGTH_SHORT).show();
         }
     }
+
     private boolean checkNewbornStatusIsLive() {
 
         try {
@@ -1090,6 +1098,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
 
         return false;
     }
+
     private void prepareDataForStage3() {
         TreeMap<String, List<ParamInfo>> stage3Map = PartogramConstants.getSectionParamInfoMasterMap(STAGE_3);
         mItemList.clear();
@@ -1146,10 +1155,12 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
         setEditData();
 
         PartogramQueryListingAdapter adapter = new PartogramQueryListingAdapter(mRecyclerView, mVisitUUID, this, mItemList,
-                partogramItemData -> {});
+                partogramItemData -> {
+                });
         adapter.setAccessMode(accessMode);
         mRecyclerView.setAdapter(adapter);
     }
+
     public static void logLargeString(String tag, String message) {
         if (message == null) return;
 
@@ -1167,7 +1178,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
             String encounterUUID,
             List<ObsDTO> obsDTOList
     ) {
-        try{
+        try {
             String value = info.getCapturedValue();
             /*if (value == null || value.isEmpty()) {
                 return; // radio never empty in real case
@@ -1193,7 +1204,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
 
             obsDTOList.add(obs);
 
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 

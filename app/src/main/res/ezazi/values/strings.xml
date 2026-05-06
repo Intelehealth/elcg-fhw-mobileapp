@@ -253,4 +253,6 @@
     <string name="no_internet">No Internet Connection</string>
     <string name="back_online">Back Online</string>
 
+    <string name="last_updated_on">Last Updated: %1$s</string>
+
 </resources>
