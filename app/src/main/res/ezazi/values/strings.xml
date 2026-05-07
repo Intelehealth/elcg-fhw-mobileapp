@@ -252,5 +252,6 @@
 
     <string name="no_internet">No Internet Connection</string>
     <string name="back_online">Back Online</string>
-
+    <string name="select_mother_complication_error">Please select mother complication options.</string>
+    <string name="select_newborn_complication_error">Please select newborn complication options.</string>
 </resources>

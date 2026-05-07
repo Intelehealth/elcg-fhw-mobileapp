@@ -362,29 +362,8 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
 
 
     private void saveObs() throws DAOException {
-        // Stage 3 Validation (ONLY for Stage 3)
-        // ✅ FIX: Stage 3 validation — show error dialog on submit for Woman & Newborn monitoring fields
-        if (mStageNumber == PartogramConstants.STAGE_3) {
-            ValidateStage3Fields.ValidationResult result = ValidateStage3Fields.INSTANCE.validatePostpartumMonitoringFromParams(PartogramDataCaptureActivity.this, mItemList, isLiveBirth);
 
-            if (!result.isValid()) {
-                // ✅ FIX: Guard against errorMessageRes=0 (would crash getString)
-                if (result.getErrorMessageRes() != 0) {
-                    String message;
-                    Object[] args = result.getErrorArgs();
-                    if (args != null && args.length > 0) {
-                        message = getString(result.getErrorMessageRes(), args);
-                    } else {
-                        message = getString(result.getErrorMessageRes());
-                    }
-                    showErrorDialogForValidations(message);
-                }
-                return; // always stop save on invalid
-            }
-        }
-
-
-       /*     // Stage 3 Validation (ONLY for Stage 3)
+            // Stage 3 Validation (ONLY for Stage 3)
         if (mStageNumber == PartogramConstants.STAGE_3) {
             ValidateStage3Fields.ValidationResult result = ValidateStage3Fields.INSTANCE.validatePostpartumMonitoringFromParams(PartogramDataCaptureActivity.this, mItemList,isLiveBirth);
 
@@ -400,7 +379,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                 showErrorDialogForValidations(message);
                 return;
             }
-        }*/
+        }
 
         ObsDAO obsDAO = new ObsDAO();
 

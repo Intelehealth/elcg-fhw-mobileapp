@@ -1,10 +1,12 @@
 package org.intelehealth.ezazi.partogram.utils
 
 import android.content.Context
+import android.util.Log
 import androidx.annotation.StringRes
 import org.intelehealth.ezazi.R
 import org.intelehealth.ezazi.partogram.PartogramConstants
 import org.intelehealth.ezazi.partogram.model.PartogramItemData
+import org.json.JSONObject
 
 /**
  * ============================================================
@@ -167,6 +169,16 @@ object ValidateStage3Fields {
         val rr = values[KEY_WOMAN_RR] ?: ""
         val bloodLoss = values[KEY_BLOOD_LOSS] ?: ""
 
+        val motherComplications =
+            values[KEY_COMPLICATIONS_MOTHER] ?: ""
+
+        // Validate complications first
+        validateComplications(
+            motherComplications,
+            R.string.select_mother_complication_error
+        )?.let {
+            return it
+        }
         // REQUIRED: Check at least one field has value
         if (pulse.isEmpty() && sysBP.isEmpty() && diaBP.isEmpty() &&
             temp.isEmpty() && rr.isEmpty() && bloodLoss.isEmpty()) {
@@ -260,6 +272,13 @@ object ValidateStage3Fields {
         val spo2 = values[KEY_NEWBORN_SPO2] ?: ""
         val temp = values[KEY_NEWBORN_TEMP] ?: ""
 
+        val newbornComplications =
+            values[KEY_COMPLICATIONS_NEWBORN] ?: ""
+
+        // Validate complications first
+        validateComplications(newbornComplications, R.string.select_newborn_complication_error)?.let {
+            return it
+        }
         //  REQUIRED: Check at least one field has value
         if (rr.isEmpty() && spo2.isEmpty() && temp.isEmpty()) {
             return null
@@ -327,6 +346,56 @@ object ValidateStage3Fields {
 
     fun isRadioSelectField(conceptId: String?): Boolean {
         return conceptId != null && radioTypeConcepts.contains(conceptId)
+    }
+
+    private fun validateComplications(
+        jsonValue: String?,
+        @StringRes errorRes: Int
+    ): ValidationResult? {
+
+        if (jsonValue.isNullOrEmpty()) {
+            return null
+        }
+
+        return try {
+
+            Log.d("ComplicationValidation", jsonValue)
+
+            val jsonObject = JSONObject(jsonValue)
+
+            val answer = jsonObject.optString(
+                "any ongoing complication"
+            ).trim()
+
+            val complications = jsonObject.optString(
+                "complications"
+            ).trim()
+
+            Log.d("ComplicationValidation",
+                "answer=$answer complications=$complications")
+
+            if (answer.equals("yes", ignoreCase = true)
+                && complications.isBlank()
+            ) {
+
+                ValidationResult(
+                    false,
+                    errorRes
+                )
+
+            } else {
+                null
+            }
+
+        } catch (e: Exception) {
+
+            e.printStackTrace()
+
+            ValidationResult(
+                false,
+                errorRes
+            )
+        }
     }
 }
 
