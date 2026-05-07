@@ -3,14 +3,6 @@ package org.intelehealth.ezazi.partogram.utils
 import android.content.Context
 import androidx.annotation.StringRes
 import org.intelehealth.ezazi.R
-import org.intelehealth.ezazi.app.AppConstants.MAXIMUM_BP_DSYS
-import org.intelehealth.ezazi.app.AppConstants.MAXIMUM_BP_SYS
-import org.intelehealth.ezazi.app.AppConstants.MAXIMUM_PULSE
-import org.intelehealth.ezazi.app.AppConstants.MAXIMUM_TEMPERATURE_CELSIUS
-import org.intelehealth.ezazi.app.AppConstants.MINIMUM_BP_DSYS
-import org.intelehealth.ezazi.app.AppConstants.MINIMUM_BP_SYS
-import org.intelehealth.ezazi.app.AppConstants.MINIMUM_PULSE
-import org.intelehealth.ezazi.app.AppConstants.MINIMUM_TEMPERATURE_CELSIUS
 import org.intelehealth.ezazi.partogram.PartogramConstants
 import org.intelehealth.ezazi.partogram.model.PartogramItemData
 
@@ -184,8 +176,8 @@ object ValidateStage3Fields {
         // Pulse: 40-200 bpm
         // Pulse: MINIMUM_PULSE - MAXIMUM_PULSE bpm
         if (pulse.isNotEmpty()) {
-            val minPulse = MINIMUM_PULSE.toInt()
-            val maxPulse = MAXIMUM_PULSE.toInt()
+            val minPulse = ValidationConstants.WOMAN_PULSE_MIN
+            val maxPulse = ValidationConstants.WOMAN_PULSE_MAX
             validateIntRange(pulse, minPulse, maxPulse)?.let {
                 return ValidationResult(false, R.string.err_pulse_range, arrayOf(minPulse, maxPulse))
             }
@@ -194,8 +186,8 @@ object ValidateStage3Fields {
         // Systolic BP: 70-200 mmHg
         // Systolic BP: MINIMUM_BP_SYS - MAXIMUM_BP_SYS mmHg
         if (sysBP.isNotEmpty()) {
-            val minSys = MINIMUM_BP_SYS.toInt()
-            val maxSys = MAXIMUM_BP_SYS.toInt()
+            val minSys = ValidationConstants.WOMAN_SYSTOLIC_BP_MIN
+            val maxSys = ValidationConstants.WOMAN_SYSTOLIC_BP_MAX
             validateIntRange(sysBP, minSys, maxSys)?.let {
                 return ValidationResult(false, R.string.err_systolic_range, arrayOf(minSys, maxSys))
             }
@@ -209,8 +201,8 @@ object ValidateStage3Fields {
                 return ValidationResult(false, R.string.err_enter_systolic_first)
             }
 
-            val minDia = MINIMUM_BP_DSYS.toInt()
-            val maxDia = MAXIMUM_BP_DSYS.toInt()
+            val minDia = ValidationConstants.WOMAN_DIASTOLIC_BP_MIN
+            val maxDia = ValidationConstants.WOMAN_DIASTOLIC_BP_MAX
 
             validateIntRange(diaBP, minDia, maxDia)?.let {
                 return ValidationResult(false, R.string.err_diastolic_range, arrayOf(minDia, maxDia))
@@ -226,9 +218,9 @@ object ValidateStage3Fields {
         }
 
         // Temperature: MINIMUM_TEMPERATURE_CELSIUS - MAXIMUM_TEMPERATURE_CELSIUS °C
-      /*  if (temp.isNotEmpty()) {
-            val minTemp = MINIMUM_TEMPERATURE_CELSIUS.toDouble()
-            val maxTemp = MAXIMUM_TEMPERATURE_CELSIUS.toDouble()
+      if (temp.isNotEmpty()) {
+            val minTemp = ValidationConstants.WOMAN_TEMPERATURE_MIN
+            val maxTemp = ValidationConstants.WOMAN_TEMPERATURE_MAX
 
             validateDoubleRange(temp, minTemp, maxTemp)?.let {
                 return ValidationResult(
@@ -237,21 +229,21 @@ object ValidateStage3Fields {
                     arrayOf(minTemp, maxTemp)
                 )
             }
-        }*/
+        }
 
-        /*// Respiratory Rate: 10-60 breaths/min
+        // Respiratory Rate: 10-60 breaths/min
         if (rr.isNotEmpty()) {
-            validateIntRange(rr, 10, 60)?.let {
-                return ValidationResult(false, R.string.err_rr_range, arrayOf(10, 60))
+            validateIntRange(rr, ValidationConstants.WOMAN_RESPIRATORY_RATE_MIN, ValidationConstants.WOMAN_RESPIRATORY_RATE_MAX)?.let {
+                return ValidationResult(false, R.string.err_rr_range, arrayOf(ValidationConstants.WOMAN_RESPIRATORY_RATE_MIN,  ValidationConstants.WOMAN_RESPIRATORY_RATE_MAX))
             }
         }
 
         // Blood Loss: 0-5000 ml
         if (bloodLoss.isNotEmpty()) {
-            validateIntRange(bloodLoss, 0, 5000)?.let {
-                return ValidationResult(false, R.string.err_blood_loss_range, arrayOf(0, 5000))
+            validateIntRange(bloodLoss, ValidationConstants.WOMAN_BLOOD_LOSS_MIN, ValidationConstants.WOMAN_BLOOD_LOSS_MAX)?.let {
+                return ValidationResult(false, R.string.err_blood_loss_range, arrayOf(ValidationConstants.WOMAN_BLOOD_LOSS_MIN, ValidationConstants.WOMAN_BLOOD_LOSS_MAX))
             }
-        }*/
+        }
 
         // Yes/No fields - no validation needed
         // Free text fields (Assessment, Plan) - no validation needed
@@ -275,22 +267,22 @@ object ValidateStage3Fields {
 
         // Respiratory Rate: 30-90 breaths/min
         if (rr.isNotEmpty()) {
-            validateIntRange(rr, 30, 90)?.let {
-                return ValidationResult(false, R.string.err_nb_rr_range, arrayOf(30, 90))
+            validateIntRange(rr, ValidationConstants.NEWBORN_RESPIRATORY_RATE_MIN, ValidationConstants.NEWBORN_RESPIRATORY_RATE_MAX)?.let {
+                return ValidationResult(false, R.string.err_nb_rr_range, arrayOf(ValidationConstants.NEWBORN_RESPIRATORY_RATE_MIN, ValidationConstants.NEWBORN_RESPIRATORY_RATE_MAX))
             }
         }
 
         // SPO2: 50-100%
         if (spo2.isNotEmpty()) {
-            validateIntRange(spo2, 50, 100)?.let {
-                return ValidationResult(false, R.string.err_nb_spo2_range, arrayOf(50, 100))
+            validateIntRange(spo2,  ValidationConstants.NEWBORN_SPO2_MIN, ValidationConstants.NEWBORN_SPO2_MAX)?.let {
+                return ValidationResult(false, R.string.err_nb_spo2_range, arrayOf(ValidationConstants.NEWBORN_SPO2_MIN, ValidationConstants.NEWBORN_SPO2_MAX))
             }
         }
 
         // Temperature: 95.0-107.6 °F
         if (temp.isNotEmpty()) {
-            validateDoubleRange(temp, 95.0, 107.6)?.let {
-                return ValidationResult(false, R.string.err_nb_temp_range, arrayOf(95.0, 107.6))
+            validateDoubleRange(temp,  ValidationConstants.NEWBORN_TEMPERATURE_MIN, ValidationConstants.NEWBORN_TEMPERATURE_MAX)?.let {
+                return ValidationResult(false, R.string.err_nb_temp_range, arrayOf(ValidationConstants.NEWBORN_TEMPERATURE_MIN, ValidationConstants.NEWBORN_TEMPERATURE_MAX))
             }
         }
 

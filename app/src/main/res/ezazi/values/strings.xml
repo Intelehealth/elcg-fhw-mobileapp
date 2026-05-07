@@ -210,18 +210,18 @@
     <string name="failed_to_save_details">Failed to save delivery outcome details</string>">
     <string name="please_specify">Please specify</string>
     <!-- Stage 3 – Woman Errors   -->
-    <string name="err_pulse_range">Pulse must be between %1$d and %2$d bpm</string>
-    <string name="err_systolic_range">Systolic BP must be between %1$d and %2$d mmHg</string>
-    <string name="err_diastolic_range">Diastolic BP must be between %1$d and %2$d mmHg</string>
+    <string name="err_pulse_range">Please enter Pulse between %1$d and %2$d bpm</string>
+    <string name="err_systolic_range">Please enter Systolic BP between %1$d and %2$d mmHg</string>
+    <string name="err_diastolic_range">Please enter Diastolic BP between %1$d and %2$d mmHg</string>
     <string name="err_diastolic_less_than_sys">Diastolic BP must be less than Systolic BP</string>
-    <string name="err_enter_systolic_first">Enter Systolic BP first</string>
-    <string name="err_temperature_range">Temperature must be between %1$.1f and %2$.1f °F</string>
-    <string name="err_rr_range">Respiratory Rate must be between %1$d and %2$d breaths/min</string>
-    <string name="err_blood_loss_range">Blood Loss must be between %1$d and %2$d ml</string>
+    <string name="err_enter_systolic_first">Please enter Systolic BP first</string>
+    <string name="err_temperature_range">Please enter Temperature between %1$.1f and %2$.1f °F</string>
+    <string name="err_rr_range">Please enter Respiratory Rate between %1$d and %2$d breaths/min</string>
+    <string name="err_blood_loss_range">Please enter Blood Loss between %1$d and %2$d ml</string>
     <!-- Stage 3 – Newborn Errors -->
-    <string name="err_nb_rr_range">Newborn Respiratory Rate must be between %1$d and %2$d</string>
-    <string name="err_nb_spo2_range">SPO2 must be between %1$d and %2$d%%</string>
-    <string name="err_nb_temp_range">Newborn Temperature must be between %1$.1f and %2$.1f °F</string>
+    <string name="err_nb_rr_range">Please enter Newborn Respiratory Rate between %1$d and %2$d</string>
+    <string name="err_nb_spo2_range">Please enter SPO2 between %1$d and %2$d%%</string>
+    <string name="err_nb_temp_range">Please enter Newborn Temperature between %1$.1f and %2$.1f °F</string>
     <string name="err_invalid_number">Invalid numeric value</string>
 
     <string name="select_mode">Select mode</string>

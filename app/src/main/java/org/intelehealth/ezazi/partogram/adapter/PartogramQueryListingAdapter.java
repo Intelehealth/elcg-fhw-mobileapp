@@ -45,8 +45,11 @@ import org.intelehealth.ezazi.partogram.model.Medication;
 import org.intelehealth.ezazi.partogram.model.Medicine;
 import org.intelehealth.ezazi.partogram.model.ParamInfo;
 import org.intelehealth.ezazi.partogram.model.PartogramItemData;
+import org.intelehealth.ezazi.partogram.model.ValidatePartogramFields;
 import org.intelehealth.ezazi.partogram.utils.DataCaptureGenericRadioFieldHandler;
 import org.intelehealth.ezazi.partogram.utils.MultiSelectDropdownHandlerForDataCapture;
+import org.intelehealth.ezazi.partogram.utils.ValidationConstants;
+import org.intelehealth.ezazi.stage3.Utils.DecimalDigitsInputFilter;
 import org.intelehealth.ezazi.stage3.Utils.GenericMultiChoiceAdapter;
 import org.intelehealth.ezazi.stage3.Utils.OngoingComplicationMotherAndBabyHandler;
 import org.intelehealth.ezazi.ui.dialog.CustomViewDialogFragment;
@@ -80,7 +83,7 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
     private TextView selectedTextview;
     boolean isToastShownTemperature, isToastShownPulse, isToastShownContraction, isToastShownFHR, isToastShownSysBP, isToastShownDysBP;
     private String mVisitUuid;
-
+    private boolean isToastShownRRMother, isToastShownBloodLoss, isToastShownNbRR, isToastShownNbSpo2, isToastShownNbTemp;
     //    private static JSONObject ivFluidsJsonObject = new JSONObject();
 //    private static JSONObject oxytocinDataObject = new JSONObject();
 //
@@ -319,8 +322,16 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         } else {
 
             if (paramDateType.equalsIgnoreCase(PartogramConstants.INPUT_DOUBLE_4_DIG_TYPE)) {
+                Log.d(TAG, "showUserInputBox: kzzzzz 1");
                 //added tempareture 3 digits
-                dataEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(3)});
+                //dataEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(3)});
+                dataEditText.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+                dataEditText.setFilters(new InputFilter[]{
+                        new InputFilter.LengthFilter(5),     // allows 108.8
+                        new DecimalDigitsInputFilter(3, 1)   // 3 digits before decimal, 1 after
+                });
+                Log.d(TAG, "showUserInputBox: kzzzzz 2");
+
             } else if (paramDateType.equalsIgnoreCase(PartogramConstants.INPUT_INT_1_DIG_TYPE)) {
                 dataEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(1)});
                 dataEditText.setInputType(InputType.TYPE_CLASS_NUMBER);
@@ -345,7 +356,12 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         isToastShownPulse = false;
         isToastShownSysBP = false;
         isToastShownDysBP = false;
-
+        // Stage 3 fields
+        isToastShownRRMother  = false;
+        isToastShownBloodLoss = false;
+        isToastShownNbRR      = false;
+        isToastShownNbSpo2    = false;
+        isToastShownNbTemp    = false;
         dataEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -370,12 +386,38 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
                     } else if (info.getParamName().equalsIgnoreCase(PartogramConstants.Params.DIASTOLIC_BP.value)) {
                         validateDysBp(dataEditText);
                     }
+                    ///Stage 3 women Monitoring
+                    else if (info.getParamName().equalsIgnoreCase(PartogramConstants.Params.RESPIRATORY_RATE_MOTHER.value)) {
+                        validateRRMother(dataEditText);
+                    } else if (info.getParamName().equalsIgnoreCase(PartogramConstants.Params.BLOOD_LOSS_MOTHER.value)) {
+                        validateBloodLoss(dataEditText);
+                    }
+                    // Stage 3 Newborn Monitoring
+                    else if (info.getParamName().equalsIgnoreCase(PartogramConstants.Params.RESPIRATORY_RATE_NEWBORN.value)) {
+                        validateNbRR(dataEditText);
+                    } else if (info.getParamName().equalsIgnoreCase(PartogramConstants.Params.SPO2_NEWBORN.value)) {
+                        validateNbSpo2(dataEditText);
+                    } else if (info.getParamName().equalsIgnoreCase(PartogramConstants.Params.TEMPERATURE_NEWBORN.value)) {
+                        validateNbTemp(dataEditText);
+                    }
                 }
             }
 
             @Override
             public void afterTextChanged(Editable s) {
-                if (dataEditText.getText().toString().endsWith(".")) {
+                ParamInfo info = (ParamInfo) dataEditText.getTag(R.id.etvData);
+
+                if (info.getParamDateType().equalsIgnoreCase(PartogramConstants.INPUT_DOUBLE_4_DIG_TYPE)) {
+                    // Always keep the DecimalDigitsInputFilter(3,1) — do NOT override it on dot
+                } else if (dataEditText.getText().toString().endsWith(".")) {
+                    dataEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(4)});
+                }
+                mItemList.get(position).getParamInfoList().get(positionChild).setCapturedValue(s.toString().trim());
+                if (s.length() > 0) {
+                    clearDiastolic(s.toString(), positionChild, mItemList.get(position).getParamInfoList(), position);
+                    validDiastolicBP(s.toString(), positionChild, mItemList.get(position).getParamInfoList(), dataEditText);
+                }
+                /*if (dataEditText.getText().toString().endsWith(".")) {
                     dataEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(4)});
                 } else {
                 }
@@ -383,7 +425,7 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
                 if (s.length() > 0) {
                     clearDiastolic(s.toString(), positionChild, mItemList.get(position).getParamInfoList(), position);
                     validDiastolicBP(s.toString(), positionChild, mItemList.get(position).getParamInfoList(), dataEditText);
-                }
+                }*/
             }
         });
 
@@ -394,7 +436,7 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         //if (Double.parseDouble(value) > Double.parseDouble(AppConstants.MAXIMUM_TEMPERATURE_CELSIUS) || Double.parseDouble(value) < Double.parseDouble(AppConstants.MINIMUM_TEMPERATURE_CELSIUS)) {
         //dataEditText.setError(getString(R.string.temp_error, AppConstants.MINIMUM_TEMPERATURE_CELSIUS, AppConstants.MAXIMUM_TEMPERATURE_CELSIUS));
         if (!isToastShownTemperature) {
-            Toast.makeText(mContext, mContext.getString(R.string.temp_error_new, AppConstants.MINIMUM_TEMPERATURE_CELSIUS, AppConstants.MAXIMUM_TEMPERATURE_CELSIUS), Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, mContext.getString(R.string.temp_error_new, ValidationConstants.WOMAN_TEMPERATURE_MIN, ValidationConstants.WOMAN_TEMPERATURE_MAX), Toast.LENGTH_SHORT).show();
             //dataEditText.setText("");
             dataEditText.requestFocus();
             isToastShownTemperature = true;
@@ -1189,7 +1231,7 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
 
     private void validatePulse(EditText dataEditText) {
         if (!isToastShownPulse) {
-            Toast.makeText(mContext, mContext.getString(R.string.pulse_err, AppConstants.MINIMUM_PULSE, AppConstants.MAXIMUM_PULSE), Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, mContext.getString(R.string.pulse_err, ValidationConstants.WOMAN_PULSE_MIN, ValidationConstants.WOMAN_PULSE_MAX), Toast.LENGTH_SHORT).show();
             dataEditText.requestFocus();
             isToastShownPulse = true;
         }
@@ -1205,7 +1247,7 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
 
     private void validateSysBp(EditText dataEditText) {
         if (!isToastShownSysBP) {
-            Toast.makeText(mContext, mContext.getString(R.string.systolic_bp_range_toast_err, AppConstants.MINIMUM_BP_SYS, AppConstants.MAXIMUM_BP_SYS), Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, mContext.getString(R.string.systolic_bp_range_toast_err,ValidationConstants.WOMAN_SYSTOLIC_BP_MIN, ValidationConstants.WOMAN_SYSTOLIC_BP_MAX), Toast.LENGTH_SHORT).show();
             dataEditText.requestFocus();
             isToastShownSysBP = true;
         }
@@ -1213,7 +1255,7 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
 
     private void validateDysBp(EditText dataEditText) {
         if (!isToastShownDysBP) {
-            Toast.makeText(mContext, mContext.getString(R.string.diastolic_bp_range_toast_err, AppConstants.MINIMUM_BP_DSYS, AppConstants.MAXIMUM_BP_DSYS), Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, mContext.getString(R.string.diastolic_bp_range_toast_err, ValidationConstants.WOMAN_DIASTOLIC_BP_MIN, ValidationConstants.WOMAN_DIASTOLIC_BP_MAX), Toast.LENGTH_SHORT).show();
             dataEditText.requestFocus();
             isToastShownDysBP = true;
         }
@@ -1398,4 +1440,55 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
             );
         }
     }
+    private void validateRRMother(EditText dataEditText) {
+        if (!isToastShownRRMother) {
+            Toast.makeText(mContext, mContext.getString(R.string.err_rr_range,
+                    ValidationConstants.WOMAN_RESPIRATORY_RATE_MIN,
+                    ValidationConstants.WOMAN_RESPIRATORY_RATE_MAX), Toast.LENGTH_SHORT).show();
+            dataEditText.requestFocus();
+            isToastShownRRMother = true;
+        }
+    }
+
+    private void validateBloodLoss(EditText dataEditText) {
+        if (!isToastShownBloodLoss) {
+            Toast.makeText(mContext, mContext.getString(R.string.err_blood_loss_range,
+                    ValidationConstants.WOMAN_BLOOD_LOSS_MIN,
+                    ValidationConstants.WOMAN_BLOOD_LOSS_MAX), Toast.LENGTH_SHORT).show();
+            dataEditText.requestFocus();
+            isToastShownBloodLoss = true;
+        }
+    }
+
+    //  Stage 3 Newborn Monitoring toast validators
+    private void validateNbRR(EditText dataEditText) {
+        if (!isToastShownNbRR) {
+            Toast.makeText(mContext, mContext.getString(R.string.err_nb_rr_range,
+                    ValidationConstants.NEWBORN_RESPIRATORY_RATE_MIN,
+                    ValidationConstants.NEWBORN_RESPIRATORY_RATE_MAX), Toast.LENGTH_SHORT).show();
+            dataEditText.requestFocus();
+            isToastShownNbRR = true;
+        }
+    }
+
+    private void validateNbSpo2(EditText dataEditText) {
+        if (!isToastShownNbSpo2) {
+            Toast.makeText(mContext, mContext.getString(R.string.err_nb_spo2_range,
+                    ValidationConstants.NEWBORN_SPO2_MIN,
+                    ValidationConstants.NEWBORN_SPO2_MAX), Toast.LENGTH_SHORT).show();
+            dataEditText.requestFocus();
+            isToastShownNbSpo2 = true;
+        }
+    }
+
+    private void validateNbTemp(EditText dataEditText) {
+        if (!isToastShownNbTemp) {
+            Toast.makeText(mContext, mContext.getString(R.string.err_nb_temp_range,
+                    ValidationConstants.NEWBORN_TEMPERATURE_MIN,
+                    ValidationConstants.NEWBORN_TEMPERATURE_MAX), Toast.LENGTH_SHORT).show();
+            dataEditText.requestFocus();
+            isToastShownNbTemp = true;
+        }
+    }
+
 }

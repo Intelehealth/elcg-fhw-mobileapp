@@ -49,6 +49,7 @@ import org.intelehealth.ezazi.partogram.model.ParamInfo;
 import org.intelehealth.ezazi.partogram.model.PartogramItemData;
 import org.intelehealth.ezazi.partogram.model.ValidatePartogramFields;
 import org.intelehealth.ezazi.partogram.utils.DataCaptureGenericRadioFieldHandler;
+import org.intelehealth.ezazi.partogram.utils.ValidationConstants;
 import org.intelehealth.ezazi.partogram.utils.ValidateStage3Fields;
 import org.intelehealth.ezazi.stage3.Utils.DeliveryDetailsConcept;
 import org.intelehealth.ezazi.syncModule.SyncUtils;
@@ -361,8 +362,29 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
 
 
     private void saveObs() throws DAOException {
+        // Stage 3 Validation (ONLY for Stage 3)
+        // ✅ FIX: Stage 3 validation — show error dialog on submit for Woman & Newborn monitoring fields
+        if (mStageNumber == PartogramConstants.STAGE_3) {
+            ValidateStage3Fields.ValidationResult result = ValidateStage3Fields.INSTANCE.validatePostpartumMonitoringFromParams(PartogramDataCaptureActivity.this, mItemList, isLiveBirth);
 
-            // Stage 3 Validation (ONLY for Stage 3)
+            if (!result.isValid()) {
+                // ✅ FIX: Guard against errorMessageRes=0 (would crash getString)
+                if (result.getErrorMessageRes() != 0) {
+                    String message;
+                    Object[] args = result.getErrorArgs();
+                    if (args != null && args.length > 0) {
+                        message = getString(result.getErrorMessageRes(), args);
+                    } else {
+                        message = getString(result.getErrorMessageRes());
+                    }
+                    showErrorDialogForValidations(message);
+                }
+                return; // always stop save on invalid
+            }
+        }
+
+
+       /*     // Stage 3 Validation (ONLY for Stage 3)
         if (mStageNumber == PartogramConstants.STAGE_3) {
             ValidateStage3Fields.ValidationResult result = ValidateStage3Fields.INSTANCE.validatePostpartumMonitoringFromParams(PartogramDataCaptureActivity.this, mItemList,isLiveBirth);
 
@@ -378,7 +400,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                 showErrorDialogForValidations(message);
                 return;
             }
-        }
+        }*/
 
         ObsDAO obsDAO = new ObsDAO();
 
@@ -627,17 +649,17 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
         } else if (!isValidBaselineFHR) {
             showErrorDialogForValidations(getString(R.string.baseline_fhr_err, AppConstants.MINIMUM_BASELINE_FHR, AppConstants.MAXIMUM_BASELINE_FHR));
         } else if (!isValidPulse && mStageNumber != PartogramConstants.STAGE_3) {
-            showErrorDialogForValidations(getString(R.string.pulse_err, AppConstants.MINIMUM_PULSE, AppConstants.MAXIMUM_PULSE));
+            showErrorDialogForValidations(getString(R.string.pulse_err, ValidationConstants.WOMAN_PULSE_MIN, ValidationConstants.WOMAN_PULSE_MAX));
         } else if (!isValidSystolicBP && mStageNumber != PartogramConstants.STAGE_3) {
             //showErrorDialog(R.string.systolic_bp_range);
-            showErrorDialogForValidations(getString(R.string.systolic_bp_range_toast_err, AppConstants.MINIMUM_BP_SYS, AppConstants.MAXIMUM_BP_SYS));
+            showErrorDialogForValidations(getString(R.string.systolic_bp_range_toast_err,  ValidationConstants.WOMAN_SYSTOLIC_BP_MIN, ValidationConstants.WOMAN_SYSTOLIC_BP_MAX));
 
         } else if (!isValidDiastolicBP && mStageNumber != PartogramConstants.STAGE_3) {
             // showErrorDialog(R.string.diastolic_bp_range);
-            showErrorDialogForValidations(getString(R.string.diastolic_bp_range_toast_err, AppConstants.MINIMUM_BP_DSYS, AppConstants.MAXIMUM_BP_DSYS));
+            showErrorDialogForValidations(getString(R.string.diastolic_bp_range_toast_err,  ValidationConstants.WOMAN_DIASTOLIC_BP_MIN, ValidationConstants.WOMAN_DIASTOLIC_BP_MAX));
 
         } else if (!isValidTemperature && mStageNumber != PartogramConstants.STAGE_3) {
-            showErrorDialogForValidations(getString(R.string.temp_error_new, AppConstants.MINIMUM_TEMPERATURE_CELSIUS, AppConstants.MAXIMUM_TEMPERATURE_CELSIUS));
+            showErrorDialogForValidations(getString(R.string.temp_error_new, ValidationConstants.WOMAN_TEMPERATURE_MIN, ValidationConstants.WOMAN_TEMPERATURE_MAX));
         } else if (!isValidDuration) {
             showErrorDialogForValidations(getString(R.string.contraction_duration_err, AppConstants.MINIMUM_CONTRACTION_DURATION, AppConstants.MAXIMUM_CONTRACTION_DURATION));
         }

@@ -3,6 +3,7 @@ package org.intelehealth.ezazi.partogram.model;
 import android.content.Context;
 
 import org.intelehealth.ezazi.app.AppConstants;
+import org.intelehealth.ezazi.partogram.utils.ValidationConstants;
 import org.intelehealth.ezazi.utilities.UuidDictionary;
 
 /**
@@ -14,7 +15,7 @@ public class ValidatePartogramFields {
     public static boolean isValidSystolicBP(String systolicBP) {
         if (systolicBP != null && !systolicBP.isEmpty()) {
             int value = Integer.parseInt(systolicBP);
-            return value >= 50 && value <= 250;
+            return value >= ValidationConstants.WOMAN_SYSTOLIC_BP_MIN && value <= ValidationConstants.WOMAN_SYSTOLIC_BP_MAX;
         } else {
             return true;
         }
@@ -24,7 +25,7 @@ public class ValidatePartogramFields {
         if (diastolicBp != null && systolicBp != null && !diastolicBp.isEmpty() && !systolicBp.isEmpty()) {
             int value = Integer.parseInt(diastolicBp);
             int systolicBpValue = Integer.parseInt(systolicBp);
-            return value >= 30 && value <= 150 && value < systolicBpValue;
+            return value >= ValidationConstants.WOMAN_DIASTOLIC_BP_MIN && value <= ValidationConstants.WOMAN_DIASTOLIC_BP_MAX && value < systolicBpValue;
         } else {
             return true;
         }
@@ -41,10 +42,10 @@ public class ValidatePartogramFields {
                     result = value >=Double.parseDouble(AppConstants.MINIMUM_BASELINE_FHR) && value <= Double.parseDouble(AppConstants.MAXIMUM_BASELINE_FHR);
                     break;
                 case UuidDictionary.PULSE:
-                    result = value >= Double.parseDouble(AppConstants.MINIMUM_PULSE) && value <= Double.parseDouble(AppConstants.MAXIMUM_PULSE);
+                    result = value >= ValidationConstants.WOMAN_PULSE_MIN && value <= ValidationConstants.WOMAN_PULSE_MAX;
                     break;
                 case UuidDictionary.TEMPERATURE:
-                    result = value >= Double.parseDouble(AppConstants.MINIMUM_TEMPERATURE_CELSIUS) && value <= Double.parseDouble(AppConstants.MAXIMUM_TEMPERATURE_CELSIUS);
+                    result = value >= ValidationConstants.WOMAN_TEMPERATURE_MIN && value <= ValidationConstants.WOMAN_TEMPERATURE_MAX;
                     break;
                 case UuidDictionary.DURATION_OF_CONTRACTION:
                     result = value >= Double.parseDouble(AppConstants.MINIMUM_CONTRACTION_DURATION) && value <= Double.parseDouble(AppConstants.MAXIMUM_CONTRACTION_DURATION);
