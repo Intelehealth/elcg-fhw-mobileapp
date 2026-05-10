@@ -32,6 +32,7 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.gson.Gson;
 
+import org.intelehealth.ezazi.BuildConfig;
 import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.activities.addNewPatient.model.DistData;
 import org.intelehealth.ezazi.activities.addNewPatient.model.StateData;
@@ -43,6 +44,7 @@ import org.intelehealth.ezazi.models.dto.PatientAttributesModel;
 import org.intelehealth.ezazi.models.dto.PatientDTO;
 import org.intelehealth.ezazi.ui.validation.FirstLetterUpperCaseInputFilter;
 import org.intelehealth.ezazi.utilities.FileUtils;
+import org.intelehealth.ezazi.utilities.FlavorKeys;
 import org.intelehealth.ezazi.utilities.Logger;
 import org.intelehealth.ezazi.utilities.NetworkConnection;
 import org.intelehealth.ezazi.utilities.SessionManager;
@@ -469,7 +471,17 @@ public class PatientAddressInfoFragment extends Fragment {
         String district = isIndiaOrNepal ? autotvDistrict.getText().toString() : mDistName;
 
         patientDTO.setStateprovince(StringUtils.getValue(state));
-        patientDTO.setCityvillage(StringUtils.getValue(district + ":" + mCityVillageName));
+
+        //since elcg (Nepal) doesn't required the district, added this logic
+        //':' causing issue on the ui part
+        String districtCity;
+        if(BuildConfig.FLAVOR_client.equals(FlavorKeys.ELCG)){
+            districtCity = mCityVillageName;
+        }else{
+            districtCity = district + ":" + mCityVillageName;
+        }
+
+        patientDTO.setCityvillage(districtCity);
         // patientDTO.setStateprovince(autotvState.getText().toString());
         //  patientDTO.setCityvillage(autotvCity.getText().toString());
 
@@ -531,7 +543,17 @@ public class PatientAddressInfoFragment extends Fragment {
             boolean isIndiaOrNepal = mIsIndiaSelected || mIsNepalSelected;
 
             patientDTO.setStateprovince(StringUtils.getValue(isIndiaOrNepal ? autotvState.getText().toString() : mStateName));
-            patientDTO.setCityvillage(StringUtils.getValue((isIndiaOrNepal ? autotvDistrict.getText().toString() : mDistName) + ":" + mCityVillageName));
+
+            //since elcg (Nepal) doesn't required the district, added this logic
+            //':' causing issue on the ui part
+            String districtCity;
+            if(BuildConfig.FLAVOR_client.equals(FlavorKeys.ELCG)){
+                districtCity = mCityVillageName;
+            }else{
+                districtCity = StringUtils.getValue((isIndiaOrNepal ? autotvDistrict.getText().toString() : mDistName) + ":" + mCityVillageName);
+            }
+
+            patientDTO.setCityvillage(districtCity);
 
 
             if (!sessionManager.getAppLanguage().equals("en")) {
@@ -549,7 +571,8 @@ public class PatientAddressInfoFragment extends Fragment {
             patientDTO.setAddress1(StringUtils.getValue(etAddress1.getText().toString()));
             patientDTO.setAddress2(StringUtils.getValue(etAddress2.getText().toString()));
             patientDTO.setPostalcode(StringUtils.getValue(etPostalCode.getText().toString()));
-            patientDTO.setCountry("India");
+            //patientDTO.setCountry("India");
+            patientDTO.setCountry(autotvCountry.getText().toString());
 
             /*patientAttributesDTO = new PatientAttributesDTO();
             patientAttributesDTO.setUuid(UUID.randomUUID().toString());
