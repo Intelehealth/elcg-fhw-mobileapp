@@ -654,7 +654,9 @@ public class PatientOtherInfoFragment extends Fragment {
 
     private void selectTimeForAllParameters(String forWhichParameter) {
         ThemeTimePickerDialog dialog = new ThemeTimePickerDialog.Builder(mContext)
-                .title(R.string.current_time).positiveButtonLabel(R.string.ok).build();
+                .title(R.string.current_time).positiveButtonLabel(R.string.ok)
+                .use24Hour(true)
+                .build();
         dialog.setListener((hours, minutes, amPm, value) -> {
             String ts = String.format(Locale.ENGLISH, "%02d:%02d %s", hours, minutes, amPm);
             switch (forWhichParameter) {
