@@ -11,6 +11,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.textfield.TextInputLayout
+import com.google.gson.Gson
 import org.intelehealth.ezazi.R
 import org.intelehealth.ezazi.activities.visitSummaryActivity.TimelineVisitSummaryActivity
 import org.intelehealth.ezazi.app.AppConstants
@@ -21,6 +22,8 @@ import org.intelehealth.ezazi.databinding.ActivityWomenDeliveryDetailsBinding
 import org.intelehealth.ezazi.models.dto.EncounterDTO
 import org.intelehealth.ezazi.stage3.Utils.DeliveryDetailsConcept
 import org.intelehealth.ezazi.stage3.Utils.DeliveryDetailsUIController
+import org.intelehealth.ezazi.stage3.Utils.NepaliDateUtils
+import org.intelehealth.ezazi.stage3.Utils.NepaliDateUtils.isAfterToday
 import org.intelehealth.ezazi.stage3.db.DeliveryDetailsLocalDataSource
 import org.intelehealth.ezazi.stage3.db.DeliveryDetailsObsMapper
 import org.intelehealth.ezazi.stage3.db.DeliveryDetailsRepository
@@ -33,6 +36,9 @@ import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment
 import org.intelehealth.ezazi.utilities.SessionManager
 import org.intelehealth.ezazi.utilities.UuidDictionary
 import org.intelehealth.klivekit.utils.DateTimeUtils
+import java.time.LocalDate
+import java.time.ZoneId
+import java.util.Date
 import java.util.UUID
 
 class WomenDeliveryDetailsActivity : AppCompatActivity() {
@@ -68,9 +74,10 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             .get(DeliveryDetailsViewModel::class.java)
         binding.btnSave.setOnClickListener {
             val deliveryDetails = collectFormData()
+            Log.d(TAG, "onCreate: deliveryDetails : "+Gson().toJson(deliveryDetails))
             if (validateFields(deliveryDetails)) {
                 clearErrors()
-                viewModel.saveDelivery(encounterDto, deliveryDetails, SessionManager(this).creatorID, "Stage3_Hour1_1")
+                //viewModel.saveDelivery(encounterDto, deliveryDetails, SessionManager(this).creatorID, "Stage3_Hour1_1")
             }
         }
 
@@ -98,8 +105,50 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
         // Clear previous errors first
         clearErrors()
 
-        if (binding.etDateOfDelivery.text.isNullOrEmpty()) {
+       /* if (binding.etDateOfDelivery.text.isNullOrEmpty()) {
             setFieldError(binding.etlDateOfDelivery, getString(R.string.this_field_is_mandatory))
+            return false
+        }*/
+        // Delivery Date Mandatory
+        if (binding.etDateOfDelivery.text.isNullOrEmpty()) {
+            setFieldError(
+                binding.etlDateOfDelivery,
+                getString(R.string.this_field_is_mandatory)
+            )
+            return false
+        }
+
+        // Delivery Time Mandatory
+        if (binding.etTimeOfDelivery.text.isNullOrEmpty()) {
+            setFieldError(
+                binding.etlTimeOfDelivery,
+                getString(R.string.this_field_is_mandatory)
+            )
+            return false
+        }
+
+        // Future Date-Time Check
+        val deliveryDate =uiHandler.getDateOfDelivery()
+
+        val deliveryDateTime = NepaliDateUtils.parseGregDateTime(
+            deliveryDate,
+            binding.etTimeOfDelivery.text.toString()
+        )
+
+        if (deliveryDate == null || deliveryDateTime == null) {
+            setFieldError(binding.etlDateOfDelivery, getString(R.string.this_field_is_mandatory))
+            return false
+        }
+
+        Log.d(TAG, "validateFields: deliveryDate : " + deliveryDate)
+        Log.d(TAG, "validateFields: deliveryDateTime : " + deliveryDateTime)
+        Log.d(TAG, "validateFields: date : " + Date())
+
+        if (deliveryDateTime.after(Date())) {
+            setFieldError(
+                binding.etlDateOfDelivery,
+                getString(R.string.date_of_delivery_future_not_allowed)
+            )
             return false
         }
 
@@ -257,7 +306,8 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
     private fun collectFormData(): DeliveryDetails {
         return DeliveryDetails().apply {
             //Section 1: Woman Delivery Details
-            dateOfDelivery = binding.etDateOfDelivery.text.toString().trim()
+            //dateOfDelivery = binding.etDateOfDelivery.text.toString().trim()
+            dateOfDelivery = uiHandler.getDateOfDelivery()
             timeOfDelivery = binding.etTimeOfDelivery.text.toString().trim()
             modeOfDelivery = uiHandler.handleOtherField(
                 keyName = DeliveryDetailsConcept.MODE_OF_DELIVERY.name,
@@ -443,7 +493,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             val t1 = format.parse(earlierTime)
             val t2 = format.parse(laterTime)
 
-            t2 != null && t1 != null && !t2.before(t1)
+            t2 != null && t1 != null && t2.after(t1)
 
         } catch (e: Exception) {
             false
