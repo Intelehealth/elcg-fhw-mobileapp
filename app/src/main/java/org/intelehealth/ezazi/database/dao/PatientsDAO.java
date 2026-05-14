@@ -683,10 +683,12 @@ public class PatientsDAO {
         }
         cursor.close();
 
-        if(stage == StageEnum.ONE) {
+        if (stage == StageEnum.ONE) {
             return stageName.contains("Stage1");
-        }else{
+        } else if (stage == StageEnum.TWO) {
             return stageName.contains("Stage2");
+        } else {
+            return stageName.contains("Stage3");
         }
     }
 }
