@@ -1,20 +1,33 @@
 package org.intelehealth.ezazi.stage3.Utils
 
 import android.content.Context
+import android.util.Log
 import android.view.View
 import android.widget.ArrayAdapter
+import android.widget.LinearLayout
+import android.widget.NumberPicker
 import android.widget.RadioGroup
+import androidx.annotation.Nullable
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputLayout
 import com.google.android.material.textview.MaterialTextView
 import org.intelehealth.ezazi.R
+import org.intelehealth.ezazi.activities.addNewPatient.PatientOtherInfoFragment
 import org.intelehealth.ezazi.databinding.ActivityWomenDeliveryDetailsBinding
+import org.intelehealth.ezazi.stage3.Utils.NepaliDateUtils.BS_MONTH_NAMES
+import org.intelehealth.ezazi.stage3.Utils.NepaliDateUtils.toGregFmt
 import org.intelehealth.ezazi.stage3.models.DeliveryDetails
 import org.intelehealth.ezazi.ui.dialog.CalendarDialog
 import org.intelehealth.ezazi.ui.dialog.MultiChoiceDialogFragment
 import org.intelehealth.ezazi.ui.dialog.ThemeTimePickerDialog
+import org.intelehealth.ezazi.utilities.NepaliDateConverter
 import org.intelehealth.ezazi.utilities.Utils
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 class DeliveryDetailsUIController(
     private val binding: ActivityWomenDeliveryDetailsBinding,
@@ -22,7 +35,8 @@ class DeliveryDetailsUIController(
     private val fragmentManager: FragmentManager
 ) {
     private lateinit var deliveryDetails: DeliveryDetails;
-
+    private  val GREG_FMT = "dd/MM/yyyy"
+    private var dateOfDelivery: String? = ""
     fun initialize() {
          deliveryDetails = DeliveryDetails()
 
@@ -200,7 +214,28 @@ class DeliveryDetailsUIController(
 
         // ---- End Icon Clicks ----
         binding.etlDateOfDelivery.setEndIconOnClickListener {
-            selectDeliveryDate()
+            showNepaliDatePicker(
+                R.string.select_date_of_delivery,
+                NepaliDateUtils.gregStringToBs(dateOfDelivery)
+            ) { y, m, d ->
+                val selectedGreg = toGregFmt(NepaliDateConverter.bsToGregorian(y, m, d))
+
+                // ← FIX: reject future dates right here in the picker callback,
+                //   same as PatientOtherInfoFragment's areValidFields() date check.
+                //   isAfterToday uses local-TZ parseGregDate — consistent with Calendar.
+                /*if (NepaliDateUtils.isAfterToday(selectedGreg)) {
+                    setFieldError(
+                        binding.etlDateOfDelivery,
+                        context.getString(R.string.date_of_delivery_future_not_allowed)
+                    )
+                    return@showNepaliDatePicker
+                }*/
+
+                dateOfDelivery = selectedGreg
+                binding.etDateOfDelivery.setText(NepaliDateUtils.formatBsDate(y, m, d))
+                clearTextInputError(binding.etlDateOfDelivery)
+                deliveryDetails.dateOfDelivery = dateOfDelivery
+            }
         }
 
         binding.etlTimeOfDelivery.setEndIconOnClickListener {
@@ -216,7 +251,30 @@ class DeliveryDetailsUIController(
         }
 
         // ---- Field Clicks ----
-        binding.etDateOfDelivery.setOnClickListener { selectDeliveryDate() }
+        binding.etDateOfDelivery.setOnClickListener {
+        //selectDeliveryDate()
+            showNepaliDatePicker(
+                R.string.select_date_of_delivery,
+                NepaliDateUtils.gregStringToBs(dateOfDelivery)
+            ) { y, m, d ->
+                val selectedGreg = toGregFmt(NepaliDateConverter.bsToGregorian(y, m, d))
+
+                /*if (NepaliDateUtils.isAfterToday(selectedGreg)) {
+                    setFieldError(
+                        binding.etlDateOfDelivery,
+                        context.getString(R.string.date_of_delivery_future_not_allowed)
+                    )
+                    return@showNepaliDatePicker
+                }*/
+
+                dateOfDelivery = selectedGreg
+                binding.etDateOfDelivery.setText(NepaliDateUtils.formatBsDate(y, m, d))
+                clearTextInputError(binding.etlDateOfDelivery)
+                deliveryDetails.dateOfDelivery = dateOfDelivery
+                Log.d("datedd", "handleClickListeners: dateOfDeliveryview : " + binding.etDateOfDelivery.text.toString())
+                Log.d("datedd", "handleClickListeners: dateOfDelivery : " + dateOfDelivery)
+            }
+        }
 
         binding.etTimeOfDelivery.setOnClickListener { selectTimeForAllParameters("timeOfDelivery") }
 
@@ -225,7 +283,7 @@ class DeliveryDetailsUIController(
         binding.actvAmtsl.setOnClickListener { showAmtslDialog() }
     }
     private fun selectDeliveryDate() {
-        val isTablet = context.resources.getBoolean(R.bool.isTabletSize)
+       val isTablet = context.resources.getBoolean(R.bool.isTabletSize)
         val maxHeight = context.resources.getDimensionPixelOffset(R.dimen.std_430dp)
 
         val dialog = CalendarDialog.Builder(context)
@@ -291,7 +349,7 @@ class DeliveryDetailsUIController(
             context.getString(R.string.none_option)
         )
 
-        // ✅ NEW — Restore previously selected values
+        //  Restore previously selected values
         val alreadySelectedText = binding.actvAmtsl.text?.toString()?.trim()
         val preSelected = if (alreadySelectedText.isNullOrEmpty())
             emptyList()
@@ -576,4 +634,82 @@ class DeliveryDetailsUIController(
         }
     }
 
+
+    private fun showNepaliDatePicker(
+        titleRes: Int,
+        currentBsDate: IntArray?,
+        listener: OnBsDateSelectedListener
+    ) {
+        val (initY, initM, initD) = if (currentBsDate != null && currentBsDate[0] > 0) {
+            Triple(currentBsDate[0], currentBsDate[1], currentBsDate[2])
+        } else {
+            val today = NepaliDateConverter.getCurrentBsDate()
+            Triple(today[0], today[1], today[2])
+        }
+
+        val yearPicker = NumberPicker(context)
+        val monthPicker = NumberPicker(context)
+        val dayPicker = NumberPicker(context)
+
+        yearPicker.minValue = 2000
+        yearPicker.maxValue = 2090
+        yearPicker.value = initY
+
+        // min/max MUST be set before displayedValues
+        monthPicker.minValue = 1
+        monthPicker.maxValue = 12
+        monthPicker.displayedValues = BS_MONTH_NAMES
+        monthPicker.value = initM
+
+        NepaliDateUtils.refreshDayPicker(dayPicker, initY, initM)
+        dayPicker.value = minOf(initD, dayPicker.maxValue)
+
+        val onChange =
+            NumberPicker.OnValueChangeListener { _, _, _ ->
+                NepaliDateUtils.refreshDayPicker(
+                    dayPicker,
+                    yearPicker.value,
+                    monthPicker.value
+                )
+            }
+
+        yearPicker.setOnValueChangedListener(onChange)
+        monthPicker.setOnValueChangedListener(onChange)
+
+        val layout = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(24, 24, 24, 24)
+        }
+
+        val lp = LinearLayout.LayoutParams(
+            0,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            1f
+        )
+
+        layout.addView(yearPicker, lp)
+        layout.addView(monthPicker, lp)
+        layout.addView(dayPicker, lp)
+
+        MaterialAlertDialogBuilder(context)
+            .setTitle("${context.getString(titleRes)} (BS)")
+            .setView(layout)
+            .setPositiveButton(R.string.ok) { _, _ ->
+                listener.onSelected(
+                    yearPicker.value,
+                    monthPicker.value,
+                    dayPicker.value
+                )
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    fun interface OnBsDateSelectedListener {
+        fun onSelected(year: Int, month: Int, day: Int)
+    }
+
+     fun getDateOfDelivery(): String?{
+        return dateOfDelivery;
+    }
 }
