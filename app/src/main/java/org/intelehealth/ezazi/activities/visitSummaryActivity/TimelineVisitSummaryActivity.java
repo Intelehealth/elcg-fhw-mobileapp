@@ -75,6 +75,7 @@ import org.intelehealth.ezazi.optimized_sync.network.NetworkStatus;
 import org.intelehealth.ezazi.models.dto.ProviderDTO;
 import org.intelehealth.ezazi.services.firebase_services.FirebaseRealTimeDBUtils;
 import org.intelehealth.ezazi.stage3.activities.WomenDeliveryDetailsActivity;
+import org.intelehealth.ezazi.stage3.postpartum.OfflineStage3ViewActivity;
 import org.intelehealth.ezazi.stage3.postpartum.ViewPostPartumReportActivity;
 import org.intelehealth.ezazi.syncModule.SyncUtils;
 import org.intelehealth.ezazi.ui.dialog.AppDialogUtils;
@@ -1604,7 +1605,14 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
     }
 
     private void showPostpartumReport() {
-        Intent intent = new Intent(context, ViewPostPartumReportActivity.class);
+        Intent intent;
+
+        if (NetworkConnection.isOnline(this)) {
+            intent = new Intent(context, ViewPostPartumReportActivity.class);
+        } else {
+            intent = new Intent(context, OfflineStage3ViewActivity.class);
+        }
+
         intent.putExtra("patientuuid", patientUuid);
         intent.putExtra("visituuid", visitUuid);
         startActivity(intent);
