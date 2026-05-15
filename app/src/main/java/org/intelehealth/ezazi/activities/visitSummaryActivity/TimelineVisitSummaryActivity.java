@@ -1228,6 +1228,9 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 
                 } else if (patientsDAO.checkStage(encounter.getEncounterTypeUuid(), StageEnum.TWO)) {
                     stageTwoList.add(encounter);
+                }else if (patientsDAO.checkStage(encounter.getEncounterTypeUuid(), StageEnum.THREE)) {
+                    //no need to show alert dialog for stage 3
+                    return;
                 }
             }
 

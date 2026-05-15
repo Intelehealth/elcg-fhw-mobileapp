@@ -165,7 +165,7 @@ public class NotificationUtils {
                 getPendingIntentFlag());
 
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(mcontext, NOTIFICATION_CHANNEL_ID_5MinsBefore);
-        mBuilder.setSmallIcon(R.mipmap.ic_launcher);
+        mBuilder.setSmallIcon(R.drawable.ezazi_logo);
         mBuilder.setContentTitle(mcontext.getString(R.string.notificationTitle_Timeline, patientName))
                 .setContentText(mcontext.getString(R.string.notificationTimeline_Description))
                 .setAutoCancel(true) // user clicks than notifi is cleared from status bar
@@ -201,7 +201,7 @@ public class NotificationUtils {
                 getPendingIntentFlag());
 
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(mcontext, NOTIFICATION_CHANNEL_ID_15MinsBefore);
-        mBuilder.setSmallIcon(R.mipmap.ic_launcher);
+        mBuilder.setSmallIcon(R.drawable.ezazi_logo);
         mBuilder.setContentTitle(mcontext.getString(R.string.notificationTitle_Timeline, patientName))
                 .setContentText("Is coming for data capture in 15mins")
                 .setAutoCancel(true) // user clicks than notifi is cleared from status bar

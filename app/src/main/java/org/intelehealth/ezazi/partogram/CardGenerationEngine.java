@@ -362,7 +362,7 @@ public class CardGenerationEngine {
 
         //Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         Uri defaultSoundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + IntelehealthApplication.getAppContext().getPackageName() + "/" + R.raw.al_1);
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(IntelehealthApplication.getAppContext(), channelId).setSmallIcon(R.mipmap.ic_launcher)
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(IntelehealthApplication.getAppContext(), channelId).setSmallIcon(R.drawable.ezazi_logo)
                 //.setContentTitle("Firebase Push Notification")
                 .setContentTitle(title).setContentText(message).setAutoCancel(true).setContentIntent(pendingIntent).setPriority(NotificationCompat.PRIORITY_HIGH);
 
