@@ -62,6 +62,7 @@ class DeliveryDetailsUIController(
         handleTextwatcher()
         setupApgar1MinDropdown()
         setupApgar5MinDropdown()
+        setupTypeOfStillBirthDropdown()
     }
     private fun setupPlacentaAndMembranesDropdown() {
         val placentaAndMembranesOptions = context.resources.getStringArray(R.array.placenta_and_membranes)
@@ -577,6 +578,7 @@ class DeliveryDetailsUIController(
 
     private fun handleLiveBirthUI(type: String?) {
         val isLiveBirth = type.equals("Live Birth", ignoreCase = true)
+        val isStillBirth = type.equals("Stillbirth", ignoreCase = true)
         val visibility = if (isLiveBirth) View.VISIBLE else View.GONE
 
         // APGAR
@@ -603,6 +605,15 @@ class DeliveryDetailsUIController(
 
         if(!isLiveBirth)
             clearLiveBirthFields()
+
+        // Stillbirth Field
+        binding.etlTypeOfStillBirth.visibility = if (isStillBirth) View.VISIBLE else View.GONE
+        binding.tvTypeOfStillBirth.visibility = if (isStillBirth) View.VISIBLE else View.GONE
+
+        if (!isStillBirth) {
+            binding.actvTypeOfStillBirth.setText("", false)
+            deliveryDetails.typeOfStillBirth = null
+        }
 
     }
     private fun setupApgar1MinDropdown() {
@@ -711,5 +722,17 @@ class DeliveryDetailsUIController(
 
      fun getDateOfDelivery(): String?{
         return dateOfDelivery;
+    }
+    private fun setupTypeOfStillBirthDropdown() {
+        val options = context.resources.getStringArray(R.array.type_of_stillbirth_options)
+        val adapter = ArrayAdapter(context, R.layout.spinner_textview, options)
+        binding.actvTypeOfStillBirth.setDropDownBackgroundResource(R.drawable.rounded_corner_white_with_gray_stroke)
+        binding.actvTypeOfStillBirth.setAdapter(adapter)
+        binding.actvTypeOfStillBirth.setOnItemClickListener { parent, _, position, _ ->
+            Utils.hideKeyboard(context as AppCompatActivity)
+            deliveryDetails.typeOfStillBirth = parent.getItemAtPosition(position).toString()
+            binding.actvTypeOfStillBirth.tag = deliveryDetails.typeOfStillBirth
+            clearTextInputError(binding.etlTypeOfStillBirth)
+        }
     }
 }

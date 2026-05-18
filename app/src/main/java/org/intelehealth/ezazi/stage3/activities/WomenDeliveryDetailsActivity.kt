@@ -343,7 +343,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             congenitalAnomalies= handleConditionalField(DeliveryDetailsConcept.CONGENITAL_ANOMALY.name,
                 uiHandler.getYesNoValue(binding.layoutCongenitalAnomaliesRadio.radioYesNoGroupCommon),  binding.autotvCongenitalYesOptions.text.toString(),
                 binding.etCongenitalYesOtherOption.text.toString())
-
+            typeOfStillBirth = binding.actvTypeOfStillBirth.text.toString().trim()
         }
     }
     private fun handleConditionalField(
