@@ -880,10 +880,10 @@ public class PatientOtherInfoFragment extends Fragment {
         }
 
         // 14. Secondary Doctor
-        if (TextUtils.isEmpty(mSecondaryDoctorTextView.getText().toString())) {
+        /*if (TextUtils.isEmpty(mSecondaryDoctorTextView.getText().toString())) {
             showError(tvErrorSecondaryDoctor, cardSecondaryDoctor, getString(R.string.select_secondary_doctor));
             isValid = false;
-        }
+        }*/
 
         return isValid;
     }

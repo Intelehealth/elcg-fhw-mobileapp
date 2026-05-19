@@ -207,15 +207,13 @@
         <item>None</item>
         <item>Oxytocin 10 IU intramuscular (IM)</item>
         <item>Oxytocin 10 IU slow intravenous (IV)</item>
-        <item>Oxytocin 20 IU IV Infusion at 60 drops per minute</item>
-        <item>Oxytocin 20 IU IV Infusion at 30 drops per minute</item>
         <item>Misoprostol 200 µg Oral</item>
         <item>Misoprostol 400 µg Oral</item>
         <item>Misoprostol 600 µg Oral</item>
         <item>Tranexamic acid 1 g (100 mg/1 ml) slow intravenous (IV)</item>
         <item>Methylergometrine Injection</item>
         <item>Carbetocin 100 µg intramuscular (IM)</item>
-        <item>Carbetocin 100 µg slow intravenous (IV)</item>
+        <item>Carbetocin 100 µg intravenous (IV)</item>
         <item>Other</item>
     </string-array>
 

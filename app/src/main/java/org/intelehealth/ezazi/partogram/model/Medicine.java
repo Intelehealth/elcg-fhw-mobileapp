@@ -180,38 +180,45 @@ public class Medicine implements Serializable, ItemHeader {
         return remark != null && remark.length() > 0 ? " | " + remark : "";
     }
 
-    public boolean isValidMedicine() {
+    /*public boolean isValidMedicine() {
         return name != null && name.length() > 0 && strength != null
                 && strength.length() > 0 && dosage != null && dosage.length() > 0 &&
                 dosageUnit != null && dosageUnit.length() > 0 && frequency != null &&
                 frequency.length() > 0 && form != null && form.length() > 0 && route != null &&
                 route.length() > 0 && duration != null && duration.length() > 0 && durationUnit != null
                 && durationUnit.length() > 0;
+    }*/
+    public boolean isValidMedicine() {
+        return name != null && name.length() > 0
+                && strength != null && strength.length() > 0
+                && dosage != null && dosage.length() > 0
+                && dosageUnit != null && dosageUnit.length() > 0
+                && form != null && form.length() > 0
+                && route != null && route.length() > 0;
     }
 
     public void dbFormatToMedicineObject(String data) {
         if (data != null && data.length() > 0) {
             String[] params = data.split("\\|");
-            ///NEW format ::  `<Form> | <MedicineName> | <Strength> | <Dosage>::<DosageUnit> || <Frequency> | <RouteOfMedicine> | <Duration>::<DurationUnit> | <Remark>`
-         /*   name = params[0].trim();
-            strength = params[1].trim();
-            dosage = params[2].trim().split("::")[0];
-            dosageUnit = params[2].trim().split("::")[1];
-            frequency = params[3].trim();
-            type = params[4].trim();
-            route = params[5].trim();*/
+            ///NEW format :: `<Form> | <MedicineName> | <Strength> | <Dosage>::<DosageUnit> | <Frequency> | <RouteOfMedicine> | <Duration>::<DurationUnit> | <Remark>`
+
             form = params[0].trim();
             name = params[1].trim();
             strength = params[2].trim();
-            dosage = params[3].trim().split("::")[0];
-            dosageUnit = params[3].trim().split("::")[1];
+
+            String[] dosageParts = params[3].trim().split("::", -1);
+            dosage = dosageParts.length > 0 ? dosageParts[0] : "";
+            dosageUnit = dosageParts.length > 1 ? dosageParts[1] : "";
+
             frequency = params[4].trim();
             route = params[5].trim();
-            duration = params[6].trim().split("::")[0];
-            durationUnit = params[6].trim().split("::")[1];
+
+            String[] durationParts = params[6].trim().split("::", -1);
+            duration = durationParts.length > 0 ? durationParts[0] : "";
+            durationUnit = durationParts.length > 1 ? durationParts[1] : "";
+
             if (params.length > 7)
                 remark = params[7].trim();
-
         }
     }
 
