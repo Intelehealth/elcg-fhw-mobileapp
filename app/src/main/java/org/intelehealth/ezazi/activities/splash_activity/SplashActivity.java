@@ -22,6 +22,8 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.Fragment;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -37,6 +39,7 @@ import org.intelehealth.ezazi.activities.setupActivity.SetupActivity;
 import org.intelehealth.ezazi.dataMigration.SmoothUpgrade;
 import org.intelehealth.ezazi.services.firebase_services.TokenRefreshUtils;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
+import org.intelehealth.ezazi.ui.dialog.PermissionRequiredDialog;
 import org.intelehealth.ezazi.utilities.Logger;
 import org.intelehealth.ezazi.utilities.SessionManager;
 
@@ -181,16 +184,30 @@ public class SplashActivity extends AppCompatActivity {
                     break;
                 }
             }
-            if (allGranted) {
+           /* if (allGranted) {
                 checkPerm();
             } else {
+                showPermissionDeniedAlert(permissions);
+            }*/
+            if (allGranted) {
+
+                Fragment dialog =
+                        getSupportFragmentManager().findFragmentByTag("PermissionDialog");
+
+                if (dialog != null) {
+                    ((DialogFragment) dialog).dismissAllowingStateLoss();
+                }
+
+                checkPerm();
+            }else {
                 showPermissionDeniedAlert(permissions);
             }
 
         }
     }
 
-    private void showPermissionDeniedAlert(String[] permissions) {
+
+   /* private void showPermissionDeniedAlert(String[] permissions) {
         ConfirmationDialogFragment dialog = new ConfirmationDialogFragment.Builder(this)
                 .title(R.string.required_permission)
                 .positiveButtonLabel(R.string.retry_again)
@@ -230,6 +247,7 @@ public class SplashActivity extends AppCompatActivity {
 //        //negativeButton.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
 //        IntelehealthApplication.setAlertDialogCustomTheme(this, alertDialog);
     }
+*/
 
     private boolean checkAndRequestPermissions() {
         List<String> listPermissionsNeeded = new ArrayList<>();
@@ -313,5 +331,36 @@ public class SplashActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
+    }
+
+    private void showPermissionDeniedAlert(String[] permissions) {
+
+        Fragment existing =
+                getSupportFragmentManager().findFragmentByTag("PermissionDialog");
+
+        if (existing != null) {
+            return; // dialog already visible, don't show again
+        }
+
+        String submit = getString(R.string.retry_again);
+        String close = getString(R.string.ok_close_now);
+
+        PermissionRequiredDialog dialog =
+                new PermissionRequiredDialog(
+                        close,
+                        submit,
+                        new PermissionRequiredDialog.OnActionClickListener() {
+
+                            @Override
+                            public void onRetryClicked() {
+                                checkPerm();
+                            }
+
+                            @Override
+                            public void onCloseClicked() {
+                            }
+                        });
+
+        dialog.show(getSupportFragmentManager(), "PermissionDialog");
     }
 }

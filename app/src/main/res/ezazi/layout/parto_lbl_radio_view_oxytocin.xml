@@ -26,9 +26,11 @@
                 style="@style/LabelStyle"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/std_4dp"
                 android:text="Param name"
                 android:textSize="@dimen/caption"
                 app:layout_constraintBottom_toBottomOf="@id/radioYesNoGroup"
+                app:layout_constraintEnd_toStartOf="@+id/radioYesNoGroup"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="@id/radioYesNoGroup" />
 
@@ -96,9 +98,11 @@
                     style="@style/LabelStyle"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:paddingEnd="@dimen/std_4dp"
                     android:text="@string/view_prescribed_oxytocin"
                     android:textSize="@dimen/caption"
                     app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/tvIvfluidCount"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 

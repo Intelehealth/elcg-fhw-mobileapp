@@ -1,5 +1,6 @@
 package org.intelehealth.ezazi.activities.homeActivity;
 
+import static org.intelehealth.ezazi.activities.homeActivity.RiskConcepts.RISK_CONCEPTS;
 import static org.intelehealth.ezazi.app.AppConstants.EVENT_SHIFT_CHANGED;
 import static org.intelehealth.ezazi.app.AppConstants.SHIFTED_DATA;
 import static org.intelehealth.ezazi.utilities.StringUtils.en__as_dob;
@@ -60,6 +61,8 @@ import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.LifecycleCoroutineScope;
+import androidx.lifecycle.LifecycleOwnerKt;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -70,6 +73,7 @@ import com.google.gson.Gson;
 
 import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.activities.activePatientsActivity.ActivePatientAdapter;
+import org.intelehealth.ezazi.activities.homeActivity.riskscores.VisitAlertBridgeForRiskCalculations;
 import org.intelehealth.ezazi.activities.loginActivity.LoginActivity;
 import org.intelehealth.ezazi.activities.searchPatientActivity.SearchPatientActivity;
 import org.intelehealth.ezazi.activities.splash_activity.SplashActivity;
@@ -93,6 +97,7 @@ import org.intelehealth.ezazi.services.firebase_services.CallListenerBackgroundS
 import org.intelehealth.ezazi.services.firebase_services.DeviceInfoUtils;
 import org.intelehealth.ezazi.services.firebase_services.TokenRefreshUtils;
 import org.intelehealth.ezazi.syncModule.SyncUtils;
+import org.intelehealth.ezazi.ui.dialog.AppDialogUtils;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
 import org.intelehealth.ezazi.ui.dialog.MultiChoiceDialogFragment;
 import org.intelehealth.ezazi.ui.dialog.SingleChoiceDialogFragment;
@@ -109,6 +114,7 @@ import org.intelehealth.ezazi.ui.visit.activity.VisitStatusActivity;
 import org.intelehealth.ezazi.ui.visit.data.VisitRepository;
 import org.intelehealth.ezazi.utilities.FileUtils;
 import org.intelehealth.ezazi.utilities.Logger;
+import org.intelehealth.ezazi.utilities.NetworkConnection;
 import org.intelehealth.ezazi.utilities.NotificationUtils;
 import org.intelehealth.ezazi.utilities.OfflineLogin;
 import org.intelehealth.ezazi.utilities.SessionManager;
@@ -141,6 +147,9 @@ import java.util.Set;
 import java.util.TimeZone;
 
 import io.reactivex.disposables.CompositeDisposable;
+import kotlin.Unit;
+import kotlin.coroutines.Continuation;
+import kotlinx.coroutines.CoroutineScope;
 
 /**
  * Home Screen
@@ -202,6 +211,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
 
     private List<VisitDTO> visitDTOList;
     /*eZazi End*/
+    private List<ActivePatientModel> visitsForRiskFactorCalculation;
 
 
     public static PendingIntent getPendingIntent(Context context, ShiftChangeData data) {
@@ -491,39 +501,40 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
         mEndShiftTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                try {
-                    String providerId = new SessionManager(IntelehealthApplication.getAppContext()).getProviderID();
-                    Logger.logV(TAG, "myCreatorUUID - " + providerId);
-                    visitDTOList = new VisitsDAO().getAllActiveVisitByProviderId(providerId);
-                    String[] patients = new String[visitDTOList.size()];
+                if (NetworkConnection.isOnline(context)) {
+                    try {
+                        String providerId = new SessionManager(IntelehealthApplication.getAppContext()).getProviderID();
+                        Logger.logV(TAG, "myCreatorUUID - " + providerId);
+                        visitDTOList = new VisitsDAO().getAllActiveVisitByProviderId(providerId);
+                        String[] patients = new String[visitDTOList.size()];
 
-                    ArrayList<MultiChoiceItem> items = new ArrayList<>();
-                    for (int i = 0; i < visitDTOList.size(); i++) {
-                        String visitUid = visitDTOList.get(i).getUuid();
-                        String creatorUuid = visitDTOList.get(i).getCreatoruuid();
-                        Logger.logV(TAG, "visitUid - " + visitUid);
-                        Logger.logV(TAG, "creatorUuid - " + creatorUuid);
-                        PatientsDAO patientsDAO = new PatientsDAO();
-                        FamilyMemberRes patientNameInfo = patientsDAO.getPatientNameInfo(visitDTOList.get(i).getPatientuuid());
-                        patientNameInfo.setVisitUuid(visitUid);
-                        items.add(patientNameInfo);
-                        String patientNameString = patientNameInfo.getOpenMRSID() + "\n" + patientNameInfo.getName();
-                        Logger.logV(TAG, "patientNameString - " + patientNameString);
-                        patients[i] = patientNameString;
-                    }
+                        ArrayList<MultiChoiceItem> items = new ArrayList<>();
+                        for (int i = 0; i < visitDTOList.size(); i++) {
+                            String visitUid = visitDTOList.get(i).getUuid();
+                            String creatorUuid = visitDTOList.get(i).getCreatoruuid();
+                            Logger.logV(TAG, "visitUid - " + visitUid);
+                            Logger.logV(TAG, "creatorUuid - " + creatorUuid);
+                            PatientsDAO patientsDAO = new PatientsDAO();
+                            FamilyMemberRes patientNameInfo = patientsDAO.getPatientNameInfo(visitDTOList.get(i).getPatientuuid());
+                            patientNameInfo.setVisitUuid(visitUid);
+                            items.add(patientNameInfo);
+                            String patientNameString = patientNameInfo.getOpenMRSID() + "\n" + patientNameInfo.getName();
+                            Logger.logV(TAG, "patientNameString - " + patientNameString);
+                            patients[i] = patientNameString;
+                        }
 //                    if (patients.length == 0) {
 //                        Toast.makeText(context, getString(R.string.no_more_visits_to_assign), Toast.LENGTH_SHORT).show();
 //                        showLogoutAlert();
 //                        return;
 //                    }
 
-                    if (items.size() == 0) {
-                        Toast.makeText(context, getString(R.string.no_more_visits_to_assign), Toast.LENGTH_SHORT).show();
-                        showLogoutAlert();
-                        return;
-                    }
+                        if (items.size() == 0) {
+                            Toast.makeText(context, getString(R.string.no_more_visits_to_assign), Toast.LENGTH_SHORT).show();
+                            showLogoutAlert();
+                            return;
+                        }
 
-                    showPatientChoiceDialog(items);
+                        showPatientChoiceDialog(items);
 
 //                    List<String> visitUUIDList = new ArrayList<>();
 //                    AlertDialog.Builder builder =
@@ -547,9 +558,13 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
 //                                }
 //                            });
 //                    builder.create().show();
-                } catch (DAOException e) {
-                    e.printStackTrace();
+                    } catch (DAOException e) {
+                        e.printStackTrace();
+                    }
+                }else{
+                    showErrorOnNoInternet();
                 }
+
             }
         });
 
@@ -766,15 +781,20 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
         //call sync
 
         // Check if the activity was opened from a notification click
-        if (getIntent() != null) {
+        /*if (getIntent() != null) {
             Log.d(TAG, "onCreate: shiftChangeNotification in if : " + new Gson().toJson(getIntent()));
 
-        }
+        }*/
         if (getIntent() != null && getIntent().hasExtra("shiftChangeNotification")) {
             Log.d(TAG, "onCreate: shiftChangeNotification");
             sync();
         }
         enableProperPadding(HomeActivity.this);
+
+        if (!NetworkConnection.isOnline(context)) {
+            showErrorOnNoInternet();
+        }
+        calculateRiskForAllVisits();
     }
 
     private void showPatientChoiceDialog(ArrayList<MultiChoiceItem> items) {
@@ -849,7 +869,8 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
             Toast.makeText(context, getString(R.string.syncInProgress), Toast.LENGTH_LONG).show();
             syncUtils.syncForeground("home");
         } else {
-            Toast.makeText(context, context.getString(R.string.failed_synced), Toast.LENGTH_LONG).show();
+            showErrorOnNoInternetOnRefresh();
+            //Toast.makeText(context, context.getString(R.string.failed_synced), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -973,7 +994,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
 
     }
 
-    private void loadVisits() {
+    private void loadVisitsOld() {
         if (sessionManager.isPullSyncFinished()) {
             getVisits();
             findViewById(R.id.tvEmpty).setVisibility(View.GONE);
@@ -2314,10 +2335,93 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
 
     @Override
     public boolean onQueryTextChange(String charSequence) {
-        String query = charSequence.trim();
+        //String query = charSequence.trim();
+        if (mActivePatientAdapter == null) return false;
+        String query = charSequence == null ? "" : charSequence.trim();
         mActivePatientAdapter.getFilter().filter(query);
         search = query;
         return false;
     }
+    private void loadVisits() {
+
+        // Step 1: get visits
+        List<ActivePatientModel> visits = new VisitQueryResultBinder().executeActiveVisitsQuery(offset, limit);
+        showOnHomeScreen(visits);
+      /*  LifecycleCoroutineScope scope = LifecycleOwnerKt.getLifecycleScope(this);
+        VisitAlertBridge.processVisits(scope, visits, result -> {
+                    showOnHomeScreen(result);
+                    return Unit.INSTANCE;
+                }
+        );*/
+    }
+
+    private void showOnHomeScreen(List<ActivePatientModel> visits) {
+        Collections.sort(visits, (v1, v2) -> Integer.compare(
+                        v2.getVisibilityOrder(),
+                        v1.getVisibilityOrder())
+        );
+
+        mActivePatientAdapter = new ActivePatientAdapter(visits, new ArrayList<>(visits), this, listPatientUUID, sessionManager);
+        mActiveVisitsRecyclerView.setAdapter(mActivePatientAdapter);
+
+        setActiveCasesCount();
+        showDecisionPendingVisits();
+    }
+    private void showErrorOnNoInternet() {
+        AppDialogUtils.showSingleButtonDialog(
+                this,
+                getString(R.string.no_internet_home_screen_title),
+                getString(R.string.no_internet_home_screen_body),
+                getString(R.string.ok),
+                () -> {
+                    //finish();
+                    return null;
+                }
+        );
+    }
+    private void showErrorOnNoInternetOnRefresh() {
+        AppDialogUtils.showSingleButtonDialog(
+                this,
+                getString(R.string.no_internet_setup_screen_title),
+                getString(R.string.no_internet_setup_screen_body),
+                getString(R.string.ok),
+                () -> {
+                    //finish();
+                    return null;
+                }
+        );
+    }
+    public void calculateRiskForAllVisits() {
+        int offset = 0;
+        int batchSize = 100; // batch size
+
+        LifecycleCoroutineScope scope = LifecycleOwnerKt.getLifecycleScope(this);
+
+        do {
+            visitsForRiskFactorCalculation = new VisitQueryResultBinder().executeVisitsQueryForRiskCalculation(offset, batchSize);
+            if (visitsForRiskFactorCalculation !=null && !visitsForRiskFactorCalculation.isEmpty()) {
+                VisitAlertBridgeForRiskCalculations.processVisits(scope, visitsForRiskFactorCalculation, result -> {
+                    VisitsDAO visitsDAO = new VisitsDAO();
+                        try {
+                            for (ActivePatientModel visit : result) {
+                                visitsDAO.updateVisitSync(visit.getUuid(), "false");
+                            }
+                        } catch (DAOException e) {
+                            e.printStackTrace();
+                            throw new RuntimeException(e);
+                        }
+
+                    boolean isSynced = syncUtils.syncForeground("visitSummary");
+
+                    return null; // Java lambda → Kotlin Unit
+                });
+            }
+
+            // Increment offset for next batch
+            offset += batchSize;
+
+        } while (!visitsForRiskFactorCalculation.isEmpty());
+    }
+
 
 }

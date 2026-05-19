@@ -100,9 +100,11 @@
                     style="@style/LabelStyle"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/std_4dp"
                     android:text="@string/lbl_assessment"
                     android:textSize="@dimen/caption"
                     app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/tvAssessmentCount"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 

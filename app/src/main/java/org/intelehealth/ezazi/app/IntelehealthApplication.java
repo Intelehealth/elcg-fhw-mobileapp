@@ -17,6 +17,7 @@ import androidx.multidex.MultiDex;
 import androidx.multidex.MultiDexApplication;
 
 import com.github.ajalt.timberkt.Timber;
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.parse.Parse;
 
@@ -70,16 +71,18 @@ public class IntelehealthApplication extends MultiDexApplication implements Appl
         super.onCreate();
         sIntelehealthApplication = this;
         //For Vector Drawables Backward Compatibility(<API 21)
+        FirebaseApp.initializeApp(this);
+
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
         mContext = getApplicationContext();
         sessionManager = new SessionManager(this);
         // keeping the base url in one singleton object for using in apprtc module
 
-        configureCrashReporting();
+        //configureCrashReporting();
 
-        RxJavaPlugins.setErrorHandler(throwable -> {
+     /*   RxJavaPlugins.setErrorHandler(throwable -> {
              FirebaseCrashlytics.getInstance().recordException(throwable);
-        });
+        });*/
         androidId = String
                 .format("%16s", Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID))
                 .replace(' ', '0');

@@ -3,8 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingStart="@dimen/login_screen_padding"
-    android:paddingEnd="@dimen/login_screen_padding">
+  >
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/tvLblUsername"
@@ -12,7 +11,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/username"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/etUsernameLayout"
         app:layout_constraintTop_toTopOf="parent" />
 
     <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
@@ -20,7 +19,11 @@
         style="@style/Theme.EZazi.Input.Login"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginStart="28dp"
         android:layout_marginTop="@dimen/screen_container_padding"
+        android:layout_marginEnd="28dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvLblUsername">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -45,7 +48,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/screen_container_padding"
         android:text="@string/prompt_password"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/etPasswordLayout"
         app:layout_constraintTop_toBottomOf="@id/etUsernameLayout" />
 
     <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
@@ -53,7 +56,11 @@
         style="@style/Theme.EZazi.Input.Login.Password"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginStart="28dp"
         android:layout_marginTop="@dimen/screen_container_padding"
+        android:layout_marginEnd="28dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvLblPassword">
 
         <com.google.android.material.textfield.TextInputEditText

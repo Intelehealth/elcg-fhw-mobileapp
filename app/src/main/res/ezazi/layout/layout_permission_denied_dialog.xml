@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <import type="android.view.View"/>
+
+        <variable
+            name="dismissLabel"
+            type="String"/>
+
+        <variable
+            name="submitLabel"
+            type="String"/>
+    </data>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:background="#80000000"
+        android:layout_height="match_parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <!-- Centered container -->
+            <LinearLayout
+                android:id="@+id/dialogContainer"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center_horizontal"
+                android:padding="20dp"
+                app:layout_constraintWidth_percent="0.90"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <!-- White Card -->
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="8dp"
+                    app:cardUseCompatPadding="true"
+                    app:cardBackgroundColor="@android:color/white">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:layout_width="match_parent"
+                            android:textSize="18sp"
+                            android:layout_height="wrap_content"
+                            android:text="@string/required_permission"
+                            android:padding="@dimen/screen_container_padding"
+                            android:textColor="@color/red"
+                            android:gravity="center"
+                            android:paddingBottom="8dp"/>
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="If you reject permission, you can not use this service"
+                            android:textColor="#3F51B5"
+                            android:textSize="14sp"
+                            android:gravity="center"
+                            android:paddingBottom="6dp"/>
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Please turn on permissions at [Setting] > [Permission]"
+                            android:textColor="#3F51B5"
+                            android:paddingBottom="6dp"
+                            android:textSize="14sp"
+                            android:gravity="center"/>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <!-- Space -->
+             <!--   <androidx.constraintlayout.widget.Space
+                    android:layout_width="match_parent"
+                    android:layout_height="24dp"/>-->
+
+                <!-- Buttons row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginEnd="15dp"
+                    android:layout_marginStart="15dp"
+                    android:gravity="center">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnDismiss"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="5dp"
+                        app:cornerRadius="@dimen/button_corner_radius"
+                        android:paddingVertical="8dp"
+                        android:backgroundTint="@color/white"
+                        android:textColor="@color/colorPrimary"
+                        android:paddingHorizontal="8dp"
+                        android:textSize="@dimen/dialog_btn_text_size_permission"
+                        android:text="@{dismissLabel}"
+                        tools:text="Ok, Close It"/>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSubmit"
+                        android:layout_width="0dp"
+                        android:paddingVertical="8dp"
+                        app:cornerRadius="@dimen/button_corner_radius"
+                        android:paddingHorizontal="8dp"
+                        android:textSize="@dimen/dialog_btn_text_size_permission"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="5dp"
+                        android:text="@{submitLabel}"
+                        tools:text="Retry Again!"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </FrameLayout>
+
+</layout>

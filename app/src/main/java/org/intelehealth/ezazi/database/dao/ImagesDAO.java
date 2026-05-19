@@ -202,7 +202,7 @@ public class ImagesDAO {
         List<PatientProfile> patientProfiles = new ArrayList<>();
         SQLiteDatabase localdb = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
         Base64Utils base64Utils = new Base64Utils();
-        localdb.beginTransaction();
+        //localdb.beginTransaction();
         try {
             Cursor idCursor = localdb.rawQuery("SELECT * FROM tbl_image_records where sync = ? OR sync=? AND image_type = ? COLLATE NOCASE", new String[]{"0", "false", "PP"});
             if (idCursor.getCount() != 0) {
@@ -217,7 +217,7 @@ public class ImagesDAO {
         } catch (SQLiteException e) {
             throw new DAOException(e);
         } finally {
-            localdb.endTransaction();
+           // localdb.endTransaction();
 
         }
 
@@ -227,7 +227,7 @@ public class ImagesDAO {
     public List<ObsPushDTO> getObsUnsyncedImages() throws DAOException {
         List<ObsPushDTO> obsImages = new ArrayList<>();
         SQLiteDatabase localdb = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
-        localdb.beginTransaction();
+        //localdb.beginTransaction();
         try {
             Cursor idCursor = localdb.rawQuery("select c.uuid as patientuuid,d.conceptuuid,a.uuid as encounteruuid,d.uuid as obsuuid,d.modified_date  from tbl_encounter a , tbl_visit b , tbl_patient c,tbl_obs d where a.visituuid=b.uuid and b.patientuuid=c.uuid and d.encounteruuid=a.uuid and (d.sync=0 or d.sync='false') and (d.conceptuuid=? or d.conceptuuid=?) and d.voided='0'", new String[]{UuidDictionary.COMPLEX_IMAGE_PE, UuidDictionary.COMPLEX_IMAGE_AD});
             if (idCursor.getCount() != 0) {
@@ -245,7 +245,7 @@ public class ImagesDAO {
         } catch (SQLiteException e) {
             throw new DAOException(e);
         } finally {
-            localdb.endTransaction();
+            //localdb.endTransaction();
 
         }
 

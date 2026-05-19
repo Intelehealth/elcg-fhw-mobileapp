@@ -20,13 +20,16 @@
             style="@style/LabelStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/std_4dp"
             android:text="Param name"
             android:textSize="@dimen/caption"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/textInputLayout"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textInputLayout"
             style="@style/Theme.EZazi.Input.NoLabel"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -40,11 +43,11 @@
                 style="@style/Theme.EZazi.Scrollbar.Thumb"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:dropDownSelector="@color/white"
                 android:gravity="center_vertical"
                 android:hint="@string/enter_value"
-                android:padding="@dimen/screen_container_padding"
                 android:inputType="none"
-                android:dropDownSelector="@color/white"
+                android:padding="@dimen/screen_container_padding"
                 android:textSize="@dimen/small_input_text_size" />
         </com.google.android.material.textfield.TextInputLayout>
 

@@ -17,13 +17,16 @@ public class ActivePatientModel {
     String phone_number;
     String sync;
     String gender;
-    int alertFlagTotal;
+    double alertFlagTotal;
     int visibilityOrder;
     private String stageName;
     private boolean obsExistsFlag;
     String birthOutcomeValue;
 
     private String bedNo;
+
+    public ActivePatientModel() {
+    }
 
     private String latestEncounterId;
 
@@ -141,11 +144,11 @@ public class ActivePatientModel {
         this.gender = gender;
     }
 
-    public int getAlertFlagTotal() {
+    public double getAlertFlagTotal() {
         return alertFlagTotal;
     }
 
-    public void setAlertFlagTotal(int alertFlagTotal) {
+    public void setAlertFlagTotal(double alertFlagTotal) {
         this.alertFlagTotal = alertFlagTotal;
     }
 

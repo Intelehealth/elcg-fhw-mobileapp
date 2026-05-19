@@ -6,10 +6,13 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.http.SslError;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Html;
 import android.util.Log;
 import android.util.Xml;
@@ -61,6 +64,10 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
     private SessionManager sessionManager;
 
     private boolean isLoaded = false;
+    private Handler timeoutHandler;
+    private boolean isPageLoaded = false;
+    private boolean isErrorShown = false;
+    private CustomProgressDialog progressDialog;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -69,6 +76,11 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
         super.onCreate(savedInstanceState);
         setupActionBar();
         enableProperPadding(EpartogramViewActivity.this);
+        timeoutHandler = new Handler(Looper.getMainLooper());
+        progressDialog = new CustomProgressDialog(this);
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+
         sessionManager = new SessionManager(this);
         webArchiveFileDir = FileUtils.getProjectCatchDir(this);
         Timber.tag(TAG).d("webArchive =>%s", webArchiveFileDir);
@@ -82,6 +94,8 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
         webView = findViewById(R.id.webview_epartogram);
         mySwipeRefreshLayout = (SwipeRefreshLayout) this.findViewById(R.id.swipeContainer);
 
+        webView.clearCache(true);
+        webView.clearHistory();
 
         webView.setSaveEnabled(true);
 //        HtmlJSInterface htmlJSInterface = new HtmlJSInterface();
@@ -109,7 +123,19 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
 
         if (NetworkConnection.isOnline(this)) {
             Log.e(TAG, "onCreate: isOnline");
-            webView.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
+            isPageLoaded = false;
+            progressDialog.show();
+
+            timeoutHandler.postDelayed(() -> {
+                if (!isPageLoaded) {
+                    Log.e(TAG, "Manual timeout triggered");
+                    webView.stopLoading();
+                    progressDialog.dismiss();
+                    handleError();
+                }
+            }, 20000);  // 20 seconds
+            //webView.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
+            webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
             webView.loadUrl(URL + visitUuid);
         } else if (!sessionManager.getLCGContentFile(visitUuid).isEmpty()) {
             Log.e(TAG, "onCreate: isOnline");
@@ -122,7 +148,8 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
 //            webView.loadDataWithBaseURL(null, webArchiveFile, "text/html", "UTF-8", null);
         } else {
             webView.setVisibility(View.GONE);
-            Toast.makeText(this, getString(R.string.please_connect_to_internet), Toast.LENGTH_LONG).show();
+            //Toast.makeText(this, getString(R.string.please_connect_to_internet), Toast.LENGTH_LONG).show();
+            showPageLoadingErrorDialog();
         }
 
         Log.v("epartog", "webviewUrl: " + URL + visitUuid);
@@ -139,8 +166,29 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
 //        }
 
         @Override
+        public void onPageStarted(WebView view, String url, Bitmap favicon) {
+            super.onPageStarted(view, url, favicon);
+
+            isPageLoaded = false;
+
+            timeoutHandler.postDelayed(() -> {
+                if (!isPageLoaded) {
+                    Log.e(TAG, "Server timeout detected");
+                    progressDialog.dismiss();
+                    handleError();
+                }
+            }, 20000); // 20 sec timeout
+        }
+        @Override
         public void onPageFinished(WebView view, String url) {
             mySwipeRefreshLayout.setRefreshing(false);
+            Log.d(TAG, "onPageFinished: kz 2");
+            isPageLoaded = true;
+            timeoutHandler.removeCallbacksAndMessages(null);
+
+            if (progressDialog.isShowing()) {
+                progressDialog.dismiss();
+            }
             if (NetworkConnection.isOnline(EpartogramViewActivity.this)) {
                 String fileName = visitUuid + ".mht";
                 Timber.tag(TAG).d("fileName => %s", fileName);
@@ -162,43 +210,66 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
         }
 
         @Override
-        public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+        public void onReceivedError(WebView view,
+                                    WebResourceRequest request,
+                                    WebResourceError error) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                Log.i("WEB_VIEW_TEST", "error code:" + error.getErrorCode());
+                if (request.isForMainFrame()) {
+                    Log.e(TAG, "Main frame error: " + error.getErrorCode());
+                    handleError();
+                }
             }
-            super.onReceivedError(view, request, error);
         }
 
         @Override
-        public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                Log.i("WEB_VIEW_TEST", "error code:" + errorResponse.getStatusCode());
+        public void onReceivedHttpError(WebView view,
+                                        WebResourceRequest request,
+                                        WebResourceResponse errorResponse) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                if (request.isForMainFrame()) {
+                    Log.e(TAG, "HTTP error: " + errorResponse.getStatusCode());
+
+                    if (errorResponse.getStatusCode() >= 400) {
+                        handleError();
+                    }
+                }
             }
-            super.onReceivedHttpError(view, request, errorResponse);
         }
 
         @Override
-        public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
-            super.onReceivedSslError(view, handler, error);
+        public void onReceivedSslError(WebView view,
+                                       SslErrorHandler handler,
+                                       SslError error) {
+            handler.cancel(); // Important
+            handleError();
         }
     };
 
     private void handleError() {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
+        if (isErrorShown) return;
+        isErrorShown = true;
+
         webView.setVisibility(View.GONE);
         showPageLoadingErrorDialog();
     }
 
     private void showPageLoadingErrorDialog() {
         ConfirmationDialogFragment dialogFragment = new ConfirmationDialogFragment.Builder(this)
-                .content(getString(R.string.content_webview_page_loading_issue))
-                .positiveButtonLabel(R.string.retry_again)
-                .negativeButtonLabel(R.string.action_exit)
+                .title(R.string.no_internet_title)
+                .content(getString(R.string.no_internet_content))
+                .positiveButtonLabel(R.string.action_exit)
+                .hideNegativeButton(true)
                 .build();
 
         dialogFragment.setListener(new ConfirmationDialogFragment.OnConfirmationActionListener() {
             @Override
             public void onAccept() {
-                webView.reload();
+                //webView.reload();
+                ConfirmationDialogFragment.OnConfirmationActionListener.super.onDecline();
+                finish();
             }
 
             @Override
@@ -213,7 +284,8 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
 
     private void showInternetRequireDialog() {
         ConfirmationDialogFragment dialogFragment = new ConfirmationDialogFragment.Builder(this)
-                .content(getString(R.string.content_elcg_internet_require))
+                .title(R.string.no_internet_timeline_screen_title)
+                .content(getString(R.string.no_internet_timeline_screen_body))
                 .positiveButtonLabel(R.string.ok)
                 .hideNegativeButton(true)
                 .build();

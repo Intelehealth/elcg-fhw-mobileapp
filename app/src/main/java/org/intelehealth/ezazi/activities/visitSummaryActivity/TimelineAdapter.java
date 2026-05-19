@@ -13,6 +13,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
@@ -26,7 +27,10 @@ import org.intelehealth.ezazi.models.dto.EncounterDTO;
 import org.intelehealth.ezazi.models.dto.ObsDTO;
 import org.intelehealth.ezazi.partogram.PartogramConstants;
 import org.intelehealth.ezazi.partogram.PartogramDataCaptureActivity;
+import org.intelehealth.ezazi.ui.dialog.AppDialogUtils;
+import org.intelehealth.ezazi.utilities.NetworkConnection;
 import org.intelehealth.ezazi.utilities.SessionManager;
+import org.intelehealth.ezazi.utilities.UuidDictionary;
 import org.intelehealth.klivekit.utils.DateTimeUtils;
 
 import java.util.ArrayList;
@@ -124,7 +128,7 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
                 // check for this enc any obs created if yes than show submitted...
                 obsDAO = new ObsDAO();
                 submitted = obsDAO.checkObsAddedOrNt(encounterDTOList.get(position).getUuid(), sessionManager.getCreatorID());
-
+                Log.d(TAG, "onBindViewHolder: submitted : "+submitted);
 //                try {
                 Date timeDateType = DateTimeUtils.utcToLocalDate(time, AppConstants.UTC_FORMAT);
 
@@ -315,14 +319,18 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
             ivEdit.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    nextIntent(PartogramConstants.AccessMode.EDIT);
+                    if(handleNoInternetCase()){
+                        nextIntent(PartogramConstants.AccessMode.EDIT);
+                    }
                 }
             });
             cardview.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    PartogramConstants.AccessMode mode = (PartogramConstants.AccessMode) view.getTag();
-                    nextIntent(mode);
+                    //if(handleNoInternetCase()) {
+                        PartogramConstants.AccessMode mode = (PartogramConstants.AccessMode) view.getTag();
+                        nextIntent(mode);
+                   // }
                 }
             });
         }
@@ -331,21 +339,39 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
             Log.v("nextIntent", "nextIntent isEditMode - " + mode);
             String encounterType = encounterDTOList.get(getAbsoluteAdapterPosition()).getEncounterType().toString();
             Log.v("nextIntent", "encounterType - " + encounterType);
+
             int type = 10;
             int stage = 1;
-            String[] name = encounterDTOList.get(getAbsoluteAdapterPosition()).getEncounterTypeName().split("_");
-            if (encounterDTOList.get(getAbsoluteAdapterPosition()).getEncounterTypeName().toLowerCase().contains("stage1")) {
-                //type = getAdapterPosition() % 2 != 0 ? HALF_HOUR : HOURLY; // card clicked is 30min OR 1 Hr
-                type = Integer.parseInt(name[2]) == 2 ? HALF_HOUR : HOURLY; // card clicked is 30min OR 1 Hr
-            } else if (encounterDTOList.get(getAbsoluteAdapterPosition()).getEncounterTypeName().toLowerCase().contains("stage2")) {
-                stage = 2;
-                //type = FIFTEEN_MIN; // card clicked is 15mins.
-                //Stage2_Hour1_1   --> 2 3 4
-                if (Integer.parseInt(name[2]) == 1) {
-                    type = HOURLY;
-                } else if (Integer.parseInt(name[2]) == 2 || Integer.parseInt(name[2]) == 3 || Integer.parseInt(name[2]) == 4) {
-                    type = FIFTEEN_MIN;
-                }
+            String encounterName = encounterDTOList.get(getAbsoluteAdapterPosition()).getEncounterTypeName();
+            if(encounterDTOList.get(getAbsoluteAdapterPosition()).getEncounterTypeUuid().equals(UuidDictionary.LCG_SOS)){
+                type = HOURLY;
+                //encounterType = EncounterDTO.Type.SOS.name();
+                EncounterTypeResolver resolver = new EncounterTypeResolver();
+                EncounterDTO.Type enumOfTypes = resolver.resolve(encounterType);
+                encounterType = enumOfTypes.name();
+                String obsValue =encounterDTOList.get(getAbsoluteAdapterPosition()).getObsValue();
+                String[] parts = obsValue.split("_");   // ["Stage1", "Hour1", "SOS1"]
+                String stagePart = parts[0];         // "Stage1"
+                String stageNumber = stagePart.replace("Stage", "");  // "1"
+                if(!stageNumber.isEmpty()) stage = Integer.parseInt(stageNumber);
+            }else{
+                if(encounterName!=null && !encounterName.isEmpty()){
+                    String[] name = encounterName.split("_");
+                    if (encounterName.toLowerCase().contains("stage1")) {
+                        //type = getAdapterPosition() % 2 != 0 ? HALF_HOUR : HOURLY; // card clicked is 30min OR 1 Hr
+                        type = Integer.parseInt(name[2]) == 2 ? HALF_HOUR : HOURLY; // card clicked is 30min OR 1 Hr
+                    } else if (encounterName.toLowerCase().contains("stage2")) {
+                        stage = 2;
+                        //type = FIFTEEN_MIN; // card clicked is 15mins.
+                        //Stage2_Hour1_1   --> 2 3 4
+                        if (Integer.parseInt(name[2]) == 1) {
+                            type = HOURLY;
+                        } else if (Integer.parseInt(name[2]) == 2 || Integer.parseInt(name[2]) == 3 || Integer.parseInt(name[2]) == 4) {
+                            type = FIFTEEN_MIN;
+                        }
+                    }
+            }
+
                 /*if (Integer.parseInt(name[2]) == 1) {
                     type = HOURLY;
                 } else if (Integer.parseInt(name[2]) == 3) {
@@ -353,22 +379,24 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
                 } else {
                     type = FIFTEEN_MIN;
                 }*/
-            }
-            Log.d("final list print", "nextIntent: whole list : " + new Gson().toJson(encounterDTOList));
-            Log.d("final", "nextIntent: encountertype : " + encounterType);
-            Intent i1 = new Intent(context, PartogramDataCaptureActivity.class);
-            i1.putExtra("patientUuid", patientUuid);
-            i1.putExtra("name", patientName);
-            i1.putExtra("visitUuid", visitUuid);
-            i1.putExtra("encounterUuid", encounterDTOList.get(getAbsoluteAdapterPosition()).getUuid());
-            i1.putExtra("type", type);
-            i1.putExtra("stage", stage);
-            i1.putExtra("encounterName", encounterDTOList.get(getAbsoluteAdapterPosition()).getEncounterTypeName());
-            i1.putExtra("encounterType", encounterType);
+                }
+                Log.d("final list print", "nextIntent: whole list : " + new Gson().toJson(encounterDTOList));
+                Log.d("final", "nextIntent: encountertype : " + encounterType);
+                Intent i1 = new Intent(context, PartogramDataCaptureActivity.class);
+                i1.putExtra("patientUuid", patientUuid);
+                i1.putExtra("name", patientName);
+                i1.putExtra("visitUuid", visitUuid);
+                i1.putExtra("encounterUuid", encounterDTOList.get(getAbsoluteAdapterPosition()).getUuid());
+                i1.putExtra("type", type);
+                i1.putExtra("stage", stage);
+                i1.putExtra("encounterName", encounterDTOList.get(getAbsoluteAdapterPosition()).getEncounterTypeName());
+                i1.putExtra("encounterType", encounterType);
 
-            i1.putExtra(TIMELINE_MODE, mode);
-            context.startActivity(i1);
+                i1.putExtra(TIMELINE_MODE, mode);
+                context.startActivity(i1);
+           // }
         }
+
     }
 
     private void updateEditIconVisibility(MaterialButton editButton) {
@@ -395,5 +423,22 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
         if (status == EncounterDTO.Status.PENDING) return R.string.tap_here_to_capture_obs;
         else if (status == EncounterDTO.Status.MISSED) return R.string.you_have_missed_obs;
         else return R.string.you_have_captured_obs;
+    }
+    private boolean handleNoInternetCase() {
+        boolean isInternetAvailable=true;
+        if (!NetworkConnection.isOnline(context)) {
+            isInternetAvailable = false;
+            AppDialogUtils.showSingleButtonDialog(
+                    (FragmentActivity)context,
+                    context.getString(R.string.no_internet_timeline_screen_title),
+                    context.getString(R.string.no_internet_timeline_screen_body),
+                    context.getString(R.string.ok),
+                    () -> {
+                        //finish();
+                        return null;
+                    }
+            );
+        }
+        return isInternetAvailable;
     }
 }

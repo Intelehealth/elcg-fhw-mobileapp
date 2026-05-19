@@ -4,7 +4,10 @@
     <dimen name="negative_vector_margin">-200dp</dimen>
     <dimen name="screen_title_size">@dimen/std_36sp</dimen>
     <dimen name="screen_padding">@dimen/std_50dp</dimen>
-    <dimen name="login_screen_padding">@dimen/std_135dp</dimen>
+<!--
+    Some view was not showing properly on the tab that's why updated padding 28 dp from 135 dp
+-->
+    <dimen name="login_screen_padding">@dimen/std_28dp</dimen>
     <dimen name="screen_container_padding">@dimen/std_20dp</dimen>
     <dimen name="list_container_padding">@dimen/std_8dp</dimen>
     <dimen name="input_height">86dp</dimen>
@@ -30,7 +33,7 @@
     <dimen name="small_btn_vertical_padding">@dimen/std_16dp</dimen>
     <dimen name="bottom_menu_text_size">@dimen/std_18sp</dimen>
     <dimen name="bottom_menu_icon_size">@dimen/std_40dp</dimen>
-    <dimen name="alert_icon_size">70dp</dimen>
+    <dimen name="alert_icon_size">90dp</dimen>
     <dimen name="design_bottom_navigation_height" tools:override="true">@dimen/std_84dp</dimen>
     <dimen name="heading1">@dimen/std_22sp</dimen>
     <dimen name="heading2">@dimen/std_20sp</dimen>
@@ -43,7 +46,7 @@
     <dimen name="container_corner_radius">@dimen/std_20dp</dimen>
     <dimen name="alert_text_size">@dimen/std_32sp</dimen>
     <dimen name="between_label_and_input_margin">@dimen/std_21dp</dimen>
-    <dimen name="actionbar_vertical_padding">@dimen/std_34dp</dimen>
+    <dimen name="actionbar_vertical_padding">@dimen/std_8dp</dimen>
     <dimen name="actionbar_horizontal_padding">@dimen/std_70dp</dimen>
     <dimen name="back_button_size">@dimen/std_64dp</dimen>
     <dimen name="back_button_padding">@dimen/std_16dp</dimen>
@@ -168,7 +171,7 @@
     <dimen name="timeline_time_width">@dimen/std_130dp</dimen>
     <dimen name="actionbar_title_left_margin">@dimen/std_26dp</dimen>
     <dimen name="timeline_bottom_menu_horizontal_padding">@dimen/std_24dp</dimen>
-    <dimen name="timeline_btn_height">@dimen/std_65dp</dimen>
+    <dimen name="timeline_btn_height">@dimen/std_45dp</dimen>
     <dimen name="sos_text_size">@dimen/std_30sp</dimen>
     <dimen name="bottom_menu_min_height">@dimen/std_135dp</dimen>
     <dimen name="small_input_text_size">@dimen/std_14sp</dimen>
@@ -246,7 +249,7 @@
     <dimen name="power_by_logo_top_margin">-20dp</dimen>
     <dimen name="margin_bottom_scroll_other">110dp</dimen>
     <dimen name="contact_summary_margin_end">12dp</dimen>
-    <dimen name="add_patient_subheading_text_size">@dimen/std_23sp</dimen>
+    <dimen name="add_patient_subheading_text_size">@dimen/std_18dp</dimen>
     <dimen name="whatsapp_icon_size_new">@dimen/std_26dp</dimen>
     <dimen name="tab_margin_from_text">@dimen/std_24dp</dimen>
     <dimen name="dropdown_max_height_dialog">200dp</dimen>
@@ -268,4 +271,10 @@
     <dimen name="menu_icon_size">@dimen/std_48dp</dimen>
     <dimen name="empty_data_icon_size">@dimen/std_120dp</dimen>
     <dimen name="outcome_pending_msg_padding">@dimen/std_20dp</dimen>
+
+    <dimen name="common_dialog_button_top_bottom_padding">32dp</dimen>
+
+    <dimen name="forgot_password_screen_padding">@dimen/std_65dp</dimen>
+    <dimen name="dialog_btn_text_size_permission">@dimen/std_16sp</dimen>
+
 </resources>

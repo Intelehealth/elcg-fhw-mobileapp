@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.text.InputFilter;
 import android.text.InputType;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -16,6 +17,7 @@ import androidx.navigation.NavDirections;
 import androidx.navigation.Navigation;
 
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.gson.Gson;
 import com.hbb20.CountryCodePicker;
 
 import org.intelehealth.ezazi.R;
@@ -88,13 +90,44 @@ public class ForgotPasswordFragment extends Fragment {
     private void requestOTP() {
         PasswordViewModel viewModel = new ViewModelProvider(this, ViewModelProvider.Factory.from(PasswordViewModel.initializer)).get(PasswordViewModel.class);
 
-        requestOTPModel = new RequestOTPModel(OTPForString, mPhoneNumberEditText.getText().toString(), mSelectedCountryCode);
+        requestOTPModel = new RequestOTPModel(OTPForString, mPhoneNumberEditText.getText().toString(), mSelectedCountryCode, "mobile");
         viewModel.requestOtp(requestOTPModel);
 
     }
 
     private void observeData() {
-        //success
+        viewModel.requestOTPResponseData.observe(getViewLifecycleOwner(), requestOTPResult -> {
+
+            Log.d(TAG, "observeData: requestOTPResult : " + new Gson().toJson(requestOTPResult));
+
+            if (requestOTPResult != null && requestOTPResult.getUserUuid() != null) {
+
+                String role = requestOTPResult.getRole();
+
+                if (role != null && role.equalsIgnoreCase("Nurse")) {
+                    Toast.makeText(mContext, getResources().getString(R.string.otp_sent), Toast.LENGTH_SHORT).show();
+                    NavDirections directions = ForgotPasswordFragmentDirections.forgotToOtpVerificationFragment(requestOTPModel);
+                    Navigation.findNavController(requireView()).navigate(directions);
+                } else {
+                    //Toast.makeText(mContext, getResources().getString(R.string.not_nurse_login_error), Toast.LENGTH_LONG).show();
+                    binding.contentForgotPassword.etUsernameLayout.setFocusable(true);
+                    binding.contentForgotPassword.etUsernameLayout.setError(getString(R.string.not_nurse_login_error));
+                }
+
+                viewModel.clearPreviousResult();
+            }
+        });
+
+        viewModel.loading.observe(getViewLifecycleOwner(), aBoolean -> {
+            if (aBoolean) {
+                customProgressDialog.show();
+            } else {
+                if (customProgressDialog.isShowing()) {
+                    customProgressDialog.dismiss();
+                }
+            }
+        });
+       /* //success
         viewModel.requestOTPResponseData.observe(getViewLifecycleOwner(), requestOTPResult -> {
             if (requestOTPResult != null && requestOTPResult.getUserUuid() != null) {
                 Toast.makeText(mContext, getResources().getString(R.string.otp_sent), Toast.LENGTH_SHORT).show();
@@ -114,14 +147,14 @@ public class ForgotPasswordFragment extends Fragment {
                     customProgressDialog.dismiss();
                 }
             }
-        });
+        });*/
 
         //failure - success - false
         viewModel.failDataResult.observe(getViewLifecycleOwner(), failureResultData -> {
             //Toast.makeText(mContext, failureResultData, Toast.LENGTH_SHORT).show();
             if (failureResultData.toLowerCase().contains("no")) {
                 binding.contentForgotPassword.etUsernameLayout.setFocusable(true);
-                binding.contentForgotPassword.etUsernameLayout.setError(getString(R.string.no_user_exist));
+                binding.contentForgotPassword.etUsernameLayout.setError(getString(R.string.no_user_exist_reset_password));
             }
         });
 

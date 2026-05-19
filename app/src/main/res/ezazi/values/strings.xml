@@ -146,5 +146,22 @@
     <string name="hint_add_new_assessment">Enter your assessment here</string>
     <string name="no_prescription_available">No prescription available</string>
     <string name="error_login_str">Error Login</string>
+    <string name="no_internet_title">Service temporarily unavailable</string>
+    <string name="no_internet_content">We’re experiencing difficulty loading the LCG. Please check back shortly or contact support if the issue persists.</string>
+    <string name="no_internet_home_screen_title">Internet connection lost!</string>
+    <string name="no_internet_home_screen_body">You can access patient records, but adding or updating information is not possible until you are back online.</string>
+    <string name="no_internet_timeline_screen_title">You are offline</string>
+    <string name="no_internet_timeline_screen_body">Connect to the internet to continue using the app.</string>
+    <string name="no_internet_setup_screen_title">No internet connection</string>
+    <string name="no_internet_setup_screen_body">Please check your connection and try again.</string>
+    <string name="no_data_for_view_lcg_title">Not Available!</string>
+    <string name="no_data_for_view_lcg_body">No observations found. Please record observations to view the LCG.</string>
+    <string name="parity_dialog_warning">Warning</string>
+    <string name="parity_dialog_message">The number of previous births and abortions entered appears unusually high for the mother\s age. Please confirm the details before saving.</string>
+    <string name="review_details">Review Details</string>
+    <string name="confirm_and_submit">Confirm &amp; Submit</string>
+    <string name="not_nurse_login_error">This number is linked to a Doctor account and cannot be used for Nurse login.</string>
+    <string name="no_user_exist_reset_password"> Mobile number not registered. Please enter a registered number.</string>
+    <string name="active_labour_diagnosis">Active labour diagnosis must be within last 15 hours</string>
 
 </resources>

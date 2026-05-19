@@ -5,11 +5,11 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/bottom_menu_bg"
-    android:minHeight="@dimen/bottom_menu_min_height"
-    android:paddingStart="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/actionbar_vertical_padding"
-    android:paddingEnd="@dimen/activity_horizontal_margin"
-    android:paddingBottom="@dimen/actionbar_vertical_padding"
+    android:minHeight="@dimen/std_56dp"
+    android:paddingStart="@dimen/std_16dp"
+    android:paddingTop="@dimen/std_8dp"
+    android:paddingEnd="@dimen/std_16dp"
+    android:paddingBottom="@dimen/std_8dp"
     tools:ignore="PrivateResource">
 
     <com.google.android.material.button.MaterialButton
@@ -95,7 +95,7 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnAddOutOfTimeReason"
-        style="@style/Theme.EZazi.TextButton"
+        style="@style/Theme.EZazi.TextButton.ViewMore"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
         android:layout_marginStart="@dimen/screen_container_padding"

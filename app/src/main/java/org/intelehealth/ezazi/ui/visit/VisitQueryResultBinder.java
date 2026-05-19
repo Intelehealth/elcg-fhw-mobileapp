@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import org.intelehealth.ezazi.app.AppConstants;
 import org.intelehealth.ezazi.builder.PatientQueryBuilder;
+import org.intelehealth.ezazi.database.dao.ObsDAO;
 import org.intelehealth.ezazi.models.ActivePatientModel;
 
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ import java.util.List;
  **/
 public class VisitQueryResultBinder {
     private List<ActivePatientModel> fetchActiveVisits(Cursor cursor) {
+        ObsDAO obsDAO = new ObsDAO();
         List<ActivePatientModel> activeVisits = new ArrayList<>();
         if (cursor != null) {
             if (cursor.moveToFirst()) {
@@ -37,6 +39,14 @@ public class VisitQueryResultBinder {
                     model.setBedNo(cursor.getString(cursor.getColumnIndexOrThrow("bedNo")));
                     model.setStageName(cursor.getString(cursor.getColumnIndexOrThrow("stage")));
                     model.setLatestEncounterId(cursor.getString(cursor.getColumnIndexOrThrow("latestEncounterId")));
+                    int index = cursor.getColumnIndexOrThrow("visitRisk");
+                    double visitRisk = 0.0;
+                    try {
+                        visitRisk = Double.parseDouble(cursor.getString(index));
+                    } catch (Exception ignored) {}
+                    model.setAlertFlagTotal(visitRisk);
+
+                    setVisibilityOrder(visitRisk, model,obsDAO);
                     activeVisits.add(model);
                 } while (cursor.moveToNext());
             }
@@ -51,5 +61,70 @@ public class VisitQueryResultBinder {
         SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
         final Cursor cursor = db.rawQuery(query, null);
         return fetchActiveVisits(cursor);
+    }
+    private void setVisibilityOrder(double totalScore, ActivePatientModel model, ObsDAO obsDAO) {
+
+        int visibilityOrder;
+        if (totalScore > 3.5) {
+            visibilityOrder = 3;
+        } else if (totalScore >= 0.5) {
+            visibilityOrder = 2;
+        } else {
+            visibilityOrder = 1;
+        }
+
+        String encounterUUID = model.getLatestEncounterId();
+        if (encounterUUID != null && !encounterUUID.isEmpty()) {
+            if (obsDAO.checkObsExistsOrNot(encounterUUID) == 1) {
+                model.setObsExistsFlag(true);
+                visibilityOrder = 4;
+            }
+        }
+        model.setVisibilityOrder(visibilityOrder);
+    }
+    public List<ActivePatientModel> executeVisitsQueryForRiskCalculation(int offset, int limit) {
+        String query = new PatientQueryBuilder().getVisitsForRiskCalculation(offset, limit);
+        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
+        final Cursor cursor = db.rawQuery(query, null);
+        return fetchVisitsForRiskFactor(cursor);
+    }
+
+    private List<ActivePatientModel> fetchVisitsForRiskFactor(Cursor cursor) {
+        ObsDAO obsDAO = new ObsDAO();
+        List<ActivePatientModel> activeVisits = new ArrayList<>();
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                do {
+                    ActivePatientModel model = new ActivePatientModel(
+                            cursor.getString(cursor.getColumnIndexOrThrow("visitUuid")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("patientuuid")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("startdate")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("enddate")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("openmrs_id")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("first_name")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("middle_name")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("last_name")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("date_of_birth")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("phoneNumber")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("sync")));
+                    model.setGender(cursor.getString(cursor.getColumnIndexOrThrow("gender")));
+                    model.setBedNo(cursor.getString(cursor.getColumnIndexOrThrow("bedNo")));
+                    model.setStageName(cursor.getString(cursor.getColumnIndexOrThrow("stage")));
+                    model.setLatestEncounterId(cursor.getString(cursor.getColumnIndexOrThrow("latestEncounterId")));
+                    int index = cursor.getColumnIndexOrThrow("visitRisk");
+                    double visitRisk = 0.0;
+                    try {
+                        visitRisk = Double.parseDouble(cursor.getString(index));
+                    } catch (Exception ignored) {}
+                    model.setAlertFlagTotal(visitRisk);
+
+                    setVisibilityOrder(visitRisk, model,obsDAO);
+                    activeVisits.add(model);
+                } while (cursor.moveToNext());
+            }
+        }
+        assert cursor != null;
+        cursor.close();
+        return activeVisits;
     }
 }

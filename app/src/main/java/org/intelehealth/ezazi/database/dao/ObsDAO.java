@@ -3,12 +3,15 @@ package org.intelehealth.ezazi.database.dao;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.BIRTH_OUTCOME;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.END_2ND_STAGE_OTHER;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.LABOUR_OTHER;
+import static org.intelehealth.ezazi.utilities.UuidDictionary.LCG_SOS;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.MISSED_ENCOUNTER;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.ENCOUNTER_TYPE;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.MOTHER_DECEASED;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.MOTHER_DECEASED_FLAG;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.OUT_OF_TIME;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.REFER_TYPE;
+import static org.intelehealth.ezazi.utilities.UuidDictionary.SOS_STAGE_HOUR;
+import static org.intelehealth.ezazi.utilities.UuidDictionary.STAGE1_HOUR1_1;
 
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -23,11 +26,15 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
+import org.intelehealth.ezazi.activities.visitSummaryActivity.EncounterTypeResolver;
 import org.intelehealth.ezazi.builder.QueryBuilder;
 import org.intelehealth.ezazi.models.dto.EncounterDTO;
 import org.intelehealth.ezazi.ui.visit.model.CompletedVisitStatus;
@@ -525,8 +532,8 @@ public class ObsDAO {
         EncounterDTO.Status status = EncounterDTO.Status.PENDING;
         db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
 
-        Cursor idCursor = db.rawQuery("SELECT * FROM tbl_obs where encounteruuid = ? AND voided='0' AND conceptuuid != ?",
-                new String[]{encounterUuid, ENCOUNTER_TYPE});
+        Cursor idCursor = db.rawQuery("SELECT * FROM tbl_obs where encounteruuid = ? AND voided='0' AND (conceptuuid != ? AND conceptuuid != ?) ",
+                new String[]{encounterUuid, ENCOUNTER_TYPE, SOS_STAGE_HOUR});
 
         if (idCursor.getCount() <= 0) {
             // that means there is no obs for this enc which means that this encounter is missed...
@@ -575,8 +582,8 @@ public class ObsDAO {
         EncounterDTO.Status status = EncounterDTO.Status.MISSED;
         db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
 
-        Cursor idCursor = db.rawQuery("SELECT * FROM tbl_obs where encounteruuid = ? AND voided='0' AND conceptuuid NOT IN (?, ?)",
-                new String[]{encounterUuid, MISSED_ENCOUNTER, ENCOUNTER_TYPE});
+        Cursor idCursor = db.rawQuery("SELECT * FROM tbl_obs where encounteruuid = ? AND voided='0' AND conceptuuid NOT IN (?, ?, ?)",
+                new String[]{encounterUuid, MISSED_ENCOUNTER, ENCOUNTER_TYPE, SOS_STAGE_HOUR});
 
 //        if (idCursor.getCount() <= 0) {
 //            // that means there is no obs for this enc which means that this encounter is missed... or not yet filled up.
@@ -654,8 +661,8 @@ public class ObsDAO {
         int isMissed = 0;
         db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
 
-        Cursor idCursor = db.rawQuery("SELECT * FROM tbl_obs where encounteruuid = ? AND voided='0' AND conceptuuid != ?",
-                new String[]{encounterUuid, UuidDictionary.ENCOUNTER_TYPE});
+        Cursor idCursor = db.rawQuery("SELECT * FROM tbl_obs where encounteruuid = ? AND voided='0' AND (conceptuuid != ? AND conceptuuid != ?)",
+                new String[]{encounterUuid, UuidDictionary.ENCOUNTER_TYPE, SOS_STAGE_HOUR});
 
         if (idCursor.getCount() <= 0) {
             /* This means against this enc there is no obs. Which means this obs is not filled yet. */
@@ -752,13 +759,15 @@ public class ObsDAO {
         db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
 
         Cursor idCursor = db.rawQuery("SELECT value FROM tbl_obs where encounteruuid = ? " +
-                        "AND voided='0' AND conceptuuid = ?",
-                new String[]{encounterUuid, ENCOUNTER_TYPE});
+                        "AND voided='0' AND (conceptuuid = ? OR conceptuuid = ?) ",
+                new String[]{encounterUuid, ENCOUNTER_TYPE, SOS_STAGE_HOUR});
 
         if (idCursor.getCount() > 0) {
             while (idCursor.moveToNext()) {
                 String value = idCursor.getString(idCursor.getColumnIndexOrThrow("value"));
-                if (value.equals(EncounterDTO.Type.SOS.name())) type = EncounterDTO.Type.SOS;
+                //if (value.equals(EncounterDTO.Type.SOS.name())) type = EncounterDTO.Type.SOS;//old
+                EncounterTypeResolver resolver = new EncounterTypeResolver();
+                type = resolver.resolve(value);
             }
         }
         idCursor.close();
@@ -1104,5 +1113,183 @@ public class ObsDAO {
         return isExist;
     }
 
+    public List<ObsDTO> getLatestObsByVisitAndConcepts(
+            String visitUuid,
+            Set<String> riskConcepts
+    ) {
 
+        if (riskConcepts == null || riskConcepts.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<String, ObsDTO> resultMap = new LinkedHashMap<>();
+        db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
+
+        StringBuilder inClause = new StringBuilder();
+        for (int i = 0; i < riskConcepts.size(); i++) {
+            inClause.append("?");
+            if (i < riskConcepts.size() - 1) inClause.append(",");
+        }
+
+        String query =
+                "SELECT o.comment, o.conceptuuid, o.encounteruuid, o.value " +
+                        "FROM tbl_obs o " +
+                        "INNER JOIN tbl_encounter e ON o.encounteruuid = e.uuid " +
+                        "WHERE e.visituuid = ? " +
+                        "AND o.voided = '0' " +
+                        "AND e.voided IN ('0','false','FALSE') " +
+                        "AND o.conceptuuid IN (" + inClause + ") " +
+                        "ORDER BY o.created_date DESC";
+
+        List<String> argsList = new ArrayList<>();
+        argsList.add(visitUuid);
+        argsList.addAll(riskConcepts);
+
+        Cursor cursor = db.rawQuery(query, argsList.toArray(new String[0]));
+
+        try {
+            while (cursor.moveToNext()) {
+
+                String conceptUuid =
+                        cursor.getString(cursor.getColumnIndexOrThrow("conceptuuid"));
+
+                if (resultMap.containsKey(conceptUuid)) continue;
+
+                String comment =
+                        cursor.getString(cursor.getColumnIndexOrThrow("comment"));
+
+                if (comment == null || comment.trim().isEmpty()) continue;
+
+                String value = cursor.getString(cursor.getColumnIndexOrThrow("value"));
+                if (resultMap.containsKey(conceptUuid)) continue;
+
+                ObsDTO obs = new ObsDTO();
+                obs.setConceptuuid(conceptUuid);
+                obs.setComment(comment);
+                obs.setValue(value);
+                obs.setEncounteruuid(cursor.getString(cursor.getColumnIndexOrThrow("encounteruuid")));
+
+                resultMap.put(conceptUuid, obs);
+                Log.d(TAG, ""+new Gson().toJson(resultMap));
+                Log.d(TAG, "getLatestObsByVisitAndConcepts: resultMap size :  "+resultMap.size());
+                Log.d(TAG, "getLatestObsByVisitAndConcepts: riskConcepts  size:  "+riskConcepts.size());
+
+
+                if (resultMap.size() == riskConcepts.size()) break;
+            }
+        } finally {
+            cursor.close();
+        }
+
+        return new ArrayList<>(resultMap.values());
+    }
+
+    public List<ObsDTO> getCervixObsByVisit(
+            String visitUuid,
+            String cervixConceptUuid
+    ) {
+
+        db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
+
+        String query =
+                "SELECT o.comment, o.conceptuuid, o.encounteruuid, e.encounter_time, o.value " +
+                        "FROM tbl_obs o " +
+                        "INNER JOIN tbl_encounter e ON o.encounteruuid = e.uuid " +
+                        "WHERE e.visituuid = ? " +
+                        "AND o.voided = '0' " +
+                        "AND e.voided IN ('0','false','FALSE') " +
+                        "AND o.conceptuuid = ? " +
+                        "ORDER BY e.encounter_time ASC";
+
+        Cursor cursor = db.rawQuery(
+                query,
+                new String[]{visitUuid, cervixConceptUuid}
+        );
+
+        List<ObsDTO> list = new ArrayList<>();
+
+        try {
+            while (cursor.moveToNext()) {
+
+                String comment =
+                        cursor.getString(cursor.getColumnIndexOrThrow("comment"));
+
+                if (comment == null || comment.trim().isEmpty()) continue;
+                String value =
+                        cursor.getString(cursor.getColumnIndexOrThrow("value"));
+
+                if (value == null || value.trim().isEmpty()) continue;
+
+                ObsDTO obs = new ObsDTO();
+                obs.setConceptuuid(cervixConceptUuid);
+                obs.setComment(comment);
+                obs.setEncounteruuid(
+                        cursor.getString(cursor.getColumnIndexOrThrow("encounteruuid"))
+                );
+                obs.setObsServerModifiedDate(
+                        cursor.getString(cursor.getColumnIndexOrThrow("encounter_time"))
+                );
+                obs.setValue(value);
+                list.add(obs);
+            }
+        } finally {
+            cursor.close();
+        }
+
+        return list;
+    }
+    public String getLatestSosObsByEncounterUuid(String encounterUuid) {
+      String valueOfPreviousSosObsRecord = "";
+        db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
+        Cursor idCursor = db.rawQuery("SELECT * FROM tbl_obs where encounteruuid = ? AND conceptuuid = ? AND voided='0'",
+                new String[]{encounterUuid, SOS_STAGE_HOUR});
+        if (idCursor.getCount() != 0) {
+            while (idCursor.moveToNext()) {
+                valueOfPreviousSosObsRecord =idCursor.getString(idCursor.getColumnIndexOrThrow("value"));
+            }
+        }
+        idCursor.close();
+        return valueOfPreviousSosObsRecord;
+    }
+
+    public boolean getObsCountForVisit(String visitId) {
+        String query = "SELECT EXISTS ( " +
+                "SELECT 1 " +
+                "FROM tbl_encounter e " +
+                "INNER JOIN tbl_obs o " +
+                "ON o.encounteruuid = e.uuid " +
+                "AND o.voided = '0' " +
+                "WHERE e.visituuid = ? " +
+                ") AS has_obs";
+
+        db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
+        Cursor cursor = db.rawQuery(query, new String[]{visitId});
+        boolean result = false;
+
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                result = cursor.getInt(0) == 1;
+            }
+            cursor.close();
+        }
+
+        return result;
+    }
+    public String getEncounterTypeFromDb(String encounterUuid) {
+        db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
+        String value = "";
+        Cursor idCursor = db.rawQuery("SELECT value FROM tbl_obs where encounteruuid = ? " +
+                        "AND voided='0' AND (conceptuuid = ? OR conceptuuid = ?) ",
+                new String[]{encounterUuid, ENCOUNTER_TYPE, SOS_STAGE_HOUR});
+
+        if (idCursor.getCount() > 0) {
+            while (idCursor.moveToNext()) {
+                value = idCursor.getString(idCursor.getColumnIndexOrThrow("value"));
+                //if (value.equals(EncounterDTO.Type.SOS.name())) type = EncounterDTO.Type.SOS;//old
+            }
+        }
+        idCursor.close();
+
+        return value;
+    }
 }

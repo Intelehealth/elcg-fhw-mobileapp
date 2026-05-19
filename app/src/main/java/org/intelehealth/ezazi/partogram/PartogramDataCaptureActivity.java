@@ -8,6 +8,8 @@ import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MenuItem;
@@ -17,6 +19,8 @@ import android.widget.Toast;
 
 import androidx.annotation.StringRes;
 import androidx.core.content.IntentCompat;
+import androidx.lifecycle.LifecycleCoroutineScope;
+import androidx.lifecycle.LifecycleOwnerKt;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -24,7 +28,9 @@ import com.google.gson.Gson;
 
 import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.activities.epartogramActivity.EpartogramViewActivity;
+import org.intelehealth.ezazi.activities.homeActivity.VisitAlertBridge;
 import org.intelehealth.ezazi.activities.splash_activity.SplashActivity;
+import org.intelehealth.ezazi.activities.visitSummaryActivity.TimelineVisitSummaryActivity;
 import org.intelehealth.ezazi.app.AppConstants;
 import org.intelehealth.ezazi.app.IntelehealthApplication;
 import org.intelehealth.ezazi.database.dao.EncounterDAO;
@@ -32,6 +38,7 @@ import org.intelehealth.ezazi.database.dao.ObsDAO;
 import org.intelehealth.ezazi.database.dao.PatientsDAO;
 import org.intelehealth.ezazi.database.dao.VisitAttributeListDAO;
 import org.intelehealth.ezazi.database.dao.VisitsDAO;
+import org.intelehealth.ezazi.models.ActivePatientModel;
 import org.intelehealth.ezazi.models.dto.EncounterDTO;
 import org.intelehealth.ezazi.models.dto.ObsDTO;
 import org.intelehealth.ezazi.partogram.adapter.PartogramQueryListingAdapter;
@@ -40,6 +47,7 @@ import org.intelehealth.ezazi.partogram.model.ParamInfo;
 import org.intelehealth.ezazi.partogram.model.PartogramItemData;
 import org.intelehealth.ezazi.partogram.model.ValidatePartogramFields;
 import org.intelehealth.ezazi.syncModule.SyncUtils;
+import org.intelehealth.ezazi.ui.dialog.AppDialogUtils;
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
 import org.intelehealth.ezazi.ui.dialog.SingleChoiceDialogFragment;
@@ -49,6 +57,8 @@ import org.intelehealth.ezazi.ui.rtc.activity.EzaziVideoCallActivity;
 import org.intelehealth.ezazi.ui.rtc.call.CallInitializer;
 import org.intelehealth.ezazi.ui.visit.model.LabourInfo;
 import org.intelehealth.ezazi.utilities.DateAndTimeUtils;
+import org.intelehealth.ezazi.utilities.InternetDialogHelper;
+import org.intelehealth.ezazi.utilities.NetworkConnection;
 import org.intelehealth.ezazi.utilities.SessionManager;
 import org.intelehealth.ezazi.utilities.UuidDictionary;
 import org.intelehealth.ezazi.utilities.exception.DAOException;
@@ -60,6 +70,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+
+import kotlin.Unit;
 
 public class PartogramDataCaptureActivity extends BaseActionBarActivity {
     private static final String TAG = "PartogramDataCaptureAct";
@@ -84,12 +96,15 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
     private static final int FIVE_HOURLY = 4;
     private String encounterName = "";
     private String encounterType = "";
+    private boolean isSynced = false;
+    private VisitAttributeListDAO visitAttributeListDAO;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_partogram_data_capture_ezazi);
         setupActionBar();
+        visitAttributeListDAO = new VisitAttributeListDAO();
         enableProperPadding(PartogramDataCaptureActivity.this);
         mSaveTextView = findViewById(R.id.btnSave);
         mEpartogramTextView = findViewById(R.id.btnView);
@@ -140,19 +155,21 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
 
         mEpartogramTextView.setOnClickListener(v -> {
 
-            DisplayMetrics metrics = new DisplayMetrics();
-            getWindowManager().getDefaultDisplay().getMetrics(metrics);
+            if (NetworkConnection.isOnline(getApplication())) {
 
-            int widthPixels = metrics.widthPixels;
-            int heightPixels = metrics.heightPixels;
+                DisplayMetrics metrics = new DisplayMetrics();
+                getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
-            float scaleFactor = metrics.density;
+                int widthPixels = metrics.widthPixels;
+                int heightPixels = metrics.heightPixels;
 
-            float widthDp = widthPixels / scaleFactor;
-            float heightDp = heightPixels / scaleFactor;
+                float scaleFactor = metrics.density;
 
-            float smallestWidth = Math.min(widthDp, heightDp);
-            Log.v("epartog", "smallest width: " + smallestWidth);
+                float widthDp = widthPixels / scaleFactor;
+                float heightDp = heightPixels / scaleFactor;
+
+                float smallestWidth = Math.min(widthDp, heightDp);
+                Log.v("epartog", "smallest width: " + smallestWidth);
 
             /*if (smallestWidth >= 720) { // 8inch = 720 and 7inch == 600
                 //Device is a 8" tablet
@@ -170,10 +187,10 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
 
 //            boolean isTablet = getResources().getBoolean(R.bool.isTablet);
 //            if (isTablet) {
-            Intent intent = new Intent(this, EpartogramViewActivity.class);
-            intent.putExtra("patientuuid", mPatientUuid);
-            intent.putExtra("visituuid", mVisitUUID);
-            startActivity(intent);
+                Intent intent = new Intent(this, EpartogramViewActivity.class);
+                intent.putExtra("patientuuid", mPatientUuid);
+                intent.putExtra("visituuid", mVisitUUID);
+                startActivity(intent);
 //            } else {
 //                new ConfirmationDialogFragment.Builder(this).content(getString(R.string.this_option_available_tablet_device)).positiveButtonLabel(R.string.ok).hideNegativeButton(true).build().show(getSupportFragmentManager(), "ConfirmationDialogFragment");
 //            }
@@ -189,6 +206,9 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
 //            else {
 //                Toast.makeText(context, R.string.this_option_available_tablet_device, Toast.LENGTH_SHORT).show();
 //            }
+            } else{
+               InternetDialogHelper.showNoInternetDialog(PartogramDataCaptureActivity.this);
+            }
 
         });
 
@@ -196,7 +216,10 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
         btnChat.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showDoctorSelectionDialog(true);
+                boolean isInternetAvailable = InternetDialogHelper.checkInternetOrShow(PartogramDataCaptureActivity.this);
+                if(isInternetAvailable) {
+                    showDoctorSelectionDialog(true);
+                }
 //                EncounterDAO encounterDAO = new EncounterDAO();
 //                EncounterDTO encounterDTO = encounterDAO.getEncounterByVisitUUIDLimit1(mVisitUUID);
 //                RTCConnectionDAO rtcConnectionDAO = new RTCConnectionDAO();
@@ -225,7 +248,10 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
         btnVideoCall.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showDoctorSelectionDialog(false);
+                boolean isInternetAvailable = InternetDialogHelper.checkInternetOrShow(PartogramDataCaptureActivity.this);
+                if(isInternetAvailable){
+                    showDoctorSelectionDialog(false);
+                }
 //                EncounterDAO encounterDAO = new EncounterDAO();
 //                EncounterDTO encounterDTO = encounterDAO.getEncounterByVisitUUIDLimit1(mVisitUUID);
 ////                RTCConnectionDAO rtcConnectionDAO = new RTCConnectionDAO();
@@ -320,6 +346,9 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
 
 
     private void saveObs() throws DAOException {
+        boolean isInternetAvailable = InternetDialogHelper.checkInternetOrShow(PartogramDataCaptureActivity.this);
+        if(!isInternetAvailable)
+            return;
         ObsDAO obsDAO = new ObsDAO();
 
         // validation
@@ -512,19 +541,69 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                 }
                 new EncounterDAO().updateEncounterSync("false", mEncounterUUID);
 
+                //Changes for EZ-657 here
+                // 1 Calculate risk factor here
+                // 2 Update in visit attribute table
+                LifecycleCoroutineScope scope = LifecycleOwnerKt.getLifecycleScope(this);
+                ActivePatientModel activePatientModel = new ActivePatientModel();
+                activePatientModel.setUuid(mVisitUUID);
+                activePatientModel.setLatestEncounterId(mEncounterUUID);
+                List<ActivePatientModel> visits = new ArrayList<>();
+                visits.add(activePatientModel);
+                VisitAlertBridge.processVisits(scope, visits, result -> {
+                    long updated = -1;
+                    if (result != null && !result.isEmpty()) {
+                        updated = visitAttributeListDAO.upsertVisitAttribute(mVisitUUID, UuidDictionary.VISIT_RISK, String.valueOf(result.get(0).getAlertFlagTotal()));
+                    }
+                    try {
+                        new VisitsDAO().updateVisitSync(mVisitUUID, "false");
+                        visitAttributeListDAO.markVisitAsRead(mVisitUUID);
+                    } catch (DAOException e) {
+                        e.printStackTrace();
+                        throw new RuntimeException(e);
+                    }
+                    SyncUtils syncUtils = new SyncUtils();
+                    if (updated > 0) {
+                        boolean isSynced = syncUtils.syncForeground("visitSummary");
+                        showToast(isSynced);
+                    } else {
+                        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                            boolean isSynced = syncUtils.syncForeground("visitSummary");
+                            showToast(isSynced);
+                        }, 500);
+                    }
+                    finish();
+
+                    return Unit.INSTANCE;
+                });
+
+                /*
+                VisitAlertBridge.processVisits(scope, visits, result -> {
+                            //showOnHomeScreen(result);
+                            // activePatientModel.setAlertFlagTotal(res);
+                            if(result!=null){
+                                long updated = new VisitAttributeListDAO().upsertVisitAttribute(mVisitUUID, UuidDictionary.VISIT_RISK, String.valueOf(result.get(0).getAlertFlagTotal()));
+                            }
+                    return Unit.INSTANCE;
+                        }
+                );
 
                 new VisitsDAO().updateVisitSync(mVisitUUID, "false");
                 new VisitAttributeListDAO().markVisitAsRead(mVisitUUID);
-
                 SyncUtils syncUtils = new SyncUtils();
-                boolean isSynced = syncUtils.syncForeground("visitSummary");
+                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                         isSynced = syncUtils.syncForeground("visitSummary");
+                    }
+                }, 400);
                 if (isSynced) {
                     Toast.makeText(this, "Data uploaded successfully!", Toast.LENGTH_SHORT).show();
                     // AppConstants.notificationUtils.DownloadDone(getString(R.string.visit_data_upload), getString(R.string.visit_uploaded_successfully), 3, PartogramDataCaptureActivity.this);
                     // finish();
                 } else {
                     Toast.makeText(this, "Unable to upload the data!", Toast.LENGTH_SHORT).show();
-                }
+                }*/
                 finish();
 
             } catch (DAOException e) {
@@ -824,5 +903,11 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
         obs.setCreatorUuid(new SessionManager(this).getCreatorID());
         return obs;
     }
-
+    private void showToast(boolean isSynced) {
+        if (isSynced) {
+            Toast.makeText(this, "Data uploaded successfully!", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Unable to upload the data!", Toast.LENGTH_SHORT).show();
+        }
+    }
 }

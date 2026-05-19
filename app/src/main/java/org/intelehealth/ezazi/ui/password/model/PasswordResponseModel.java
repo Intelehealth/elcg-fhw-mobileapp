@@ -28,7 +28,19 @@ public class PasswordResponseModel {
         return providerUuid;
     }
 
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
     public void setProviderUuid(String providerUuid) {
         this.providerUuid = providerUuid;
     }
+
+    @SerializedName("role")
+    @Expose
+    private String role;
 }

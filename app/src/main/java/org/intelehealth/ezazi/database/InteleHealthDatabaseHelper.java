@@ -316,6 +316,8 @@ public class InteleHealthDatabaseHelper extends SQLiteOpenHelper {
 
             // For SOS encounter
             db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('d1fb190a-9ebb-448f-8d61-dfeeb20fd931','Encounter Status')");
+            db.execSQL("INSERT OR REPLACE INTO tbl_uuid_dictionary (uuid,name) VALUES('6ce3e2eb-35d4-4aa2-aa77-6d1d3b3f524a','LCG_SOS')");
+
         }
     }
 

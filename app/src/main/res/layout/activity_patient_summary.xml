@@ -1,566 +1,568 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/coordinatorLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     tools:context=".activities.patientDetailActivity.PatientDetailActivity">
 
     <include
         android:id="@+id/toolbar_common"
-        layout="@layout/simple_appbar" />
+        layout="@layout/simple_appbar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <LinearLayout
-        android:id="@+id/layout_content"
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll_view"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/toolbar_common"
-        android:layout_marginHorizontal="@dimen/screen_padding"
-        android:background="@drawable/container_bg_rounded"
-        android:orientation="vertical"
-        android:padding="@dimen/screen_container_padding"
-        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        app:layout_constraintBottom_toTopOf="@+id/btnStartObservation"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar_common">
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <TextView
-                android:id="@+id/textView_ID"
-                style="@style/Theme.EZazi.Text.SubHeading"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="@dimen/ib_edit_details_padding"
-                android:text="@string/patient_id_"
-                android:textColor="@color/colorPrimary"
-                android:textSize="@dimen/tv_summary_title_text_size" />
-
-            <ImageView
-                android:id="@+id/edit_button"
-                android:layout_width="@dimen/ib_edit_details_size"
-                android:layout_height="@dimen/ib_edit_details_size"
-                android:layout_alignParentEnd="true"
-                android:layout_alignParentRight="true"
-                android:layout_centerVertical="true"
-                android:layout_marginEnd="@dimen/ib_edit_margin_end"
-                android:background="?attr/selectableItemBackground"
-                android:contentDescription="TODO"
-                android:foreground="?android:attr/selectableItemBackground"
-                android:foregroundGravity="center"
-                android:src="@drawable/ic_edit_details" />
-        </RelativeLayout>
-
-        <com.google.android.material.card.MaterialCardView
-            style="@style/Theme.EZazi.Material.CardView"
+        <LinearLayout
+            android:id="@+id/layout_content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/tab_margin_from_text">
+            android:layout_marginHorizontal="@dimen/screen_padding"
+            android:layout_marginTop="@dimen/screen_padding"
+            android:layout_marginBottom="80dp"
+            android:background="@drawable/container_bg_rounded"
+            android:orientation="vertical"
+            android:padding="@dimen/screen_container_padding">
 
-            <LinearLayout
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/textView_ID"
+                    style="@style/Theme.EZazi.Text.SubHeading"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="@dimen/ib_edit_details_padding"
+                    android:text="@string/patient_id_"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="@dimen/tv_summary_title_text_size" />
+
+                <ImageView
+                    android:id="@+id/edit_button"
+                    android:layout_width="@dimen/ib_edit_details_size"
+                    android:layout_height="@dimen/ib_edit_details_size"
+                    android:layout_alignParentEnd="true"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginEnd="@dimen/ib_edit_margin_end"
+                    android:background="?attr/selectableItemBackground"
+                    android:contentDescription="TODO"
+                    android:foreground="?android:attr/selectableItemBackground"
+                    android:foregroundGravity="center"
+                    android:src="@drawable/ic_edit_details" />
+            </RelativeLayout>
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Theme.EZazi.Material.CardView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minHeight="@dimen/max_input_height"
-                android:orientation="horizontal"
-                android:paddingHorizontal="@dimen/screen_container_padding"
-                android:paddingVertical="@dimen/padding_card_summary"
-                android:weightSum="2">
-
-                <TextView
-                    style="@style/LabelStyleSummary"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="0.8"
-                    android:text="@string/patient_name" />
-
-                <TextView
-                    android:id="@+id/textView_name"
-                    style="@style/LabelStyleSummaryValues"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1.2"
-                    android:hint="@string/patient_name"
-                    android:textAlignment="viewStart" />
-            </LinearLayout>
-
-
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.card.MaterialCardView
-            style="@style/Theme.EZazi.Material.CardView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/screen_container_padding">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:minHeight="@dimen/max_input_height"
-                android:orientation="horizontal"
-                android:paddingHorizontal="@dimen/screen_container_padding"
-                android:paddingVertical="@dimen/padding_card_summary"
-                android:weightSum="2">
-
-                <TextView
-                    style="@style/LabelStyleSummary"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="0.8"
-                    android:text="@string/unique_Ezazi_registration_number" />
-
-                <TextView
-                    android:id="@+id/textView_UER_No"
-                    style="@style/LabelStyleSummaryValues"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1.2"
-                    android:hint="@string/unique_Ezazi_registration_number"
-                    android:textAlignment="viewStart" />
-            </LinearLayout>
-
-
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.card.MaterialCardView
-            style="@style/Theme.EZazi.Material.CardView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/screen_container_padding">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:minHeight="@dimen/max_input_height"
-                android:orientation="horizontal"
-                android:paddingHorizontal="@dimen/screen_container_padding"
-                android:paddingVertical="@dimen/padding_card_summary"
-                android:weightSum="2">
-
-                <TextView
-                    style="@style/LabelStyleSummary"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="0.8"
-                    android:text="@string/dob_title" />
-
-                <TextView
-                    android:id="@+id/textView_DOB"
-                    style="@style/LabelStyleSummaryValues"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1.2"
-                    android:hint="@string/dob_title"
-                    android:textAlignment="viewStart" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.card.MaterialCardView
-            style="@style/Theme.EZazi.Material.CardView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/screen_container_padding">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:minHeight="@dimen/max_input_height"
-                android:orientation="horizontal"
-                android:paddingHorizontal="@dimen/screen_container_padding"
-                android:paddingVertical="@dimen/padding_card_summary"
-                android:weightSum="2">
-
-                <TextView
-                    style="@style/LabelStyleSummary"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="0.8"
-                    android:text="@string/age_title" />
-
-                <TextView
-                    android:id="@+id/textView_age"
-                    style="@style/LabelStyleSummaryValues"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1.2"
-                    android:hint="@string/age_title"
-                    android:textAlignment="viewStart" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.card.MaterialCardView
-            style="@style/Theme.EZazi.Material.CardView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/screen_container_padding">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:minHeight="@dimen/max_input_height"
-                android:orientation="horizontal"
-                android:paddingHorizontal="@dimen/screen_container_padding"
-                android:paddingVertical="@dimen/padding_card_summary"
-                android:weightSum="2">
-
-                <TextView
-                    style="@style/LabelStyleSummary"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="0.8"
-                    android:text="@string/address" />
-
-                <TextView
-                    android:id="@+id/textView_address_final"
-                    style="@style/LabelStyleSummaryValues"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1.2"
-                    android:hint="@string/address"
-                    android:textAlignment="viewStart" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.card.MaterialCardView
-            style="@style/Theme.EZazi.Material.CardView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/screen_container_padding">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:minHeight="@dimen/max_input_height"
-                android:orientation="horizontal"
-                android:paddingHorizontal="@dimen/screen_container_padding"
-                android:paddingVertical="@dimen/screen_container_padding"
-                android:weightSum="2">
-
-                <TextView
-                    style="@style/LabelStyleSummary"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="0.8"
-                    android:text="@string/mobile_number" />
+                android:layout_marginTop="@dimen/tab_margin_from_text">
 
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1.2"
-                    android:gravity="center_vertical">
+                    android:minHeight="@dimen/max_input_height"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="@dimen/screen_container_padding"
+                    android:paddingVertical="@dimen/padding_card_summary"
+                    android:weightSum="2">
 
                     <TextView
-                        android:id="@+id/textView_phone"
+                        style="@style/LabelStyleSummary"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.8"
+                        android:text="@string/patient_name" />
+
+                    <TextView
+                        android:id="@+id/textView_name"
                         style="@style/LabelStyleSummaryValues"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="5dp"
                         android:layout_weight="1.2"
-                        android:hint="@string/mobile_number" />
-
-                    <ImageView
-                        android:id="@+id/calling"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:layout_marginEnd="@dimen/contact_summary_margin_end"
-                        android:background="@drawable/selector_icon"
-                        android:src="@drawable/ic_call_primary" />
-
-                    <ImageView
-                        android:id="@+id/whatsapp_no"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:background="@drawable/selector_icon"
-                        android:src="@drawable/whatsapp_call" />
-
+                        android:hint="@string/patient_name"
+                        android:textAlignment="viewStart" />
                 </LinearLayout>
 
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+            </com.google.android.material.card.MaterialCardView>
 
-        <com.google.android.material.card.MaterialCardView
-            style="@style/Theme.EZazi.Material.CardView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/screen_container_padding">
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Theme.EZazi.Material.CardView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/screen_container_padding">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/max_input_height"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="@dimen/screen_container_padding"
+                    android:paddingVertical="@dimen/padding_card_summary"
+                    android:weightSum="2">
+
+                    <TextView
+                        style="@style/LabelStyleSummary"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.8"
+                        android:text="@string/unique_Ezazi_registration_number" />
+
+                    <TextView
+                        android:id="@+id/textView_UER_No"
+                        style="@style/LabelStyleSummaryValues"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1.2"
+                        android:hint="@string/unique_Ezazi_registration_number"
+                        android:textAlignment="viewStart" />
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Theme.EZazi.Material.CardView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/screen_container_padding">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/max_input_height"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="@dimen/screen_container_padding"
+                    android:paddingVertical="@dimen/padding_card_summary"
+                    android:weightSum="2">
+
+                    <TextView
+                        style="@style/LabelStyleSummary"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.8"
+                        android:text="@string/dob_title" />
+
+                    <TextView
+                        android:id="@+id/textView_DOB"
+                        style="@style/LabelStyleSummaryValues"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1.2"
+                        android:hint="@string/dob_title"
+                        android:textAlignment="viewStart" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Theme.EZazi.Material.CardView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/screen_container_padding">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/max_input_height"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="@dimen/screen_container_padding"
+                    android:paddingVertical="@dimen/padding_card_summary"
+                    android:weightSum="2">
+
+                    <TextView
+                        style="@style/LabelStyleSummary"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.8"
+                        android:text="@string/age_title" />
+
+                    <TextView
+                        android:id="@+id/textView_age"
+                        style="@style/LabelStyleSummaryValues"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1.2"
+                        android:hint="@string/age_title"
+                        android:textAlignment="viewStart" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Theme.EZazi.Material.CardView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/screen_container_padding">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/max_input_height"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="@dimen/screen_container_padding"
+                    android:paddingVertical="@dimen/padding_card_summary"
+                    android:weightSum="2">
+
+                    <TextView
+                        style="@style/LabelStyleSummary"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.8"
+                        android:text="@string/address" />
+
+                    <TextView
+                        android:id="@+id/textView_address_final"
+                        style="@style/LabelStyleSummaryValues"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1.2"
+                        android:hint="@string/address"
+                        android:textAlignment="viewStart" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Theme.EZazi.Material.CardView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/screen_container_padding">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:minHeight="@dimen/max_input_height"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="@dimen/screen_container_padding"
+                    android:paddingVertical="@dimen/screen_container_padding"
+                    android:weightSum="2">
+
+                    <TextView
+                        style="@style/LabelStyleSummary"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.8"
+                        android:text="@string/mobile_number" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1.2"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/textView_phone"
+                            style="@style/LabelStyleSummaryValues"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="5dp"
+                            android:layout_weight="1.2"
+                            android:hint="@string/mobile_number" />
+
+                        <ImageView
+                            android:id="@+id/calling"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginEnd="@dimen/contact_summary_margin_end"
+                            android:background="@drawable/selector_icon"
+                            android:src="@drawable/ic_call_primary" />
+
+                        <ImageView
+                            android:id="@+id/whatsapp_no"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_vertical"
+                            android:background="@drawable/selector_icon"
+                            android:src="@drawable/whatsapp_call" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Theme.EZazi.Material.CardView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/screen_container_padding">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/max_input_height"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="@dimen/screen_container_padding"
+                    android:paddingVertical="@dimen/padding_card_summary"
+                    android:weightSum="2">
+
+                    <TextView
+                        style="@style/LabelStyleSummary"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.8"
+                        android:text="@string/bed_number_title" />
+
+                    <TextView
+                        android:id="@+id/textView_bed_no"
+                        style="@style/LabelStyleSummaryValues"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1.2"
+                        android:hint="@string/bed_number_title"
+                        android:textAlignment="viewStart" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minHeight="@dimen/max_input_height"
                 android:orientation="horizontal"
-                android:paddingHorizontal="@dimen/screen_container_padding"
-                android:paddingVertical="@dimen/padding_card_summary"
-                android:weightSum="2">
+                android:visibility="gone">
 
-                <TextView
-                    style="@style/LabelStyleSummary"
-                    android:layout_width="0dp"
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardView_history"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="0.8"
-                    android:text="@string/bed_number_title" />
+                    android:layout_gravity="center"
+                    android:layout_marginTop="@dimen/padding_card"
+                    android:visibility="gone"
+                    app:cardCornerRadius="5dp"
+                    app:cardElevation="2dp"
+                    app:cardUseCompatPadding="true">
 
-                <TextView
-                    android:id="@+id/textView_bed_no"
-                    style="@style/LabelStyleSummaryValues"
-                    android:layout_width="0dp"
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <RelativeLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@color/titleBar_cardview">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/lato_bold"
+                                android:includeFontPadding="false"
+                                android:padding="10dp"
+                                android:paddingStart="20dp"
+                                android:paddingTop="@dimen/padding_card_title_text"
+                                android:text="@string/header_medical_history"
+                                android:textColor="@color/white"
+                                android:textSize="@dimen/card_content_text_size" />
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentEnd="true"
+                                android:orientation="horizontal"
+                                android:visibility="invisible">
+
+                                <ImageButton
+                                    style="@style/SelectableItemBackground"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_alignParentEnd="true"
+                                    android:background="@null"
+                                    android:contentDescription="TODO"
+                                    android:foreground="?android:attr/selectableItemBackground"
+                                    android:padding="10dp"
+                                    app:srcCompat="@drawable/edit_icon" />
+
+                            </LinearLayout>
+
+                        </RelativeLayout>
+
+                        <TableLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:padding="@dimen/padding_card">
+
+                            <TableRow
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:fontFamily="@font/lato_bold"
+                                    android:includeFontPadding="false"
+                                    android:paddingTop="@dimen/padding_card_action"
+                                    android:text="@string/header_patient_history"
+                                    android:textSize="@dimen/card_content_sub_text_size" />
+
+                                <androidx.legacy.widget.Space
+                                    android:layout_width="10dp"
+                                    android:layout_height="wrap_content" />
+
+                                <TextView
+                                    android:id="@+id/textView_patHist"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:fontFamily="@font/lato_regular"
+                                    android:includeFontPadding="false"
+                                    android:paddingHorizontal="5dp"
+                                    android:paddingTop="@dimen/padding_card_action"
+                                    android:textSize="@dimen/card_content_sub_text_size" />
+
+                            </TableRow>
+
+                            <TableRow
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content">
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:includeFontPadding="false"
+                                    android:text="@string/header_family_history"
+                                    android:textSize="@dimen/card_content_sub_text_size" />
+
+                                <androidx.legacy.widget.Space
+                                    android:layout_width="10dp"
+                                    android:layout_height="wrap_content" />
+
+                                <TextView
+                                    android:id="@+id/textView_famHist"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:fontFamily="@font/lato_regular"
+                                    android:includeFontPadding="false"
+                                    android:paddingHorizontal="5dp"
+                                    android:paddingTop="@dimen/padding_card_action"
+                                    android:textSize="@dimen/card_content_sub_text_size" />
+
+                            </TableRow>
+
+                        </TableLayout>
+
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <Button
+                    android:id="@+id/button_new_visit"
+                    style="@style/SelectableItemBackground"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1.2"
-                    android:hint="@string/bed_number_title"
-                    android:textAlignment="viewStart" />
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginHorizontal="10dp"
+                    android:layout_marginTop="16dp"
+                    android:elevation="5dp"
+                    android:fontFamily="@font/lato_bold"
+                    android:foreground="?android:attr/selectableItemBackground"
+                    android:text="@string/button_new_visit" />
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardView_previous_visits"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="@dimen/padding_card"
+                    android:visibility="gone"
+                    app:cardCornerRadius="5dp"
+                    app:cardElevation="2dp"
+                    app:cardUseCompatPadding="true">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <RelativeLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@color/titleBar_cardview">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:background="@color/titleBar_cardview"
+                                android:fontFamily="@font/lato_bold"
+                                android:includeFontPadding="false"
+                                android:padding="10dp"
+                                android:paddingStart="20dp"
+                                android:text="@string/previous_visits"
+                                android:textColor="@color/white"
+                                android:textSize="@dimen/card_content_text_size" />
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentEnd="true"
+                                android:orientation="horizontal"
+                                android:visibility="invisible">
+
+                                <ImageButton
+                                    style="@style/SelectableItemBackground"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_alignParentEnd="true"
+                                    android:background="@null"
+                                    android:contentDescription="TODO"
+                                    android:foreground="?android:attr/selectableItemBackground"
+                                    android:padding="10dp"
+                                    app:srcCompat="@drawable/edit_icon" />
+
+                            </LinearLayout>
+
+                        </RelativeLayout>
+
+                        <LinearLayout
+                            android:id="@+id/linearLayout_previous_visits"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="vertical"
+                            android:padding="@dimen/padding_card">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/lato_regular"
+                                android:includeFontPadding="false"
+                                android:textSize="@dimen/card_title_text_size"
+                                android:visibility="gone" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </androidx.cardview.widget.CardView>
+
             </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-    </LinearLayout>
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnStartObservation"
         style="@style/Theme.EZazi.Button"
         android:layout_width="match_parent"
         android:layout_height="@dimen/input_height"
-        android:layout_alignParentBottom="true"
         android:layout_gravity="bottom"
-        android:visibility="visible"
         android:layout_margin="@dimen/screen_padding"
         android:text="@string/start_obs"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:rippleColor="@color/white" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        android:orientation="horizontal">
-
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cardView_history"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="@dimen/padding_card"
-            android:visibility="gone"
-            app:cardCornerRadius="5dp"
-            app:cardElevation="2dp"
-            app:cardUseCompatPadding="true">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@color/titleBar_cardview">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/lato_bold"
-                        android:includeFontPadding="false"
-                        android:padding="10dp"
-                        android:paddingStart="20dp"
-                        android:paddingTop="@dimen/padding_card_title_text"
-                        android:text="@string/header_medical_history"
-                        android:textColor="@color/white"
-                        android:textSize="@dimen/card_content_text_size" />
-
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:orientation="horizontal"
-                        android:visibility="invisible">
-
-                        <ImageButton
-
-                            style="@style/SelectableItemBackground"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentEnd="true"
-                            android:background="@null"
-                            android:contentDescription="TODO"
-                            android:foreground="?android:attr/selectableItemBackground"
-                            android:padding="10dp"
-                            app:srcCompat="@drawable/edit_icon" />
-
-                    </LinearLayout>
-
-                </RelativeLayout>
-
-
-                <TableLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="@dimen/padding_card">
-
-
-                    <TableRow
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/lato_bold"
-                            android:includeFontPadding="false"
-                            android:paddingTop="@dimen/padding_card_action"
-                            android:text="@string/header_patient_history"
-                            android:textSize="@dimen/card_content_sub_text_size" />
-
-
-                        <androidx.legacy.widget.Space
-                            android:layout_width="10dp"
-                            android:layout_height="wrap_content" />
-
-                        <TextView
-                            android:id="@+id/textView_patHist"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:fontFamily="@font/lato_regular"
-                            android:includeFontPadding="false"
-                            android:paddingHorizontal="5dp"
-                            android:paddingTop="@dimen/padding_card_action"
-                            android:textSize="@dimen/card_content_sub_text_size" />
-
-
-                    </TableRow>
-
-                    <TableRow
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:includeFontPadding="false"
-                            android:text="@string/header_family_history"
-                            android:textSize="@dimen/card_content_sub_text_size" />
-
-
-                        <androidx.legacy.widget.Space
-                            android:layout_width="10dp"
-                            android:layout_height="wrap_content" />
-
-                        <TextView
-                            android:id="@+id/textView_famHist"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:fontFamily="@font/lato_regular"
-                            android:includeFontPadding="false"
-                            android:paddingHorizontal="5dp"
-                            android:paddingTop="@dimen/padding_card_action"
-                            android:textSize="@dimen/card_content_sub_text_size" />
-
-
-                    </TableRow>
-
-
-                </TableLayout>
-
-
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <Button
-            android:id="@+id/button_new_visit"
-            style="@style/SelectableItemBackground"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginHorizontal="10dp"
-            android:layout_marginTop="16dp"
-            android:elevation="5dp"
-            android:fontFamily="@font/lato_bold"
-            android:foreground="?android:attr/selectableItemBackground"
-            android:text="@string/button_new_visit" />
-
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cardView_previous_visits"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="@dimen/padding_card"
-            android:visibility="gone"
-            app:cardCornerRadius="5dp"
-            app:cardElevation="2dp"
-            app:cardUseCompatPadding="true">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@color/titleBar_cardview">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="@color/titleBar_cardview"
-                        android:fontFamily="@font/lato_bold"
-                        android:includeFontPadding="false"
-                        android:padding="10dp"
-                        android:paddingStart="20dp"
-                        android:text="@string/previous_visits"
-                        android:textColor="@color/white"
-                        android:textSize="@dimen/card_content_text_size" />
-
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:orientation="horizontal"
-                        android:visibility="invisible">
-
-                        <ImageButton
-                            style="@style/SelectableItemBackground"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentEnd="true"
-                            android:background="@null"
-                            android:contentDescription="TODO"
-                            android:foreground="?android:attr/selectableItemBackground"
-                            android:padding="10dp"
-                            app:srcCompat="@drawable/edit_icon" />
-
-                    </LinearLayout>
-
-                </RelativeLayout>
-
-
-                <LinearLayout
-                    android:id="@+id/linearLayout_previous_visits"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="vertical"
-                    android:padding="@dimen/padding_card">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/lato_regular"
-                        android:includeFontPadding="false"
-                        android:textSize="@dimen/card_title_text_size"
-                        android:visibility="gone" />
-
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-
-        </androidx.cardview.widget.CardView>
-
-    </LinearLayout>
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
