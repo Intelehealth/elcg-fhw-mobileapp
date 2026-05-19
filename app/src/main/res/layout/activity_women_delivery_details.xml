@@ -478,6 +478,7 @@
                     <com.google.android.material.textview.MaterialTextView
                         android:id="@+id/tv_type_of_still_birth"
                         style="@style/LabelStyleAddPatient"
+                        android:visibility="gone"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/label_type_of_still_birth" />
@@ -485,6 +486,7 @@
                         android:id="@+id/etl_type_of_still_birth"
                         style="@style/Theme.EZazi.Input.Login.DropDown"
                         android:layout_width="match_parent"
+                        android:visibility="gone"
                         android:layout_height="wrap_content"
                         android:layout_margin="@dimen/list_container_padding"
                         android:layout_marginTop="10dp">
