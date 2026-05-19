@@ -52,4 +52,5 @@ class DeliveryDetails {
 
     var congenitalAnomalies: String? = null
     var congenitalAnomalySpecification: String? = null
+    //var typeOfStillBirth: String? = null
 }

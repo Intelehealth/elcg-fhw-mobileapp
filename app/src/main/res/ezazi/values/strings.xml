@@ -258,5 +258,6 @@
     <string name="select_date_of_delivery">Select Date of delivery</string>
 
     <string name="last_updated_on">Last Updated: %1$s</string>
+    <string name="label_type_of_still_birth">Type of Stillbirth</string>
 
 </resources>

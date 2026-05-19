@@ -311,15 +311,16 @@ public class PartogramAlertEngine {
                 } else {
                     alert = "G";
                 }
-            } else if (paramInfo.getParamName().equalsIgnoreCase("Temperature(C)")) {
+            } else if (paramInfo.getParamName().equalsIgnoreCase("Temperature (°F)")) {
                 double val = Double.parseDouble(paramInfo.getCapturedValue());
-                if (val < 35) {
+                if (val < 95 || val >= 99.5) alert = "R";
+               /* if (val < 35) {
                     alert = "R";
                 } else if (val >= 37.5) {
                     alert = "R";
                 } else {
                     alert = "G";
-                }
+                }*/
             } else if (paramInfo.getParamName().equalsIgnoreCase("Urine protein")) {
                 if (paramInfo.getCapturedValue().equalsIgnoreCase("P3+")
                         || paramInfo.getCapturedValue().equalsIgnoreCase("P4+")) {
@@ -410,7 +411,7 @@ public class PartogramAlertEngine {
                     int val = Integer.parseInt(paramInfo.getCapturedValue());
                     if (val >= 90) alert = "R";
 
-                } else if (paramInfo.getParamName().equalsIgnoreCase("Temperature (°F)")) {
+                } else if (paramInfo.getParamName().equalsIgnoreCase("Temperature(°F)")) {
 
                     double val = Double.parseDouble(paramInfo.getCapturedValue());
                     if (val < 95 || val >= 99.5) alert = "R";
