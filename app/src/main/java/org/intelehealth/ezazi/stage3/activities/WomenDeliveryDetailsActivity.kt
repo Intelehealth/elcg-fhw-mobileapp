@@ -17,6 +17,7 @@ import org.intelehealth.ezazi.activities.visitSummaryActivity.TimelineVisitSumma
 import org.intelehealth.ezazi.app.AppConstants
 import org.intelehealth.ezazi.database.dao.EncounterDAO
 import org.intelehealth.ezazi.database.dao.ObsDAO
+import org.intelehealth.ezazi.database.dao.VisitAttributeListDAO
 import org.intelehealth.ezazi.database.dao.VisitsDAO
 import org.intelehealth.ezazi.databinding.ActivityWomenDeliveryDetailsBinding
 import org.intelehealth.ezazi.models.dto.EncounterDTO
@@ -77,7 +78,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             Log.d("kkcheck", "onCreate: deliveryDetails : "+Gson().toJson(deliveryDetails))
             if (validateFields(deliveryDetails)) {
                 clearErrors()
-                viewModel.saveDelivery(encounterDto, deliveryDetails, SessionManager(this).creatorID, "Stage3_Hour1_1")
+                viewModel.saveDelivery(encounterDto, deliveryDetails, SessionManager(this).creatorID, "Stage3_Hour1_1",  VisitAttributeListDAO())
             }
         }
 

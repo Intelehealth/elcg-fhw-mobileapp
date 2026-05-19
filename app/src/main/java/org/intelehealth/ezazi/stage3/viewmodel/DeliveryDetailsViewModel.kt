@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.intelehealth.ezazi.database.dao.VisitAttributeListDAO
 import org.intelehealth.ezazi.models.dto.EncounterDTO
 import org.intelehealth.ezazi.stage3.db.SaveDeliveryDetailsUseCase
 import org.intelehealth.ezazi.stage3.models.DeliveryDetails
@@ -22,11 +23,12 @@ class DeliveryDetailsViewModel(
         encounterDTO: EncounterDTO,
         deliveryDetails: DeliveryDetails,
         creatorId: String,
-        encounterTypeName: String
+        encounterTypeName: String,
+        visitAttributeListDAO: VisitAttributeListDAO
     ) {
         viewModelScope.launch {
 
-            val result = withContext(Dispatchers.IO) { saveDeliveryDetailsUseCase(encounterDTO, deliveryDetails, creatorId, encounterTypeName)
+            val result = withContext(Dispatchers.IO) { saveDeliveryDetailsUseCase(encounterDTO, deliveryDetails, creatorId, encounterTypeName, visitAttributeListDAO)
             }
 
             _saveResult.value = result
