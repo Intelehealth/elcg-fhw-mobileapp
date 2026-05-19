@@ -127,7 +127,7 @@ public class PatientQueryBuilder extends QueryBuilder {
                 "FROM tbl_encounter E, tbl_obs O " +
                 "WHERE E.visituuid =V.uuid  and E.voided = '0' and O.encounteruuid = E.uuid " +
                 "AND O.conceptuuid IN ('" + UuidDictionary.BIRTH_OUTCOME + "', " +
-                "'" + UuidDictionary.REFER_TYPE + "','" + UuidDictionary.OUT_OF_TIME + "') LIMIT 1) as birthStatus, ";
+                "'" + UuidDictionary.REFER_TYPE + "','" + UuidDictionary.OUT_OF_TIME + "','" + UuidDictionary.MOTHER_DECEASED +"') LIMIT 1) as birthStatus, ";
     }
 
     private String caseOfMotherDeceased() {

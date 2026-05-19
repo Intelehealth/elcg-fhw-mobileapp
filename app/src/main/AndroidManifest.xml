@@ -50,9 +50,21 @@
         tools:ignore="UnusedAttribute, LockedOrientationActivity, DiscouragedApi"
         tools:replace="allowBackup">
         <activity
-            android:name=".stage3.postpartum.ViewPostPartumReportActivity"
+            android:name=".activities.epartogramActivity.OfflineEPartogramViewActivity"
             android:exported="false"
+            android:label="@string/title_activity_epartogram"
+            android:screenOrientation="landscape"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".stage3.postpartum.OfflineStage3ViewActivity"
+            android:exported="false"
+            android:label="@string/title_activity_epartogram"
+            android:screenOrientation="landscape"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".stage3.postpartum.ViewPostPartumReportActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
+            android:exported="false"
             android:label="@string/title_activity_post_partum"
             android:screenOrientation="landscape"
             android:theme="@style/AppTheme.NoActionBar" />
