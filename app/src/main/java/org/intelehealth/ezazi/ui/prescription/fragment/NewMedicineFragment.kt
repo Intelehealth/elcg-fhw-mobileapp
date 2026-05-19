@@ -54,6 +54,7 @@ class NewMedicineFragment : Fragment(R.layout.fragment_new_medicine) {
         )
     }
 
+
     private fun setData() {
         arguments?.let {
             NewMedicineFragmentArgs.fromBundle(it).medicine.let {
