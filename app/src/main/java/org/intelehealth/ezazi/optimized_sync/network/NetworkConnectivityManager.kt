@@ -92,26 +92,14 @@ class NetworkConnectivityManager(private val context: Context) {
     private var nsa5GOverride: Boolean = false
 
     /**
-     * Holds the API 31+ TelephonyCallback instance.  Created lazily inside
+     * Holds the API 31+ TelephonyCallback instance. Created lazily inside
      * [registerDisplayInfoListener] so that [TelephonyCallback] (API 31) is only
      * referenced after the version check — avoids NoClassDefFoundError on older devices.
      */
-    private var displayInfoCallback: TelephonyCallback = @RequiresApi(Build.VERSION_CODES.S)
-    object : TelephonyCallback(),
-        DisplayInfoListener {
-        override fun onDisplayInfoChanged(telephonyDisplayInfo: TelephonyDisplayInfo) {
-            handleDisplayInfo(telephonyDisplayInfo)
-        }
-    }
-
+    private var displayInfoCallback: Any? = null
 
     @Suppress("DEPRECATION")
-    private val legacyPhoneStateListener: PhoneStateListener = object : PhoneStateListener() {
-        @RequiresApi(Build.VERSION_CODES.R)
-        override fun onDisplayInfoChanged(telephonyDisplayInfo: TelephonyDisplayInfo) {
-            handleDisplayInfo(telephonyDisplayInfo)
-        }
-    }
+    private var legacyPhoneStateListener: PhoneStateListener? = null
 
     @RequiresApi(Build.VERSION_CODES.R)
     private fun handleDisplayInfo(info: TelephonyDisplayInfo) {
@@ -386,15 +374,30 @@ class NetworkConnectivityManager(private val context: Context) {
     private fun registerDisplayInfoListener() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             try {
+                if (displayInfoCallback == null) {
+                    displayInfoCallback = object : TelephonyCallback(), DisplayInfoListener {
+                        override fun onDisplayInfoChanged(telephonyDisplayInfo: TelephonyDisplayInfo) {
+                            handleDisplayInfo(telephonyDisplayInfo)
+                        }
+                    }
+                }
                 telephonyManager.registerTelephonyCallback(
                     context.mainExecutor,
-                    displayInfoCallback,
+                    displayInfoCallback as TelephonyCallback,
                 )
             } catch (_: SecurityException) {
                 // READ_PHONE_STATE not granted — 5G NSA detection unavailable.
             }
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             try {
+                if (legacyPhoneStateListener == null) {
+                    legacyPhoneStateListener = object : PhoneStateListener() {
+                        @RequiresApi(Build.VERSION_CODES.R)
+                        override fun onDisplayInfoChanged(telephonyDisplayInfo: TelephonyDisplayInfo) {
+                            handleDisplayInfo(telephonyDisplayInfo)
+                        }
+                    }
+                }
                 @Suppress("DEPRECATION")
                 telephonyManager.listen(
                     legacyPhoneStateListener,
@@ -409,13 +412,17 @@ class NetworkConnectivityManager(private val context: Context) {
     private fun unregisterDisplayInfoListener() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             try {
-                telephonyManager.unregisterTelephonyCallback(displayInfoCallback)
+                (displayInfoCallback as? TelephonyCallback)?.let {
+                    telephonyManager.unregisterTelephonyCallback(it)
+                }
             } catch (_: Exception) { /* ignore */
             }
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             try {
-                @Suppress("DEPRECATION")
-                telephonyManager.listen(legacyPhoneStateListener, PhoneStateListener.LISTEN_NONE)
+                legacyPhoneStateListener?.let {
+                    @Suppress("DEPRECATION")
+                    telephonyManager.listen(it, PhoneStateListener.LISTEN_NONE)
+                }
             } catch (_: Exception) { /* ignore */
             }
         }
