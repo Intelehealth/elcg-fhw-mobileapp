@@ -17,6 +17,7 @@ import org.intelehealth.ezazi.activities.visitSummaryActivity.TimelineVisitSumma
 import org.intelehealth.ezazi.app.AppConstants
 import org.intelehealth.ezazi.database.dao.EncounterDAO
 import org.intelehealth.ezazi.database.dao.ObsDAO
+import org.intelehealth.ezazi.database.dao.VisitAttributeListDAO
 import org.intelehealth.ezazi.database.dao.VisitsDAO
 import org.intelehealth.ezazi.databinding.ActivityWomenDeliveryDetailsBinding
 import org.intelehealth.ezazi.models.dto.EncounterDTO
@@ -74,10 +75,10 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             .get(DeliveryDetailsViewModel::class.java)
         binding.btnSave.setOnClickListener {
             val deliveryDetails = collectFormData()
-            Log.d(TAG, "onCreate: deliveryDetails : "+Gson().toJson(deliveryDetails))
+            Log.d("kkcheck", "onCreate: deliveryDetails : "+Gson().toJson(deliveryDetails))
             if (validateFields(deliveryDetails)) {
                 clearErrors()
-                viewModel.saveDelivery(encounterDto, deliveryDetails, SessionManager(this).creatorID, "Stage3_Hour1_1")
+                viewModel.saveDelivery(encounterDto, deliveryDetails, SessionManager(this).creatorID, "Stage3_Hour1_1",  VisitAttributeListDAO())
             }
         }
 
@@ -331,7 +332,8 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
 
             // SECTION 3: Newborn Details
 
-            typeOfBirth = binding.actvTypeOfBirth.text.toString().trim()
+            //typeOfBirth = binding.actvTypeOfBirth.text.toString().trim()
+            typeOfBirth = uiHandler.getTypeOfBirthValue()
             babyGender = binding.actvSex.text.toString().trim()
             apgarScore1Min = binding.autotvApgar1.text.toString().trim()
             apgarScore5Min = binding.autotvApgar5.text.toString().trim()
@@ -343,7 +345,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             congenitalAnomalies= handleConditionalField(DeliveryDetailsConcept.CONGENITAL_ANOMALY.name,
                 uiHandler.getYesNoValue(binding.layoutCongenitalAnomaliesRadio.radioYesNoGroupCommon),  binding.autotvCongenitalYesOptions.text.toString(),
                 binding.etCongenitalYesOtherOption.text.toString())
-
+            //typeOfStillBirth = binding.actvTypeOfStillBirth.text.toString().trim()
         }
     }
     private fun handleConditionalField(

@@ -473,6 +473,36 @@
                             android:textSize="@dimen/input_inner_size" />
                     </org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout>
 
+
+                    <!-- Type of Still birth option only -->
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/tv_type_of_still_birth"
+                        style="@style/LabelStyleAddPatient"
+                        android:visibility="gone"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/label_type_of_still_birth" />
+                    <org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
+                        android:id="@+id/etl_type_of_still_birth"
+                        style="@style/Theme.EZazi.Input.Login.DropDown"
+                        android:layout_width="match_parent"
+                        android:visibility="gone"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/list_container_padding"
+                        android:layout_marginTop="10dp">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/actv_type_of_still_birth"
+                            style="@style/Theme.EZazi.Scrollbar.Thumb"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:focusable="true"
+                            android:hint="@string/select"
+                            android:inputType="none"
+                            android:minHeight="@dimen/max_input_height"
+                            android:textSize="@dimen/input_inner_size" />
+                    </org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout>
+
                     <!-- Sex -->
                     <com.google.android.material.textview.MaterialTextView
                         style="@style/LabelStyleAddPatient"
