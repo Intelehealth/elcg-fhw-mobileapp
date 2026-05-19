@@ -51,9 +51,9 @@ class DeliveryDetailsObsMapper{
             add(DeliveryDetailsConcept.CONGENITAL_ANOMALY, deliveryDetails.congenitalAnomalies)
             add(DeliveryDetailsConcept.RESUSCITATION, deliveryDetails.resuscitation)
         }
-        if (deliveryDetails.typeOfBirth.equals("Still Birth", true)) {
+       /* if (deliveryDetails.typeOfBirth.equals("Still Birth", true)) {
             add(DeliveryDetailsConcept.TYPE_OF_STILL_BIRTH, deliveryDetails.typeOfStillBirth)
-        }
+        }*/
         return list
     }
 }

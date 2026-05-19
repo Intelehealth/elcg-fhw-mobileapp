@@ -612,7 +612,7 @@ class DeliveryDetailsUIController(
 
         if (!isStillBirth) {
             binding.actvTypeOfStillBirth.setText("", false)
-            deliveryDetails.typeOfStillBirth = null
+            //deliveryDetails.typeOfStillBirth = null
         }
 
     }
@@ -730,9 +730,19 @@ class DeliveryDetailsUIController(
         binding.actvTypeOfStillBirth.setAdapter(adapter)
         binding.actvTypeOfStillBirth.setOnItemClickListener { parent, _, position, _ ->
             Utils.hideKeyboard(context as AppCompatActivity)
-            deliveryDetails.typeOfStillBirth = parent.getItemAtPosition(position).toString()
-            binding.actvTypeOfStillBirth.tag = deliveryDetails.typeOfStillBirth
+            //deliveryDetails.typeOfStillBirth = parent.getItemAtPosition(position).toString()
+            val selectedValue = parent.getItemAtPosition(position).toString()
+            val selectedTypeOfBirth = binding.actvTypeOfBirth.text.toString()
+            if(selectedTypeOfBirth.equals("Stillbirth", true)){
+                deliveryDetails.typeOfBirth = "$selectedTypeOfBirth-$selectedValue"
+            }else{
+                deliveryDetails.typeOfBirth = selectedTypeOfBirth
+            }
+            binding.actvTypeOfStillBirth.tag = selectedValue
             clearTextInputError(binding.etlTypeOfStillBirth)
         }
+    }
+    fun getTypeOfBirthValue(): String?{
+        return  deliveryDetails.typeOfBirth
     }
 }
