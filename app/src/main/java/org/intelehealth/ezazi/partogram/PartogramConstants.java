@@ -318,8 +318,8 @@ public class PartogramConstants {
         paramInfo.setOptions(new String[]{"10", "9", "8", "7", "6", "5"});
         paramInfo.setValues(new String[]{"10", "9", "8", "7", "6", "5"});
         if (stage == STAGE_2) {
-            paramInfo.setOptions(new String[]{"10"});
-            paramInfo.setValues(new String[]{"P"});
+            paramInfo.setOptions(new String[]{"Pushing", "10"});
+            paramInfo.setValues(new String[]{"P", "10"});
             paramInfo.setFifteenMinField(true);
         } else {
             paramInfo.setFiveHourField(true);
@@ -841,7 +841,7 @@ public class PartogramConstants {
         newbornParam.setConceptUUID(Params.PLAN_NEWBORN.conceptId);
         newbornParam.setEachEncounterField(true);
         //newbornParam.setFifteenMinField(true);
-       // newbornParam.setHalfHourField(true);
+        // newbornParam.setHalfHourField(true);
         //newbornParam.setOnlyOneHourField(true);
         newbornList.add(newbornParam);
 
