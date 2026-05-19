@@ -77,7 +77,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             Log.d("kkcheck", "onCreate: deliveryDetails : "+Gson().toJson(deliveryDetails))
             if (validateFields(deliveryDetails)) {
                 clearErrors()
-                //viewModel.saveDelivery(encounterDto, deliveryDetails, SessionManager(this).creatorID, "Stage3_Hour1_1")
+                viewModel.saveDelivery(encounterDto, deliveryDetails, SessionManager(this).creatorID, "Stage3_Hour1_1")
             }
         }
 

@@ -16,6 +16,7 @@ import com.google.android.material.textview.MaterialTextView
 import org.intelehealth.ezazi.R
 import org.intelehealth.ezazi.activities.addNewPatient.PatientOtherInfoFragment
 import org.intelehealth.ezazi.databinding.ActivityWomenDeliveryDetailsBinding
+import org.intelehealth.ezazi.stage3.BirthType
 import org.intelehealth.ezazi.stage3.Utils.NepaliDateUtils.BS_MONTH_NAMES
 import org.intelehealth.ezazi.stage3.Utils.NepaliDateUtils.toGregFmt
 import org.intelehealth.ezazi.stage3.models.DeliveryDetails
@@ -577,10 +578,14 @@ class DeliveryDetailsUIController(
     }
 
     private fun handleLiveBirthUI(type: String?) {
-        val isLiveBirth = type.equals("Live Birth", ignoreCase = true)
-        val isStillBirth = type.equals("Stillbirth", ignoreCase = true)
-        val visibility = if (isLiveBirth) View.VISIBLE else View.GONE
+        //val isLiveBirth = type.equals("Live Birth", ignoreCase = true)
+        //val isStillBirth = type.equals("Stillbirth", ignoreCase = true)
+        //val visibility = if (isLiveBirth) View.VISIBLE else View.GONE
+        val birthType = BirthType.from(type)
 
+        val isLiveBirth = birthType == BirthType.LIVE_BIRTH
+        val isStillBirth = birthType == BirthType.STILLBIRTH
+        val visibility = if (isLiveBirth) View.VISIBLE else View.GONE
         // APGAR
         binding.textViewApgar1.visibility = visibility
         binding.etlApgar1.visibility = visibility
@@ -733,7 +738,8 @@ class DeliveryDetailsUIController(
             //deliveryDetails.typeOfStillBirth = parent.getItemAtPosition(position).toString()
             val selectedValue = parent.getItemAtPosition(position).toString()
             val selectedTypeOfBirth = binding.actvTypeOfBirth.text.toString()
-            if(selectedTypeOfBirth.equals("Stillbirth", true)){
+
+            if(selectedTypeOfBirth.equals(BirthType.STILLBIRTH.value, true)){
                 deliveryDetails.typeOfBirth = "$selectedTypeOfBirth-$selectedValue"
             }else{
                 deliveryDetails.typeOfBirth = selectedTypeOfBirth
