@@ -23,6 +23,8 @@
         <item name="checkboxStyle">@style/Theme.EZazi.CheckBox</item>
         <item name="android:textColorPrimaryInverse">@color/colorPrimary</item>
         <item name="android:textColorSecondaryInverse">@color/darkGray</item>
+        <item name="popupMenuStyle">@style/MyPopupMenu</item>
+        <item name="actionOverflowMenuStyle">@style/MyPopupMenu</item>
 <!--        <item name="android:textColorPrimary">@color/red</item>-->
     </style>
 
@@ -138,6 +140,15 @@
     <style name="Widget.AppTheme.ButtonBar.Fullscreen" parent="">
         <item name="android:background">@color/black_overlay</item>
         <item name="android:buttonBarStyle">?android:attr/buttonBarStyle</item>
+    </style>
+
+    <style name="MyPopupTextAppearance" parent="TextAppearance.AppCompat.Menu">
+        <item name="android:textSize">@dimen/menu_item_text_size</item>
+    </style>
+
+    <style name="MyPopupMenu" parent="ThemeOverlay.AppCompat.Light">
+        <item name="android:textAppearanceLargePopupMenu">@style/MyPopupTextAppearance</item>
+        <item name="android:textAppearanceSmallPopupMenu">@style/MyPopupTextAppearance</item>
     </style>
 
 </resources>

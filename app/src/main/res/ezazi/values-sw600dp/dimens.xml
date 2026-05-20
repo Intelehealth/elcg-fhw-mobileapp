@@ -160,7 +160,6 @@
     <!--    <dimen name="dialog_max_height">@dimen/std_814dp</dimen>-->
     <dimen name="dialog_max_height">@dimen/std_720dp</dimen>
     <dimen name="search_icon_padding">@dimen/std_24dp</dimen>
-    <dimen name="small_btn_min_width">@dimen/std_150dp</dimen>
     <dimen name="actionbar_screen_title_size">@dimen/std_23sp</dimen>
     <dimen name="icon_btn_padding">@dimen/std_16dp</dimen>
     <dimen name="stage_text_size">@dimen/std_26sp</dimen>
@@ -276,5 +275,12 @@
 
     <dimen name="forgot_password_screen_padding">@dimen/std_65dp</dimen>
     <dimen name="dialog_btn_text_size_permission">@dimen/std_16sp</dimen>
+
+    <dimen name="timeline_actionbar_horizontal_padding">@dimen/std_16dp</dimen>
+    <dimen name="card_content_sub_text_size">20sp</dimen>
+    <dimen name="action_menu_view_dropdown_size">24dp</dimen>
+    <dimen name="small_btn_min_width">96dp</dimen>
+    <dimen name="menu_item_text_size">20sp</dimen>
+
 
 </resources>
