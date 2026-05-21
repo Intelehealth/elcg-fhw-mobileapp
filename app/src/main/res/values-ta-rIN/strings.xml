@@ -695,6 +695,9 @@
     <string name="prolonged_labour_detected">Prolonged labour detected: Active stage exceeded safe duration.</string>
     <string name="second_stage_prolonged">Second stage prolonged. Immediate attention required.</string>
     <string name="shift_to_postnatal_ward">Shift to Postnatal Ward</string>
+    <string name="patient_not_found">Patient not found</string>
+    <string name="search_pat_not_found_txt">Patient not found!</string>
+    <string name="search_pat_hint_txt">Use correct Username or ID to search or you can register a new patient.</string>
 
 </resources>
 

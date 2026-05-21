@@ -41,4 +41,7 @@
     <string name="select_lmp_date">Select a valid date of last menstruation period (LMP).</string>
     <string name="select_labor_diagnosed_date">Select valid date when labor was diagnosed.</string>
     <string name="edd_range_invalid">EDD can range between 3 weeks after or before today.</string>
+    <string name="patient_not_found">Patient not found</string>
+    <string name="search_pat_not_found_txt">Patient not found!</string>
+    <string name="search_pat_hint_txt">Use correct Username or ID to search or you can register a new patient.</string>
 </resources>
