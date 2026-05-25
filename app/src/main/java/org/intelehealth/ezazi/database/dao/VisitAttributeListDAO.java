@@ -280,7 +280,7 @@ public class VisitAttributeListDAO {
         db.beginTransaction();
 
         Cursor cursor = db.rawQuery("SELECT value FROM tbl_visit_attribute WHERE visit_uuid = ? " +
-                        " AND visit_attribute_type_uuid = '" + UuidDictionary.DECISION_PENDING + "' AND value = 'true'",
+                        " AND visit_attribute_type_uuid = '" + UuidDictionary.DECISION_PENDING + "' AND value = 'true' ORDER BY rowid DESC LIMIT 1",
                 new String[]{VISITUUID});
 
         if (cursor.getCount() != 0) {

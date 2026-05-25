@@ -152,7 +152,7 @@ public class PatientOtherInfoFragment extends Fragment {
             tvErrorPrimaryDoctor, tvErrorSecondaryDoctor, tvErrorBedNumber,
             tvErrorLabourDiagnosedDate, tvErrorLabourDiagnosedTime,
             tvErrorRiskFactor, tvErrorHospital, tvErrorHospitalOther,
-            tvErrorGravida, tvErrorLmpDate, tvErrorEDD, tvErrorHospitalId;
+            tvErrorGravida, tvErrorLmpDate, tvErrorEDD, tvErrorHospitalId, tvErrorSacRuptured;
     private TextView tvErrorHighRisk;
 
     // ── Card views ─────────────────────────────────────────────────────────
@@ -160,7 +160,7 @@ public class PatientOtherInfoFragment extends Fragment {
             cardTotalMiscarraige, cardSacRupturedDate, cardSacRupturedTime,
             cardPrimaryDoctor, cardSecondaryDoctor, cardBedNumber,
             cardDiagnosedDate, cardDiagnosedTime, dropdownRiskFactors,
-            cardOtherRisk, cardHospitalOther;
+            cardOtherRisk, cardHospitalOther, cardSacRupturedMembrane;
     private LinearLayout layoutSacRuptured, cardOptions;
 
     private boolean isUnknownChecked;
@@ -172,10 +172,12 @@ public class PatientOtherInfoFragment extends Fragment {
     private String mLmpDate = "", mEDD = "";
     private TextInputEditText mLmpDateTextView, mEDDTextView;
     private String patientUuid = "";
-
+    private String  mSelectedRuptureMembrane= "";
     // ═════════════════════════════════════════════════════════════════════
     //  Lifecycle
     // ═════════════════════════════════════════════════════════════════════
+    private AutoCompleteTextView autotvRupturedMembrane;
+    private boolean shouldValidateSacMembraneDates = false;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -250,6 +252,10 @@ public class PatientOtherInfoFragment extends Fragment {
         try { mProviderDoctorList = providerDAO.getDoctorList(); }
         catch (DAOException e) { e.printStackTrace(); }
 
+        autotvRupturedMembrane = view.findViewById(R.id.autotv_sac_ruptured_options);
+        tvErrorSacRuptured = view.findViewById(R.id.tv_error_sac_ruptured_membrane);
+        cardSacRupturedMembrane = view.findViewById(R.id.dropdown_sac_ruptured_options);
+
         handleAllClickListeners();
 
         Intent intent = getActivity().getIntent();
@@ -272,6 +278,7 @@ public class PatientOtherInfoFragment extends Fragment {
             patientAttributesModel = (PatientAttributesModel) getArguments().getSerializable("patientAttributes");
             if (fromSecondScreen && patientAttributesModel != null) updateUIForUserFromAddressTab();
         }
+
     }
 
     private void disableSoftInput(EditText... fields) {
@@ -726,8 +733,30 @@ public class PatientOtherInfoFragment extends Fragment {
             }
         }
 
-        // 8. Sac Ruptured
+       /* // 8. Sac Ruptured
         if (!isUnknownChecked) {
+            if (TextUtils.isEmpty(mMembraneRupturedDate)) {
+                showError(tvErrorSacRupturedDate, cardSacRupturedDate, getString(R.string.select_sac_ruptured_date));
+                isValid = false;
+            } else if (isAfterToday(mMembraneRupturedDate)) {
+                showError(tvErrorSacRupturedDate, cardSacRupturedDate, getString(R.string.sac_ruptured_future_not_allowed));
+                isValid = false;
+            }
+            if (TextUtils.isEmpty(mMembraneRupturedTime)) {
+                showError(tvErrorSacRupturedTime, cardSacRupturedTime, getString(R.string.select_sac_ruptured_time));
+                isValid = false;
+            }
+            else if (!TextUtils.isEmpty(mMembraneRupturedTime)) {
+                Date rupDt = parseGregDateTime(mMembraneRupturedDate, mMembraneRupturedTime);
+                if (rupDt != null && rupDt.after(new Date())) {
+                    showError(tvErrorSacRupturedTime, cardSacRupturedTime, getString(R.string.select_sac_ruptured_time));
+                    isValid = false;
+                }
+            }
+        }
+*/
+        // 8. Sac Ruptured
+        if (shouldValidateSacMembraneDates) {
             if (TextUtils.isEmpty(mMembraneRupturedDate)) {
                 showError(tvErrorSacRupturedDate, cardSacRupturedDate, getString(R.string.select_sac_ruptured_date));
                 isValid = false;
@@ -887,6 +916,11 @@ public class PatientOtherInfoFragment extends Fragment {
             isValid = false;
         }*/
 
+        if (TextUtils.isEmpty(autotvRupturedMembrane.getText().toString())) {
+            showError(tvErrorSacRuptured, cardSacRupturedMembrane, getString(R.string.select_rupture_membrane));
+            isValid = false;
+        }
+
         return isValid;
     }
 
@@ -959,6 +993,7 @@ public class PatientOtherInfoFragment extends Fragment {
         TextInputLayout etLayoutRiskFactors     = view.findViewById(R.id.etLayout_risk_factors);
         TextInputLayout etLayoutPrimaryDoctor   = view.findViewById(R.id.etLayout_primary_doctor);
         TextInputLayout etLayoutSecondaryDoctor = view.findViewById(R.id.etLayout_secondary_doctor);
+        TextInputLayout etLayoutSacRupturedMembraneOptions = view.findViewById(R.id.etLayout_sac_ruptured_options);
 
         View layoutLmpEdd = view.findViewById(R.id.view_lmp_edd_layout);
         TextInputLayout etLayoutLmp = layoutLmpEdd.findViewById(R.id.etLayout_lmp);
@@ -986,6 +1021,8 @@ public class PatientOtherInfoFragment extends Fragment {
         mPrimaryDoctorTextView.setOnClickListener(v -> selectPrimaryDoctor());
         etLayoutSecondaryDoctor.setEndIconOnClickListener(v -> selectSecondaryDoctor());
         mSecondaryDoctorTextView.setOnClickListener(v -> selectSecondaryDoctor());
+        etLayoutSacRupturedMembraneOptions.setEndIconOnClickListener(v -> selectRuptureMembraneOptions());
+        autotvRupturedMembrane.setOnClickListener(v -> selectRuptureMembraneOptions());
 
         mUnknownMembraneRupturedCheckBox.setOnCheckedChangeListener((btn, checked) -> {
             isUnknownChecked = checked;
@@ -1133,12 +1170,34 @@ public class PatientOtherInfoFragment extends Fragment {
             mActiveLaborDiagnosedDateTextView.setText(gregToDisplay(mActiveLaborDiagnosedDate));
             mActiveLaborDiagnosedTimeTextView.setText(mActiveLaborDiagnosedTime);
         }
-        if (patient.getMembraneRupturedTimestamp() != null) {
+        /*if (patient.getMembraneRupturedTimestamp() != null) {
             if (patient.getMembraneRupturedTimestamp().equalsIgnoreCase("U")) {
                 mUnknownMembraneRupturedCheckBox.setChecked(true);
             } else {
                 // ── FIX (AM/PM bug): same split(" ", 2) fix as activeLaborDiagnosed ──
                 String[] p = patient.getMembraneRupturedTimestamp().split(" ", 2);
+                mMembraneRupturedDate = p[0];
+                mMembraneRupturedTime = normaliseTimeString(p.length > 1 ? p[1].trim() : "");
+                mMembraneRupturedDateTextView.setText(gregToDisplay(mMembraneRupturedDate));
+                mMembraneRupturedTimeTextView.setText(mMembraneRupturedTime);
+            }
+        }*/
+        if (patient.getMembraneRupturedTimestamp() != null) {
+
+            String membraneValue = patient.getMembraneRupturedTimestamp();
+
+            if ("U".equalsIgnoreCase(membraneValue)) {
+                // Unknown selected
+                autotvRupturedMembrane.setText("Unknown", false);
+            } else if ("I".equalsIgnoreCase(membraneValue)) {
+                // Intact selected
+                autotvRupturedMembrane.setText("Intact", false);
+            } else {
+                // Known selected
+                autotvRupturedMembrane.setText("Known", false);
+                layoutSacRuptured.setVisibility(View.VISIBLE);
+                // Split date and time
+                String[] p = membraneValue.split(" ", 2);
                 mMembraneRupturedDate = p[0];
                 mMembraneRupturedTime = normaliseTimeString(p.length > 1 ? p[1].trim() : "");
                 mMembraneRupturedDateTextView.setText(gregToDisplay(mMembraneRupturedDate));
@@ -1385,8 +1444,26 @@ public class PatientOtherInfoFragment extends Fragment {
         attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.PARITY.value, StringUtils.getValue(mTotalBirthCount + "," + mTotalMiscarriageCount)));
         attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.LABOR_ONSET.value, StringUtils.getValue(mLaborOnsetString)));
         attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.ACTIVE_LABOR_DIAGNOSED.value, StringUtils.getValue(mActiveLaborDiagnosedDate + " " + mActiveLaborDiagnosedTime)));
-        attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.MEMBRANE_RUPTURED_TIMESTAMP.value,
-                mUnknownMembraneRupturedCheckBox.isChecked() ? "U" : StringUtils.getValue(mMembraneRupturedDate + " " + mMembraneRupturedTime)));
+       /* attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.MEMBRANE_RUPTURED_TIMESTAMP.value,
+                mUnknownMembraneRupturedCheckBox.isChecked() ? "U" : StringUtils.getValue(mMembraneRupturedDate + " " + mMembraneRupturedTime)));*/
+        String membraneValue;
+        if ("Unknown".equals(mSelectedRuptureMembrane)) {
+            membraneValue = "U";
+        } else if ("Intact".equals(mSelectedRuptureMembrane)) {
+            membraneValue = "I";
+        } else {
+            // Known
+            membraneValue = StringUtils.getValue(
+                    mMembraneRupturedDate + " " + mMembraneRupturedTime
+            );
+        }
+
+        attrList.add(
+                mkAttr.apply(
+                        PatientAttributesDTO.Columns.MEMBRANE_RUPTURED_TIMESTAMP.value,
+                        membraneValue
+                )
+        );
         if (mRiskFactorsString.contains(getString(R.string.other_risk)))
             mRiskFactorsString = mRiskFactorsString.replace(getString(R.string.other_risk), etHighRisk.getText().toString());
         attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.RISK_FACTORS.value, StringUtils.getValue(mRiskFactorsString)));
@@ -1456,5 +1533,41 @@ public class PatientOtherInfoFragment extends Fragment {
 
     public static Point getLocationOnScreen(View v) {
         int[] loc = new int[2]; v.getLocationOnScreen(loc); return new Point(loc[0], loc[1]);
+    }
+    private void selectRuptureMembraneOptions() {
+        String[] options = getResources().getStringArray(R.array.rupture_membrane_options);
+        ArrayList<SingChoiceItem> items = new ArrayList<>();
+        for (int i = 0; i < options.length; i++) {
+            SingChoiceItem item = new SingChoiceItem();
+            item.setItem(options[i]);
+            item.setItemId(String.valueOf(i));
+            item.setItemIndex(i);
+            items.add(item);
+        }
+
+        SingleChoiceDialogFragment dialog = new SingleChoiceDialogFragment.Builder(mContext)
+                        .title(R.string.select_rupture_membrane)
+                        .positiveButtonLabel(R.string.save_button)
+                        .content(items)
+                        .build();
+
+        dialog.isSearchable(false);
+        dialog.setListener(item -> {
+            mSelectedRuptureMembrane = item.getItem();
+            mSelectedRuptureMembrane = item.getItem();
+            autotvRupturedMembrane.setText(item.getItem());
+            clearError(tvErrorSacRuptured, cardSacRupturedMembrane);
+            if(!mSelectedRuptureMembrane.isEmpty() && mSelectedRuptureMembrane.equalsIgnoreCase("Known")){
+                shouldValidateSacMembraneDates = true;
+                layoutSacRuptured.setVisibility(View.VISIBLE);
+            }else{
+                shouldValidateSacMembraneDates = false;
+                layoutSacRuptured.setVisibility(View.GONE);
+                mMembraneRupturedDateTextView.setText("");
+                mMembraneRupturedTimeTextView.setText("");
+            }
+        });
+
+        dialog.show(getChildFragmentManager(), dialog.getClass().getCanonicalName());
     }
 }

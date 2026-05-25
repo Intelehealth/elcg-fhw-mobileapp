@@ -259,5 +259,6 @@
 
     <string name="last_updated_on">Last Updated: %1$s</string>
     <string name="label_type_of_still_birth">Type of Stillbirth</string>
+    <string name="select_rupture_membrane">Select amniotic sac ruptured membrane</string>
 
 </resources>
