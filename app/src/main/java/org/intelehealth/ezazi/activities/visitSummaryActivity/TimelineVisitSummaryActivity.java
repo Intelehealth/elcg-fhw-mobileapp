@@ -723,6 +723,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         } else if (stageNo == 3) {
             tvPendingDecision.setText(getResources().getString(R.string.outcome_decision_stage_3));
         }
+        isDecisionPending = status;
 //        new Thread(new Runnable() {
 //            @Override
 //            public void run() {

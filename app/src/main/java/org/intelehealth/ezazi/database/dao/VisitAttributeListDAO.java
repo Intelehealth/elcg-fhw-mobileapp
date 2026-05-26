@@ -291,9 +291,9 @@ public class VisitAttributeListDAO {
             }
         }
         cursor.close();
-        db.setTransactionSuccessful();
-        db.endTransaction();
-        db.close();
+        //db.setTransactionSuccessful();
+        //db.endTransaction();
+        //db.close();
         return false;
     }
 
