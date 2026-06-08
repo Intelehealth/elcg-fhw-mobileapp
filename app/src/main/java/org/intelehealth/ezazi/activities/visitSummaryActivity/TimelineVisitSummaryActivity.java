@@ -696,7 +696,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 
     private void showToastIfNoPrescription() {
         SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
-        PrescriptionRepository repository = new PrescriptionRepository(db);
+        PrescriptionRepository repository = new PrescriptionRepository(db,obsDAO);
         prescriptions = repository.fetchPrescription(visitUuid, PrescriptionFragment.PrescriptionType.FULL);
         if (prescriptions != null && !prescriptions.isEmpty()) {
             Drawable drawable = ContextCompat.getDrawable(this, R.drawable.ic_vector_prescription);

@@ -261,4 +261,8 @@
     <string name="label_type_of_still_birth">Type of Stillbirth</string>
     <string name="select_rupture_membrane">Select amniotic sac ruptured membrane</string>
 
+    <string name="lbl_lcg_risks">LCG Risks</string>
+    <string name="lbl_no_active_lcg_alerts">No active LCG alerts</string>
+    <string name="content_lcg_risks_header">LCG Risks panel, tap to collapse or expand</string>
+    <string name="lcg_alert_ref_format">LCG alert value: %1$s</string>
 </resources>

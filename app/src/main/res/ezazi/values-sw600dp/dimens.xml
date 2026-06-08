@@ -281,6 +281,10 @@
     <dimen name="action_menu_view_dropdown_size">24dp</dimen>
     <dimen name="small_btn_min_width">96dp</dimen>
     <dimen name="menu_item_text_size">20sp</dimen>
-
+    <dimen name="lcg_container_padding">16dp</dimen>
+    <dimen name="lcg_container_margin_top">12dp</dimen>
+    <dimen name="lcg_container_text_size">@dimen/std_25sp</dimen>
+    <dimen name="lcg_container_view_margin_end">10dp</dimen>
+    <dimen name="lcg_alert_text_size">@dimen/std_14sp</dimen>
 
 </resources>
