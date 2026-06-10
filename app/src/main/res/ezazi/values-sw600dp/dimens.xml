@@ -286,5 +286,5 @@
     <dimen name="lcg_container_text_size">@dimen/std_25sp</dimen>
     <dimen name="lcg_container_view_margin_end">10dp</dimen>
     <dimen name="lcg_alert_text_size">@dimen/std_14sp</dimen>
-
+    <dimen name="plan_field_min_height">120dp</dimen>
 </resources>

@@ -135,6 +135,7 @@
                 android:gravity="top|start"
                 android:hint="@string/enter_here"
                 android:imeOptions="actionDone"
+                android:minHeight="@dimen/plan_field_min_height"
                 android:inputType="textMultiLine"
                 android:lineSpacingExtra="@dimen/std_4dp"
                 android:scrollbars="vertical"

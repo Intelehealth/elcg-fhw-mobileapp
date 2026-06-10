@@ -100,13 +100,13 @@ object RiskConcepts {
 
         // Fetal condition
         PartogramConstants.Params.BASELINE_FHR.conceptId
-                to "<90 or >220 bpm",
+                to "<110 or >=160 bpm",
 
         PartogramConstants.Params.FHR_DEC.conceptId
                 to "Late",
 
         PartogramConstants.Params.AMNIOTIC_FLUID.conceptId
-                to "M++ / M+++ / B",
+                to "M+++ / B",
 
         PartogramConstants.Params.FETAL_POSITION.conceptId
                 to "P (Occiput anterior) / T (Occiput transverse)",
@@ -119,16 +119,16 @@ object RiskConcepts {
 
         // Maternal condition
         PartogramConstants.Params.PULSE.conceptId
-                to "<30 or >250 bpm",
+                to "<60 or >=120 bpm",
 
         PartogramConstants.Params.SYSTOLIC_BP.conceptId
-                to "<30 or >300 mmHg",
+                to "<80 or >=140 mmHg",
 
         PartogramConstants.Params.DIASTOLIC_BP.conceptId
-                to "<20 or >180 mmHg",
+                to ">=90 mmHg",
 
         PartogramConstants.Params.TEMPERATURE.conceptId
-                to "<89.6 °F or >109.0 °F",
+                to "<95 °F or >=99.5 °F",
 
         PartogramConstants.Params.RESPIRATORY_RATE_MOTHER.conceptId
                 to "<10 or >80 breaths/min",
