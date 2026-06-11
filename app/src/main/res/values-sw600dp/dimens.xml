@@ -37,6 +37,7 @@
     <dimen name="splash_bottom_text_margin">84dp</dimen>
     <dimen name="splash_bottom_text_size">@dimen/std_28sp</dimen>
 
+
     <dimen name="margin_top_parto_labels">14dp</dimen>
     <dimen name="margin_top_parto_section_labels">20dp</dimen>
 
@@ -44,7 +45,7 @@
     <dimen name="search_icon_bg_dimens">140dp</dimen>
     <dimen name="search_pat_notfound_txtsize">26sp</dimen>
     <dimen name="fu_margin_start">24dp</dimen>
-    <dimen name="fu_name_txt_size">34sp</dimen>
+    <dimen name="fu_name_txt_size">28sp</dimen>
     <dimen name="toolbar_margin_right">34dp</dimen>
     <dimen name="margin_20dp">30dp</dimen>
 

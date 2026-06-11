@@ -49,8 +49,11 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Filter;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -222,6 +225,10 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
     private FrameLayout flInternetStatus;
     private TextView tvInternetStatus;
 
+    RelativeLayout view_no_case_found;
+    TextView search_pat_not_found_txt, search_pat_hint_txt;
+    LinearLayout add_new_patientTV;
+
     public static PendingIntent getPendingIntent(Context context, ShiftChangeData data) {
         Intent shiftChangeIntent = new Intent(context, HomeActivity.class);
         shiftChangeIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -366,6 +373,18 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_ezazi);
+
+        view_no_case_found = findViewById(R.id.view_nopatientfound);
+        search_pat_not_found_txt = findViewById(R.id.search_pat_not_found_txt);
+        search_pat_hint_txt = findViewById(R.id.search_pat_hint_txt);
+        add_new_patientTV = findViewById(R.id.add_new_patientTV);
+
+        search_pat_not_found_txt.setText(R.string.no_active_case_found);
+        search_pat_hint_txt.setText(R.string.use_correct_username_or_id_to_search);
+        add_new_patientTV.setVisibility(View.GONE);
+
+
+
         super.initializeNetworkBannerComponents();
         sessionManager = new SessionManager(this);
         OptimizedSyncWorker.enqueuePeriodicWork(this);
@@ -2273,15 +2292,30 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
         //String query = charSequence.trim();
         if (mActivePatientAdapter == null) return false;
         String query = charSequence == null ? "" : charSequence.trim();
-        mActivePatientAdapter.getFilter().filter(query);
+        mActivePatientAdapter.getFilter().filter(query, new Filter.FilterListener() {
+            @Override
+            public void onFilterComplete(int i) {
+                showHideDataNotFoundView(i == 0);
+            }
+        });
         search = query;
         return false;
     }
+
+    private void showHideDataNotFoundView(boolean empty) {
+        if (empty) {
+            view_no_case_found.setVisibility(View.VISIBLE);
+        } else {
+            view_no_case_found.setVisibility(View.GONE);
+        }
+    }
+
 
     private void loadVisits() {
 
         // Step 1: get visits
         List<ActivePatientModel> visits = new VisitQueryResultBinder().executeActiveVisitsQuery(offset, limit);
+        showHideDataNotFoundView(visits.isEmpty());
         showOnHomeScreen(visits);
       /*  LifecycleCoroutineScope scope = LifecycleOwnerKt.getLifecycleScope(this);
         VisitAlertBridge.processVisits(scope, visits, result -> {
