@@ -50,7 +50,11 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Filter;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -60,6 +64,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.cardview.widget.CardView;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LifecycleCoroutineScope;
 import androidx.lifecycle.LifecycleOwnerKt;
@@ -213,6 +218,12 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
     /*eZazi End*/
     private List<ActivePatientModel> visitsForRiskFactorCalculation;
 
+    private ProgressBar progressBar;
+
+    RelativeLayout view_no_case_found;
+    TextView search_pat_not_found_txt, search_pat_hint_txt;
+    LinearLayout add_new_patientTV;
+
 
     public static PendingIntent getPendingIntent(Context context, ShiftChangeData data) {
         Intent shiftChangeIntent = new Intent(context, HomeActivity.class);
@@ -359,6 +370,16 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_ezazi);
 
+        view_no_case_found = findViewById(R.id.view_nopatientfound);
+        search_pat_not_found_txt = findViewById(R.id.search_pat_not_found_txt);
+        search_pat_hint_txt = findViewById(R.id.search_pat_hint_txt);
+        add_new_patientTV = findViewById(R.id.add_new_patientTV);
+
+        search_pat_not_found_txt.setText(R.string.no_active_case_found);
+        search_pat_hint_txt.setText(R.string.use_correct_username_or_id_to_search);
+        add_new_patientTV.setVisibility(View.GONE);
+
+
         sessionManager = new SessionManager(this);
         Log.e(TAG, "onNext: setChwname" + sessionManager.getChwname());
         Log.e(TAG, "onNext: setCreatorID" + sessionManager.getCreatorID());
@@ -454,6 +475,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
 
         //Search pateint code
 //        etvSearchVisit = findViewById(R.id.etvSearchVisit);
+
         SearchView searchView = findViewById(R.id.searchView);
         searchView.setOnQueryTextListener(this);
         EditText searchEditText = searchView.findViewById(androidx.appcompat.R.id.search_src_text);
@@ -561,7 +583,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
                     } catch (DAOException e) {
                         e.printStackTrace();
                     }
-                }else{
+                } else {
                     showErrorOnNoInternet();
                 }
 
@@ -592,7 +614,9 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
         lastSyncAgo = findViewById(R.id.lastsyncago);
         manualSyncButton = findViewById(R.id.manualsyncbutton);
 //        manualSyncButton.setPaintFlags(Paint.UNDERLINE_TEXT_FLAG);
-//        c1 = findViewById(R.id.cardview_newpat);
+//        c1 = findViewById(R.id.cardview_newpat); RelativeLayout view_nopatientfound;
+//    ConstraintLayout clSearchContainer;
+//    LinearLayout addPatientTV;
         c2 = findViewById(R.id.cardview_find_patient);
         c3 = findViewById(R.id.cardview_today_patient);
         c4 = findViewById(R.id.cardview_active_patients);
@@ -1055,7 +1079,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
                         PartogramConstants.Params.URINE_ACETONE.conceptId,
                         PartogramConstants.Params.CONTRACTION_PER_10_MIN.conceptId,
                         PartogramConstants.Params.DURATION_OF_CONTRACTION.conceptId
-                        ));
+                ));
                 int red = 2, yellow = 1, green = 0;
                 int r_count = 0, y_count = 0, g_count = 0;
                 int count = 0;
@@ -1066,7 +1090,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
                 // 1) Load encounters of this visit ordered by time (latest → oldest)
                 List<EncounterDTO> encounterList =
                         encounterDAO.getAllEncountersByVisitUuid(activePatientModels.get(j).getUuid());
-                Log.d(TAG, "loadVisits: encounterList : "+encounterList.size());
+                Log.d(TAG, "loadVisits: encounterList : " + encounterList.size());
                /* Collections.sort(encounterList, (e1, e2) ->
                         e2.getEncounterTime().compareTo(e1.getEncounterTime())
                 );*/
@@ -1114,7 +1138,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
 
                 // Now use encounterToUse for alert calculation
                 if (encounterToUse != null && !encounterToUse.isEmpty()) {
-                //if (encounterUUID != null && !encounterUUID.equalsIgnoreCase("")) {
+                    //if (encounterUUID != null && !encounterUUID.equalsIgnoreCase("")) {
                     obsDTOList = obsDAO.obsCommentList(encounterToUse);
                     if (obsDTOList != null) {
                         for (int i = 0; i < obsDTOList.size(); i++) {
@@ -1177,8 +1201,8 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
                                     " | Total: " + count +
                                     " | VisibilityOrder: " + activePatientModels.get(j).getVisibilityOrder());
 
-               // }
-}
+                    // }
+                }
             }
 
             // #-- Alert logic -- end
@@ -2338,14 +2362,30 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
         //String query = charSequence.trim();
         if (mActivePatientAdapter == null) return false;
         String query = charSequence == null ? "" : charSequence.trim();
-        mActivePatientAdapter.getFilter().filter(query);
+        mActivePatientAdapter.getFilter().filter(query, new Filter.FilterListener() {
+            @Override
+            public void onFilterComplete(int i) {
+                showHideDataNotFoundView(i == 0);
+            }
+        });
         search = query;
         return false;
     }
-    private void loadVisits() {
 
+    private void showHideDataNotFoundView(boolean empty) {
+        if (empty) {
+            view_no_case_found.setVisibility(View.VISIBLE);
+        } else {
+            view_no_case_found.setVisibility(View.GONE);
+        }
+    }
+
+    private void loadVisits() {
         // Step 1: get visits
         List<ActivePatientModel> visits = new VisitQueryResultBinder().executeActiveVisitsQuery(offset, limit);
+
+        showHideDataNotFoundView(visits.isEmpty());
+
         showOnHomeScreen(visits);
       /*  LifecycleCoroutineScope scope = LifecycleOwnerKt.getLifecycleScope(this);
         VisitAlertBridge.processVisits(scope, visits, result -> {
@@ -2357,8 +2397,8 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
 
     private void showOnHomeScreen(List<ActivePatientModel> visits) {
         Collections.sort(visits, (v1, v2) -> Integer.compare(
-                        v2.getVisibilityOrder(),
-                        v1.getVisibilityOrder())
+                v2.getVisibilityOrder(),
+                v1.getVisibilityOrder())
         );
 
         mActivePatientAdapter = new ActivePatientAdapter(visits, new ArrayList<>(visits), this, listPatientUUID, sessionManager);
@@ -2367,6 +2407,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
         setActiveCasesCount();
         showDecisionPendingVisits();
     }
+
     private void showErrorOnNoInternet() {
         AppDialogUtils.showSingleButtonDialog(
                 this,
@@ -2379,6 +2420,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
                 }
         );
     }
+
     private void showErrorOnNoInternetOnRefresh() {
         AppDialogUtils.showSingleButtonDialog(
                 this,
@@ -2391,6 +2433,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
                 }
         );
     }
+
     public void calculateRiskForAllVisits() {
         int offset = 0;
         int batchSize = 100; // batch size
@@ -2399,17 +2442,17 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
 
         do {
             visitsForRiskFactorCalculation = new VisitQueryResultBinder().executeVisitsQueryForRiskCalculation(offset, batchSize);
-            if (visitsForRiskFactorCalculation !=null && !visitsForRiskFactorCalculation.isEmpty()) {
+            if (visitsForRiskFactorCalculation != null && !visitsForRiskFactorCalculation.isEmpty()) {
                 VisitAlertBridgeForRiskCalculations.processVisits(scope, visitsForRiskFactorCalculation, result -> {
                     VisitsDAO visitsDAO = new VisitsDAO();
-                        try {
-                            for (ActivePatientModel visit : result) {
-                                visitsDAO.updateVisitSync(visit.getUuid(), "false");
-                            }
-                        } catch (DAOException e) {
-                            e.printStackTrace();
-                            throw new RuntimeException(e);
+                    try {
+                        for (ActivePatientModel visit : result) {
+                            visitsDAO.updateVisitSync(visit.getUuid(), "false");
                         }
+                    } catch (DAOException e) {
+                        e.printStackTrace();
+                        throw new RuntimeException(e);
+                    }
 
                     boolean isSynced = syncUtils.syncForeground("visitSummary");
 
