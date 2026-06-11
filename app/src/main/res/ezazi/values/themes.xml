@@ -42,10 +42,8 @@
     <style name="Theme.EZazi.ActionBar.Padding" parent="@style/Widget.MaterialComponents.Toolbar">
         <item name="android:paddingTop">@dimen/actionbar_vertical_padding</item>
         <item name="android:paddingBottom">@dimen/actionbar_vertical_padding</item>
-        <item name="android:paddingRight">@dimen/actionbar_horizontal_padding</item>
-        <item name="android:paddingEnd">@dimen/actionbar_horizontal_padding</item>
-        <item name="android:paddingLeft">@dimen/actionbar_horizontal_padding</item>
-        <item name="android:paddingStart">@dimen/actionbar_horizontal_padding</item>
+        <item name="android:paddingEnd">@dimen/timeline_actionbar_horizontal_padding</item>
+        <item name="android:paddingStart">@dimen/timeline_actionbar_horizontal_padding</item>
         <item name="titleTextColor">@color/font_black_0</item>
         <item name="titleTextAppearance">@style/Theme.EZazi.ActionBar.Title.Text</item>
         <item name="titleMarginStart">@dimen/actionbar_title_left_margin</item>
@@ -81,4 +79,5 @@
         <item name="android:paddingLeft">@dimen/actionbar_horizontal_padding_new</item>
         <item name="android:paddingStart">@dimen/actionbar_horizontal_padding_new</item>
     </style>
+
 </resources>

@@ -3,12 +3,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/action_view_lcg"
-        android:title="View LCG"
         android:icon="@drawable/view_lcg_menu"
+        android:title="View LCG"
         app:showAsAction="never" />
     <item
         android:id="@+id/action_view_postpartum"
-        android:title="View Postpartum Report"
         android:icon="@drawable/view_postpartum_lcg"
+        android:title="View Postpartum Report"
         app:showAsAction="never" />
 </menu>

@@ -2,10 +2,15 @@ package org.intelehealth.ezazi.ui.prescription.data
 
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.github.ajalt.timberkt.Timber
 import com.google.gson.Gson
 import org.intelehealth.ezazi.R
+import org.intelehealth.ezazi.activities.homeActivity.RiskConcepts
+import org.intelehealth.ezazi.database.dao.ObsDAO
 import org.intelehealth.ezazi.models.dto.ObsDTO
+import org.intelehealth.ezazi.partogram.PartogramConstants
 import org.intelehealth.ezazi.partogram.PartogramConstants.Params
 import org.intelehealth.ezazi.partogram.model.Medication
 import org.intelehealth.ezazi.partogram.model.Medicine
@@ -13,6 +18,7 @@ import org.intelehealth.ezazi.partogram.model.ParamInfo
 import org.intelehealth.ezazi.ui.elcg.model.CategoryHeader
 import org.intelehealth.ezazi.ui.prescription.fragment.PrescriptionFragment
 import org.intelehealth.ezazi.ui.prescription.fragment.PrescriptionFragment.PrescriptionType
+import org.intelehealth.ezazi.ui.prescription.model.LcgAlertItem
 import org.intelehealth.ezazi.utilities.StringUtils
 import org.intelehealth.klivekit.chat.model.ItemHeader
 import java.util.LinkedList
@@ -23,10 +29,10 @@ import kotlin.math.roundToInt
  * Email : mithun@intelehealth.org
  * Mob   : +919727206702
  **/
-class PrescriptionRepository(val database: SQLiteDatabase) {
+class PrescriptionRepository(val database: SQLiteDatabase,  private val obsDAO: ObsDAO) {
     fun fetchPrescription(
         visitId: String,
-        type: PrescriptionType
+        type: PrescriptionType,
     ): List<ItemHeader> {
         return when (type) {
             PrescriptionType.FULL -> fetchFullPrescription(visitId)
@@ -244,4 +250,92 @@ class PrescriptionRepository(val database: SQLiteDatabase) {
             }
         }
     }
+    private fun retrieveElcgFields(cursor: Cursor): List<ObsDTO>{
+        val elcgFieldsObsList: MutableList<ObsDTO> = ArrayList()
+        if (cursor.moveToFirst()) {
+            do {
+                val model = ObsDTO()
+                model.uuid = cursor.getString(cursor.getColumnIndexOrThrow("uuid"))
+                model.value = cursor.getString(cursor.getColumnIndexOrThrow("value"))
+                model.conceptuuid = cursor.getString(cursor.getColumnIndexOrThrow("conceptuuid"))
+                model.creator = cursor.getString(cursor.getColumnIndexOrThrow("creator"))
+                model.name = cursor.getString(cursor.getColumnIndexOrThrow("given_name"))
+                model.setCreatedDate(cursor.getString(cursor.getColumnIndexOrThrow("created_date")))
+                elcgFieldsObsList.add(model)
+            } while (cursor.moveToNext())
+        }
+        return elcgFieldsObsList
+    }
+
+  /*  fun getElcgFieldsValues(visitId: String): List<LcgAlertItem> {
+        // Fetch latest obs for all monitored concepts for this visit
+        val obsList = obsDAO.getLatestObsByVisitAndConcepts(
+            visitId,
+            RiskConcepts.ALL_RISK_CONCEPTS
+        )
+
+        // Keep only breached obs (comment == "R")
+        return obsList
+            .filter { obs ->
+                obs.comment?.trim()?.uppercase() == "R"
+            }
+            .mapNotNull { obs ->
+
+                // Skip if conceptuuid is null or blank — nothing to resolve
+                val conceptId = obs.conceptuuid
+                    ?.takeIf { it.isNotBlank() }
+                    ?: return@mapNotNull null
+
+                val paramName = PartogramConstants.Params.values()
+                    .firstOrNull { it.conceptId == conceptId }
+                    ?.value
+                    ?: return@mapNotNull null
+
+                val rawValue = obs.value?.trim() ?: ""
+
+                LcgAlertItem(
+                    conceptId               = conceptId,
+                    parameterName           = paramName,
+                    currentValueFormatted   = RiskConcepts.formatValue(conceptId, rawValue),
+                    alertThresholdFormatted = RiskConcepts.alertThresholdFor(conceptId)
+                )
+            }
+    }*/
+  fun getElcgFieldsValues(visitId: String): List<LcgAlertItem> {
+
+      val obsList = obsDAO.getLatestObsByVisitAndConcepts(
+          visitId,
+          RiskConcepts.ALL_RISK_CONCEPTS
+      )
+
+      val conceptOrder = RiskConcepts.STAGE_1_2_CONCEPTS.toList()
+
+      return obsList
+          .filter {
+              it.comment?.trim()?.uppercase() == "R"
+          }
+          .mapNotNull { obs ->
+
+              val conceptId = obs.conceptuuid
+                  ?.takeIf { it.isNotBlank() }
+                  ?: return@mapNotNull null
+
+              val paramName = PartogramConstants.Params.values()
+                  .firstOrNull { it.conceptId == conceptId }
+                  ?.value
+                  ?: return@mapNotNull null
+
+              val rawValue = obs.value?.trim() ?: ""
+
+              LcgAlertItem(
+                  conceptId = conceptId,
+                  parameterName = paramName,
+                  currentValueFormatted = RiskConcepts.formatValue(conceptId, rawValue),
+                  alertThresholdFormatted = RiskConcepts.alertThresholdFor(conceptId)
+              )
+          }
+          .sortedBy { item ->
+              conceptOrder.indexOf(item.conceptId)
+          }
+  }
 }

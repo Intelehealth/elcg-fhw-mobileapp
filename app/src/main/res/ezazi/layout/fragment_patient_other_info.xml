@@ -527,6 +527,7 @@
                 app:layout_constraintTop_toBottomOf="@+id/card_labour_diagnosed">
 
                 <TextView
+                    android:id="@+id/tvSacRupturedOptions"
                     style="@style/LabelStyleAddPatient"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
@@ -544,6 +545,7 @@
                     android:layout_marginTop="@dimen/other_info_checkbox_margin_top"
                     android:fontFamily="@font/dm_sans_medium"
                     android:gravity="center"
+                    android:visibility="gone"
                     android:layoutDirection="rtl"
                     android:padding="5dp"
                     android:text="@string/unknown"
@@ -552,7 +554,47 @@
                     android:textSize="10sp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintRight_toRightOf="parent" />
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/dropdown_sac_ruptured_options"
+                    style="@style/Theme.EZazi.Material.CardView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/tvSacRupturedOptions"
+                    android:layout_marginTop="@dimen/list_container_padding"
+                    android:layout_weight="1">
 
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/etLayout_sac_ruptured_options"
+                        style="@style/Widget.MyApp.TextInputLayout.custom.dropdown"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/list_container_padding"
+                        app:hintEnabled="true">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/autotv_sac_ruptured_options"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:focusable="true"
+                            android:hint="@string/select"
+                            android:inputType="none"
+                            android:textSize="@dimen/input_inner_size" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <TextView
+                    android:id="@+id/tv_error_sac_ruptured_membrane"
+                    style="@style/Textview_Validation_Error"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/validation_error_tv_margin_top"
+                    android:layout_weight="1"
+                    android:gravity="end"
+                    android:lineSpacingExtra="0sp"
+                    android:text="@string/this_field_is_mandatory"
+                    android:visibility="gone" />
             </RelativeLayout>
 
 
@@ -562,6 +604,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/screen_container_padding"
                 android:orientation="vertical"
+                android:visibility="gone"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/textView8">
 
