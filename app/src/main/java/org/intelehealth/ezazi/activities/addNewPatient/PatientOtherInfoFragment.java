@@ -628,22 +628,32 @@ public class PatientOtherInfoFragment extends Fragment {
                 });
     }
 
-    /** EDD = LMP + 7 days − 3 months + 1 year (Naegele's Rule). */
+    /** EDD = LMP + 9 months + 7 days */
     private void calculateEDDFromLMP(String lmpGregStr) {
         try {
-            // ── FIX: UTC parse so the LMP day matches what was stored ─────────
+            TimeZone utcZone = TimeZone.getTimeZone("UTC");
+
+            // Parse input string in UTC
             SimpleDateFormat sdf = new SimpleDateFormat(GREG_FMT, Locale.ENGLISH);
-            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+            sdf.setTimeZone(utcZone);
             Date lmp = sdf.parse(lmpGregStr);
-            Calendar cal = Calendar.getInstance();
+
+            // Initialize Calendar in UTC
+            Calendar cal = Calendar.getInstance(utcZone);
             cal.setTime(lmp);
+
+            // Naegele's Rule: Add 9 months and 7 days
+            cal.add(Calendar.MONTH, 9);
             cal.add(Calendar.DAY_OF_MONTH, 7);
-            cal.add(Calendar.MONTH, -3);
-            cal.add(Calendar.YEAR, 1);
             Date eddGreg = cal.getTime();
+
+            // Convert back to string (Ensure toGregFmt uses UTC!)
             mEDD = toGregFmt(eddGreg);
+
+            // Convert to Nepali BS Calendar
             int[] bs = NepaliDateConverter.gregorianToBs(eddGreg);
             mEDDTextView.setText(formatBsDate(bs[0], bs[1], bs[2]));
+
             clearError(tvErrorEDD, null);
         } catch (Exception e) { e.printStackTrace(); }
     }
@@ -855,8 +865,9 @@ public class PatientOtherInfoFragment extends Fragment {
             isValid = false;
         }
 
+        //edd validation removed
         // 12. EDD
-        if (!TextUtils.isEmpty(mEDD)) {
+        /*if (!TextUtils.isEmpty(mEDD)) {
             Date edd = parseGregDate(mEDD);
             if (edd != null) {
                 Calendar minEdd = Calendar.getInstance(); minEdd.add(Calendar.WEEK_OF_YEAR, -3);
@@ -873,7 +884,7 @@ public class PatientOtherInfoFragment extends Fragment {
             tvErrorEDD.setText(getString(R.string.select_edd_date));
             tvErrorEDD .setVisibility(View.VISIBLE);
             isValid = false;
-        }
+        }*/
 
         // 13. Primary Doctor
         if (TextUtils.isEmpty(mPrimaryDoctorTextView.getText().toString())) {
@@ -978,8 +989,8 @@ public class PatientOtherInfoFragment extends Fragment {
         mMembraneRupturedTimeTextView.setOnClickListener(v -> selectTimeForAllParameters("membraneRupturedTime"));
         etLayoutLmp.setEndIconOnClickListener(v -> pickLmpDate());
         mLmpDateTextView.setOnClickListener(v -> pickLmpDate());
-        etLayoutEdd.setEndIconOnClickListener(v -> pickEddDate());
-        mEDDTextView.setOnClickListener(v -> pickEddDate());
+        //etLayoutEdd.setEndIconOnClickListener(v -> pickEddDate());
+        //mEDDTextView.setOnClickListener(v -> pickEddDate());
         etLayoutRiskFactors.setEndIconOnClickListener(v -> showRiskFactorSelectionDialog());
         mRiskFactorsTextView.setOnClickListener(v -> showRiskFactorSelectionDialog());
         etLayoutPrimaryDoctor.setEndIconOnClickListener(v -> selectPrimaryDoctor());
