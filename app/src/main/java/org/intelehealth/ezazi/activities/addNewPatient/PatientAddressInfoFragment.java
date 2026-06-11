@@ -583,7 +583,7 @@ public class PatientAddressInfoFragment extends Fragment {
 
         String stateText = autotvState.getText().toString();
         boolean isStateInList = searchForState(stateText);
-        if (TextUtils.isEmpty(stateText)) {
+        if (TextUtils.isEmpty(stateText) || !isStateInList) {
 
             /*tvErrorState.setVisibility(View.VISIBLE);
             tvErrorState.setText(getString(R.string.select_state));
@@ -594,8 +594,9 @@ public class PatientAddressInfoFragment extends Fragment {
             cardState.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
 
         }
-        String isDistrictString = searchForDistrict(autotvDistrict.getText().toString());
-        if (TextUtils.isEmpty(autotvDistrict.getText().toString())) {
+        //String isDistrictString = searchForDistrict(autotvDistrict.getText().toString());
+        boolean isDistrictString = searchForDistrictBool(autotvDistrict.getText().toString());
+        if (TextUtils.isEmpty(autotvDistrict.getText().toString()) || !isDistrictString) {
 
             /*tvDistrictError.setVisibility(View.VISIBLE);
             tvDistrictError.setText(getString(R.string.select_district));*/
@@ -758,7 +759,6 @@ public class PatientAddressInfoFragment extends Fragment {
         }
 
     }
-
     private String searchForCityVillage(String cityVillage) {
         String result = "";
         if (cityVillagesArr != null) {
@@ -785,6 +785,14 @@ public class PatientAddressInfoFragment extends Fragment {
             }
         } else result = "none";
         return result;
+    }
+
+    private Boolean searchForDistrictBool(String district) {
+        if (districtsArr != null && districtsArr.length > 0) {
+            List<String> districtsList = Arrays.asList(districtsArr);
+            return districtsList.contains(district);
+        }
+        return false;
     }
 
     private void setStateAdapter(String countryName) {
