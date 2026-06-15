@@ -188,10 +188,11 @@ abstract class BaseDialogFragment<T> extends AppCompatDialogFragment implements 
                 if(((String) args.getContent()).length() > 300){
                     params.height = height - (titleHeight + padding + actionsHeight);
                 }else {
-                    params.matchConstraintMaxHeight = height - (titleHeight + padding + actionsHeight);
+                    params.matchConstraintMaxHeight = height - (titleHeight + padding);
                 }
             }else{
-                params.matchConstraintMaxHeight = height - (titleHeight + padding + actionsHeight);
+                params.matchConstraintMaxHeight = height - (titleHeight + padding);
+
             }
 
         }
