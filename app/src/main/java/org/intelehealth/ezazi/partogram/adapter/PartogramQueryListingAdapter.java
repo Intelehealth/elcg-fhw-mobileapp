@@ -405,6 +405,7 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         PartoLablRadioViewMedicineBinding binding = PartoLablRadioViewMedicineBinding.bind(tempView);
 
         binding.clMedicineCountView.setOnClickListener(v -> {
+            hideKeyboardAndClearFocus();
             PrescriptionArg arg = getMedicationArg(PrescriptionFragment.PrescriptionType.MEDICINE);
             AdministeredActivity.startAdministeredActivity(mContext, arg);
             MedicineSingleton.INSTANCE.setMedicineListener(new MedicineChangeListener() {
@@ -460,6 +461,7 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         Log.d(TAG, "showRadioOptionBoxForIVFluid: iv data: " + new Gson().toJson(info.getMedicationsForFluid()));
 
         binding.clIvFluidCountView.setOnClickListener(v -> {
+            hideKeyboardAndClearFocus();
             PrescriptionArg arg = getMedicationArg(PrescriptionFragment.PrescriptionType.IV_FLUID);
             AdministeredActivity.startAdministeredActivity(mContext, arg);
             MedicineSingleton.INSTANCE.setIvFluidListener(new MedicineChangeListener() {
@@ -802,12 +804,14 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         binding.ivFluidOptions.viewTypeOfIvFluid.getRoot().setOnClickListener(v -> {
             //show iv fluid options
             showIVFluidDialog(title, info, view);
+            hideKeyboardAndClearFocus();
         });
         binding.ivFluidOptions.viewInfusionStatus.getRoot().setOnClickListener(v -> {
             //show infusion status
             // showIVFluidInfusionStatusDialog(title, info, view);
             String heading = "Select " + v.getContext().getString(R.string.title_iv_infusion_status);
             showSingleSelectionDialog(heading, info, ivTypeValue);
+            hideKeyboardAndClearFocus();
         });
 
         setInfusionRateTextChangeListener(ivInfusionRate, info);
@@ -934,6 +938,7 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         Log.d(TAG, "showRadioOptionBoxForOxytocin: iv data: " + new Gson().toJson(info.getMedicationsForOxytocin()));
 
         binding.clOxytocinCountView.setOnClickListener(v -> {
+            hideKeyboardAndClearFocus();
             PrescriptionArg arg = getMedicationArg(PrescriptionFragment.PrescriptionType.OXYTOCIN);
             AdministeredActivity.startAdministeredActivity(mContext, arg);
             MedicineSingleton.INSTANCE.setOxytocinListener(new MedicineChangeListener() {
@@ -1148,6 +1153,7 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         PartoLablRadioViewPlanBinding binding = PartoLablRadioViewPlanBinding.bind(tempView);
 
         binding.clPlanCountView.setOnClickListener(v -> {
+            hideKeyboardAndClearFocus();
             PrescriptionArg arg = getMedicationArg(PrescriptionFragment.PrescriptionType.PLAN);
             AdministeredActivity.startAdministeredActivity(mContext, arg);
             MedicineSingleton.INSTANCE.setPlanListener(new MedicineChangeListener() {
@@ -1202,6 +1208,7 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         PartoLablRadioViewAssessmentBinding binding = PartoLablRadioViewAssessmentBinding.bind(tempView);
 
         binding.clAssessmentCountView.setOnClickListener(v -> {
+            hideKeyboardAndClearFocus();
             PrescriptionArg arg = getMedicationArg(PrescriptionFragment.PrescriptionType.ASSESSMENT);
             AdministeredActivity.startAdministeredActivity(mContext, arg);
             MedicineSingleton.INSTANCE.setAssessmentListener(new MedicineChangeListener() {

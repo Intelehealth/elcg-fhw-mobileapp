@@ -6,6 +6,7 @@ import android.text.InputFilter
 import android.view.View
 import android.widget.AdapterView
 import android.widget.AutoCompleteTextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
@@ -18,11 +19,13 @@ import org.intelehealth.ezazi.database.dao.ProviderDAO
 import org.intelehealth.ezazi.databinding.FragmentNewMedicineBinding
 import org.intelehealth.ezazi.partogram.model.GetMedicineData
 import org.intelehealth.ezazi.partogram.model.Medicine
+import org.intelehealth.ezazi.ui.custom.RightAlignErrorTextInputLayout
 import org.intelehealth.ezazi.ui.prescription.listener.TitleChangeListener
 import org.intelehealth.ezazi.ui.prescription.viewmodel.PrescriptionViewModel
 import org.intelehealth.ezazi.ui.shared.TextChangeListener
 import org.intelehealth.ezazi.ui.validation.FirstLetterUpperCaseInputFilter
 import org.intelehealth.ezazi.utilities.SessionManager
+import org.intelehealth.ezazi.utilities.Utils
 import org.intelehealth.ezazi.utilities.exception.DAOException
 import org.intelehealth.klivekit.utils.DateTimeUtils
 
@@ -187,8 +190,8 @@ class NewMedicineFragment : Fragment(R.layout.fragment_new_medicine) {
             val filteredItems = filterMedicines(medicineItem)
             if (filteredItems.size > 0) {
                 val array = filteredItems.toTypedArray()
-                setupAutoCompleteAdapter(array, medicineDropDown)
-            } else setupAutoCompleteAdapter(medicineItem, medicineDropDown)
+                setupAutoCompleteAdapter(array, medicineDropDown, binding.tilOtherMedicines)
+            } else setupAutoCompleteAdapter(medicineItem, medicineDropDown, binding.tilOtherMedicines)
         }
     }
 
@@ -210,33 +213,52 @@ class NewMedicineFragment : Fragment(R.layout.fragment_new_medicine) {
         val routes = requireContext().resources.getStringArray(R.array.dose_units)
         val doseDropDown: AutoCompleteTextView =
             binding.autoCompleteMedicineDosageUnit
-        setupAutoCompleteAdapter(routes, doseDropDown)
+        setupAutoCompleteAdapter(routes, doseDropDown, binding.tilMedicineDosageUnit)
     }
 
     private fun setupRoutes() {
         val routes = requireContext().resources.getStringArray(R.array.medicine_routes)
         val routeDropDown: AutoCompleteTextView = binding.autoCompleteMedicineRoute
-        setupAutoCompleteAdapter(routes, routeDropDown)
+        setupAutoCompleteAdapter(routes, routeDropDown, binding.tilMedicineRoute)
     }
 
     private fun setupFrequency() {
         val frequencies = requireContext().resources.getStringArray(R.array.medicine_frequencies)
         val frequenciesDropDown: AutoCompleteTextView =
             binding.autoCompleteMedicineFrequency
-        setupAutoCompleteAdapter(frequencies, frequenciesDropDown)
+        setupAutoCompleteAdapter(frequencies, frequenciesDropDown, binding.tilMedicineFrequency)
     }
 
     private fun setupAutoCompleteAdapter(
         items: Array<String?>,
-        autoCompleteTextView: AutoCompleteTextView
+        autoCompleteTextView: AutoCompleteTextView,
+        textInputLayout: RightAlignErrorTextInputLayout
     ) {
         val adapter = LocationArrayAdapter(requireContext(), items.toList())
         autoCompleteTextView.setDropDownBackgroundResource(R.drawable.rounded_corner_white_with_gray_stroke)
         autoCompleteTextView.threshold = 0
         autoCompleteTextView.setOnClickListener { v: View? ->
-            autoCompleteTextView.requestFocus() // Request focus to ensure the dropdown appears
-            autoCompleteTextView.showDropDown()
+            if(v?.id == R.id.autoCompleteOtherMedicine
+                || v?.id == R.id.autoCompleteMedicineStrength){
+                autoCompleteTextView.requestFocus() // Request focus to ensure the dropdown appears
+            }else{
+                v?.clearFocus();
+                Utils.hideKeyboard(activity as AppCompatActivity?)
+            }
+            autoCompleteTextView.showDropDown();
         }
+
+        textInputLayout.setEndIconOnClickListener {v->
+            if(v?.id == R.id.tilOtherMedicines
+                || v?.id == R.id.tilMedicineStrength){
+                autoCompleteTextView.requestFocus() // Request focus to ensure the dropdown appears
+            }else{
+                v?.clearFocus();
+                Utils.hideKeyboard(activity as AppCompatActivity?)
+            }
+            autoCompleteTextView.showDropDown();
+        }
+
         autoCompleteTextView.onItemClickListener =
             AdapterView.OnItemClickListener { parent: AdapterView<*>, view: View?, position: Int, id: Long ->
                 if (autoCompleteTextView.id == binding.autoCompleteOtherMedicine.getId()) {
@@ -258,19 +280,31 @@ class NewMedicineFragment : Fragment(R.layout.fragment_new_medicine) {
 
     private fun setupDurationUnits() {
         requireContext().resources.getStringArray(R.array.medicine_duration_units).apply {
-            setupAutoCompleteAdapter(this, binding.autoCompleteMedicineDurationUnit)
+            setupAutoCompleteAdapter(
+                this,
+                binding.autoCompleteMedicineDurationUnit,
+                binding.tilMedicineDurationUnit
+            )
         }
     }
 
     private fun setFormArray() {
         requireContext().resources.getStringArray(R.array.medicine_form).apply {
-            setupAutoCompleteAdapter(this, binding.autoCompleteMedicineForm)
+            setupAutoCompleteAdapter(
+                this,
+                binding.autoCompleteMedicineForm,
+                binding.tilMedicineType
+            )
         }
     }
 
     private fun setStrength() {
         requireContext().resources.getStringArray(R.array.medicine_strength).apply {
-            setupAutoCompleteAdapter(this, binding.autoCompleteMedicineStrength)
+            setupAutoCompleteAdapter(
+                this,
+                binding.autoCompleteMedicineStrength,
+                binding.tilMedicineStrength
+            )
         }
     }
 
