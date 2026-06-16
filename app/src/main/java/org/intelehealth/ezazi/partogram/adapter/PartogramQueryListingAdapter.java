@@ -1,8 +1,10 @@
 package org.intelehealth.ezazi.partogram.adapter;
 
 import static org.intelehealth.ezazi.app.AppConstants.INPUT_MAX_LENGTH;
+import static org.intelehealth.ezazi.utilities.Utils.hideKeyboard;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.text.Editable;
 import android.text.InputFilter;
@@ -31,6 +33,7 @@ import com.google.gson.JsonSyntaxException;
 
 import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.app.AppConstants;
+import org.intelehealth.ezazi.app.IntelehealthApplication;
 import org.intelehealth.ezazi.databinding.DialogIvfluidOptionsBinding;
 import org.intelehealth.ezazi.databinding.PartoLablRadioViewAssessmentBinding;
 import org.intelehealth.ezazi.databinding.PartoLablRadioViewMedicineBinding;
@@ -120,6 +123,9 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, @SuppressLint("RecyclerView") int position) {
         if (holder instanceof GenericViewHolder) {
+            holder.itemView.setFocusable(true);
+            holder.itemView.setFocusableInTouchMode(true);
+
             GenericViewHolder genericViewHolder = (GenericViewHolder) holder;
             genericViewHolder.partogramItemData = mItemList.get(position);
             genericViewHolder.selectedIndex = position;
@@ -154,9 +160,12 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
                         tempView = View.inflate(mContext, R.layout.parto_labl_radio_view_assessment, null);
                     }
                     if (tempView != null) {
+                       hideKeyboardAndClearFocus();
+
                         showRadioOptionBox(tempView, position, i);
                         genericViewHolder.containerLinearLayout.addView(tempView);
                     }
+
 
                 } /*else if (paramInfo.getParamDateType().equalsIgnoreCase(PartogramConstants.RADIO_SELECT_TYPE_OXYTOCIN)) {
                     View tempView = View.inflate(mContext, R.layout.parto_lbl_radio_view_oxytocin, null);
@@ -194,7 +203,6 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         dataEditText.setDropDownBackgroundResource(R.drawable.rounded_corner_white_with_gray_stroke);
         dataEditText.setAdapter(new ArrayAdapter(mContext, R.layout.spinner_textview, mContext.getResources().getStringArray(R.array.medications)));
         dataEditText.setThreshold(1);
-
         paramNameTextView.setText(mItemList.get(position).getParamInfoList().get(positionChild).getParamName());
 
         if (mItemList.get(position).getParamInfoList().get(positionChild).getCapturedValue() != null && !mItemList.get(position).getParamInfoList().get(positionChild).getCapturedValue().isEmpty()) {
@@ -203,6 +211,13 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
 
         if (paramDateType.equalsIgnoreCase(PartogramConstants.AUTOCOMPLETE_SUGGESTION_EDITTEXT))
             dataEditText.setInputType(InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE); // input type to AutoComplete
+
+
+        dataEditText.setOnItemClickListener((parent, view, index, id) -> {
+            // Clear focus from the autocomplete textview so it doesn't keep the cursor blinking
+            dataEditText.clearFocus();
+            hideKeyboard((AppCompatActivity) mContext);
+        });
 
         dataEditText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -235,6 +250,9 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         }
 
         dataEditText.setTag(R.id.etvData, mItemList.get(position).getParamInfoList().get(positionChild));
+
+        dataEditText.setFocusable(true);
+        dataEditText.setFocusableInTouchMode(true);
 
       /*  dataEditText.setOnFocusChangeListener((v, hasFocus) -> {
             ParamInfo info = (ParamInfo) v.getTag(R.id.etvData);
@@ -387,6 +405,7 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         PartoLablRadioViewMedicineBinding binding = PartoLablRadioViewMedicineBinding.bind(tempView);
 
         binding.clMedicineCountView.setOnClickListener(v -> {
+            hideKeyboardAndClearFocus();
             PrescriptionArg arg = getMedicationArg(PrescriptionFragment.PrescriptionType.MEDICINE);
             AdministeredActivity.startAdministeredActivity(mContext, arg);
             MedicineSingleton.INSTANCE.setMedicineListener(new MedicineChangeListener() {
@@ -442,6 +461,7 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         Log.d(TAG, "showRadioOptionBoxForIVFluid: iv data: " + new Gson().toJson(info.getMedicationsForFluid()));
 
         binding.clIvFluidCountView.setOnClickListener(v -> {
+            hideKeyboardAndClearFocus();
             PrescriptionArg arg = getMedicationArg(PrescriptionFragment.PrescriptionType.IV_FLUID);
             AdministeredActivity.startAdministeredActivity(mContext, arg);
             MedicineSingleton.INSTANCE.setIvFluidListener(new MedicineChangeListener() {
@@ -535,6 +555,9 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
                 ivFluidDataForDb.setOtherType(null);
                 binding.ivFluidOptions.viewTypeOfIvFluid.tvData.setText(ivFluidData.getType());
             }
+            hideKeyboardAndClearFocus();
+
+
             Log.d(TAG, "setivFluidDataNew: type  check : " + ivFluidData.getType());
             Log.d(TAG, "setivFluidDataNew: type val check : " + ivFluidData.getOtherType());
             ivFluidDataForDb.setInfusionRate(ivFluidData.getInfusionRate());
@@ -549,6 +572,16 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
                 info.setCreatedDate(DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
             }
         }
+    }
+
+    private void hideKeyboardAndClearFocus() {
+        if (mContext instanceof Activity) {
+            View currentFocus = ((Activity) mContext).getCurrentFocus();
+            if (currentFocus != null) {
+                currentFocus.clearFocus();
+            }
+        }
+        hideKeyboard((AppCompatActivity) mContext);
     }
 
     private void uncheckAllOptions(DialogIvfluidOptionsBinding binding) {
@@ -627,6 +660,7 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
                         selected.setVisibility(View.VISIBLE);
                     dialog.dismiss();*/
                 } else dialog.dismiss();
+                hideKeyboardAndClearFocus();
             }
 
             @Override
@@ -645,6 +679,7 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
                     radioGroup.check(R.id.radioNo);
                 }
                 selected.setText(info.getCapturedValue());
+                hideKeyboardAndClearFocus();
             }
         });
 
@@ -722,6 +757,8 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         }
 
         dropdownTextView.setOnClickListener(v -> {
+            // 1. CLEAR FOCUS & HIDE KEYBOARD HERE (Right when clicked)
+            hideKeyboardAndClearFocus();
             if (v.getTag() instanceof ParamInfo) {
                 ParamInfo ivFluidInfo = (ParamInfo) v.getTag();
                 if (ivFluidInfo.getParamName().equalsIgnoreCase(PartogramConstants.Params.IV_FLUID.value)) {
@@ -767,12 +804,14 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         binding.ivFluidOptions.viewTypeOfIvFluid.getRoot().setOnClickListener(v -> {
             //show iv fluid options
             showIVFluidDialog(title, info, view);
+            hideKeyboardAndClearFocus();
         });
         binding.ivFluidOptions.viewInfusionStatus.getRoot().setOnClickListener(v -> {
             //show infusion status
             // showIVFluidInfusionStatusDialog(title, info, view);
             String heading = "Select " + v.getContext().getString(R.string.title_iv_infusion_status);
             showSingleSelectionDialog(heading, info, ivTypeValue);
+            hideKeyboardAndClearFocus();
         });
 
         setInfusionRateTextChangeListener(ivInfusionRate, info);
@@ -854,6 +893,7 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
 
         dialog.setListener(item -> {
             manageSelectionSingleChoiceSelection(info, item, selected);
+            hideKeyboardAndClearFocus();
         });
         dialog.show(((AppCompatActivity) mContext).getSupportFragmentManager(), dialog.getClass().getCanonicalName());
 
@@ -898,6 +938,7 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         Log.d(TAG, "showRadioOptionBoxForOxytocin: iv data: " + new Gson().toJson(info.getMedicationsForOxytocin()));
 
         binding.clOxytocinCountView.setOnClickListener(v -> {
+            hideKeyboardAndClearFocus();
             PrescriptionArg arg = getMedicationArg(PrescriptionFragment.PrescriptionType.OXYTOCIN);
             AdministeredActivity.startAdministeredActivity(mContext, arg);
             MedicineSingleton.INSTANCE.setOxytocinListener(new MedicineChangeListener() {
@@ -1112,6 +1153,7 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         PartoLablRadioViewPlanBinding binding = PartoLablRadioViewPlanBinding.bind(tempView);
 
         binding.clPlanCountView.setOnClickListener(v -> {
+            hideKeyboardAndClearFocus();
             PrescriptionArg arg = getMedicationArg(PrescriptionFragment.PrescriptionType.PLAN);
             AdministeredActivity.startAdministeredActivity(mContext, arg);
             MedicineSingleton.INSTANCE.setPlanListener(new MedicineChangeListener() {
@@ -1166,6 +1208,7 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         PartoLablRadioViewAssessmentBinding binding = PartoLablRadioViewAssessmentBinding.bind(tempView);
 
         binding.clAssessmentCountView.setOnClickListener(v -> {
+            hideKeyboardAndClearFocus();
             PrescriptionArg arg = getMedicationArg(PrescriptionFragment.PrescriptionType.ASSESSMENT);
             AdministeredActivity.startAdministeredActivity(mContext, arg);
             MedicineSingleton.INSTANCE.setAssessmentListener(new MedicineChangeListener() {

@@ -6,6 +6,7 @@ import android.content.Context;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.appcompat.app.AppCompatDialogFragment;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.core.content.ContextCompat;
@@ -123,7 +125,7 @@ abstract class BaseDialogFragment<T> extends AppCompatDialogFragment implements 
      *
      * @return LayoutParams
      */
-    private LayoutParams getConstraintLayoutParams() {
+   /* private LayoutParams getConstraintLayoutParams() {
         int height = getResources().getDimensionPixelOffset(R.dimen.dialog_max_height);
         if (args.getMaxHeight() != 0) height = args.getMaxHeight();
         int padding = getResources().getDimensionPixelOffset(R.dimen.screen_container_padding) * 5;
@@ -133,7 +135,68 @@ abstract class BaseDialogFragment<T> extends AppCompatDialogFragment implements 
         params.startToStart = ConstraintSet.PARENT_ID;
         params.endToEnd = ConstraintSet.PARENT_ID;
         if (!isWrapContentDialog())
-            params.matchConstraintMaxHeight = height - (binding.tvDialogTitle.getHeight() + padding);
+            params.matchConstraintMaxHeight = height - (binding.tvDialogTitle.getHeight() + padding + binding.llDialogActions.getHeight());
+        return params;
+    }*/
+
+
+    private ConstraintLayout.LayoutParams getConstraintLayoutParams() {
+        int height = getResources().getDimensionPixelOffset(R.dimen.dialog_max_height);
+
+        if (args.getMaxHeight() != 0) {
+            height = args.getMaxHeight();
+        }
+
+        int padding = getResources()
+                .getDimensionPixelOffset(R.dimen.screen_container_padding) * 5;
+
+        ConstraintLayout.LayoutParams params =
+                new ConstraintLayout.LayoutParams(
+                        0,
+                        ConstraintLayout.LayoutParams.WRAP_CONTENT
+                );
+
+        params.topToTop = ConstraintSet.PARENT_ID;
+        params.bottomToBottom = ConstraintSet.PARENT_ID;
+        params.startToStart = ConstraintSet.PARENT_ID;
+        params.endToEnd = ConstraintSet.PARENT_ID;
+
+        if (!isWrapContentDialog()) {
+
+            int titleHeight = binding.tvDialogTitle.getHeight();
+            int actionsHeight = binding.llDialogActions.getHeight();
+
+            // Fallback if layout has not happened yet
+            if (titleHeight == 0) {
+                binding.tvDialogTitle.measure(
+                        View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                        View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+                );
+                titleHeight = binding.tvDialogTitle.getMeasuredHeight();
+            }
+
+            if (actionsHeight == 0) {
+                binding.llDialogActions.measure(
+                        View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                        View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+                );
+                actionsHeight = binding.llDialogActions.getMeasuredHeight();
+            }
+
+            if(args.getContent() instanceof String){
+                // setting static height to long content
+                if(((String) args.getContent()).length() > 300){
+                    params.height = height - (titleHeight + padding + actionsHeight);
+                }else {
+                    params.matchConstraintMaxHeight = height - (titleHeight + padding);
+                }
+            }else{
+                params.matchConstraintMaxHeight = height - (titleHeight + padding);
+
+            }
+
+        }
+
         return params;
     }
 

@@ -54,4 +54,9 @@
     <string name="enter_sex_of_baby">Enter Sex of baby</string>
     <string name="enter_baby_status">Enter Baby Status</string>
     <string name="enter_mother_status">Enter Mother Status</string>
+    <string name="patient_not_found">Patient not found</string>
+    <string name="search_pat_not_found_txt">Patient not found!</string>
+    <string name="search_pat_hint_txt">Use correct Username or ID to search or you can register a new patient.</string>
+    <string name="no_active_case_found">No Active Case found</string>
+    <string name="use_correct_username_or_id_to_search">Use correct username or ID to search</string>
 </resources>

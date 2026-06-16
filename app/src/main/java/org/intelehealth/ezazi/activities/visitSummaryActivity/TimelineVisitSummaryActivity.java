@@ -202,7 +202,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 
         initUI();
         fabSOS.setOnClickListener(view -> {
-            if(NetworkConnection.isOnline(TimelineVisitSummaryActivity.this)){
+            if (NetworkConnection.isOnline(TimelineVisitSummaryActivity.this)) {
                 Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
                 // Vibrate for 500 milliseconds
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -213,20 +213,20 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
                 }
 
                 showEmergencyDialog();
-            }else{
+            } else {
                 InternetDialogHelper.showNoInternetDialog(TimelineVisitSummaryActivity.this);
             }
 
         });
         fabc.setOnClickListener(view -> {
             boolean isInternetAvailable = InternetDialogHelper.checkInternetOrShow(TimelineVisitSummaryActivity.this);
-            if(isInternetAvailable) {
+            if (isInternetAvailable) {
                 showDoctorSelectionDialog(true);
             }
         });
         fabv.setOnClickListener(view -> {
             boolean isInternetAvailable = InternetDialogHelper.checkInternetOrShow(TimelineVisitSummaryActivity.this);
-            if(isInternetAvailable) {
+            if (isInternetAvailable) {
                 showDoctorSelectionDialog(false);
             }
         });
@@ -371,15 +371,15 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 //                boolean isTablet = getResources().getBoolean(R.bool.isTablet);
 //                if (isTablet) showEpartogram();
 //                else showRequireTabletView();
-                if(NetworkConnection.isOnline(TimelineVisitSummaryActivity.this)) {
+                if (NetworkConnection.isOnline(TimelineVisitSummaryActivity.this)) {
                     //show dialog for no data for elcg
                     boolean doesVisitHasData = obsDAO.getObsCountForVisit(visitUuid);
-                    if(doesVisitHasData){
+                    if (doesVisitHasData) {
                         showEpartogram();
-                    }else{
+                    } else {
                         showNoDataDialogForViewLcg();
                     }
-                }else{
+                } else {
                     InternetDialogHelper.showNoInternetDialog(TimelineVisitSummaryActivity.this);
                 }
                 break;
@@ -496,7 +496,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 
         // clicking on this open dialog to confirm and start stage 2 | If stage 2 already open then ends visit.
         endStageButton.setOnClickListener(v -> {
-            if(NetworkConnection.isOnline(TimelineVisitSummaryActivity.this)){
+            if (NetworkConnection.isOnline(TimelineVisitSummaryActivity.this)) {
                 if (stageNo == 1) {
                     // showEndShiftDialog(); //old flow
                     FragmentManager fragmentManager = getSupportFragmentManager();
@@ -521,7 +521,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
                         }
                     }).buildDialog();
                 }
-            }else{
+            } else {
                 InternetDialogHelper.showNoInternetDialog(TimelineVisitSummaryActivity.this);
             }
 
@@ -631,7 +631,12 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
             content = content != null ? "Other Comment:\n" + content + "\n\n" + "Mother Deceased Reason:\n" + outcome.getMotherDeceasedReason() : "Mother Deceased Reason:\n" + outcome.getMotherDeceasedReason();
         }
 
-        ConfirmationDialogFragment dialog = new ConfirmationDialogFragment.Builder(this).title(outcome.getOutcome()).content(content).positiveButtonLabel(R.string.okay).hideNegativeButton(true).build();
+        ConfirmationDialogFragment dialog = new ConfirmationDialogFragment.Builder(this)
+                .title(outcome.getOutcome())
+                .content(content)
+                .positiveButtonLabel(R.string.okay)
+                .hideNegativeButton(true)
+                .build();
 
         dialog.show(getSupportFragmentManager(), dialog.getTag());
     }
@@ -760,14 +765,14 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 //        }
 //        if (isInserted) {
 //            Toast.makeText(context, context.getString(R.string.self_discharge_successful), Toast.LENGTH_SHORT).show();
-////            Intent intent = new Intent(context, HomeActivity.class);
-////            startActivity(intent);
+
+    /// /            Intent intent = new Intent(context, HomeActivity.class);
+    /// /            startActivity(intent);
 //            checkInternetAndUploadVisitEncounter(true);
 //        } else {
 //            Toast.makeText(context, context.getString(R.string.something_went_wrong), Toast.LENGTH_SHORT).show();
 //        }
 //    }
-
     private void showConfirmationDialog(@StringRes int content, ConfirmationDialogFragment.OnConfirmationActionListener listener) {
         ConfirmationDialogFragment dialog = new ConfirmationDialogFragment.Builder(this).content(getString(content)).positiveButtonLabel(R.string.yes).build();
 
@@ -809,8 +814,8 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 //
 //            if (isInserted) {
 //                Toast.makeText(context, context.getString(R.string.refer_data_submitted_successfully), Toast.LENGTH_SHORT).show();
-////                Intent intent = new Intent(context, HomeActivity.class);
-////                startActivity(intent);
+    /// /                Intent intent = new Intent(context, HomeActivity.class);
+    /// /                startActivity(intent);
 //                checkInternetAndUploadVisitEncounter(true);
 //            } else {
 //                Toast.makeText(context, context.getString(R.string.something_went_wrong), Toast.LENGTH_SHORT).show();
@@ -992,7 +997,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         for (int i = 0; i < encounterListDTO.size(); i++) {
             String name = encounterDAO.getEncounterTypeNameByUUID(encounterListDTO.get(i).getEncounterTypeUuid());
             EncounterDTO.Type type = new ObsDAO().getEncounterType(encounterListDTO.get(i).getUuid(), sessionManager.getCreatorID());
-            String obsValue= new ObsDAO().getEncounterTypeFromDb(encounterListDTO.get(i).getUuid());
+            String obsValue = new ObsDAO().getEncounterTypeFromDb(encounterListDTO.get(i).getUuid());
 
             encounterListDTO.get(i).setEncounterTypeName(name);
             encounterListDTO.get(i).setEncounterType(type);
@@ -1021,7 +1026,8 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 //        intent.putExtra("visitUuid", visitUuid);
 //        intent.putExtra("providerID", providerID);
 //        intent.putExtra("Stage2_Hour1_1", "Stage1_Hour1_1");
-////        intent.putExtra("Stage2_Hour1_1","Stage2_Hour1_1");
+
+    /// /        intent.putExtra("Stage2_Hour1_1","Stage2_Hour1_1");
 //
 //        Log.v("timeline", "patientname_3 " + patientName + " " + patientUuid + " " + visitUuid);
 //        Log.v("timeline", "visituuid_int_15min " + visitUuid.replaceAll("[^\\d]", ""));
@@ -1034,7 +1040,6 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 //                    AlarmManager.INTERVAL_FIFTEEN_MINUTES, pendingIntent);
 //        }*/
 //    }
-
     private void triggerAlarm_Stage1_every30mins() { // TODO: change 1min to 15mins..... // visituuid : 2 - 7
         Calendar calendar = Calendar.getInstance(); // current time and from there evey 30mins notifi will be triggered...
         calendar.add(Calendar.MINUTE, 30); // So that after 15mins this notifi is triggered and scheduled...
@@ -1164,16 +1169,16 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
     private void collectEmergencyData() {
         EncounterDTO encounterDTO = encounterDAO.getEncounterByVisitUUIDLimit1(visitUuid);
         if (encounterDTO == null) return;
-        Log.d(TAG, "collectEmergencyData: encounterDTO : "+new Gson().toJson(encounterDTO));
+        Log.d(TAG, "collectEmergencyData: encounterDTO : " + new Gson().toJson(encounterDTO));
 
         String latestEncounterName = encounterDAO.getEncounterTypeNameByUUID(encounterDTO.getEncounterTypeUuid());
-        Log.d("kzsos", "collectEmergencyData: latestEncounterName : "+latestEncounterName);
+        Log.d("kzsos", "collectEmergencyData: latestEncounterName : " + latestEncounterName);
         int currentStage = -1;
-        int currentHour  = -1;
+        int currentHour = -1;
 
         if (latestEncounterName != null && !latestEncounterName.isEmpty()) {
             String name = latestEncounterName.toLowerCase();
-            Log.d("kzsos", "collectEmergencyData: name : "+name);
+            Log.d("kzsos", "collectEmergencyData: name : " + name);
 
             if (!name.contains("stage") || !name.contains("hour")) return;
             String[] parts = name
@@ -1183,20 +1188,20 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 
             if (parts.length != 3) return;
             currentStage = Integer.parseInt(parts[0]);
-            currentHour  = Integer.parseInt(parts[1]);
-            Log.d("kzsos", "collectEmergencyData: currentStage : "+currentStage);
-            Log.d("kzsos", "collectEmergencyData: currentHour : "+currentHour);
+            currentHour = Integer.parseInt(parts[1]);
+            Log.d("kzsos", "collectEmergencyData: currentStage : " + currentStage);
+            Log.d("kzsos", "collectEmergencyData: currentHour : " + currentHour);
 
         }
 
         if (currentStage == -1 || currentHour == -1) return;
         int cardNumber = 1;
         EncounterDTO lastSosEncounter = encounterDAO.getSosEncounterByVisitUUIDLimit1(visitUuid);
-        Log.d("kzsos", "collectEmergencyData: lastSosEncounter : "+new Gson().toJson(lastSosEncounter));
+        Log.d("kzsos", "collectEmergencyData: lastSosEncounter : " + new Gson().toJson(lastSosEncounter));
 
         if (lastSosEncounter != null) {
             String latestSosObs = new ObsDAO().getLatestSosObsByEncounterUuid(lastSosEncounter.getUuid());
-            Log.d("kzsos", "collectEmergencyData: latestSosObs : "+new Gson().toJson(latestSosObs));
+            Log.d("kzsos", "collectEmergencyData: latestSosObs : " + new Gson().toJson(latestSosObs));
 
             if (latestSosObs != null && !latestSosObs.isEmpty()
                     && latestSosObs.toLowerCase().contains("stage")
@@ -1213,27 +1218,28 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 
                     if (parts.length == 3) {
                         int lastStage = Integer.parseInt(parts[0]);
-                        int lastHour  = Integer.parseInt(parts[1]);
-                        int lastSOS   = Integer.parseInt(parts[2]);
+                        int lastHour = Integer.parseInt(parts[1]);
+                        int lastSOS = Integer.parseInt(parts[2]);
 
                         if (lastStage == currentStage && lastHour == currentHour) {
                             cardNumber = lastSOS + 1;
                         }
                     }
-                    Log.d("kzsos", "collectEmergencyData: cardNumber : "+cardNumber);
-                } catch (NumberFormatException ignored) {}
+                    Log.d("kzsos", "collectEmergencyData: cardNumber : " + cardNumber);
+                } catch (NumberFormatException ignored) {
+                }
             }
         }
 
         String nextEncounterTypeName = "Stage" + currentStage + "_Hour" + currentHour + "_SOS" + cardNumber;
         String encounterUuid = UUID.randomUUID().toString();
-        Log.d("kzsos", "collectEmergencyData: nextEncounterTypeName : "+nextEncounterTypeName);
+        Log.d("kzsos", "collectEmergencyData: nextEncounterTypeName : " + nextEncounterTypeName);
         //1 Create sos encounter
         try {
             EncounterDTO sosEncounter = new EncounterDTO();
             sosEncounter.setUuid(encounterUuid);
             sosEncounter.setVisituuid(encounterDTO.getVisituuid());
-            sosEncounter.setEncounterTime( DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
+            sosEncounter.setEncounterTime(DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
             sosEncounter.setProvideruuid(encounterDTO.getProvideruuid());
             sosEncounter.setEncounterTypeUuid(UuidDictionary.LCG_SOS);
             sosEncounter.setVoided(encounterDTO.getVoided());
@@ -1255,7 +1261,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
             obsDAO.insertObs(obsDTO);
 
         } catch (DAOException e) {
-            Log.d(TAG, "collectEmergencyData: e : "+e.getLocalizedMessage());
+            Log.d(TAG, "collectEmergencyData: e : " + e.getLocalizedMessage());
             e.printStackTrace();
             throw new RuntimeException(e);
         }
@@ -1266,17 +1272,17 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         fetchAllEncountersFromVisitForTimelineScreen(visitUuid);
     }
 
-  /*  private void showErrorOnNoInternet() {
-        AppDialogUtils.showSingleButtonDialog(
-                this,
-                getString(R.string.no_internet_timeline_screen_title),
-                getString(R.string.no_internet_timeline_screen_body),
-                getString(R.string.ok),
-                () -> {
-                    return null;
-                }
-        );
-    }*/
+    /*  private void showErrorOnNoInternet() {
+          AppDialogUtils.showSingleButtonDialog(
+                  this,
+                  getString(R.string.no_internet_timeline_screen_title),
+                  getString(R.string.no_internet_timeline_screen_body),
+                  getString(R.string.ok),
+                  () -> {
+                      return null;
+                  }
+          );
+      }*/
     private void showNoDataDialogForViewLcg() {
         AppDialogUtils.showSingleButtonDialog(
                 this,

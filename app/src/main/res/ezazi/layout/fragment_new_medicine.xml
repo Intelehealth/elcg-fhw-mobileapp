@@ -302,13 +302,14 @@
                             selectedValue="@{medicine.route}"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:cursorVisible="true"
                             android:dropDownHeight="@dimen/dropdown_max_height_dialog"
                             android:dropDownSelector="@color/white"
                             android:editable="false"
+                            android:focusable="false"
                             android:inputType="none"
                             android:maxLines="1"
                             android:minHeight="@dimen/max_address_input_height"
+
                             android:textAlignment="viewStart"
                             android:textSize="@dimen/input_inner_size"
                             tools:ignore="LabelFor" />

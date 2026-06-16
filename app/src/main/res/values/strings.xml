@@ -1111,4 +1111,6 @@
     <string name="empty_administer_list_message">Please add %1$s\nhere to administer</string>
     <string name="no_data_message">No record for\n%1$s</string>
     <string name="title_upcoming_visit">Upcoming Visit</string>
+    <string name="no_active_case_found">No Active Case found</string>
+    <string name="use_correct_username_or_id_to_search">Use correct username or ID to search</string>
 </resources>

@@ -166,4 +166,17 @@
     <dimen name="common_padding_medication">2dp</dimen>
     <dimen name="std_45dp">50dp</dimen>
 
+    <dimen name="margin_top_parto_labels">10dp</dimen>
+    <dimen name="margin_top_parto_section_labels">16dp</dimen>
+    <dimen name="fu_vs_margin_top">40dp</dimen>
+    <dimen name="search_icon_bg_dimens">100dp</dimen>
+    <dimen name="search_pat_notfound_txtsize">20sp</dimen>
+    <dimen name="fu_margin_start">12dp</dimen>
+    <dimen name="fu_name_txt_size">16sp</dimen>
+    <dimen name="toolbar_margin_right">24dp</dimen>
+    <dimen name="margin_20dp">20dp</dimen>
+
+
+
+
 </resources>

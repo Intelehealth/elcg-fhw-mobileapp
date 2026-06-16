@@ -16,9 +16,11 @@
             type="String" />
     </data>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center|top"
         android:paddingStart="@dimen/screen_padding"
         android:paddingEnd="@dimen/screen_padding"
         android:paddingBottom="@dimen/screen_container_padding">
@@ -26,7 +28,7 @@
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/tvAlertTitle"
             style="@style/Theme.EZazi.Text.Dialog.Alert.Title"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
             android:paddingStart="@dimen/screen_container_padding"
@@ -40,17 +42,24 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:text="@string/emergency" />
 
-        <com.google.android.material.textview.MaterialTextView
-            style="@style/Theme.EZazi.Text.Dialog.Content"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:paddingTop="@dimen/screen_container_padding"
-            android:text="@{content}"
-            android:textColor="?attr/colorPrimary"
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:scrollIndicators="end"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvAlertTitle"
-            tools:text="@string/setup_internet" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            app:layout_constraintTop_toBottomOf="@id/tvAlertTitle">
+
+            <com.google.android.material.textview.MaterialTextView
+                style="@style/Theme.EZazi.Text.Dialog.Content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="@{content}"
+                android:textColor="?attr/colorPrimary"
+                tools:text="@string/setup_internet" />
+        </ScrollView>
+    </LinearLayout>
 </layout>
