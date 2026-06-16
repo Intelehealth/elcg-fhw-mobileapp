@@ -316,5 +316,11 @@
     <dimen name="lcg_container_view_margin_end">5dp</dimen>
     <dimen name="lcg_alert_text_size">11sp</dimen>
     <dimen name="plan_field_min_height">60dp</dimen>
+    <dimen name="et_plan_margin_top">5dp</dimen>
+    <dimen name="add_plan_container_padding">8dp</dimen>
 
+    <dimen name="edit_text_normal_height">56dp</dimen>
+    <dimen name="edit_text_expanded_height">88dp</dimen>
+    <dimen name="recycler_view_normal_height">320dp</dimen>
+    <dimen name="recycler_view_reduced_height">200dp</dimen>
 </resources>

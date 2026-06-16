@@ -5,6 +5,8 @@ import android.os.Bundle
 import android.text.InputFilter
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
@@ -42,55 +44,149 @@ class NewPlanFragment : Fragment(R.layout.fragment_new_plan) {
         )[PrescriptionViewModel::class.java]
     }
 
-    // Adapter for the LCG alert rows
     private val lcgAlertsAdapter = LcgAlertsAdapter()
 
-    // Panel expanded/collapsed state — defaults to expanded per acceptance criteria
-    private var isLcgPanelExpanded = true
+    // RecyclerView never exceeds 38% of screen height; scrolls internally beyond that
+    private val FRAC_RV_MAX = 0.35f
+
+    private val screenHeight: Int
+        get() = requireActivity().window.decorView.height
+            .takeIf { it > 0 } ?: resources.displayMetrics.heightPixels
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding = FragmentNewPlanBinding.bind(view)
 
+        setupKeyboardHandling()
         setActionClickListener()
         setInputFilter(binding.etNewPlan)
-        binding.etNewPlan.addTextChangedListener(listener)
+        binding.etNewPlan.addTextChangedListener(textWatcher)
         setData()
         setupLcgRisksPanel()
+
         viewModel.prescriptionArg?.visitId?.let { visitId ->
             viewModel.loadBreachedLcgAlerts(visitId)
         }
         observeLcgAlerts()
+
         if (::titleChangeListener.isInitialized) {
             titleChangeListener.changeScreenTitle(getScreenTitle())
         }
     }
 
-    private fun applyPanelState(animated: Boolean) {
-        val body = binding.llLcgRisksBody
-        val chevron = binding.ivLcgRisksChevron
+    // ─── Keyboard handling ──────────────────────────────────────────────────
 
-        if (animated) {
-            val anim = if (isLcgPanelExpanded) {
-                body.visibility = View.VISIBLE
-                body.alpha = 0f
-                body.animate().alpha(1f).setDuration(200).withEndAction(null)
-            } else {
-                body.animate().alpha(0f).setDuration(200).withEndAction {
-                    body.visibility = View.GONE
+    /**
+     * Two-part fix:
+     * 1. adjustResize (Manifest) shrinks the NestedScrollView's window when
+     *    keyboard opens — this makes the scroll container shorter so its
+     *    content (which is taller, height=match_parent of the ORIGINAL
+     *    screen height... see note below) becomes scrollable.
+     * 2. On EditText focus, scroll it to the bottom of the scroll view so
+     *    it sits just above the keyboard / above the buttons.
+     */
+    private fun setupKeyboardHandling() {
+        binding.etNewPlan.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                binding.nestedScrollView.post {
+                    binding.nestedScrollView.smoothScrollTo(
+                        0,
+                        binding.layoutButtonsAdd.bottom
+                    )
                 }
             }
-        } else {
-            body.visibility = if (isLcgPanelExpanded) View.VISIBLE else View.GONE
-            body.alpha = if (isLcgPanelExpanded) 1f else 0f
         }
 
-        // Rotate chevron: 0° = pointing up (expanded), 180° = pointing down (collapsed)
-        val targetRotation = if (isLcgPanelExpanded) 0f else 180f
-        chevron.animate().rotation(targetRotation).setDuration(200).start()
+        // Also re-scroll on every IME inset change (covers rotation / multiwindow)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.nestedScrollView) { v: View?, insets: WindowInsetsCompat ->
+            val imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
+            if (imeVisible && binding.etNewPlan.hasFocus()) {
+                binding.nestedScrollView.post {
+                    binding.nestedScrollView.smoothScrollTo(
+                        0,
+                        binding.layoutButtonsAdd.bottom
+                    )
+                }
+            }
+            insets
+        }
     }
 
-    // ─── Existing logic (unchanged) ─────────────────────────────────────────
+    // ─── RV height cap ──────────────────────────────────────────────────────
+
+    private fun capRecyclerViewHeight() {
+        val rv = binding.rvLcgAlerts
+        val cap = (screenHeight * FRAC_RV_MAX).toInt()
+
+        rv.layoutParams = rv.layoutParams.apply { height = ViewGroup.LayoutParams.WRAP_CONTENT }
+        rv.requestLayout()
+
+        rv.post {
+            val contentH = rv.measuredHeight
+            val finalH = if (contentH > cap) cap else contentH
+
+            rv.layoutParams = rv.layoutParams.apply { height = finalH }
+            rv.isNestedScrollingEnabled = contentH > cap
+            rv.requestLayout()
+        }
+    }
+
+    // ─── LCG panel ──────────────────────────────────────────────────────────
+
+    private fun setupLcgRisksPanel() {
+        binding.rvLcgAlerts.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = lcgAlertsAdapter
+            isNestedScrollingEnabled = true
+            overScrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS
+        }
+
+        lcgAlertsAdapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
+            override fun onChanged() { capRecyclerViewHeight() }
+            override fun onItemRangeInserted(p: Int, n: Int) { capRecyclerViewHeight() }
+            override fun onItemRangeRemoved(p: Int, n: Int) { capRecyclerViewHeight() }
+        })
+
+        binding.llLcgRisksBody.visibility = View.VISIBLE
+        binding.ivLcgRisksChevron.rotation = -90f
+
+        binding.llLcgRisksHeader.setOnClickListener {
+            if (binding.llLcgRisksBody.visibility == View.VISIBLE) collapsePanel()
+            else expandPanel()
+        }
+    }
+
+    private fun collapsePanel() {
+        binding.llLcgRisksBody.animate()
+            .alpha(0f).setDuration(200)
+            .withEndAction {
+                binding.llLcgRisksBody.visibility = View.GONE
+                binding.llLcgRisksBody.alpha = 1f
+                // LinearLayout weight redistributes — EditText fills freed space
+            }.start()
+        binding.ivLcgRisksChevron.animate().rotation(0f).setDuration(200).start()
+    }
+
+    private fun expandPanel() {
+        binding.llLcgRisksBody.alpha = 0f
+        binding.llLcgRisksBody.visibility = View.VISIBLE
+        binding.llLcgRisksBody.animate().alpha(1f).setDuration(200).start()
+        binding.ivLcgRisksChevron.animate().rotation(-90f).setDuration(200).start()
+        capRecyclerViewHeight()
+    }
+
+    private fun observeLcgAlerts() {
+        viewModel.breachedLcgAlerts.observe(viewLifecycleOwner) { alerts ->
+            lcgAlertsAdapter.submitList(alerts)
+            val hasAlerts = alerts.isNotEmpty()
+            binding.rvLcgAlerts.visibility       = if (hasAlerts) View.VISIBLE else View.GONE
+            binding.tvLcgNoAlerts.visibility     = if (hasAlerts) View.GONE    else View.VISIBLE
+            binding.ivLcgRisksChevron.visibility = if (hasAlerts) View.VISIBLE else View.GONE
+            binding.llLcgRisksHeader.isClickable = hasAlerts
+        }
+    }
+
+    // ─── Existing logic ──────────────────────────────────────────────────────
 
     private fun setData() {
         arguments?.let {
@@ -103,16 +199,14 @@ class NewPlanFragment : Fragment(R.layout.fragment_new_plan) {
 
     private fun setActionClickListener() {
         binding.btnAddPlanAdd.setOnClickListener { addPlan() }
-        binding.btnAddPlanCancel.setOnClickListener {
-            findNavController().popBackStack()
-        }
+        binding.btnAddPlanCancel.setOnClickListener { findNavController().popBackStack() }
     }
 
     private fun setInputFilter(editText: TextInputEditText) {
         editText.filters = arrayOf<InputFilter>(FirstLetterUpperCaseInputFilter())
     }
 
-    private val listener: TextChangeListener = object : TextChangeListener() {
+    private val textWatcher: TextChangeListener = object : TextChangeListener() {
         override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
             validatePlanFormInput()
         }
@@ -144,7 +238,6 @@ class NewPlanFragment : Fragment(R.layout.fragment_new_plan) {
             }
             if (updated > -1) viewModel.updateItem(updated, plan)
             else viewModel.addItem(plan)
-
             clearAddNewMedicineForm()
             findNavController().popBackStack(R.id.fragmentAdministered, false)
         }
@@ -170,118 +263,5 @@ class NewPlanFragment : Fragment(R.layout.fragment_new_plan) {
         super.onAttach(context)
         if (context is TitleChangeListener) titleChangeListener = context
     }
-
-    private fun observeLcgAlerts() {
-
-        viewModel.breachedLcgAlerts.observe(viewLifecycleOwner) { alerts ->
-
-            lcgAlertsAdapter.submitList(alerts)
-
-            val hasAlerts = alerts.isNotEmpty()
-
-            binding.rvLcgAlerts.visibility = if (hasAlerts) View.VISIBLE else View.GONE
-
-            binding.tvLcgNoAlerts.visibility = if (hasAlerts) View.GONE else View.VISIBLE
-
-          /*  val iconRes =
-                if (hasAlerts) R.drawable.ic_high_alert
-                else R.drawable.ic_normal_alert
-                binding.ivLcgRisksIcon.setImageResource(iconRes)*/
-        }
-    }
-    private fun setupLcgRisksPanel() {
-
-        binding.rvLcgAlerts.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = lcgAlertsAdapter
-            isNestedScrollingEnabled = false
-        }
-
-        fun updateRecyclerViewHeight() {
-
-            binding.rvLcgAlerts.post {
-
-                // Reset first so RecyclerView can measure actual content size
-                binding.rvLcgAlerts.layoutParams =
-                    binding.rvLcgAlerts.layoutParams.apply {
-                        height = ViewGroup.LayoutParams.WRAP_CONTENT
-                    }
-
-                binding.rvLcgAlerts.requestLayout()
-
-                binding.rvLcgAlerts.post {
-
-                    val maxHeight =
-                        (resources.displayMetrics.heightPixels * 0.35f).toInt()
-
-                    val contentHeight = binding.rvLcgAlerts.measuredHeight
-
-                    binding.rvLcgAlerts.layoutParams =
-                        binding.rvLcgAlerts.layoutParams.apply {
-                            height = minOf(contentHeight, maxHeight)
-                        }
-
-                    binding.rvLcgAlerts.isNestedScrollingEnabled =
-                        contentHeight > maxHeight
-
-                    binding.rvLcgAlerts.requestLayout()
-                }
-            }
-        }
-
-        lcgAlertsAdapter.registerAdapterDataObserver(
-            object : RecyclerView.AdapterDataObserver() {
-
-                override fun onChanged() {
-                    updateRecyclerViewHeight()
-                }
-
-                override fun onItemRangeInserted(
-                    positionStart: Int,
-                    itemCount: Int
-                ) {
-                    updateRecyclerViewHeight()
-                }
-
-                override fun onItemRangeRemoved(
-                    positionStart: Int,
-                    itemCount: Int
-                ) {
-                    updateRecyclerViewHeight()
-                }
-            }
-        )
-
-        updateRecyclerViewHeight()
-
-        binding.llLcgRisksBody.visibility = View.VISIBLE
-        binding.ivLcgRisksChevron.rotation = -90f
-
-        binding.llLcgRisksHeader.setOnClickListener {
-
-            val isExpanded =
-                binding.llLcgRisksBody.visibility == View.VISIBLE
-
-            if (isExpanded) {
-
-                binding.llLcgRisksBody.visibility = View.GONE
-
-                binding.ivLcgRisksChevron.animate()
-                    .rotation(0f)
-                    .setDuration(200)
-                    .start()
-
-            } else {
-
-                binding.llLcgRisksBody.visibility = View.VISIBLE
-
-                binding.ivLcgRisksChevron.animate()
-                    .rotation(-90f)
-                    .setDuration(200)
-                    .start()
-
-                updateRecyclerViewHeight()
-            }
-        }
-    }
 }
+

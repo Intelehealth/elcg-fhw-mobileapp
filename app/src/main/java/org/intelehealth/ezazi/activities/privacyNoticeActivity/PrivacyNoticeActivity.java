@@ -23,6 +23,7 @@ import org.intelehealth.ezazi.optimized_sync.network.NetworkStatus;
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
 import org.intelehealth.ezazi.utilities.FileUtils;
 import org.intelehealth.ezazi.utilities.SessionManager;
+import org.intelehealth.klivekit.utils.DateTimeUtils;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -109,7 +110,7 @@ public class PrivacyNoticeActivity extends BaseActionBarActivity implements View
     public void onClick(View v) {
 
         if (checkBox_cho.isChecked() && v.getId() == R.id.button_accept) {
-
+            sessionManager.savePatientRegistrationDateTime(DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
             //Clear HouseHold UUID from Session for new registration
             sessionManager.setHouseholdUuid("");
 

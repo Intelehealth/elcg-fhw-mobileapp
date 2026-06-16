@@ -1482,7 +1482,9 @@ public class PatientOtherInfoFragment extends Fragment {
         attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.lmp.value, mLmpDate));
         attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.EDD.value, mEDD));
         attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.HOSPITAL_ID.value, mHospitalId.getText().toString()));
-
+        if(!fromSummary){
+            attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.PATIENT_REGISTRATION_START_DATE_TIME.value, sessionManager.getPatientRegistrationDateTime()));
+        }
         patientDTO.setPatientAttributesDTOList(attrList);
         patientDTO.setSyncd(false);
 
@@ -1507,6 +1509,7 @@ public class PatientOtherInfoFragment extends Fragment {
                     i.putExtra("patientUuid", uuid); i.putExtra("patientName", patientDTO.getFirstname() + " " + patientDTO.getLastname());
                     i.putExtra("tag", "newPatient"); i.putExtra("privacy", privacy_value); i.putExtra("hasPrescription", "false");
                     setSelectedDob(requireContext(), "");
+                    sessionManager.savePatientRegistrationDateTime("");
                     mContext.startActivity(i); getActivity().finish();
                 } else { Toast.makeText(mContext, "Error adding data", Toast.LENGTH_SHORT).show(); }
             }
