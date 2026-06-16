@@ -71,6 +71,8 @@ public class SessionManager {
     private Context _context;
     // Shared pref mode
     private int PRIVATE_MODE = 0;
+    private static final String PATIENT_REGISTRATION_START_DATE_TIME = "patientRegistrationStartDateTime";
+
 
     public SessionManager(Context context) {
         this._context = context;
@@ -519,6 +521,15 @@ public class SessionManager {
 
     public String getJwtAuthToken() {
         return pref.getString(JWT_AUTH_TOKEN, "");
+    }
+
+    public String getPatientRegistrationDateTime() {
+        return pref.getString(PATIENT_REGISTRATION_START_DATE_TIME, "");
+    }
+
+    public void savePatientRegistrationDateTime(String dateTime) {
+        editor.putString(PATIENT_REGISTRATION_START_DATE_TIME, dateTime);
+        editor.commit();
     }
 
 }

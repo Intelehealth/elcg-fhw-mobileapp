@@ -75,7 +75,9 @@ public class PatientAttributesDTO implements Serializable {
         GRAVIDA("Gravida"),
         lmp("Last Menstrual Period (LMP)"),
         EDD("Estimated Date of Delivery (EDD)"),
-        HOSPITAL_ID("Hospital ID");
+        HOSPITAL_ID("Hospital ID"),
+        PATIENT_REGISTRATION_START_DATE_TIME("Patient Registration Date And Time");
+
         public String value;
 
         Columns(String value) {
