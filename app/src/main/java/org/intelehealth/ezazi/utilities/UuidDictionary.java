@@ -158,6 +158,7 @@ public class UuidDictionary {
     public static final String PROVIDER_WARD = "af56439d-5e7f-42e7-9249-6a894b07eb51";
     public static final String ONGOING_COMPLICATIONS_MOTHER =  "caa174fc-5889-443e-b53d-701fb2e85c23";
     public static final String ONGOING_COMPLICATIONS_NEWBORN = "820ae093-d3ab-402a-9a81-279963cf9dc8";
+    public static final String PATIENT_REGISTRATION_START_DATE_TIME = "d2050806-33b5-47ee-b72e-ff9230222ea6";
 
 
 

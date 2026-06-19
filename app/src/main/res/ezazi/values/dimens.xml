@@ -308,6 +308,27 @@
     <dimen name="forgot_password_screen_padding">@dimen/std_28dp</dimen>
     <dimen name="dialog_btn_text_size_permission">@dimen/std_14sp</dimen>
     <dimen name="action_menu_view_dropdown_size">30dp</dimen>
+    <dimen name="timeline_actionbar_horizontal_padding">@dimen/std_16dp</dimen>
+    <dimen name="menu_item_text_size">16sp</dimen>
+    <dimen name="lcg_container_padding">12dp</dimen>
+    <dimen name="lcg_container_margin_top">8dp</dimen>
+    <dimen name="lcg_container_text_size">14sp</dimen>
+    <dimen name="lcg_container_view_margin_end">5dp</dimen>
+    <dimen name="lcg_alert_text_size">11sp</dimen>
+    <dimen name="plan_field_min_height">60dp</dimen>
+    <dimen name="et_plan_margin_top">5dp</dimen>
+    <dimen name="add_plan_container_padding">8dp</dimen>
 
-
+    <dimen name="edit_text_normal_height">56dp</dimen>
+    <dimen name="edit_text_expanded_height">88dp</dimen>
+    <dimen name="recycler_view_normal_height">320dp</dimen>
+    <dimen name="recycler_view_reduced_height">200dp</dimen>
+    <dimen name="home_screen_container_margin_top">5dp</dimen>
+    <dimen name="home_screen_logo_width">120dp</dimen>
+    <dimen name="home_screen_toolbar_height">80dp</dimen>
+    <dimen name="home_screen_toolbar_padding_start_end">10dp</dimen>
+    <dimen name="splash_logo_width_nepal">200dp</dimen>
+    <dimen name="splash_logo_height_nepal">180dp</dimen>
+    <dimen name="login_logo_width_nepal">160dp</dimen>
+    <dimen name="login_logo_height_nepal">150dp</dimen>
 </resources>

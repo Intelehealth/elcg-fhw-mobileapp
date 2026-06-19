@@ -14,6 +14,7 @@
     android:includeFontPadding="false"
     android:layout_height="wrap_content"
     android:text="@string/action_view"
+    android:textStyle="bold"
     android:textSize="@dimen/card_content_sub_text_size"
     android:textColor="@color/colorPrimary" />
 

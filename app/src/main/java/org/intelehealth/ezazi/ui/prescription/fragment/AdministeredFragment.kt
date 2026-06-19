@@ -23,6 +23,7 @@ import com.github.ajalt.timberkt.Timber
 import com.google.gson.Gson
 import org.intelehealth.ezazi.R
 import org.intelehealth.ezazi.app.AppConstants
+import org.intelehealth.ezazi.database.dao.ObsDAO
 import org.intelehealth.ezazi.databinding.FragmentAdministeredBinding
 import org.intelehealth.ezazi.models.dto.ObsDTO
 import org.intelehealth.ezazi.partogram.PartogramConstants
@@ -252,9 +253,10 @@ class AdministeredFragment : Fragment(R.layout.fragment_administered), MenuProvi
     }
 
     private fun hasPrescriptions(): Boolean {
+        val obsDAO = ObsDAO()
         return viewMode.prescriptionArg?.let {
             val db: SQLiteDatabase = AppConstants.inteleHealthDatabaseHelper.readableDatabase
-            val repository = PrescriptionRepository(db)
+            val repository = PrescriptionRepository(db,obsDAO)
             val prescriptions: List<ItemHeader> = repository.fetchPrescription(it.visitId, it.prescriptionType)
             prescriptions.isNotEmpty()
         } ?: false

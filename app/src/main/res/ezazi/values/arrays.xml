@@ -304,4 +304,9 @@
         <item>Fresh</item>
         <item>Macerated</item>
     </string-array>
+    <string-array name="rupture_membrane_options">
+        <item>Known</item>
+        <item>Unknown</item>
+        <item>Intact</item>
+    </string-array>
 </resources>

@@ -111,6 +111,8 @@
         <item name="android:insetBottom">0dp</item>
         <item name="backgroundTint">@color/btn_blue_color_selector</item>
         <item name="cornerRadius">@dimen/button_corner_radius</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:gravity">center</item>
     </style>
 
     <style name="Theme.EZazi.Button.Small" parent="Theme.EZazi.Button">
@@ -721,5 +723,15 @@
         <item name="android:popupBackground">@drawable/popup_rounded_bg</item>
         <item name="android:dropDownWidth">220dp</item>
         <item name="android:popupElevation">8dp</item>
+        <item name="android:itemTextAppearance">@style/RoundedPopupMenu.ItemText</item>
     </style>
+
+    <style name="RoundedPopupMenu.ItemText" parent="TextAppearance.MaterialComponents.Body2">
+        <item name="android:textColor">@color/colorPrimary</item>
+        <item name="android:textSize">@dimen/card_content_sub_text_size</item>
+        <item name="fontFamily">@font/lato_regular</item>
+        <item name="android:fontFamily">@font/lato_regular</item>
+    </style>
+
+
 </resources>

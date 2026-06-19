@@ -6,48 +6,67 @@
     android:layout_height="match_parent"
     android:background="@color/white"
     android:fitsSystemWindows="false"
-    android:windowSoftInputMode="adjustResize"
     tools:context=".activities.homeActivity.HomeActivity">
+    <!--  Top App Bar  -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        app:elevation="0dp">
 
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/homeToolbar"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/home_screen_toolbar_height"
+            android:background="@android:color/transparent"
+            android:paddingStart="@dimen/home_screen_toolbar_padding_start_end"
+            android:paddingEnd="@dimen/home_screen_toolbar_padding_start_end"
+            app:contentInsetStart="0dp"
+            app:contentInsetEnd="0dp"
+            android:paddingTop="0dp"
+            android:paddingBottom="0dp">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_gravity="top"
+                android:layout_height="match_parent">
+
+                <ImageView
+                    android:id="@+id/imgLogo"
+                    android:layout_width="@dimen/home_screen_logo_width"
+                    android:layout_height="0dp"
+                    android:adjustViewBounds="true"
+                    android:src="@drawable/elcg_nepal_home_screen_logo"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintHeight_percent="0.8"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tvLastSyncStatus"
+                    style="@style/Theme.EZazi.LastSync.Text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="end"
+                    android:layout_marginTop="@dimen/home_screen_container_margin_top"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:text="Last Refreshed - 7 Jestha 2083 BS 16:15" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.appcompat.widget.Toolbar>
+
+        <include layout="@layout/layout_connection_details_bar" />
+    </com.google.android.material.appbar.AppBarLayout>
+    <!--  Main Content  -->
     <include
         android:id="@+id/layout_content_home"
         layout="@layout/content_home_ezazi"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior" />
-
-    <!--<include layout="@layout/content_home" />-->
-    <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/appBarLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
-        android:paddingVertical="5dp"
-        app:elevation="0dp">
-
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/homeToolbar"
-            style="@style/Theme.EZazi.ActionBar.Padding"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@android:color/transparent"
-            app:navigationIcon="@drawable/ic_home_logo"
-            app:popupTheme="@style/AppTheme.PopupOverlay">
-
-            <TextView
-                android:id="@+id/tvLastSyncStatus"
-                style="@style/Theme.EZazi.LastSync.Text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:text="sfdfdfd" />
-
-        </androidx.appcompat.widget.Toolbar>
-
-        <include layout="@layout/layout_connection_details_bar" />
-
-    </com.google.android.material.appbar.AppBarLayout>
-
+    <!--  Bottom Navigation  -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavMenu"
         android:layout_width="match_parent"
@@ -61,5 +80,4 @@
         app:itemTextAppearanceInactive="@style/Theme.EZazi.Bottom.Menu.Text"
         app:itemTextColor="?colorPrimary"
         app:menu="@menu/home_bottom_menu" />
-
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
