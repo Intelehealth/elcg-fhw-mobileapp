@@ -377,6 +377,15 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
         Toolbar toolbar = findViewById(R.id.homeToolbar);
         setSupportActionBar(toolbar);
         toolbar.setNavigationOnClickListener(null);
+        ImageView imgLogo = findViewById(R.id.imgLogo);
+        imgLogo.setPivotX(0); // Left edge
+        imgLogo.setPivotY(imgLogo.getHeight() / 2f);
+
+        imgLogo.setScaleX(1.5f);
+        imgLogo.setScaleY(1.5f);
+
+// Move image slightly upward
+        imgLogo.setTranslationY(-5f); // adjust -3f, -5f, -8f as needed
 //        toolbar.setTitleTextAppearance(this, R.style.ToolbarTheme);
 //        toolbar.setTitleTextColor(Color.WHITE);
         DeviceInfoUtils.saveDeviceInfo(this);

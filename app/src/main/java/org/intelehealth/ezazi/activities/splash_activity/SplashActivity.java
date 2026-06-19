@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
@@ -73,7 +74,9 @@ public class SplashActivity extends AppCompatActivity {
         // refresh the fcm token
         TokenRefreshUtils.refreshToken(this);
         initFirebaseRemoteConfig();
-
+        ImageView logo = findViewById(R.id.ivSplashLogo);
+        logo.setScaleX(1.3f);
+        logo.setScaleY(1.3f);
     }
 
     private void initFirebaseRemoteConfig() {

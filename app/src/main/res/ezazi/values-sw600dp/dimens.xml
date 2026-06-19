@@ -294,4 +294,12 @@
     <dimen name="edit_text_expanded_height">200dp</dimen>
     <dimen name="recycler_view_normal_height">350dp</dimen>
     <dimen name="recycler_view_reduced_height">220dp</dimen>
+    <dimen name="home_screen_container_margin_top">30dp</dimen>
+    <dimen name="home_screen_logo_width">200dp</dimen>
+    <dimen name="home_screen_toolbar_height">120dp</dimen>
+    <dimen name="home_screen_toolbar_padding_start_end">16dp</dimen>
+    <dimen name="splash_logo_width_nepal">280dp</dimen>
+    <dimen name="splash_logo_height_nepal">250dp</dimen>
+    <dimen name="login_logo_width_nepal">280dp</dimen>
+    <dimen name="login_logo_height_nepal">280dp</dimen>
 </resources>
