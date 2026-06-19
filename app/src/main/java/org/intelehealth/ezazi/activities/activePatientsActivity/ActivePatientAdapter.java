@@ -482,6 +482,7 @@ public class ActivePatientAdapter extends RecyclerView.Adapter<ActivePatientAdap
                 }
                 FilterResults filterResults = new FilterResults();
                 filterResults.values = listfiltered;
+                filterResults.count = listfiltered.size();
                 return filterResults;
 
             }

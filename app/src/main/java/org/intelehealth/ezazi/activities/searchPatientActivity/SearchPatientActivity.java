@@ -21,13 +21,16 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SearchView;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -71,6 +74,10 @@ public class SearchPatientActivity extends BaseActionBarActivity implements Sear
     private SessionManager sessionManager = null;
     private TextView msg;
     private MaterialAlertDialogBuilder dialogBuilder;
+    RelativeLayout view_nopatientfound;
+    ConstraintLayout clSearchContainer;
+    LinearLayout addPatientTV;
+
     private String TAG = SearchPatientActivity.class.getSimpleName();
     private SQLiteDatabase db;
     private ImageView new_patient;
@@ -95,6 +102,10 @@ public class SearchPatientActivity extends BaseActionBarActivity implements Sear
         enableProperPadding(SearchPatientActivity.this);
         dataBinder = new PatientDataBinder();
         progressBar = findViewById(R.id.searchPatientProgress);
+        view_nopatientfound = findViewById(R.id.view_nopatientfound);
+        addPatientTV = findViewById(R.id.add_new_patientTV);
+        clSearchContainer = findViewById(R.id.clSearchContainer);
+
         // Get the intent, verify the action and get the query
 
         //toolbar views
@@ -236,13 +247,21 @@ public class SearchPatientActivity extends BaseActionBarActivity implements Sear
         }
 
         new_patient.setOnClickListener(v -> {
-            //Loads the config file values and check for the boolean value of privacy key.
-            ConfigUtils configUtils = new ConfigUtils(SearchPatientActivity.this);
-            if (configUtils.privacy_notice()) {
-                Intent intent1 = new Intent(SearchPatientActivity.this, PrivacyNoticeActivity.class);
-                startActivity(intent1);
-            }
+           startNewPatientCreationActivity();
         });
+
+        addPatientTV.setOnClickListener(v -> {
+            startNewPatientCreationActivity();
+        });
+    }
+
+    private void startNewPatientCreationActivity() {
+        //Loads the config file values and check for the boolean value of privacy key.
+        ConfigUtils configUtils = new ConfigUtils(SearchPatientActivity.this);
+        if (configUtils.privacy_notice()) {
+            Intent intent1 = new Intent(SearchPatientActivity.this, PrivacyNoticeActivity.class);
+            startActivity(intent1);
+        }
     }
 
     @Override
@@ -298,7 +317,7 @@ public class SearchPatientActivity extends BaseActionBarActivity implements Sear
         try {
             offset = 0;
             fullyLoaded = false;
-            getAllPatientsFromDB(offset, results -> searchPatientAdapter.updateList(results));
+            getAllPatientsFromDB(offset, true,results -> searchPatientAdapter.updateList(results));
         } catch (Exception e) {
             FirebaseCrashlytics.getInstance().recordException(e);
             Logger.logE("firstquery", "exception", e);
@@ -318,7 +337,7 @@ public class SearchPatientActivity extends BaseActionBarActivity implements Sear
                 if (!fullyLoaded && newState == RecyclerView.SCROLL_STATE_IDLE && reLayoutManager.findLastVisibleItemPosition() == searchPatientAdapter.getItemCount() - 1) {
                     Toast.makeText(SearchPatientActivity.this, R.string.loading_more, Toast.LENGTH_SHORT).show();
                     offset += limit;
-                    getAllPatientsFromDB(offset, results -> {
+                    getAllPatientsFromDB(offset, false, results -> {
                         if (results.size() < limit) {
                             fullyLoaded = true;
                         }
@@ -336,7 +355,11 @@ public class SearchPatientActivity extends BaseActionBarActivity implements Sear
     }
 
 
-    public void getAllPatientsFromDB(int offset, OnSearchCompleteListener listener) {
+    public void getAllPatientsFromDB(int offset, boolean isFirstQuery, OnSearchCompleteListener listener) {
+        runOnUiThread(() -> {
+            progressBar.setVisibility(View.VISIBLE);
+            view_nopatientfound.setVisibility(View.GONE);
+        });
         new TaskExecutor<List<PatientDTO>>().executeTask(new TaskCompleteListener<List<PatientDTO>>() {
             @Override
             public List<PatientDTO> call() throws Exception {
@@ -362,6 +385,21 @@ public class SearchPatientActivity extends BaseActionBarActivity implements Sear
                 Log.d(TAG, "getAllPatientsFromDB$onComplete: " + result.size());
                 runOnUiThread(() -> {
                     progressBar.setVisibility(View.GONE);
+                    if(result.isEmpty()){
+                        view_nopatientfound.setVisibility(View.VISIBLE);
+                        clSearchContainer.setVisibility(View.GONE);
+                    }else{
+                        searchView.setEnabled(true);
+                        clSearchContainer.setVisibility(View.VISIBLE);
+                    }
+
+                    if(isFirstQuery){
+                        if(result.isEmpty()){
+                            clSearchContainer.setVisibility(View.GONE);
+                        }else{
+                            clSearchContainer.setVisibility(View.VISIBLE);
+                        }
+                    }
                     if (listener != null) listener.onSearchCompleted(result);
                 });
             }
@@ -499,6 +537,10 @@ public class SearchPatientActivity extends BaseActionBarActivity implements Sear
     }
 
     private void searchPatient(String keyword, OnSearchCompleteListener listener) {
+        runOnUiThread(() -> {
+            progressBar.setVisibility(View.VISIBLE);
+            view_nopatientfound.setVisibility(View.GONE);
+        });
         SQLiteDatabase database = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
         String query = new PatientQueryBuilder().searchQuery(keyword);
         new TaskExecutor<List<PatientDTO>>().executeTask(new TaskCompleteListener<List<PatientDTO>>() {
@@ -519,6 +561,8 @@ public class SearchPatientActivity extends BaseActionBarActivity implements Sear
                 TaskCompleteListener.super.onComplete(result);
                 Log.d(TAG, "searchPatient$onComplete: " + result.size());
                 runOnUiThread(() -> {
+                    progressBar.setVisibility(View.GONE);
+                    if(result.isEmpty()) view_nopatientfound.setVisibility(View.VISIBLE);
                     if (listener != null) listener.onSearchCompleted(result);
                 });
             }

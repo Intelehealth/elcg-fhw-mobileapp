@@ -33,6 +33,18 @@
     <dimen name="timeTextview_margin_start">30dp</dimen>
 
     <dimen name="timeTextview_min_width">100dip</dimen>
+
     <dimen name="margin_top_parto_labels">16dp</dimen>
     <dimen name="margin_top_parto_section_labels">20dp</dimen>
+
+    <dimen name="fu_vs_margin_top">50dp</dimen>
+    <dimen name="search_icon_bg_dimens">140dp</dimen>
+    <dimen name="search_pat_notfound_txtsize">26sp</dimen>
+    <dimen name="fu_margin_start">24dp</dimen>
+    <dimen name="fu_name_txt_size">28sp</dimen>
+    <dimen name="toolbar_margin_right">34dp</dimen>
+    <dimen name="margin_20dp">30dp</dimen>
+
+
+
 </resources>
