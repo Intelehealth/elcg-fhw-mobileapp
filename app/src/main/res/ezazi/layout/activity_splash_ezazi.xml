@@ -30,16 +30,16 @@
 
     <ImageView
         android:id="@+id/ivSplashLogo"
-        android:layout_width="@dimen/splash_logo_width"
-        android:layout_height="@dimen/splash_logo_height"
+        android:layout_width="@dimen/splash_logo_width_nepal"
+        android:layout_height="@dimen/splash_logo_height_nepal"
         android:layout_gravity="center"
-        android:scaleType="centerCrop"
-        android:src="@drawable/logo_ezazi"
+        android:src="@drawable/nepal_ezazi_spalsh_icon"
         app:layout_constraintBottom_toTopOf="@+id/ivBottomLightVector"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.84000003" />
+        app:layout_constraintVertical_bias="0.84000003"
+       />
 
     <TextView
         android:id="@+id/tvSplashContent"
