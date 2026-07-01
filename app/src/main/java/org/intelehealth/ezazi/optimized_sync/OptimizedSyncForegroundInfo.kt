@@ -41,7 +41,7 @@ private fun getSyncNotificationChannel(): NotificationChannel = NotificationChan
 
 private fun getSyncNotificationBuilder(context: Context) =
     NotificationCompat.Builder(context, OptimizedSyncConstants.SYNC_CHANNEL_ID)
-        .setSmallIcon(R.mipmap.ic_launcher) // Replace with your app's sync icon
+        .setSmallIcon(R.mipmap.app_lanucher_logo_nepal) // Replace with your app's sync icon
         .setContentTitle(OptimizedSyncConstants.NOTIFICATION_CONTENT_TITLE)
         .setContentText(OptimizedSyncConstants.NOTIFICATION_CONTENT_DESCRIPTION)
         .setPriority(NotificationCompat.PRIORITY_LOW)
