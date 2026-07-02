@@ -1168,8 +1168,14 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         binding.includeLayoutPartoOxytocin.viewInfusionRate.tvParamName.setText(R.string.iv_infusion_rate);
         binding.includeLayoutPartoOxytocin.viewInfusionStatus.tvParamName.setText(R.string.iv_infusion_status);
 
-        binding.includeLayoutPartoOxytocin.viewStrength.etvData.setFilters(new InputFilter[]{new InputFilter.LengthFilter(200)});
-        binding.includeLayoutPartoOxytocin.viewStrength.etvData.setInputType(InputType.TYPE_CLASS_NUMBER);
+        EditText strengthEditText = binding.includeLayoutPartoOxytocin.viewStrength.etvData;
+        strengthEditText.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+        strengthEditText.setFilters(new InputFilter[]{
+                new InputFilter.LengthFilter(5),          // e.g. "10.0"
+                new DecimalDigitsInputFilter(2, 2)        // up to 2 digits before "." and 1 after
+        });
+        //binding.includeLayoutPartoOxytocin.viewStrength.etvData.setFilters(new InputFilter[]{new InputFilter.LengthFilter(200)});
+        //binding.includeLayoutPartoOxytocin.viewStrength.etvData.setInputType(InputType.TYPE_CLASS_NUMBER);
         binding.includeLayoutPartoOxytocin.viewInfusionRate.etvData.setFilters(new InputFilter[]{new InputFilter.LengthFilter(200)});
         binding.includeLayoutPartoOxytocin.viewInfusionRate.etvData.setInputType(InputType.TYPE_CLASS_NUMBER);
 
@@ -1186,9 +1192,18 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
                 if (s.length() > 0) {
                     //if (s.toString().contains("(U/L)")) {
                     String cleanedString = s.toString().replace("(U/L)", "").trim();
-
-                    int value = Integer.parseInt(cleanedString);
-                    if (value <= 10 && value > 0) {
+                    if (cleanedString.equals(".") || cleanedString.endsWith(".")) {
+                        // user is still typing the decimal, e.g. "1." — wait for more digits, don't validate yet
+                        return;
+                    }
+                    double value;
+                    try {
+                        value = Double.parseDouble(cleanedString);
+                    } catch (NumberFormatException e) {
+                        return; // incomplete/invalid partial input, ignore silently
+                    }
+                    //int value = Integer.parseInt(cleanedString);
+                    if (value <= 10 && value >= 1) {
                         info.getMedication().setStrength(cleanedString);
                         info.saveJson();
                     } else {
