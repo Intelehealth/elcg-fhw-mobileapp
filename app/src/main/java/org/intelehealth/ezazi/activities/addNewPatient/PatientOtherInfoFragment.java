@@ -636,6 +636,7 @@ public class PatientOtherInfoFragment extends Fragment {
     }
 
     /** EDD = LMP + 9 months + 7 days */
+/* Commented due to https://intelehealthwiki.atlassian.net/browse/EZ-956 ticket changes.
     private void calculateEDDFromLMP(String lmpGregStr) {
         try {
             TimeZone utcZone = TimeZone.getTimeZone("UTC");
@@ -664,7 +665,37 @@ public class PatientOtherInfoFragment extends Fragment {
             clearError(tvErrorEDD, null);
         } catch (Exception e) { e.printStackTrace(); }
     }
+*/
 
+    private void calculateEDDFromLMP(String lmpGregStr) {
+        try {
+            TimeZone utcZone = TimeZone.getTimeZone("UTC");
+
+            // Parse input string in UTC
+            SimpleDateFormat sdf = new SimpleDateFormat(GREG_FMT, Locale.ENGLISH);
+            sdf.setTimeZone(utcZone);
+            Date lmp = sdf.parse(lmpGregStr);
+
+            // Initialize Calendar in UTC
+            Calendar cal = Calendar.getInstance(utcZone);
+            cal.setTime(lmp);
+
+            // ===================== Naegele's Rule = LMP + 7 days - 3 months + 1 year =====================
+            cal.add(Calendar.DAY_OF_MONTH, 7);
+            cal.add(Calendar.MONTH, -3);
+            cal.add(Calendar.YEAR, 1);
+            Date eddGreg = cal.getTime();
+
+            // Convert back to string (Ensure toGregFmt uses UTC!)
+            mEDD = toGregFmt(eddGreg);
+
+            // Convert to Nepali BS Calendar
+            int[] bs = NepaliDateConverter.gregorianToBs(eddGreg);
+            mEDDTextView.setText(formatBsDate(bs[0], bs[1], bs[2]));
+
+            clearError(tvErrorEDD, null);
+        } catch (Exception e) { e.printStackTrace(); }
+    }
     // ═════════════════════════════════════════════════════════════════════
     //  Time picker — no restrictions, validated on Save
     // ═════════════════════════════════════════════════════════════════════
