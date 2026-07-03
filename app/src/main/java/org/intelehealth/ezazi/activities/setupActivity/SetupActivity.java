@@ -161,7 +161,7 @@ public class SetupActivity extends AppCompatActivity {
 
     //    Map.Entry<String, String> village_name;
 //    int state_count = 0, district_count = 0, sanch_count = 0, village_count = 0;
-
+    private Location mSelectedLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -218,9 +218,17 @@ public class SetupActivity extends AppCompatActivity {
             mEmailView.setError(null);
 
             LocationArrayAdapter adapter = new LocationArrayAdapter(SetupActivity.this, new ArrayList<String>());
+           /* mDropdownLocation.setOnItemClickListener((parent, view, position, id) -> {
+                Log.e(TAG, "onCreate: id=>" + view.getContentDescription());
+                mLocationInputView.setError(null);
+                changeButtonStatus(true);
+            });*/
             mDropdownLocation.setOnItemClickListener((parent, view, position, id) -> {
                 Log.e(TAG, "onCreate: id=>" + view.getContentDescription());
                 mLocationInputView.setError(null);
+                if (position >= 0 && position < mLocations.size()) {
+                    mSelectedLocation = mLocations.get(position);
+                }
                 changeButtonStatus(true);
             });
             mDropdownLocation.setAdapter(adapter);
@@ -373,9 +381,19 @@ public class SetupActivity extends AppCompatActivity {
             //  if (location != null) {
             //   Log.i(TAG, "location:: " + location.getDisplay());
             String urlString = setupUrl;
+            if (mSelectedLocation != null) {
+                location.setDisplay(mSelectedLocation.getDisplay());
+                location.setUuid(mSelectedLocation.getUuid());
+                location.setDescription(mSelectedLocation.getDescription());
+            } else {
+                // fallback: shouldn't happen since selectedLocation is validated non-empty above
+                location.setDisplay(selectedLocation);
+            }
+            Log.d(TAG, "attemptLogin: selected location1 : "+location.getUuid());
             // as in ezazi we dont want to show locations dropdown so adding as static value.
+            /*  Commented due to https://intelehealthwiki.atlassian.net/browse/EZ-969
             location.setDisplay(selectedLocation);
-            location.setUuid("eb374eaf-430e-465e-81df-fe94c2c515be");
+            location.setUuid("eb374eaf-430e-465e-81df-fe94c2c515be");*/
             // TestSetup(urlString, email, password, location);//previous flow
             getJWTToken(urlString, email, password, location);
 
@@ -542,6 +560,8 @@ public class SetupActivity extends AppCompatActivity {
                                     sessionManager.setServerUrlBase(CLEAN_URL + "/openmrs");
                                     sessionManager.setBaseUrl(BASE_URL);
                                     sessionManager.setSetupComplete(true);
+                                    Log.d(TAG, "attemptLogin: selected location2 : "+sessionManager.getLocationUuid());
+
                                     saveToken();
 
                                     IntelehealthApplication.getInstance().startRealTimeObserverAndSocket();
