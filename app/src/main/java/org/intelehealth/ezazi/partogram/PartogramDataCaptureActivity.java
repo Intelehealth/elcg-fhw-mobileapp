@@ -564,14 +564,13 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                             obsDTOData.setUuid(uuid);
                             if (value != null && !value.isEmpty()) {
 
-                                if (value.equalsIgnoreCase("Yes")) {
+                                if (value.equalsIgnoreCase("Yes") || value.equalsIgnoreCase("Y")) {
                                     obsDTOData.setValue("Y");
-                                } else if (value.equalsIgnoreCase("No")) {
+                                } else if (value.equalsIgnoreCase("No") || value.equalsIgnoreCase("N")) {
                                     obsDTOData.setValue("N");
                                 } else {
                                     obsDTOData.setValue(value);
                                 }
-
                                 if (uuid != null && !uuid.isEmpty()) {
                                     obsDTOList.add(obsDTOData);
                                 } else {
@@ -687,6 +686,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                 visits.add(activePatientModel);
                 VisitAlertBridge.processVisits(scope, visits, result -> {
                     long updated = -1;
+                    Log.d("kaveririskcheck", "saveObs: result : "+String.valueOf(result.get(0).getAlertFlagTotal()));
                     if (result != null && !result.isEmpty()) {
                         updated = visitAttributeListDAO.upsertVisitAttribute(mVisitUUID, UuidDictionary.VISIT_RISK, String.valueOf(result.get(0).getAlertFlagTotal()));
                     }
