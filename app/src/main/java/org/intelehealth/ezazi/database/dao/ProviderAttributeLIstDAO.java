@@ -70,7 +70,7 @@ public class ProviderAttributeLIstDAO {
             }
             //provider ward type inserting to db
             else if(attributeListDTO.getVoided() == 0
-                    && attributeListDTO.getAttributetypeuuid().equalsIgnoreCase(UuidDictionary.PROVIDER_WARD)){
+                    && (attributeListDTO.getAttributetypeuuid().equalsIgnoreCase(UuidDictionary.PROVIDER_WARD) || attributeListDTO.getAttributetypeuuid().equalsIgnoreCase(UuidDictionary.FACILITY))){
                 createdRecordsCount = db.insertWithOnConflict("tbl_provider_attribute", null, values, SQLiteDatabase.CONFLICT_REPLACE);
             }
 

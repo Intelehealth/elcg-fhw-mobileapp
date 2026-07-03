@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 
@@ -11,6 +12,7 @@ import org.intelehealth.ezazi.app.AppConstants;
 import org.intelehealth.ezazi.app.IntelehealthApplication;
 import org.intelehealth.ezazi.models.dto.ProviderDTO;
 import org.intelehealth.ezazi.utilities.SessionManager;
+import org.intelehealth.ezazi.utilities.UuidDictionary;
 import org.intelehealth.ezazi.utilities.exception.DAOException;
 
 import java.util.ArrayList;
@@ -214,13 +216,28 @@ public class ProviderDAO {
     }
 
 
-    public List<ProviderDTO> getDoctorList() throws DAOException {
+    public List<ProviderDTO> getDoctorList(String setupLocationUuid) throws DAOException {
         List<ProviderDTO> providersList = new ArrayList<>();
         SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
         db.beginTransaction();
         try {
-            String query = "select * from tbl_provider where role='Organizational: Doctor'";
-            Cursor cursor = db.rawQuery(query, new String[]{});
+            //String query = "select * from tbl_provider where role='Organizational: Doctor'";
+            //Cursor cursor = db.rawQuery(query, new String[]{});
+            //Commented due to EZ-969
+            String query = "SELECT p.* " +
+                    "FROM tbl_provider p " +
+                    "INNER JOIN tbl_provider_attribute pa " +
+                    "ON p.uuid = pa.provideruuid " +
+                    "WHERE p.role = ? " +
+                    "AND pa.attributetypeuuid = ? " +
+                    "AND pa.value = ?";
+
+            Cursor cursor = db.rawQuery(query,
+                    new String[]{
+                            "Organizational: Doctor",
+                            UuidDictionary.FACILITY,
+                            setupLocationUuid
+                    });
             if (cursor.getCount() != 0) {
                 while (cursor.moveToNext()) {
                     ProviderDTO providerDTO = new ProviderDTO();

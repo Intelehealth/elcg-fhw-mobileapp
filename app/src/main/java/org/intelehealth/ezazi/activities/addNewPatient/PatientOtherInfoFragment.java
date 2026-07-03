@@ -249,7 +249,7 @@ public class PatientOtherInfoFragment extends Fragment {
         handleOptionsForMaternity();
 
         ProviderDAO providerDAO = new ProviderDAO();
-        try { mProviderDoctorList = providerDAO.getDoctorList(); }
+        try { mProviderDoctorList = providerDAO.getDoctorList(sessionManager.getLocationUuid()); }
         catch (DAOException e) { e.printStackTrace(); }
 
         autotvRupturedMembrane = view.findViewById(R.id.autotv_sac_ruptured_options);

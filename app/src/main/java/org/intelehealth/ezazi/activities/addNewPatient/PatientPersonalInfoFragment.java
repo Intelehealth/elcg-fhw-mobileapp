@@ -217,7 +217,7 @@ public class PatientPersonalInfoFragment extends Fragment {
 
         ProviderDAO providerDAO = new ProviderDAO();
         try {
-            mProviderDoctorList = providerDAO.getDoctorList();
+            mProviderDoctorList = providerDAO.getDoctorList(sessionManager.getLocationUuid());
         } catch (DAOException e) {
             e.printStackTrace();
         }
