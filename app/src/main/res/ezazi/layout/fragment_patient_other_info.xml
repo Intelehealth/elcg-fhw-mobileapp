@@ -297,6 +297,7 @@
                             android:focusable="true"
                             android:gravity="center_vertical"
                             android:hint="@string/gravida_hint"
+                            android:enabled="false"
                             android:imeOptions="actionNext"
                             android:importantForAutofill="no"
                             android:inputType="number"
