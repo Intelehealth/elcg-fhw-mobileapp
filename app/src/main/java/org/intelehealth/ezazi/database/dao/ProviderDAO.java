@@ -292,6 +292,9 @@ public class ProviderDAO {
 
             // Note:
             // - "Unassigned Ward" nurses are always included where applicable
+            String setupLocationUuid = new SessionManager(IntelehealthApplication.getAppContext()).getLocationUuid();
+            Log.d("TAG", "getNurseList: setupLocationUuid : "+setupLocationUuid);
+
             String query = "select * from tbl_provider as p where p.role='Organizational: Nurse'";
             if(ward.equals("Labor Ward") && isFromHome){
                 query = "select p.* from tbl_provider as p " +
@@ -309,7 +312,21 @@ public class ProviderDAO {
                         "where p.role='Organizational: Nurse'" +
                         "and (pa.value is null or pa.value != 'Labor Ward') order by pa.value desc";
             }
-            Cursor cursor = db.rawQuery(query, new String[]{});
+
+// NEW: wrap the untouched ward query as a subquery, DISTINCT to remove duplicate provider rows,
+// then filter by facility + setupLocationUuid on top of it
+            String finalQuery =
+                    "select distinct p2.* from (" + query + ") as p2 " +
+                            "inner join tbl_provider_attribute as pa2 " +
+                            "on p2.uuid = pa2.provideruuid " +
+                            "and pa2.attributetypeuuid = ? " +
+                            "and pa2.value = ?";
+
+            Cursor cursor = db.rawQuery(finalQuery,
+                    new String[]{
+                            UuidDictionary.FACILITY,
+                            setupLocationUuid
+                    });
             if (cursor.getCount() != 0) {
                 while (cursor.moveToNext()) {
                     ProviderDTO providerDTO = new ProviderDTO();
