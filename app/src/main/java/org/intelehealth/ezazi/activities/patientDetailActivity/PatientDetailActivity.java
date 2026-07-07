@@ -111,6 +111,7 @@ public class PatientDetailActivity extends BaseActionBarActivity {
     ImageView editbtn;
     //    ImageButton ib_addFamilyMember;
     Button newVisit;
+    private String activeVisitUuid = "";
     IntentFilter filter;
     Myreceiver reMyreceive;
     ImageView photoView;
@@ -237,6 +238,10 @@ public class PatientDetailActivity extends BaseActionBarActivity {
 
         setDisplay(patientUuid);
 
+        activeVisitUuid = new VisitsDAO().fetchVisitUUIDFromPatientUUID(patientUuid);
+        newVisit.setText((activeVisitUuid == null || activeVisitUuid.isEmpty())
+                ? R.string.start_obs : R.string.manage_encounters);
+
 //        if (newVisit.isEnabled()) {
 //            newVisit.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
 //            newVisit.setTextColor(getResources().getColor(R.color.white));
@@ -248,6 +253,10 @@ public class PatientDetailActivity extends BaseActionBarActivity {
         newVisit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (activeVisitUuid != null && !activeVisitUuid.isEmpty()) {
+                    openTimelineForExistingVisit();
+                    return;
+                }
                 // before starting, we determine if it is new visit for a returning patient
                 // extract both FH and PMH
 //                SimpleDateFormat currentDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.ENGLISH);
@@ -442,6 +451,27 @@ public class PatientDetailActivity extends BaseActionBarActivity {
             newVisit.setEnabled(false);
         }
 
+    }
+
+    /** Opens the ongoing visit's timeline for a patient who already has an active visit. */
+    private void openTimelineForExistingVisit() {
+        String fullName = patient.getFirst_name() + " " + patient.getLast_name();
+        String patientTimelineName;
+        if (patient.getMiddle_name() != null && !patient.getMiddle_name().equalsIgnoreCase("")
+                && !patient.getMiddle_name().isEmpty()) {
+            patientTimelineName = patient.getFirst_name() + " " + patient.getMiddle_name() + " " + patient.getLast_name();
+        } else {
+            patientTimelineName = patient.getFirst_name() + " " + patient.getLast_name();
+        }
+        Intent intent = new Intent(PatientDetailActivity.this, TimelineVisitSummaryActivity.class);
+        intent.putExtra("patientUuid", patientUuid);
+        intent.putExtra("visitUuid", activeVisitUuid);
+        intent.putExtra("name", fullName);
+        intent.putExtra("patientNameTimeline", patientTimelineName);
+        intent.putExtra("tag", "exisiting");
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        finish();
     }
 
     @Override

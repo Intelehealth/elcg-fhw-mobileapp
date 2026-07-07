@@ -72,6 +72,12 @@
                 android:value="" />
         </activity>
         <activity
+            android:name=".activities.visitCreation.VisitCreationActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustPan" />
+        <activity
             android:name=".activities.epartogramActivity.EpartogramViewActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:exported="false"

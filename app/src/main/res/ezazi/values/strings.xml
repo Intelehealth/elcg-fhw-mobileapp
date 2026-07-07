@@ -163,5 +163,5 @@
     <string name="not_nurse_login_error">This number is linked to a Doctor account and cannot be used for Nurse login.</string>
     <string name="no_user_exist_reset_password"> Mobile number not registered. Please enter a registered number.</string>
     <string name="active_labour_diagnosis">Active labour diagnosis must be within last 15 hours</string>
-
+    <string name="select_valid_date">Select valid date</string>
 </resources>

@@ -544,10 +544,13 @@ public class PatientAddressInfoFragment extends Fragment {
         bundle.putBoolean("patient_detail", patient_detail);
         bundle.putSerializable("patientAttributes", (Serializable) patientAttributesModel);
 
-        fragment_thirdScreen.setArguments(bundle); // passing data to Fragment
-//
-        requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.frame_add_patient, fragment_thirdScreen).commit();
-        ((AddNewPatientActivity) requireActivity()).changeCurrentPage(AddNewPatientActivity.PAGE_OTHER);
+        if (PatientOtherInfoFragment.hasFieldsToShow(requireActivity())) {
+            fragment_thirdScreen.setArguments(bundle); // passing data to Fragment
+            requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.frame_add_patient, fragment_thirdScreen).commit();
+            ((AddNewPatientActivity) requireActivity()).changeCurrentPage(AddNewPatientActivity.PAGE_OTHER);
+        } else {
+            PatientRegistrationSaver.savePatient(requireActivity(), patientDTO, mAlternateNumberString, fromSummary, patientUuidUpdate);
+        }
 
         if (NetworkConnection.isOnline(mContext)) {
 //                patientApiCall();

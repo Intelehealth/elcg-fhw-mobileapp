@@ -21,10 +21,8 @@ import android.widget.TextView;
 import java.util.List;
 
 import org.intelehealth.ezazi.R;
-import org.intelehealth.ezazi.activities.visitSummaryActivity.TimelineVisitSummaryActivity;
 import org.intelehealth.ezazi.app.AppConstants;
 import org.intelehealth.ezazi.database.dao.VisitAttributeListDAO;
-import org.intelehealth.ezazi.database.dao.VisitsDAO;
 import org.intelehealth.ezazi.models.dto.PatientDTO;
 import org.intelehealth.ezazi.utilities.DateAndTimeUtils;
 
@@ -120,47 +118,13 @@ public class SearchPatientAdapter extends RecyclerView.Adapter<SearchPatientAdap
         }
 
         private void onPatientClicked(PatientDTO patient) {
-            String visitId = getVisitUuid(patient);
-            String patientName = getPatientName(patient);
-            startNextActivity(patient, visitId, patientName);
-        }
-
-        private String getVisitUuid(PatientDTO patient) {
-            VisitsDAO visitsDAO = new VisitsDAO();
-            return visitsDAO.fetchVisitUUIDFromPatientUUID(patient.getUuid());
-        }
-
-        private String getPatientName(PatientDTO patient) {
-            if (patient.getMiddlename() != null && !patient.getMiddlename().equalsIgnoreCase("")
-                    && !patient.getMiddlename().isEmpty()) {
-                return patient.getFirstname() + " " + patient.getMiddlename() + " " + patient.getLastname();
-            } else {
-                return patient.getFirstname() + " " + patient.getLastname();
-            }
-        }
-
-        private void startNextActivity(PatientDTO patient, String visitUUID, String patientName) {
-            if (visitUUID != null && visitUUID.equalsIgnoreCase("")) { // visit is not yet created for this user.
-                Log.d("search adapter", "patientuuid" + patient.getUuid());
-                String patientStatus = "returning";
-                Intent intent = new Intent(context, PatientDetailActivity.class);
-                intent.putExtra("patientUuid", patient.getUuid());
-                intent.putExtra("patientName", patient.getFirstname() + "" + patient.getLastname());
-                intent.putExtra("status", patientStatus);
-                intent.putExtra("tag", "search");
-                intent.putExtra("hasPrescription", "false");
-                context.startActivity(intent);
-            } else {
-                Intent intent = new Intent(context, TimelineVisitSummaryActivity.class);
-                intent.putExtra("patientUuid", patient.getUuid());
-                intent.putExtra("visitUuid", visitUUID);
-                intent.putExtra("name", patient.getFirstname() + " " + patient.getLastname());
-                intent.putExtra("patientNameTimeline", patientName);
-                intent.putExtra("tag", "exisiting");
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(intent);
-
-            }
+            Intent intent = new Intent(context, PatientDetailActivity.class);
+            intent.putExtra("patientUuid", patient.getUuid());
+            intent.putExtra("patientName", patient.getFirstname() + "" + patient.getLastname());
+            intent.putExtra("status", "returning");
+            intent.putExtra("tag", "search");
+            intent.putExtra("hasPrescription", "false");
+            context.startActivity(intent);
         }
     }
 }
