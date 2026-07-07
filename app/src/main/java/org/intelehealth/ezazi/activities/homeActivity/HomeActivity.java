@@ -41,6 +41,8 @@ import android.os.Handler;
 import android.telephony.TelephonyManager;
 import android.text.InputFilter;
 import android.util.Log;
+import android.view.ContextThemeWrapper;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -53,6 +55,7 @@ import android.widget.Filter;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -1509,6 +1512,9 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
 
     private TextView tvLastSyncStatus;
 
+   /*
+    Commented due to theme issue
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -1516,7 +1522,7 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
 //        mLastUpdateMenuItem = menu.findItem(R.id.updateTimeItem);
         setLastSyncTime(getString(R.string.last_synced) + " \n" + sessionManager.getLastSyncDateTime());
         return super.onCreateOptionsMenu(menu);
-    }
+    }*/
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -2418,5 +2424,57 @@ public class HomeActivity extends BaseActivity implements SearchView.OnQueryText
     @Override
     public void onNetworkLost() {
         super.onNetworkLost();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.home_menu_popup, menu);
+
+        LinearLayout btn = menu.findItem(R.id.action_home_menu)
+                .getActionView()
+                .findViewById(R.id.layoutActionMenuHome);
+        btn.setOnClickListener(this::showHomeDropdownMenu);
+
+        setLastSyncTime(getString(R.string.last_synced) + " \n" + sessionManager.getLastSyncDateTime());
+        return super.onCreateOptionsMenu(menu);
+    }
+    private void showHomeDropdownMenu(View anchor) {
+       /* PopupMenu popupMenu = new PopupMenu(this, anchor);
+        popupMenu.getMenuInflater().inflate(R.menu.menu_home_dropdown, popupMenu.getMenu());
+*/
+        PopupMenu popupMenu = new PopupMenu(
+                new ContextThemeWrapper(this, R.style.RoundedPopupMenu),
+                anchor,
+                Gravity.END
+        );
+        popupMenu.getMenuInflater().inflate(R.menu.menu_home_dropdown, popupMenu.getMenu());
+
+        // Force a solid white background directly, no theme dependency
+        try {
+            java.lang.reflect.Field field = PopupMenu.class.getDeclaredField("mPopup");
+            field.setAccessible(true);
+            Object menuPopupHelper = field.get(popupMenu);
+            Object menuHelper = menuPopupHelper.getClass()
+                    .getMethod("getPopup")
+                    .invoke(menuPopupHelper);
+            ((android.widget.ListPopupWindow) menuHelper)
+                    .setBackgroundDrawable(ContextCompat.getDrawable(this, R.drawable.bg_popup_menu));
+        } catch (Exception e) {
+            e.printStackTrace(); // safe fallback: continue without forced bg on unsupported OEMs
+        }
+
+        popupMenu.setOnMenuItemClickListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.logoutOption) {
+                showLogoutAlert();
+                return true;
+            } else if (id == R.id.restAppOption) {
+                return onOptionsItemSelected(item); // reuses your existing reset logic unchanged
+            }
+            return false;
+        });
+
+        popupMenu.show();
     }
 }
