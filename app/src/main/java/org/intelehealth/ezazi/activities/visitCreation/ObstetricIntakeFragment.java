@@ -1,5 +1,6 @@
 package org.intelehealth.ezazi.activities.visitCreation;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -345,11 +346,16 @@ public class ObstetricIntakeFragment extends Fragment {
     }
 
     /**
-     * Receives the validated obstetric intake. Creating the visit, writing these values as
-     * visit attributes and opening the timeline is handled in a later step of the flow.
+     * Creates the visit from the validated intake, writes the obstetric values as visit
+     * attributes and opens the timeline.
      */
     private void onObstetricDataCollected(ObstetricVisitData data) {
-        Toast.makeText(requireContext(), R.string.obstetric_intake_saved, Toast.LENGTH_SHORT).show();
+        Intent intent = requireActivity().getIntent();
+        VisitCreator.createVisitAndOpenTimeline(requireActivity(),
+                intent.getStringExtra("patientUuid"),
+                intent.getStringExtra("name"),
+                intent.getStringExtra("patientNameTimeline"),
+                data);
     }
 
     private boolean isBlank(TextInputEditText editText) {

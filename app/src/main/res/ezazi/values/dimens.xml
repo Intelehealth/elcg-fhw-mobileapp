@@ -307,6 +307,7 @@
 
     <dimen name="forgot_password_screen_padding">@dimen/std_28dp</dimen>
     <dimen name="dialog_btn_text_size_permission">@dimen/std_14sp</dimen>
-
+    <dimen name="item_past_visit_padding">10dp</dimen>
+    <dimen name="margin_12">12dp</dimen>
 
 </resources>

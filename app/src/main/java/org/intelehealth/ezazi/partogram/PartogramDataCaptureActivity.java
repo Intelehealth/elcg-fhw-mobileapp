@@ -279,7 +279,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
     }
 
     private void showDoctorSelectionDialog(boolean isChat) {
-        LinkedList<SingChoiceItem> choiceItems = CallInitializer.getDoctorsDetails(mPatientUuid);
+        LinkedList<SingChoiceItem> choiceItems = CallInitializer.getDoctorsDetails(mVisitUUID);
 
         SingleChoiceDialogFragment dialog = new SingleChoiceDialogFragment.Builder(this)
                 .title(R.string.select_doctor)

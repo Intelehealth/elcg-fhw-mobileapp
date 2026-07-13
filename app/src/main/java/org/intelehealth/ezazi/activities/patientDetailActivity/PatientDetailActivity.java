@@ -1,6 +1,5 @@
 package org.intelehealth.ezazi.activities.patientDetailActivity;
 
-import static org.intelehealth.ezazi.app.AppConstants.OBSTETRICIAN_GYNECOLOGIST;
 import static org.intelehealth.ezazi.utilities.StringUtils.en__as_dob;
 import static org.intelehealth.ezazi.utilities.StringUtils.en__bn_dob;
 import static org.intelehealth.ezazi.utilities.StringUtils.en__gu_dob;
@@ -14,6 +13,7 @@ import static org.intelehealth.ezazi.utilities.StringUtils.en__ta_dob;
 import static org.intelehealth.ezazi.utilities.StringUtils.en__te_dob;
 import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
 
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -23,6 +23,7 @@ import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.Html;
@@ -38,6 +39,8 @@ import android.widget.Toast;
 import androidx.appcompat.widget.Toolbar;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.gson.Gson;
@@ -46,16 +49,15 @@ import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.activities.addNewPatient.AddNewPatientActivity;
 import org.intelehealth.ezazi.activities.homeActivity.HomeActivity;
 import org.intelehealth.ezazi.activities.searchPatientActivity.SearchPatientActivity;
+import org.intelehealth.ezazi.activities.visitCreation.VisitCreationActivity;
 import org.intelehealth.ezazi.activities.visitSummaryActivity.TimelineVisitSummaryActivity;
 import org.intelehealth.ezazi.app.AppConstants;
 import org.intelehealth.ezazi.database.dao.EncounterDAO;
 import org.intelehealth.ezazi.database.dao.ImagesDAO;
 import org.intelehealth.ezazi.database.dao.PatientsDAO;
-import org.intelehealth.ezazi.database.dao.VisitAttributeListDAO;
 import org.intelehealth.ezazi.database.dao.VisitsDAO;
 import org.intelehealth.ezazi.models.Patient;
 import org.intelehealth.ezazi.models.dto.EncounterDTO;
-import org.intelehealth.ezazi.models.dto.VisitDTO;
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
 import org.intelehealth.ezazi.utilities.DateAndTimeUtils;
 import org.intelehealth.ezazi.utilities.DownloadFilesUtils;
@@ -238,9 +240,10 @@ public class PatientDetailActivity extends BaseActionBarActivity {
 
         setDisplay(patientUuid);
 
-        activeVisitUuid = new VisitsDAO().fetchVisitUUIDFromPatientUUID(patientUuid);
+        activeVisitUuid = new VisitsDAO().fetchActiveVisitUUIDFromPatientUUID(patientUuid);
         newVisit.setText((activeVisitUuid == null || activeVisitUuid.isEmpty())
-                ? R.string.start_obs : R.string.manage_encounters);
+                ? R.string.add_visit_details : R.string.current_visit_timeline);
+        loadPastVisits();
 
 //        if (newVisit.isEnabled()) {
 //            newVisit.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
@@ -257,189 +260,7 @@ public class PatientDetailActivity extends BaseActionBarActivity {
                     openTimelineForExistingVisit();
                     return;
                 }
-                // before starting, we determine if it is new visit for a returning patient
-                // extract both FH and PMH
-//                SimpleDateFormat currentDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.ENGLISH);
-//                SimpleDateFormat timeLineTime = new SimpleDateFormat("HH:mm a", Locale.ENGLISH);
-
-                String thisDate = DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT);
-                Log.e(TAG, "onClick: create visit : time =>" + thisDate);
-//                String timeLineTimeValue = timeLineTime.format(todayDate);
-
-
-                String uuid = UUID.randomUUID().toString();
-              /*  EncounterDAO encounterDAO = new EncounterDAO();
-                encounterDTO = new EncounterDTO();
-                encounterDTO.setUuid(UUID.randomUUID().toString());
-                encounterDTO.setEncounterTypeUuid(encounterDAO.getEncounterTypeUuid("ENCOUNTER_VITALS"));
-                encounterDTO.setEncounterTime(thisDate);
-                encounterDTO.setVisituuid(uuid);
-                encounterDTO.setSyncd(false);
-                encounterDTO.setProvideruuid(sessionManager.getProviderID());
-                Log.d("DTO", "DTO:detail " + encounterDTO.getProvideruuid());
-                encounterDTO.setVoided(0);
-                encounterDTO.setPrivacynotice_value(privacy_value_selected);//privacy value added.
-
-                try {
-                    encounterDAO.createEncountersToDB(encounterDTO);
-                } catch (DAOException e) {
-                    FirebaseCrashlytics.getInstance().recordException(e);
-                }
-*/
-               /* // create encounter adultinitial
-                EncounterDAO encounterDAO = new EncounterDAO();
-                EncounterDTO encounterDTO = new EncounterDTO();
-                encounterDTO.setUuid(UUID.randomUUID().toString());
-                encounterDTO.setEncounterTypeUuid(encounterDAO.getEncounterTypeUuid("ENCOUNTER_ADULTINITIAL"));
-                encounterDTO.setEncounterTime(AppConstants.dateAndTimeUtils.currentDateTime());
-                encounterDTO.setVisituuid(uuid);
-                encounterDTO.setSyncd(false);
-                encounterDTO.setProvideruuid(sessionManager.getProviderID());
-                Log.d("DTO", "DTOcomp: " + encounterDTO.getProvideruuid());
-                encounterDTO.setVoided(0);
-                try {
-                    encounterDAO.createEncountersToDB(encounterDTO);
-                } catch (DAOException e) {
-                    FirebaseCrashlytics.getInstance().recordException(e);
-                }
-                // end*/
-
-               /* InteleHealthDatabaseHelper mDatabaseHelper = new InteleHealthDatabaseHelper(PatientDetailActivity.this);
-                SQLiteDatabase sqLiteDatabase = mDatabaseHelper.getReadableDatabase();
-
-                String CREATOR_ID = sessionManager.getCreatorID();
-                returning = false;
-                sessionManager.setReturning(returning);
-
-                String[] cols = {"value"};
-                Cursor cursor = sqLiteDatabase.query("tbl_obs", cols, "encounteruuid=? and conceptuuid=?",// querying for PMH (Past Medical History)
-                        new String[]{encounterAdultIntials, UuidDictionary.RHK_MEDICAL_HISTORY_BLURB},
-                        null, null, null);
-
-                if (cursor.moveToFirst()) {
-                    // rows present
-                    do {
-                        // so that null data is not appended
-                        phistory = phistory + cursor.getString(0);
-
-                    }
-                    while (cursor.moveToNext());
-                    returning = true;
-                    sessionManager.setReturning(returning);
-                }
-                cursor.close();
-                */
-
-//                Cursor cursor1 = sqLiteDatabase.query("tbl_obs", cols, "encounteruuid=? and conceptuuid=?",// querying for FH (Family History)
-//                        new String[]{encounterAdultIntials, UuidDictionary.RHK_FAMILY_HISTORY_BLURB},
-//                        null, null, null);
-//                if (cursor1.moveToFirst()) {
-//                    // rows present
-//                    do {
-//                        fhistory = fhistory + cursor1.getString(0);
-//                    }
-//                    while (cursor1.moveToNext());
-//                    returning = true;
-//                    sessionManager.setReturning(returning);
-//                }
-//                cursor1.close();
-
-                // Will display data for patient as it is present in database
-                // Toast.makeText(PatientDetailActivity.this,"PMH: "+phistory,Toast.LENGTH_SHORT).sƒhow();
-                // Toast.makeText(PatientDetailActivity.this,"FH: "+fhistory,Toast.LENGTH_SHORT).show();
-
-                Intent intent2 = new Intent(PatientDetailActivity.this, TimelineVisitSummaryActivity.class);
-                String fullName = patient.getFirst_name() + " " + patient.getLast_name();
-                // For Timeline Notification...
-                String patientfullName = "";
-                if (patient.getMiddle_name() != null && !patient.getMiddle_name().equalsIgnoreCase("")
-                        && !patient.getMiddle_name().isEmpty()) {
-                    patientfullName = patient.getFirst_name() + " " + patient.getMiddle_name() + " " + patient.getLast_name();
-                } else {
-                    patientfullName = patient.getFirst_name() + " " + patient.getLast_name();
-                }
-                // end...
-
-                // Visit is created when clicked on the New Visit button...
-                VisitDTO visitDTO = new VisitDTO();
-                visitDTO.setUuid(uuid);
-                visitDTO.setPatientuuid(patient.getUuid());
-                visitDTO.setStartdate(thisDate);
-                visitDTO.setVisitTypeUuid(UuidDictionary.VISIT_TELEMEDICINE);
-                visitDTO.setLocationuuid(sessionManager.getLocationUuid());
-                visitDTO.setSyncd(false);
-                visitDTO.setEnddate(null);
-                visitDTO.setCreatoruuid(sessionManager.getCreatorID());//static
-                VisitsDAO visitsDAO = new VisitsDAO();
-
-                try {
-                    Log.d(TAG, "onClick: check kz");
-//                    ArrayList<VisitAttributeDTO> attributes = new ArrayList<>();
-//                    VisitAttributeDTO general = VisitAttributeDTO.generateNew(uuid, "General Physician", VISIT_ATTR_TYPE_UUID);
-//                    VisitAttributeDTO holder = VisitAttributeDTO.generateNew(uuid, sessionManager.getProviderID(), VISIT_HOLDER);
-//                    attributes.add(general);
-//                    attributes.add(holder);
-//                    visitDTO.setVisitAttributeDTOS(attributes);
-                    visitsDAO.insertPatientToDB(visitDTO);
-
-                    VisitAttributeListDAO speciality_attributes = new VisitAttributeListDAO();
-                    speciality_attributes
-                            .insertVisitAttributes(uuid, OBSTETRICIAN_GYNECOLOGIST, VISIT_DR_SPECIALITY);
-                    speciality_attributes
-                            .insertVisitAttributes(uuid, sessionManager.getProviderID(), VISIT_HOLDER);
-                    speciality_attributes
-                            .insertVisitAttributes(uuid, "$", VISIT_READ_STATUS);
-                    speciality_attributes
-                            .insertVisitAttributes(uuid, "false", UuidDictionary.DECISION_PENDING);
-
-
-                } catch (DAOException e) {
-                    e.printStackTrace();
-                    Log.d(TAG, "onClick: e message : "+e.getLocalizedMessage());
-                    FirebaseCrashlytics.getInstance().recordException(e);
-                }
-                // end - visit
-
-                // Create a static Stage1_Hr1_1 encounter so than to link all the other encounters.
-                // Start - encounter
-                boolean isInserted = false;
-                EncounterDAO eDAO = new EncounterDAO();
-                EncounterDTO eDTO = new EncounterDTO();
-                stage1Hr1_1_EncounterUuid = UUID.randomUUID().toString();
-                eDTO.setUuid(stage1Hr1_1_EncounterUuid);
-                eDTO.setVisituuid(uuid);
-                eDTO.setEncounterTime(DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
-                eDTO.setProvideruuid(sessionManager.getProviderID());
-                eDTO.setEncounterTypeUuid(eDAO.getEncounterTypeUuid("Stage1_Hour1_1"));
-                eDTO.setSyncd(false); // false as this is the one that is started and would be pushed in the payload...
-                eDTO.setVoided(0);
-
-                Log.d("DTO", "DTOcomp: " + eDTO.getProvideruuid());
-                try {
-                    isInserted = eDAO.createEncountersToDB(eDTO);
-                } catch (DAOException e) {
-                    FirebaseCrashlytics.getInstance().recordException(e);
-                }
-                // end - encounter
-
-                // This 23 ones would be created initially itself with sync = true so that they wont be pushed bt only created.
-                  /*  addIntoEncounterList23UUIDs();
-                    for (int i = 0; i < encounterTypeUUIDListFor12Encounters.size(); i++) {
-                        create23EncountersForTimeline(uuid, encounterTypeUUIDListFor12Encounters.get(i));
-                    }*/
-                // end - Encounter
-
-
-                intent2.putExtra("patientUuid", patientUuid);
-                intent2.putExtra("visitUuid", uuid);
-                intent2.putExtra("name", fullName);
-                intent2.putExtra("patientNameTimeline", patientfullName);
-                intent2.putExtra("tag", "new");
-                intent2.putExtra("encounter_time", eDTO.getEncounterTime());
-                intent2.putExtra("Stage1_Hour1_1", "Stage1_Hour1_1");
-                intent2.putExtra("providerID", sessionManager.getProviderID());
-                startActivity(intent2);
-                finish();
+                openObstetricIntake();
             }
         });
 
@@ -454,6 +275,70 @@ public class PatientDetailActivity extends BaseActionBarActivity {
     }
 
     /** Opens the ongoing visit's timeline for a patient who already has an active visit. */
+    /**
+     * Populates the read-only Past Visit Details section with the patient's closed visits.
+     * The section is collapsible: it starts collapsed (chevron down) and the header toggles
+     * the list, rotating the chevron up when expanded.
+     */
+
+    private boolean isRotatedUp = false;
+
+    private void loadPastVisits() {
+        TextView pastVisitsHeader = findViewById(R.id.tv_past_visits_header);
+        RecyclerView rvPastVisits = findViewById(R.id.rv_past_visits);
+        List<PastVisitDetails> pastVisits = PastVisitLoader.loadForPatient(patientUuid);
+
+        if (pastVisits.isEmpty()) {
+            pastVisitsHeader.setVisibility(View.GONE);
+            rvPastVisits.setVisibility(View.GONE);
+            return;
+        }
+
+        pastVisitsHeader.setVisibility(View.VISIBLE);
+        rvPastVisits.setLayoutManager(new LinearLayoutManager(this));
+        rvPastVisits.setAdapter(new PastVisitAdapter(pastVisits));
+        rvPastVisits.setVisibility(View.GONE);
+
+        pastVisitsHeader.setOnClickListener(v -> {
+            handlePastVisitHeaderDrawable(pastVisitsHeader);
+            boolean expand = rvPastVisits.getVisibility() != View.VISIBLE;
+            rvPastVisits.setVisibility(expand ? View.VISIBLE : View.GONE);
+        });
+    }
+
+    private void handlePastVisitHeaderDrawable(TextView pastVisitsHeader) {
+        Drawable[] drawable = pastVisitsHeader.getCompoundDrawablesRelative();
+        Drawable endDrawable = drawable[2];
+
+        if (endDrawable == null) return;
+        endDrawable.mutate();
+
+        float startAngle = isRotatedUp ? 10000f : 0f;
+        float endAngle = isRotatedUp ? 0f : 10000f;
+
+        ValueAnimator animator = ValueAnimator.ofFloat(startAngle, endAngle);
+        animator.setDuration(200);
+        animator.addUpdateListener(animation -> {
+            float currentLevel = (float) animation.getAnimatedValue();
+            endDrawable.setLevel((int) currentLevel);
+            pastVisitsHeader.invalidate();
+        });
+
+        animator.start();
+        isRotatedUp = !isRotatedUp;
+    }
+
+    private void openObstetricIntake() {
+        Intent intent = new Intent(this, VisitCreationActivity.class);
+        intent.putExtra("patientUuid", patientUuid);
+        intent.putExtra("name", patient.getFirst_name() + " " + patient.getLast_name());
+        String timelineName = (patient.getMiddle_name() != null && !patient.getMiddle_name().trim().isEmpty())
+                ? patient.getFirst_name() + " " + patient.getMiddle_name() + " " + patient.getLast_name()
+                : patient.getFirst_name() + " " + patient.getLast_name();
+        intent.putExtra("patientNameTimeline", timelineName);
+        startActivity(intent);
+    }
+
     private void openTimelineForExistingVisit() {
         String fullName = patient.getFirst_name() + " " + patient.getLast_name();
         String patientTimelineName;
@@ -570,7 +455,7 @@ public class PatientDetailActivity extends BaseActionBarActivity {
 
     @Override
     protected void onStart() {
-       // registerReceiver(reMyreceive, filter);
+        // registerReceiver(reMyreceive, filter);
         ContextCompat.registerReceiver(this, reMyreceive, filter, ContextCompat.RECEIVER_EXPORTED);
 
         super.onStart();

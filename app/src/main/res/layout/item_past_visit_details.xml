@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="@dimen/screen_container_padding"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="2dp"
+    app:cardUseCompatPadding="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/screen_container_padding">
+
+        <TextView
+            android:id="@+id/tv_pv_visit_date"
+            style="@style/LabelStyleAddPatient"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/screen_container_padding"
+            android:textColor="@color/colorBlack"
+            android:textSize="@dimen/edittext_textsize_16sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingVertical="@dimen/padding_card_summary"
+            android:weightSum="2">
+
+            <TextView
+                style="@style/LabelStyleSummary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.9"
+                android:text="@string/pv_active_labour" />
+
+            <TextView
+                android:id="@+id/tv_pv_active_labour"
+                style="@style/LabelStyleSummaryValues"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.1"
+                android:textAlignment="viewStart" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingVertical="@dimen/item_past_visit_padding"
+            android:weightSum="2">
+
+            <TextView
+                style="@style/LabelStyleSummary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.9"
+                android:text="@string/pv_delivery" />
+
+            <TextView
+                android:id="@+id/tv_pv_delivery"
+                style="@style/LabelStyleSummaryValues"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.1"
+                android:textAlignment="viewStart" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingVertical="@dimen/item_past_visit_padding"
+            android:weightSum="2">
+
+            <TextView
+                style="@style/LabelStyleSummary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.9"
+                android:text="@string/risk_factors_title" />
+
+            <TextView
+                android:id="@+id/tv_pv_risk"
+                style="@style/LabelStyleSummaryValues"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.1"
+                android:textAlignment="viewStart" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingVertical="@dimen/item_past_visit_padding"
+            android:weightSum="2">
+
+            <TextView
+                style="@style/LabelStyleSummary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.9"
+                android:text="@string/parity" />
+
+            <TextView
+                android:id="@+id/tv_pv_parity"
+                style="@style/LabelStyleSummaryValues"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.1"
+                android:textAlignment="viewStart" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingVertical="@dimen/item_past_visit_padding"
+            android:weightSum="2">
+
+            <TextView
+                style="@style/LabelStyleSummary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.9"
+                android:text="@string/pv_mode_of_delivery" />
+
+            <TextView
+                android:id="@+id/tv_pv_mode"
+                style="@style/LabelStyleSummaryValues"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.1"
+                android:textAlignment="viewStart" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingVertical="@dimen/item_past_visit_padding"
+            android:weightSum="2">
+
+            <TextView
+                style="@style/LabelStyleSummary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.9"
+                android:text="@string/pv_baby_status" />
+
+            <TextView
+                android:id="@+id/tv_pv_baby"
+                style="@style/LabelStyleSummaryValues"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.1"
+                android:textAlignment="viewStart" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingVertical="@dimen/item_past_visit_padding"
+            android:weightSum="2">
+
+            <TextView
+                style="@style/LabelStyleSummary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.9"
+                android:text="@string/pv_mother_status" />
+
+            <TextView
+                android:id="@+id/tv_pv_mother"
+                style="@style/LabelStyleSummaryValues"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.1"
+                android:textAlignment="viewStart" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingVertical="@dimen/item_past_visit_padding"
+            android:visibility="gone"
+            android:weightSum="2">
+
+            <TextView
+                style="@style/LabelStyleSummary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.9"
+                android:text="@string/pv_final_outcome_report" />
+
+            <TextView
+                android:id="@+id/tv_pv_report"
+                style="@style/LabelStyleSummaryValues"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.1"
+                android:textAlignment="viewStart" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

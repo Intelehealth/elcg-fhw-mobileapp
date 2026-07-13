@@ -258,7 +258,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
      * to video call with selected doctor from list
      */
     private void showDoctorSelectionDialog(boolean isChat) {
-        LinkedList<SingChoiceItem> choiceItems = CallInitializer.getDoctorsDetails(patientUuid);
+        LinkedList<SingChoiceItem> choiceItems = CallInitializer.getDoctorsDetails(visitUuid);
         Timber.tag(TAG).d(new Gson().toJson(choiceItems));
         SingleChoiceDialogFragment dialog = new SingleChoiceDialogFragment.Builder(this).title(R.string.select_doctor).content(choiceItems).build();
 

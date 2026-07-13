@@ -112,6 +112,7 @@ public class UuidDictionary {
 
     // BIRTH OUTCOME
     public static final String BIRTH_OUTCOME = "23601d71-50e6-483f-968d-aeef3031346d";
+    public static final String MODE_OF_DELIVERY = "57ca9fc6-82c6-487c-b05e-83bb4d2d589e";
 
     // Refer Obs
     public static final String REFER_TYPE = "9414cc17-1f97-4a27-8066-17591c11e513";

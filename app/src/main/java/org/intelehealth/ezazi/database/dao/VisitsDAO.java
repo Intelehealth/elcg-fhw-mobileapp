@@ -295,7 +295,7 @@ public class VisitsDAO {
 //        Cursor cursor = db.rawQuery("SELECT * FROM tbl_visit_attribute WHERE sync=? AND visit_uuid=?",
 //                new String[] {"0", visit_uuid});
 
-        Cursor cursor = db.rawQuery("SELECT * FROM tbl_visit_attribute WHERE visit_uuid=? group by value", new String[]{visit_uuid});
+        Cursor cursor = db.rawQuery("SELECT * FROM tbl_visit_attribute WHERE visit_uuid=?", new String[]{visit_uuid});
         if (cursor.getCount() != 0) {
             while (cursor.moveToNext()) {
                 VisitAttribute_Speciality speciality = new VisitAttribute_Speciality();
@@ -435,6 +435,24 @@ public class VisitsDAO {
         return visitUUID;
     }
 
+
+    /**
+     * Returns the patient's active (not-yet-ended) visit uuid, or "" if none is open.
+     * A visit counts as ended once its enddate is set (see VisitCompletionHelper), so a
+     * patient with only completed visits gets "" and can start a fresh visit.
+     */
+    public String fetchActiveVisitUUIDFromPatientUUID(String patientUUID) {
+        String visitUUID = "";
+        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
+        Cursor cursor = db.rawQuery(
+                "SELECT uuid FROM tbl_visit WHERE patientuuid = ? AND (enddate IS NULL OR enddate = '') ORDER BY startdate DESC",
+                new String[]{patientUUID});
+        if (cursor.moveToFirst()) {
+            visitUUID = cursor.getString(cursor.getColumnIndexOrThrow("uuid"));
+        }
+        cursor.close();
+        return visitUUID;
+    }
 
     public String patientUuidByViistUuid(String visituuid) {
         String patientUuidByViistUuid = "";

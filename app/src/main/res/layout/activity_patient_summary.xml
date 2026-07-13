@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/coordinatorLayout"
@@ -547,6 +546,29 @@
 
             </LinearLayout>
 
+            <TextView
+                android:id="@+id/tv_past_visits_header"
+                style="@style/Theme.EZazi.Text.SubHeading"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_16dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:text="@string/past_visit_details"
+                android:gravity="start|center_vertical"
+                android:textColor="@color/colorPrimary"
+                android:textSize="@dimen/tv_summary_title_text_size"
+                android:visibility="gone"
+                android:drawableEnd="@drawable/ic_past_visit_chevron_rotatable"
+                tools:visibility="visible" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_past_visits"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:visibility="gone" />
+
         </LinearLayout>
 
     </androidx.core.widget.NestedScrollView>
@@ -558,7 +580,7 @@
         android:layout_height="@dimen/input_height"
         android:layout_gravity="bottom"
         android:layout_margin="@dimen/screen_padding"
-        android:text="@string/start_obs"
+        android:text="@string/add_visit_details"
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

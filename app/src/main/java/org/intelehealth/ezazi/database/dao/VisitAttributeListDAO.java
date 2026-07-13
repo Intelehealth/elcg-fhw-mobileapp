@@ -161,6 +161,19 @@ public class VisitAttributeListDAO {
         return isValue;
     }
 
+    public String getVisitAttributeValue(String visitUuid, String visitAttrTypeUuid) {
+        String value = "";
+        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWritableDatabase();
+        Cursor cursor = db.rawQuery(
+                "SELECT value FROM tbl_visit_attribute WHERE visit_uuid = ? AND visit_attribute_type_uuid = ?",
+                new String[]{visitUuid, visitAttrTypeUuid});
+        if (cursor.moveToFirst()) {
+            value = cursor.getString(cursor.getColumnIndexOrThrow("value"));
+        }
+        cursor.close();
+        return value;
+    }
+
     public boolean insertVisitAttributes(String visitUuid, String speciality_selected, String visitAttrTypeUuid) throws
             DAOException {
         boolean isInserted = false;

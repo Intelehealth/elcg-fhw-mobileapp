@@ -8,6 +8,7 @@ import android.util.Log;
 
 import org.intelehealth.ezazi.app.IntelehealthApplication;
 import org.intelehealth.ezazi.models.dto.PatientAttributesDTO;
+import org.intelehealth.ezazi.models.dto.VisitAttributeDTO;
 import org.intelehealth.ezazi.models.dto.VisitDTO;
 import org.intelehealth.ezazi.ui.visit.model.CompletedVisitStatus;
 import org.intelehealth.ezazi.utilities.SessionManager;
@@ -53,7 +54,7 @@ public class PatientQueryBuilder extends QueryBuilder {
                 "END fullName, " + getCompletedVisitStatusCase() + getCurrentStageCase() + ", " + caseOfMotherDeceased() +
                 "(select count(uuid) from tbl_encounter where visituuid = V.uuid) as alertCount, " +
                 "CASE PA.person_attribute_type_uuid WHEN '14d4f066-15f5-102d-96e4-000c29c2a5d7' THEN PA.value END phoneNumber, " +
-                "CASE WHEN PA.person_attribute_type_uuid  != '14d4f066-15f5-102d-96e4-000c29c2a5d7' THEN PA.value END bedNo ")
+                "(SELECT value FROM tbl_visit_attribute WHERE visit_attribute_type_uuid = '" + VisitAttributeDTO.Columns.BED_NUMBER.uuid + "' AND visit_uuid = V.uuid) AS bedNo ")
                 .from("tbl_patient P")
                 .join("LEFT OUTER JOIN tbl_visit V ON P.uuid = V.patientuuid " +
                         "LEFT OUTER JOIN tbl_patient_attribute PA ON PA.patientuuid = P.uuid " +
@@ -70,7 +71,7 @@ public class PatientQueryBuilder extends QueryBuilder {
                 "P.last_name, " +
                 "P.middle_name, " +
                 "P.date_of_birth, " +
-                "CASE WHEN PA.person_attribute_type_uuid  != '14d4f066-15f5-102d-96e4-000c29c2a5d7' THEN PA.value END bedNo, " +
+                "(SELECT value FROM tbl_visit_attribute WHERE visit_attribute_type_uuid = '" + VisitAttributeDTO.Columns.BED_NUMBER.uuid + "' AND visit_uuid = V.uuid) AS bedNo, " +
                 "CASE PA.person_attribute_type_uuid WHEN '14d4f066-15f5-102d-96e4-000c29c2a5d7' THEN PA.value END phoneNumber, " +
                 "(SELECT uuid FROM tbl_encounter where visituuid = V.uuid and voided IN ('0', 'false', 'FALSE') " +
                 "AND encounter_type_uuid != '" + ENCOUNTER_VISIT_COMPLETE + "' ORDER BY encounter_time DESC limit 1) " +
@@ -237,7 +238,7 @@ public class PatientQueryBuilder extends QueryBuilder {
                         "P.last_name, " +
                         "P.middle_name, " +
                         "P.date_of_birth, " +
-                        "CASE WHEN PA.person_attribute_type_uuid != '14d4f066-15f5-102d-96e4-000c29c2a5d7' THEN PA.value END bedNo, " +
+                        "(SELECT value FROM tbl_visit_attribute WHERE visit_attribute_type_uuid = '" + VisitAttributeDTO.Columns.BED_NUMBER.uuid + "' AND visit_uuid = V.uuid) AS bedNo, " +
                         "CASE PA.person_attribute_type_uuid WHEN '14d4f066-15f5-102d-96e4-000c29c2a5d7' THEN PA.value END phoneNumber, " +
                         "(SELECT uuid FROM tbl_encounter WHERE visituuid = V.uuid AND voided IN ('0', 'false', 'FALSE') " +
                         "AND encounter_type_uuid != '" + ENCOUNTER_VISIT_COMPLETE + "' ORDER BY encounter_time DESC LIMIT 1) " +

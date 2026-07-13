@@ -956,7 +956,16 @@
     <string name="dob_title">Date of Birth</string>
     <string name="start_obs">Start Recording Observations</string>
     <string name="manage_encounters">Manage Encounters</string>
-    <string name="visit_creation_title">Start Visit</string>
+    <string name="add_visit_details">Add Visit Details</string>
+    <string name="current_visit_timeline">Current Visit Timeline</string>
+    <string name="past_visit_details">Past Visit Details</string>
+    <string name="pv_active_labour">Date of Active Labour Diagnosed</string>
+    <string name="pv_delivery">Date of Delivery</string>
+    <string name="pv_mode_of_delivery">Mode of Delivery</string>
+    <string name="pv_baby_status">Baby Status</string>
+    <string name="pv_mother_status">Mother Status</string>
+    <string name="pv_final_outcome_report">Final Outcome Report</string>
+    <string name="visit_creation_title">Add Visit Details</string>
     <string name="gravida">Gravida</string>
     <string name="lmp_title">Last Menstrual Period (LMP)</string>
     <string name="edd_title">Estimated Date of Delivery (EDD)</string>
