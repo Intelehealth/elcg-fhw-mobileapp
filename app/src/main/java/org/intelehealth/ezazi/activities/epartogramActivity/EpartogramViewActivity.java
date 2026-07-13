@@ -2,20 +2,30 @@ package org.intelehealth.ezazi.activities.epartogramActivity;
 
 import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
 
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.net.http.SslError;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
-import android.text.Html;
+import android.print.PrintAttributes;
+import android.print.PrintDocumentAdapter;
+import android.print.PrintJob;
+import android.print.PrintManager;
 import android.util.Log;
-import android.util.Xml;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.webkit.SslErrorHandler;
@@ -27,47 +37,49 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
-
 import com.github.ajalt.timberkt.Timber;
 
 import org.intelehealth.ezazi.BuildConfig;
 import org.intelehealth.ezazi.R;
-import org.intelehealth.ezazi.app.IntelehealthApplication;
-import org.intelehealth.ezazi.ui.elcg.HtmlJSInterface;
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
-import org.intelehealth.ezazi.ui.webviewreader.Lt;
-import org.intelehealth.ezazi.ui.webviewreader.WebArchiveReader;
 import org.intelehealth.ezazi.utilities.FileUtils;
 import org.intelehealth.ezazi.utilities.NetworkConnection;
 import org.intelehealth.ezazi.utilities.SessionManager;
+import org.intelehealth.ezazi.utilities.WebViewPdfExporter;
 import org.intelehealth.ezazi.widget.materialprogressbar.CustomProgressDialog;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-
-import io.socket.utf8.UTF8;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class EpartogramViewActivity extends BaseActionBarActivity {
+
     private WebView webView;
     private static final String TAG = "EpartogramViewActivity";
 
+    private static final int REQUEST_STORAGE_PERMISSION = 4321;
+
+    // A4 landscape ≈ 11.69in × 96 CSS px/in ≈ 1122; slightly less for safety
+    private static final int A4_LANDSCAPE_CSS_WIDTH = 1080;
+
     private String patientUuid, visitUuid;
     private static final String URL = BuildConfig.SERVER_URL + "/intelehealth/index.html#/epartogram/";
-    //    https://ezazi.intelehealth.org/intelehealth/index.html#/dashboard/visit-summary/af35030a-cbf0-426c-9c61-4b9677ccb3b2
-    // "df07db0d-d9b9-4597-a9e5-d62d3cff3d45/705397d4-0c62-4f26-bd53-2dd8523d5d1b";
+
     private SwipeRefreshLayout mySwipeRefreshLayout;
     private ViewTreeObserver.OnScrollChangedListener mOnScrollChangedListener;
 
     private String webArchiveFileDir;
     private SessionManager sessionManager;
 
-    private boolean isLoaded = false;
     private Handler timeoutHandler;
+    private Handler printJobHandler;
     private boolean isPageLoaded = false;
     private boolean isErrorShown = false;
     private CustomProgressDialog progressDialog;
+
+    private Menu optionsMenu;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -98,19 +110,13 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
         webView.clearHistory();
 
         webView.setSaveEnabled(true);
-//        HtmlJSInterface htmlJSInterface = new HtmlJSInterface();
-//        webView.addJavascriptInterface(htmlJSInterface, HtmlJSInterface.EXECUTOR_PAGE_SAVER);
-
         webView.getSettings().setAllowFileAccess(true);
-
         webView.getSettings().setUserAgentString("Android");
-//
         webView.getSettings().setJavaScriptEnabled(true);
         webView.getSettings().setLoadWithOverviewMode(true);
         webView.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
         webView.getSettings().setUseWideViewPort(true);
         webView.getSettings().setDefaultTextEncodingName("UTF-8");
-
         webView.getSettings().setSupportZoom(true);
         webView.getSettings().setBuiltInZoomControls(true);
         webView.getSettings().setDisplayZoomControls(false);
@@ -134,21 +140,13 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
                     handleError();
                 }
             }, 20000);  // 20 seconds
-            //webView.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
             webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
             webView.loadUrl(URL + visitUuid);
         } else if (!sessionManager.getLCGContentFile(visitUuid).isEmpty()) {
-            Log.e(TAG, "onCreate: isOnline");
-//            webView.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ONLY);
-//            String webArchiveFile = webArchiveFileDir + sessionManager.getLCGContentFile(visitUuid);
-//            Timber.tag(TAG).d("Offline => %s", webArchiveFile);
-//            webView.loadUrl("file://" + webArchiveFile);
+            Log.e(TAG, "onCreate: isOffline, archive available");
             showInternetRequireDialog();
-//            webView.loadData(htmlJSInterface.getHtml(), "text/html", null);
-//            webView.loadDataWithBaseURL(null, webArchiveFile, "text/html", "UTF-8", null);
         } else {
             webView.setVisibility(View.GONE);
-            //Toast.makeText(this, getString(R.string.please_connect_to_internet), Toast.LENGTH_LONG).show();
             showPageLoadingErrorDialog();
         }
 
@@ -156,20 +154,228 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
         mySwipeRefreshLayout.setOnRefreshListener(() -> webView.reload());
     }
 
+    // region ---- Options menu (Print / Download PDF) ----
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_epartogram, menu);
+        optionsMenu = menu;
+        setExportActionsEnabled(isPageLoaded && !isErrorShown);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.action_print) {
+            printEpartogram();
+            return true;
+        } else if (id == R.id.action_download_pdf) {
+            downloadEpartogramAsPdf();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    /**
+     * Print / Download only make sense once the partogram has actually rendered,
+     * otherwise the user exports a blank page.
+     */
+    private void setExportActionsEnabled(boolean enabled) {
+        if (optionsMenu == null) return;
+        MenuItem print = optionsMenu.findItem(R.id.action_print);
+        MenuItem download = optionsMenu.findItem(R.id.action_download_pdf);
+        if (print != null) {
+            print.setEnabled(enabled);
+            if (print.getIcon() != null) print.getIcon().setAlpha(enabled ? 255 : 100);
+        }
+        if (download != null) {
+            download.setEnabled(enabled);
+            if (download.getIcon() != null) download.getIcon().setAlpha(enabled ? 255 : 100);
+        }
+    }
+
+    // endregion
+
+    // region ---- Print ----
+
+    /**
+     * Expands the page's scroll containers (so the full LCG width, including
+     * Stage 2, gets painted), scales the page to fit A4 landscape, then hands
+     * the WebView's print adapter to the system PrintManager.
+     */
+    private void printEpartogram() {
+        if (!isPageLoaded || isErrorShown) {
+            Toast.makeText(this, R.string.epartogram_not_loaded, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        progressDialog.show();
+
+        // Step 1: expand the nested scroll containers (shared with the PDF path)
+        WebViewPdfExporter.expandAndMeasure(webView, cssWidth -> {
+
+            // Step 2: scale the page down so the FULL width fits on A4 landscape
+            double zoom = (cssWidth > A4_LANDSCAPE_CSS_WIDTH)
+                    ? (double) A4_LANDSCAPE_CSS_WIDTH / cssWidth
+                    : 1.0;
+
+            webView.evaluateJavascript(
+                    "document.body.style.zoom='" + zoom + "';",
+                    ignored -> webView.postDelayed(this::launchPrintJob, 300));
+        });
+    }
+
+    private void launchPrintJob() {
+        progressDialog.dismiss();
+        try {
+            PrintManager printManager = (PrintManager) getSystemService(Context.PRINT_SERVICE);
+            String jobName = getString(R.string.app_name) + "_ePartogram_" + visitUuid;
+            PrintDocumentAdapter adapter = webView.createPrintDocumentAdapter(jobName);
+
+            PrintAttributes attributes = new PrintAttributes.Builder()
+                    .setMediaSize(PrintAttributes.MediaSize.ISO_A4.asLandscape())
+                    .setResolution(new PrintAttributes.Resolution("epartogram", "epartogram", 300, 300))
+                    .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
+                    .build();
+
+            PrintJob printJob = printManager.print(jobName, adapter, attributes);
+
+            // Step 3: the job renders asynchronously — only restore the page's
+            // CSS once it reaches a terminal state, otherwise the printed pages
+            // would capture the restored (clipped) layout.
+            monitorPrintJob(printJob);
+
+        } catch (Exception e) {
+            Timber.tag(TAG).e(e, "Print failed");
+            WebViewPdfExporter.restorePageStyles(webView);
+            Toast.makeText(this, R.string.epartogram_export_failed, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void monitorPrintJob(final PrintJob printJob) {
+        if (printJobHandler != null) printJobHandler.removeCallbacksAndMessages(null);
+        printJobHandler = new Handler(Looper.getMainLooper());
+
+        Runnable checker = new Runnable() {
+            @Override
+            public void run() {
+                if (printJob == null
+                        || printJob.isCompleted()
+                        || printJob.isFailed()
+                        || printJob.isCancelled()) {
+                    WebViewPdfExporter.restorePageStyles(webView);
+                } else {
+                    printJobHandler.postDelayed(this, 1000);
+                }
+            }
+        };
+        printJobHandler.postDelayed(checker, 1000);
+    }
+
+    // endregion
+
+    // region ---- Download as PDF ----
+
+    private void downloadEpartogramAsPdf() {
+        if (!isPageLoaded || isErrorShown) {
+            Toast.makeText(this, R.string.epartogram_not_loaded, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Pre-Android 10 needs WRITE_EXTERNAL_STORAGE to place the file in public Downloads.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q &&
+                ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    REQUEST_STORAGE_PERMISSION);
+            return;
+        }
+
+        generatePdf();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_STORAGE_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                generatePdf();
+            } else {
+                Toast.makeText(this, R.string.storage_permission_needed, Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    private void generatePdf() {
+        progressDialog.show();
+
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmm", Locale.US).format(new Date());
+        String displayName = "ePartogram_" + visitUuid + "_" + timestamp + ".pdf";
+
+        WebViewPdfExporter.export(this, webView, displayName,
+                new WebViewPdfExporter.Callback() {
+                    @Override
+                    public void onSuccess(@NonNull Uri uri, @NonNull String name) {
+                        progressDialog.dismiss();
+                        showPdfSavedDialog(uri, name);
+                    }
+
+                    @Override
+                    public void onFailure(String message) {
+                        Timber.tag(TAG).e("PDF export failed: %s", message);
+                        progressDialog.dismiss();
+                        Toast.makeText(EpartogramViewActivity.this,
+                                R.string.epartogram_export_failed, Toast.LENGTH_LONG).show();
+                    }
+                });
+    }
+
+    private void showPdfSavedDialog(Uri pdfUri, String displayName) {
+        ConfirmationDialogFragment dialogFragment = new ConfirmationDialogFragment.Builder(this)
+                .title(R.string.pdf_saved_title)
+                .content(getString(R.string.pdf_saved_body, displayName))
+                .positiveButtonLabel(R.string.action_open)
+                .negativeButtonLabel(R.string.ok)
+                .build();
+
+        dialogFragment.setListener(new ConfirmationDialogFragment.OnConfirmationActionListener() {
+            @Override
+            public void onAccept() {
+                openPdf(pdfUri);
+            }
+
+            @Override
+            public void onDecline() {
+                ConfirmationDialogFragment.OnConfirmationActionListener.super.onDecline();
+            }
+        });
+
+        dialogFragment.show(getSupportFragmentManager(),
+                dialogFragment.getClass().getCanonicalName());
+    }
+
+    private void openPdf(Uri pdfUri) {
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setDataAndType(pdfUri, "application/pdf");
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivity(intent);
+        } catch (Exception e) {
+            Toast.makeText(this, R.string.no_pdf_viewer_found, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    // endregion
+
     private final WebViewClient webViewClient = new WebViewClient() {
-//        @Override
-//        public boolean shouldOverrideUrlLoading(WebView view, String url) {
-//            String webArchiveFile = webArchiveFileDir + sessionManager.getLCGContentFile(visitUuid);
-//            Timber.tag(TAG).d("Offline => %s", webArchiveFile);
-//            webView.loadUrl("file://" + webArchiveFile);
-//            return true;
-//        }
 
         @Override
         public void onPageStarted(WebView view, String url, Bitmap favicon) {
             super.onPageStarted(view, url, favicon);
-
             isPageLoaded = false;
+            setExportActionsEnabled(false);
 
             timeoutHandler.postDelayed(() -> {
                 if (!isPageLoaded) {
@@ -179,16 +385,22 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
                 }
             }, 20000); // 20 sec timeout
         }
+
         @Override
         public void onPageFinished(WebView view, String url) {
             mySwipeRefreshLayout.setRefreshing(false);
-            Log.d(TAG, "onPageFinished: kz 2");
+            Log.d(TAG, "onPageFinished");
             isPageLoaded = true;
             timeoutHandler.removeCallbacksAndMessages(null);
 
             if (progressDialog.isShowing()) {
                 progressDialog.dismiss();
             }
+
+            if (!isErrorShown) {
+                setExportActionsEnabled(true);
+            }
+
             if (NetworkConnection.isOnline(EpartogramViewActivity.this)) {
                 String fileName = visitUuid + ".mht";
                 Timber.tag(TAG).d("fileName => %s", fileName);
@@ -198,8 +410,6 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
                 if (archive.exists()) {
                     if (archive.delete()) view.saveWebArchive(filePath);
                 } else view.saveWebArchive(filePath);
-
-//                view.loadUrl(HtmlJSInterface.jsFunction());
             }
         }
 
@@ -228,7 +438,6 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 if (request.isForMainFrame()) {
                     Log.e(TAG, "HTTP error: " + errorResponse.getStatusCode());
-
                     if (errorResponse.getStatusCode() >= 400) {
                         handleError();
                     }
@@ -252,6 +461,7 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
         if (isErrorShown) return;
         isErrorShown = true;
 
+        setExportActionsEnabled(false);
         webView.setVisibility(View.GONE);
         showPageLoadingErrorDialog();
     }
@@ -267,7 +477,6 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
         dialogFragment.setListener(new ConfirmationDialogFragment.OnConfirmationActionListener() {
             @Override
             public void onAccept() {
-                //webView.reload();
                 ConfirmationDialogFragment.OnConfirmationActionListener.super.onDecline();
                 finish();
             }
@@ -308,14 +517,26 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
                         mySwipeRefreshLayout.setEnabled(true);
                     else
                         mySwipeRefreshLayout.setEnabled(false);
-
                 });
     }
-
 
     @Override
     protected void onStop() {
         super.onStop();
         mySwipeRefreshLayout.getViewTreeObserver().removeOnScrollChangedListener(mOnScrollChangedListener);
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (timeoutHandler != null) {
+            timeoutHandler.removeCallbacksAndMessages(null);
+        }
+        if (printJobHandler != null) {
+            printJobHandler.removeCallbacksAndMessages(null);
+        }
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
+        super.onDestroy();
     }
 }

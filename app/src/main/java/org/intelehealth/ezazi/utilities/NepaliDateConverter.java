@@ -120,7 +120,7 @@ public class NepaliDateConverter {
     // Reference epoch: BS 2000 Baisakh 1 = AD 1943 April 14
     private static final int REF_AD_YEAR  = 1943;
     private static final int REF_AD_MONTH = 4;  // April (1-based)
-    private static final int REF_AD_DAY   = 15;
+    private static final int REF_AD_DAY   = 14;
 
     private static final String[] BS_DISPLAY_MONTHS = {
             "Baisakh", "Jestha", "Asar", "Shrawan",

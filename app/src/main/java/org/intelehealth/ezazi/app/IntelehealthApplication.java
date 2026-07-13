@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
+import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -68,6 +69,7 @@ public class IntelehealthApplication extends MultiDexApplication implements Appl
 
     @Override
     public void onCreate() {
+        WebView.enableSlowWholeDocumentDraw();   // ← must run before any WebView is created
         super.onCreate();
         sIntelehealthApplication = this;
         //For Vector Drawables Backward Compatibility(<API 21)
@@ -78,11 +80,11 @@ public class IntelehealthApplication extends MultiDexApplication implements Appl
         sessionManager = new SessionManager(this);
         // keeping the base url in one singleton object for using in apprtc module
 
-        //configureCrashReporting();
+        configureCrashReporting();
 
-     /*   RxJavaPlugins.setErrorHandler(throwable -> {
+        RxJavaPlugins.setErrorHandler(throwable -> {
              FirebaseCrashlytics.getInstance().recordException(throwable);
-        });*/
+        });
         androidId = String
                 .format("%16s", Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID))
                 .replace(' ', '0');

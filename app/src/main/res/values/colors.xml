@@ -93,6 +93,7 @@
     <color name="dialog_transparency_bg">#80000000</color>
     <color name="darkPink">#FFB7CB</color>
     <color name="decisionPending">#E3D4EB</color>
+    <color name="splash_bg">#FFFFFF</color>
 
 
 </resources>

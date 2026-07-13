@@ -589,7 +589,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         } else {
             intent = new Intent(context, OfflineEPartogramViewActivity.class);
         }
-
+        intent.putExtra("patientName", patientName);
         intent.putExtra("patientuuid", patientUuid);
         intent.putExtra("visituuid", visitUuid);
         startActivity(intent);
@@ -1617,6 +1617,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
             intent = new Intent(context, OfflineStage3ViewActivity.class);
         }
 
+        intent.putExtra("patientName", patientName);
         intent.putExtra("patientuuid", patientUuid);
         intent.putExtra("visituuid", visitUuid);
         startActivity(intent);

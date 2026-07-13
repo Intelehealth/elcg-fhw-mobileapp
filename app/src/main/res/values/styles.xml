@@ -152,6 +152,7 @@
         <item name="android:textColor">
             #7F7B92
         </item>
+    </style>
     <style name="MyPopupTextAppearance" parent="TextAppearance.AppCompat.Menu">
         <item name="android:textSize">@dimen/menu_item_text_size</item>
     </style>
@@ -160,5 +161,9 @@
         <item name="android:textAppearanceLargePopupMenu">@style/MyPopupTextAppearance</item>
         <item name="android:textAppearanceSmallPopupMenu">@style/MyPopupTextAppearance</item>
     </style>
-
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_bg</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
+    </style>
 </resources>

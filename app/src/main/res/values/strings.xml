@@ -1151,4 +1151,13 @@
     <string name="search_pat_hint_txt">Use correct Username or ID to search or you can register a new patient.</string>
     <string name="no_active_case_found">No Active Case found</string>
     <string name="use_correct_username_or_id_to_search">Use correct username or ID to search</string>
+
+    <string name="action_download_pdf">Download PDF</string>
+    <string name="action_open">Open</string>
+    <string name="epartogram_not_loaded">Please wait for the ePartogram to finish loading.</string>
+    <string name="epartogram_export_failed">Could not export the ePartogram. Please try again.</string>
+    <string name="pdf_saved_title">PDF saved</string>
+    <string name="pdf_saved_body">%1$s has been saved to Downloads/eZazi.</string>
+    <string name="storage_permission_needed">Storage permission is required to save the PDF to Downloads.</string>
+    <string name="no_pdf_viewer_found">No app found on this device to open PDF files.</string>
 </resources>

@@ -311,9 +311,9 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             dateOfDelivery = uiHandler.getDateOfDelivery()
             timeOfDelivery = binding.etTimeOfDelivery.text.toString().trim()
             modeOfDelivery = uiHandler.handleOtherField(
-                keyName = DeliveryDetailsConcept.MODE_OF_DELIVERY.name,
                 mainValue = binding.autotvModeOfDelivery.text.toString(),
                 otherValue = binding.etModeOfDeliveryOtherOption.text.toString()
+                // triggerValues defaults to ["Other"]
             )
             perinealTear = uiHandler.getYesNoValue(binding.layoutPernealTearRadio.radioYesNoGroupCommon)
             degreeOfPerinealTear = binding.autotvDegreeOfPerinealTear.text.toString().trim()
@@ -321,14 +321,18 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
            // Section 2: Placenta &amp; Membrane Delivery Details
             placentaMembraneStatus = binding.autotvPlacentaMembraneDelivery.text.toString().trim()
             timeOfPlacentaDelivery = binding.etTimeOfPlacentaDelivery.text.toString().trim()
-            placentalOrCordAbnormality = uiHandler.getYesNoValue(binding.layoutPlacentalAbnormalityRadio.radioYesNoGroupCommon)
-            modeOfDelivery = uiHandler.handleOtherField(
-                keyName = DeliveryDetailsConcept.PLACENTA_CORD_ABNORMALITY.name,
-                mainValue = placentalOrCordAbnormality,
-                otherValue = binding.etPlacentalOrCordAbnormalityOtherOption.text.toString()
+            placentalOrCordAbnormality = uiHandler.handleOtherField(
+                mainValue = uiHandler.getYesNoValue(binding.layoutPlacentalAbnormalityRadio.radioYesNoGroupCommon),
+                otherValue = binding.etPlacentalOrCordAbnormalityOtherOption.text.toString(),
+                triggerValues = listOf("Yes")
             )
 
-            amtsl= handleConditionalField(DeliveryDetailsConcept.MEDICATIONS_AMTSL.name, binding.actvAmtsl.text.toString(),  binding.actvAmtsl.text.toString(), binding.actvAmtsl.text.toString())
+            amtsl = uiHandler.handleOtherField(
+                mainValue = binding.actvAmtsl.text.toString(),
+                otherValue = binding.etAmtslOtherOption.text.toString()
+                // triggerValues defaults to ["Other"]
+            )
+//            amtsl= handleConditionalField(DeliveryDetailsConcept.MEDICATIONS_AMTSL.name, binding.actvAmtsl.text.toString(),  binding.actvAmtsl.text.toString(), binding.actvAmtsl.text.toString())
 
             // SECTION 3: Newborn Details
 

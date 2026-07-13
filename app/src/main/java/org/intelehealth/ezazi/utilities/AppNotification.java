@@ -36,8 +36,9 @@ public class AppNotification {
 
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context, channelId)
-                .setSmallIcon(R.drawable.ezazi_logo)
-                .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher))
+                //.setSmallIcon(R.drawable.ezazi_logo)
+                .setSmallIcon(R.drawable.app_lanucher_logi_nepal)
+                .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.mipmap.app_lanucher_logo_nepal))
                 //.setContentTitle("Firebase Push Notification")
                 .setContentTitle(title)
                 .setContentText(message)

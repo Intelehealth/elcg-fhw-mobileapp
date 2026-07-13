@@ -299,8 +299,11 @@
                             android:hint="@string/gravida_hint"
                             android:imeOptions="actionNext"
                             android:importantForAutofill="no"
-                            android:inputType="number"
                             android:maxLength="2"
+                            android:enabled="false"
+                            android:focusableInTouchMode="false"
+                            android:clickable="false"
+                            android:cursorVisible="false"
                             android:maxLines="1"
                             android:singleLine="true"
                             android:textSize="@dimen/input_inner_size" />
