@@ -414,15 +414,27 @@ class DeliveryDetailsUIController(
         }
     }
 
-     fun handleOtherField(
-        keyName: String,        // e.g., "Mode of Delivery"
-        mainValue: String?,     // value selected in dropdown
-        otherValue: String?     // free text if "Other"
+    /**
+     * Combines a selected value with its free-text details.
+     *
+     * Returns "MainValue - details" when [mainValue] matches one of
+     * [triggerValues] and details were entered; otherwise just [mainValue].
+     * Output is always a plain string (never JSON).
+     */
+    fun handleOtherField(
+        mainValue: String?,                          // e.g. "Yes", "Other", "Normal Vaginal Delivery"
+        otherValue: String?,                         // free text from the details EditText
+        triggerValues: List<String> = listOf("Other") // values that unlock the details field
     ): String {
-        return if (mainValue.equals("Other", ignoreCase = true)) {
-            """{ "$keyName": "Other", "other_text": "${otherValue?.trim() ?: ""}" }"""
+        val main = mainValue?.trim() ?: return ""
+        val details = otherValue?.trim().orEmpty()
+
+        val isTriggered = triggerValues.any { it.equals(main, ignoreCase = true) }
+
+        return if (isTriggered && details.isNotEmpty()) {
+            "$main - $details"
         } else {
-            mainValue?.trim() ?: ""
+            main
         }
     }
 

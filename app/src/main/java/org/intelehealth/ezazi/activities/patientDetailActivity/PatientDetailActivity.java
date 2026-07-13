@@ -558,7 +558,7 @@ public class PatientDetailActivity extends BaseActionBarActivity {
 
         // ── 14. Click listeners (WhatsApp / Call) ─────────────────────────────
         whatsapp_no.setOnClickListener(v -> {
-            String phoneNumberWithCountryCode = "+91" + phoneView.getText().toString();
+            String phoneNumberWithCountryCode = "+977" + phoneView.getText().toString();
             String message = getString(R.string.hello_my_name_is) + sessionManager.getChwname();
             startActivity(new Intent(Intent.ACTION_VIEW,
                     Uri.parse(String.format("https://api.whatsapp.com/send?phone=%s&text=%s",

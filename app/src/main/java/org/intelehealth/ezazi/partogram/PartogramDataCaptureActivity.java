@@ -454,15 +454,32 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                     }
 
                     //plan and assessment
+                    //plan and assessment
                     if (info.getConceptUUID().equals(UuidDictionary.MEDICINE)) {
                         isValidMedicine = info.isValidMedicine();
-                        if (isValidMedicine && info.getCheckedRadioOption() != ParamInfo.RadioOptions.NO) {
-                            obsDTOList.addAll(info.getMedicinesObsList(mEncounterUUID, new SessionManager(this).getCreatorID()));
-                        }
-                        voidedMedicines = info.getVoidedMedicineUuid();
-                    } else if (info.getConceptUUID().equals(UuidDictionary.PLAN)) {
-                        obsDTOList.addAll(info.getPlansObsList(mEncounterUUID, new SessionManager(this).getCreatorID()));
+                        boolean isNoSelected = info.getCheckedRadioOption() == ParamInfo.RadioOptions.NO;
 
+                        if (isValidMedicine && !isNoSelected) {
+                            obsDTOList.addAll(info.getMedicinesObsList(mEncounterUUID,
+                                    new SessionManager(this).getCreatorID()));
+                        } else if (isNoSelected) {
+                            // User explicitly selected "No" — save it instead of leaving the response blank
+                            obsDTOList.add(createNoResponseObs(info));
+                        }
+
+                        voidedMedicines = new ArrayList<>(info.getVoidedMedicineUuid());
+
+                        // Transition No -> Yes: a previously saved "No" obs must be voided,
+                        // otherwise the encounter carries both "No" and medicines
+                        if (!isNoSelected && accessMode == PartogramConstants.AccessMode.EDIT) {
+                            String staleNoUuid = findExistingNoObsUuid(info.getConceptUUID());
+                            if (staleNoUuid != null && !voidedMedicines.contains(staleNoUuid)) {
+                                voidedMedicines.add(staleNoUuid);
+                            }
+                        }
+                    } else if (info.getConceptUUID().equals(UuidDictionary.PLAN)) {
+                        obsDTOList.addAll(info.getPlansObsList(mEncounterUUID,
+                                new SessionManager(this).getCreatorID()));
                     } else if (info.getConceptUUID().equals(UuidDictionary.ASSESSMENT)) {
                         if(mStageNumber == PartogramConstants.STAGE_3){
                             info.setCreatedDate(DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
@@ -481,40 +498,57 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                             obsDTOList.addAll(info.getAssessmentsObsList(mEncounterUUID, new SessionManager(this).getCreatorID()));
                         }
                     } else if (info.getConceptUUID().equals(UuidDictionary.OXYTOCIN_UL_DROPS_MIN)) {
-                        isValidOxytocin = info.isValidJson();
-                        String uuid = obsDAO.getObsuuid(mEncounterUUID, info.getConceptUUID());
-                        ObsDTO obs = buildOxytocinIvFluidData(uuid, info);
+                        boolean isNoSelected = info.getCheckedRadioOption() == ParamInfo.RadioOptions.NO;
 
-                        if (isValidOxytocin) {
-                            boolean isExist = obsDAO.isOxytocinByHWExistInDb(mEncounterUUID, info.getMedication().toJson());
-                            if (!isExist) {
-                                obs.setCreatedDate(DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
-                                if (info.getCapturedValue() != null && !info.getCapturedValue().isEmpty()) {
-                                    obsDTOList.add(obs);
-                                }
-                            } else {
-                                if (info.getCapturedValue() != null && !info.getCapturedValue().isEmpty() && info.getCapturedValue().equalsIgnoreCase("no")) {
+                        if (isNoSelected) {
+                            // Radio at default/"No" — save an explicit "No" obs, same pattern as Medicine
+                            obsDTOList.add(createNoResponseObs(info));
+                        } else {
+                            isValidOxytocin = info.isValidJson();
+                            String uuid = obsDAO.getObsuuid(mEncounterUUID, info.getConceptUUID());
+                            ObsDTO obs = buildOxytocinIvFluidData(uuid, info);
+
+                            if (isValidOxytocin) {
+                                boolean isExist = obsDAO.isOxytocinByHWExistInDb(mEncounterUUID, info.getMedication().toJson());
+                                if (!isExist && info.getCapturedValue() != null && !info.getCapturedValue().isEmpty()) {
                                     obs.setCreatedDate(DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
                                     obsDTOList.add(obs);
+                                }
+                            }
+
+                            // Transition No -> Yes: void a previously saved "No" obs, same pattern as Medicine
+                            if (accessMode == PartogramConstants.AccessMode.EDIT) {
+                                String staleNoUuid = findExistingNoObsUuid(info.getConceptUUID());
+                                if (staleNoUuid != null && !voidedMedicines.contains(staleNoUuid)) {
+                                    voidedMedicines.add(staleNoUuid);
                                 }
                             }
                         }
 
                     } else if (info.getConceptUUID().equals(UuidDictionary.IV_FLUIDS)) {
-                        isValidIVFluid = info.isValidJson();
-                        String uuid = obsDAO.getObsuuid(mEncounterUUID, info.getConceptUUID());
-                        ObsDTO obs = buildOxytocinIvFluidData(uuid, info);
-                        if (isValidIVFluid) {
-                            boolean isExist = obsDAO.isIvFluidByHWExistInDb(mEncounterUUID, info.getMedication().toJson());
-                            if (!isExist) {
-                                obs.setCreatedDate(DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
-                                if (info.getCapturedValue() != null && !info.getCapturedValue().isEmpty()) {
-                                    obsDTOList.add(obs);
-                                }
-                            } else {
-                                if (info.getCapturedValue() != null && !info.getCapturedValue().isEmpty() && info.getCapturedValue().equalsIgnoreCase("no")) {
+                        boolean isNoSelected = info.getCheckedRadioOption() == ParamInfo.RadioOptions.NO;
+
+                        if (isNoSelected) {
+                            // Radio at default/"No" — save an explicit "No" obs, same pattern as Medicine
+                            obsDTOList.add(createNoResponseObs(info));
+                        } else {
+                            isValidIVFluid = info.isValidJson();
+                            String uuid = obsDAO.getObsuuid(mEncounterUUID, info.getConceptUUID());
+                            ObsDTO obs = buildOxytocinIvFluidData(uuid, info);
+
+                            if (isValidIVFluid) {
+                                boolean isExist = obsDAO.isIvFluidByHWExistInDb(mEncounterUUID, info.getMedication().toJson());
+                                if (!isExist && info.getCapturedValue() != null && !info.getCapturedValue().isEmpty()) {
                                     obs.setCreatedDate(DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
                                     obsDTOList.add(obs);
+                                }
+                            }
+
+                            // Transition No -> Yes: void a previously saved "No" obs, same pattern as Medicine
+                            if (accessMode == PartogramConstants.AccessMode.EDIT) {
+                                String staleNoUuid = findExistingNoObsUuid(info.getConceptUUID());
+                                if (staleNoUuid != null && !voidedMedicines.contains(staleNoUuid)) {
+                                    voidedMedicines.add(staleNoUuid);
                                 }
                             }
                         }
@@ -747,6 +781,40 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
         }
     }
 
+    /**
+     * Builds an obs recording an explicit "No" for the medicine question, so the
+     * response is transmitted instead of being omitted. Mirrors buildObservation()'s
+     * construction. In EDIT mode, reuses an existing "No" obs UUID so the save
+     * loop updates it instead of inserting a duplicate.
+     */
+    private ObsDTO createNoResponseObs(ParamInfo info) {
+        ObsDTO obs = new ObsDTO();
+        obs.setEncounteruuid(mEncounterUUID);
+        obs.setConceptuuid(info.getConceptUUID());
+        obs.setValue("No");
+        obs.setCreatorUuid(new SessionManager(this).getCreatorID());
+        obs.setCreatedDate(DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
+
+        if (accessMode == PartogramConstants.AccessMode.EDIT) {
+            // null -> insert, non-null -> update (same pattern as the save loop expects)
+            obs.setUuid(findExistingNoObsUuid(info.getConceptUUID()));
+        }
+        return obs;
+    }
+
+    /** Finds a previously saved explicit "No" obs for this concept in the current encounter. */
+    private String findExistingNoObsUuid(String conceptUuid) {
+        List<ObsDTO> existing = new ObsDAO().getOBSByEncounterUUID(mEncounterUUID);
+        for (ObsDTO old : existing) {
+            if (conceptUuid.equals(old.getConceptuuid())
+                    && old.getValue() != null
+                    && old.getValue().trim().equalsIgnoreCase("no")) {
+                return old.getUuid();
+            }
+        }
+        return null;
+    }
+
     private ObsDTO buildObservation(ParamInfo info) {
         ObsDTO obsDTOData = new ObsDTO();
 //        obsDTOData.setCreatorUuid(new SessionManager(this).getCreatorID());
@@ -787,7 +855,8 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                                     info.setCheckedRadioOption(ParamInfo.RadioOptions.NO);
                                 }
                             } else if (obsDTO.getConceptuuid().equals(UuidDictionary.IV_FLUIDS)) {
-                                if (obsDTO.getValue() != null && !obsDTO.getValue().isEmpty()) {
+                                // "No" is now a saved value — treat it as the No state, not medication JSON (mirrors Medicine readback)
+                                if (obsDTO.getValue() != null && !obsDTO.getValue().isEmpty() && !obsDTO.getValue().equalsIgnoreCase("no")) {
                                     info.setCapturedValue(obsDTO.getValue());
                                     info.getMedication(obsDTO, obsDTO.getValue(), obsDTO.getCreatedDate(true), obsDTO.getConceptuuid());
                                 } else {
@@ -800,7 +869,8 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                                 }*/
                             } else if (obsDTO.getConceptuuid().equals(UuidDictionary.OXYTOCIN_UL_DROPS_MIN)) {
                                 //info.setCapturedValue(ParamInfo.RadioOptions.YES.name());
-                                if (obsDTO.getValue() != null && !obsDTO.getValue().isEmpty()) {
+                                // "No" is now a saved value — treat it as the No state, not medication JSON (mirrors Medicine readback)
+                                if (obsDTO.getValue() != null && !obsDTO.getValue().isEmpty() && !obsDTO.getValue().equalsIgnoreCase("no")) {
                                     info.setCapturedValue(obsDTO.getValue());
                                     info.getMedication(obsDTO, obsDTO.getValue(), obsDTO.getCreatedDate(true), obsDTO.getConceptuuid());
                                 } else {
