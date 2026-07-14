@@ -265,4 +265,6 @@
     <string name="lbl_no_active_lcg_alerts">No active LCG alerts</string>
     <string name="content_lcg_risks_header">LCG Risks panel, tap to collapse or expand</string>
     <string name="lcg_alert_ref_format">LCG alert value: %1$s</string>
+    <string name="action_download">Download</string>
+    <string name="sac_ruptured_past_limit">Sac ruptured date cannot be more than 4 weeks before EDD</string>
 </resources>
