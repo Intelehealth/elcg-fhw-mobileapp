@@ -1216,6 +1216,17 @@ public class PatientOtherInfoFragment extends Fragment {
         getLabourOnsetValue(mLaborOnsetString);
         if (!mHospitalMaternityString.isEmpty() && mHospitalMaternityString.equalsIgnoreCase("other"))
             etHospitalOther.setText(patientAttributesModel.getOtherHospitalString());
+        mSelectedRuptureMembrane = patientAttributesModel.getRuptureMembraneOption();
+        if (mSelectedRuptureMembrane != null && !mSelectedRuptureMembrane.isEmpty()) {
+            autotvRupturedMembrane.setText(mSelectedRuptureMembrane, false);
+            if (mSelectedRuptureMembrane.equalsIgnoreCase("Known")) {
+                shouldValidateSacMembraneDates = true;
+                layoutSacRuptured.setVisibility(View.VISIBLE);
+            } else {
+                shouldValidateSacMembraneDates = false;
+                layoutSacRuptured.setVisibility(View.GONE);
+            }
+        }
         hideAllErrorFields();
     }
 
@@ -1485,6 +1496,15 @@ public class PatientOtherInfoFragment extends Fragment {
         m.setOtherHospitalString(etHospitalOther.getText().toString());
         m.setGravida(mGravidaEdittext.getText().toString());
         m.setLmp(mLmpDate); m.setEdd(mEDD); m.setHospitalId(mHospitalId.getText().toString());
+        m.setRuptureMembraneOption(mSelectedRuptureMembrane);
+        if (!"Known".equalsIgnoreCase(mSelectedRuptureMembrane)) {
+            mMembraneRupturedDate = "";
+            mMembraneRupturedTime = "";
+            mMembraneRupturedDateTextView.setText("");
+            mMembraneRupturedTimeTextView.setText("");
+        }
+        m.setSacRupturedDate(mMembraneRupturedDate);
+        m.setSacRupturedTime(mMembraneRupturedTime);
         return m;
     }
 
