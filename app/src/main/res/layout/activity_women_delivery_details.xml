@@ -650,7 +650,7 @@
                             android:layout_height="wrap_content"
                             android:gravity="center_vertical"
                             android:hint="@string/label_birth_weight"
-                            android:imeOptions="actionNext"
+                            android:imeOptions="actionDone"
                             android:importantForAutofill="no"
                             android:inputType="number"
                             android:maxLength="5"
