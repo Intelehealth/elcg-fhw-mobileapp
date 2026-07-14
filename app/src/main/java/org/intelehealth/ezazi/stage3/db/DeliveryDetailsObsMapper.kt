@@ -1,5 +1,6 @@
 package org.intelehealth.ezazi.stage3.db
 
+import android.util.Log
 import org.intelehealth.ezazi.models.dto.ObsDTO
 import org.intelehealth.ezazi.stage3.Utils.DeliveryDetailsConcept
 import org.intelehealth.ezazi.stage3.models.DeliveryDetails
@@ -41,6 +42,7 @@ class DeliveryDetailsObsMapper{
         add(DeliveryDetailsConcept.MEDICATIONS_AMTSL, deliveryDetails.amtsl)
         add(DeliveryDetailsConcept.BIRTH_TYPE, deliveryDetails.typeOfBirth)
         add(DeliveryDetailsConcept.BABY_GENDER, deliveryDetails.babyGender)
+        add(DeliveryDetailsConcept.GESTATION, deliveryDetails.gestationWeeks)
 
         if (deliveryDetails.typeOfBirth.equals("Live Birth", true)) {
             add(DeliveryDetailsConcept.APGAR_SCORE_1_MIN, deliveryDetails.apgarScore1Min)
@@ -51,9 +53,10 @@ class DeliveryDetailsObsMapper{
             add(DeliveryDetailsConcept.CONGENITAL_ANOMALY, deliveryDetails.congenitalAnomalies)
             add(DeliveryDetailsConcept.RESUSCITATION, deliveryDetails.resuscitation)
         }
-       /* if (deliveryDetails.typeOfBirth.equals("Still Birth", true)) {
-            add(DeliveryDetailsConcept.TYPE_OF_STILL_BIRTH, deliveryDetails.typeOfStillBirth)
-        }*/
+        if (deliveryDetails.typeOfBirth?.contains("Stillbirth", true) == true) {
+            add(DeliveryDetailsConcept.BIRTH_WEIGHT, deliveryDetails.birthWeightGrams)
+            add(DeliveryDetailsConcept.CONGENITAL_ANOMALY, deliveryDetails.congenitalAnomalies)
+        }
         return list
     }
 }
