@@ -59,7 +59,7 @@ public class PartogramConstants {
         ORAL_FLUID("Oral Fluid", "9d31451b-538f-11e6-9cfe-86f436325720"),
         POSTURE("Posture", "9d3148b1-538f-11e6-9cfe-86f436325720"),
         FHR_DEC("FHR Deceleration", "9d31573c-538f-11e6-9cfe-86f436325720"),
-        AMNIOTIC_FLUID("Amniotic Fluid Meconium", "9d3160a6-538f-11e6-9cfe-86f436325720"),
+        AMNIOTIC_FLUID("Amniotic Fluid", "9d3160a6-538f-11e6-9cfe-86f436325720"),
 
         FETAL_POSITION("Fetal Position", "9d316387-538f-11e6-9cfe-86f436325720"),
         CAPUT("Caput", "9d316761-538f-11e6-9cfe-86f436325720"),
