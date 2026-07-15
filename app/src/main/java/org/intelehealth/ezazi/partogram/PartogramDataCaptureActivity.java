@@ -173,6 +173,12 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
 
         mEpartogramTextView.setOnClickListener(v -> {
 
+            boolean doesVisitHasData = new ObsDAO().getObsCountForVisit(mVisitUUID);
+            if (!doesVisitHasData) {
+                showNoDataDialogForViewLcg(getString(R.string.no_data_for_view_lcg_title), getString(R.string.no_data_for_view_lcg_body));
+                return;
+            }
+
             if (NetworkConnection.isOnline(getApplication())) {
 
                 DisplayMetrics metrics = new DisplayMetrics();
@@ -301,6 +307,18 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
             }
         });
 
+    }
+
+    private void showNoDataDialogForViewLcg(String title, String message) {
+        AppDialogUtils.showSingleButtonDialog(
+                this,
+                title,
+                message,
+                getString(R.string.ok),
+                () -> {
+                    return null;
+                }
+        );
     }
 
     private void showDoctorSelectionDialog(boolean isChat) {
