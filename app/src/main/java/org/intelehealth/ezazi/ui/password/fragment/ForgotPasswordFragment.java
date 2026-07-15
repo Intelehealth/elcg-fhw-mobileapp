@@ -38,7 +38,7 @@ public class ForgotPasswordFragment extends Fragment {
     private String mSelectedCountryCode = "";
     private CountryCodePicker mCountryCodePicker;
     private TextInputEditText mPhoneNumberEditText;
-    private int mSelectedMobileNumberValidationLength = 0;
+    private int mSelectedMobileNumberValidationLength = 10;
     public static final String OTPForString = "password";
     private CustomProgressDialog customProgressDialog;
     private Context mContext;
