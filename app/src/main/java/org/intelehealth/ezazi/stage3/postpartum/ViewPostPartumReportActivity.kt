@@ -46,10 +46,10 @@ class ViewPostPartumReportActivity : BaseActionBarActivity() {
         private const val TAG = "ViewPostPartumReport"
 
         // Existing LCG URL
-        private const val URL_LCG = BuildConfig.SERVER_URL + "/intelehealth/index.html#/epartogram/"
+         val URL_LCG = BuildConfig.SERVER_URL + "/intelehealth/index.html#/epartogram/"
 
         // New Postpartum Report URL
-        private const val URL_POSTPARTUM = BuildConfig.SERVER_URL + "/intelehealth/index.html#/dashboard/stage3/"
+         val URL_POSTPARTUM = BuildConfig.SERVER_URL + "/intelehealth/index.html#/dashboard/stage3/"
 
         // Intent extras
         const val EXTRA_PATIENT_UUID = "patientuuid"
