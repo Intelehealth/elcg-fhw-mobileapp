@@ -38,6 +38,7 @@ import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment
 import org.intelehealth.ezazi.utilities.SessionManager
 import org.intelehealth.ezazi.utilities.UuidDictionary
 import org.intelehealth.klivekit.utils.DateTimeUtils
+import java.util.Calendar
 import java.util.Date
 import java.util.UUID
 
@@ -158,7 +159,12 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
         Log.d(TAG, "validateFields: deliveryDateTime : " + deliveryDateTime)
         Log.d(TAG, "validateFields: date : " + Date())
 
-        if (deliveryDateTime.after(Date())) {
+        val nowToMinute = Calendar.getInstance().apply {
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.time
+
+        if (!deliveryDateTime.before(nowToMinute)) {
             setFieldError(
                 binding.etlDateOfDelivery,
                 getString(R.string.date_of_delivery_future_not_allowed)
@@ -178,7 +184,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             activeLaborParts.getOrNull(1)
         )
 
-        if (activeLaborDateTime != null && deliveryDateTime.before(activeLaborDateTime)) {
+        if (activeLaborDateTime != null && !deliveryDateTime.after(activeLaborDateTime)) {
             setFieldError(
                 binding.etlDateOfDelivery,
                 getString(R.string.date_of_delivery_cannot_be_before_the_active_labor_date)
