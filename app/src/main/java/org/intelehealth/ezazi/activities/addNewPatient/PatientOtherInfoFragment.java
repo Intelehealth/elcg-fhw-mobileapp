@@ -40,6 +40,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
+import com.google.gson.Gson;
 
 import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.activities.patientDetailActivity.PatientDetailActivity;
@@ -797,13 +798,40 @@ public class PatientOtherInfoFragment extends Fragment {
         }
 */
         // 8. Sac Ruptured
+        Log.d(TAG, "areValidFields: shouldValidateSacMembraneDates : "+shouldValidateSacMembraneDates);
         if (shouldValidateSacMembraneDates) {
+            Log.d(TAG, "areValidFields: medd : "+mEDD);
             if (TextUtils.isEmpty(mMembraneRupturedDate)) {
                 showError(tvErrorSacRupturedDate, cardSacRupturedDate, getString(R.string.select_sac_ruptured_date));
                 isValid = false;
             } else if (isAfterToday(mMembraneRupturedDate)) {
                 showError(tvErrorSacRupturedDate, cardSacRupturedDate, getString(R.string.sac_ruptured_future_not_allowed));
                 isValid = false;
+            } else if (!TextUtils.isEmpty(mEDD)) {
+                // lower-bound check — sac ruptured date can't be earlier than (EDD - 4 weeks)
+                Date sacDate = parseGregDate(mMembraneRupturedDate);
+                Date eddDate = parseGregDate(mEDD);
+                if (sacDate != null && eddDate != null) {
+                    Calendar minSacDate = Calendar.getInstance();
+                    minSacDate.setTime(eddDate);
+                    minSacDate.add(Calendar.WEEK_OF_YEAR, -4);
+                    minSacDate.set(Calendar.HOUR_OF_DAY, 0);
+                    minSacDate.set(Calendar.MINUTE, 0);
+                    minSacDate.set(Calendar.SECOND, 0);
+                    minSacDate.set(Calendar.MILLISECOND, 0);
+
+                    Calendar selSacDate = Calendar.getInstance();
+                    selSacDate.setTime(sacDate);
+                    selSacDate.set(Calendar.HOUR_OF_DAY, 0);
+                    selSacDate.set(Calendar.MINUTE, 0);
+                    selSacDate.set(Calendar.SECOND, 0);
+                    selSacDate.set(Calendar.MILLISECOND, 0);
+
+                    if (selSacDate.getTime().before(minSacDate.getTime())) {
+                        showError(tvErrorSacRupturedDate, cardSacRupturedDate, getString(R.string.sac_ruptured_past_limit));
+                        isValid = false;
+                    }
+                }
             }
             if (TextUtils.isEmpty(mMembraneRupturedTime)) {
                 showError(tvErrorSacRupturedTime, cardSacRupturedTime, getString(R.string.select_sac_ruptured_time));
@@ -1152,6 +1180,7 @@ public class PatientOtherInfoFragment extends Fragment {
     // ═════════════════════════════════════════════════════════════════════
 
     private void updateUIForUserFromAddressTab() {
+        Log.d(TAG, "updateUIForUserFromAddressTab: patientAttributesModel : "+new Gson().toJson(patientAttributesModel));
         String admDate = patientAttributesModel.getAdmissionDate();
         String labDate = patientAttributesModel.getActiveLabourDiagnosedDate();
         String sacDate = patientAttributesModel.getSacRupturedDate();
@@ -1187,6 +1216,17 @@ public class PatientOtherInfoFragment extends Fragment {
         getLabourOnsetValue(mLaborOnsetString);
         if (!mHospitalMaternityString.isEmpty() && mHospitalMaternityString.equalsIgnoreCase("other"))
             etHospitalOther.setText(patientAttributesModel.getOtherHospitalString());
+        mSelectedRuptureMembrane = patientAttributesModel.getRuptureMembraneOption();
+        if (mSelectedRuptureMembrane != null && !mSelectedRuptureMembrane.isEmpty()) {
+            autotvRupturedMembrane.setText(mSelectedRuptureMembrane, false);
+            if (mSelectedRuptureMembrane.equalsIgnoreCase("Known")) {
+                shouldValidateSacMembraneDates = true;
+                layoutSacRuptured.setVisibility(View.VISIBLE);
+            } else {
+                shouldValidateSacMembraneDates = false;
+                layoutSacRuptured.setVisibility(View.GONE);
+            }
+        }
         hideAllErrorFields();
     }
 
@@ -1224,6 +1264,7 @@ public class PatientOtherInfoFragment extends Fragment {
                 mMembraneRupturedTimeTextView.setText(mMembraneRupturedTime);
             }
         }*/
+        Log.d(TAG, "updateUI: membraine status - "+patient.getMembraneRupturedTimestamp());
         if (patient.getMembraneRupturedTimestamp() != null) {
 
             String membraneValue = patient.getMembraneRupturedTimestamp();
@@ -1238,6 +1279,7 @@ public class PatientOtherInfoFragment extends Fragment {
                 // Known selected
                 autotvRupturedMembrane.setText("Known", false);
                 layoutSacRuptured.setVisibility(View.VISIBLE);
+                shouldValidateSacMembraneDates = true;
                 // Split date and time
                 String[] p = membraneValue.split(" ", 2);
                 mMembraneRupturedDate = p[0];
@@ -1454,6 +1496,15 @@ public class PatientOtherInfoFragment extends Fragment {
         m.setOtherHospitalString(etHospitalOther.getText().toString());
         m.setGravida(mGravidaEdittext.getText().toString());
         m.setLmp(mLmpDate); m.setEdd(mEDD); m.setHospitalId(mHospitalId.getText().toString());
+        m.setRuptureMembraneOption(mSelectedRuptureMembrane);
+        if (!"Known".equalsIgnoreCase(mSelectedRuptureMembrane)) {
+            mMembraneRupturedDate = "";
+            mMembraneRupturedTime = "";
+            mMembraneRupturedDateTextView.setText("");
+            mMembraneRupturedTimeTextView.setText("");
+        }
+        m.setSacRupturedDate(mMembraneRupturedDate);
+        m.setSacRupturedTime(mMembraneRupturedTime);
         return m;
     }
 

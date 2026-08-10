@@ -295,7 +295,7 @@ public class ProviderDAO {
             String setupLocationUuid = new SessionManager(IntelehealthApplication.getAppContext()).getLocationUuid();
             Log.d("TAG", "getNurseList: setupLocationUuid : "+setupLocationUuid);
 
-            String query = "select * from tbl_provider as p where p.role='Organizational: Nurse'";
+          /*  String query = "select * from tbl_provider as p where p.role='Organizational: Nurse'";
             if(ward.equals("Labor Ward") && isFromHome){
                 query = "select p.* from tbl_provider as p " +
                         "left join tbl_provider_attribute as pa on  p.uuid = pa.provideruuid " +
@@ -326,7 +326,85 @@ public class ProviderDAO {
                     new String[]{
                             UuidDictionary.FACILITY,
                             setupLocationUuid
-                    });
+                    });*/
+            // ==== Constants ====
+            String WARD_ATTRIBUTE_TYPE_UUID = UuidDictionary.PROVIDER_WARD;
+             String FACILITY_ATTRIBUTE_TYPE_UUID = UuidDictionary.FACILITY;
+
+                // ==== Reusable joins with placeholders instead of concatenated UUIDs ====
+            String baseJoins =
+                    "left join (" +
+                            "    select pa.provideruuid, pa.value " +
+                            "    from tbl_provider_attribute pa " +
+                            "    inner join (" +
+                            "        select provideruuid, max(rowid) as latest_row " +
+                            "        from tbl_provider_attribute " +
+                            "        where (voided = 'false' OR voided = '0') " +
+                            "        and attributetypeuuid = ? " +                 // 1st placeholder
+                            "        group by provideruuid" +
+                            "    ) latest_ward on pa.provideruuid = latest_ward.provideruuid " +
+                            "                  and pa.rowid = latest_ward.latest_row" +
+                            ") pa on p.uuid = pa.provideruuid " +
+                            "left join (" +
+                            "    select fac.provideruuid, fac.value " +
+                            "    from tbl_provider_attribute fac " +
+                            "    inner join (" +
+                            "        select provideruuid, max(rowid) as latest_row " +
+                            "        from tbl_provider_attribute " +
+                            "        where (voided = 'false' OR voided = '0') " +
+                            "        and attributetypeuuid = ? " +                 // 2nd placeholder
+                            "        group by provideruuid" +
+                            "    ) latest_fac on fac.provideruuid = latest_fac.provideruuid " +
+                            "                 and fac.rowid = latest_fac.latest_row" +
+                            ") fac on p.uuid = fac.provideruuid ";
+
+                // ==== Default query (no placeholders needed) ====
+            String query = "select * from tbl_provider as p where p.role='Organizational: Nurse'";
+            String[] selectionArgs = null;
+
+                // ==== Branch 1: Labor Ward + isFromHome -> exclude Post Natal Ward ====
+            if (ward.equals("Labor Ward") && isFromHome) {
+                query = "select p.* from tbl_provider as p " +
+                        baseJoins +
+                        "where p.role='Organizational: Nurse' " +
+                        "and (pa.value is null or pa.value != ?) " +       // 3rd placeholder
+                        "and fac.value = ?";                                 // 4th placeholder
+                selectionArgs = new String[]{
+                        WARD_ATTRIBUTE_TYPE_UUID,
+                        FACILITY_ATTRIBUTE_TYPE_UUID,
+                        "Post Natal Ward",
+                        setupLocationUuid
+                };
+
+                // ==== Branch 2: Post Natal Ward + isFromHome -> exclude Labor Ward ====
+            } else if (ward.equals("Post Natal Ward") && isFromHome) {
+                query = "select p.* from tbl_provider as p " +
+                        baseJoins +
+                        "where p.role='Organizational: Nurse' " +
+                        "and (pa.value is null or pa.value != ?) " +
+                        "and fac.value = ?";
+                selectionArgs = new String[]{
+                        WARD_ATTRIBUTE_TYPE_UUID,
+                        FACILITY_ATTRIBUTE_TYPE_UUID,
+                        "Labor Ward",
+                        setupLocationUuid
+                };
+
+                    // ==== Branch 3: Labor Ward + !isFromHome -> exclude Labor Ward ====
+            } else if (ward.equals("Labor Ward") && !isFromHome) {
+                query = "select p.* from tbl_provider as p " +
+                        baseJoins +
+                        "where p.role='Organizational: Nurse' " +
+                        "and (pa.value is null or pa.value != ?) " +
+                        "and fac.value = ?";
+                selectionArgs = new String[]{
+                        WARD_ATTRIBUTE_TYPE_UUID,
+                        FACILITY_ATTRIBUTE_TYPE_UUID,
+                        "Labor Ward",
+                        setupLocationUuid
+                };
+            }
+            Cursor cursor = db.rawQuery(query, selectionArgs);
             if (cursor.getCount() != 0) {
                 while (cursor.moveToNext()) {
                     ProviderDTO providerDTO = new ProviderDTO();

@@ -80,7 +80,7 @@
             android:exported="true"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"
-            android:windowSoftInputMode="adjustNothing" />
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".partogram.PartogramBaseActivity"
             android:exported="false" />
@@ -97,7 +97,7 @@
             android:exported="true"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"
-            android:windowSoftInputMode="adjustPan">
+            android:windowSoftInputMode="adjustResize">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
@@ -115,7 +115,7 @@
             android:exported="true"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"
-            android:windowSoftInputMode="adjustPan" />
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".activities.visitSummaryActivity.TimelineVisitSummaryActivity"
             android:exported="false"
@@ -131,7 +131,7 @@
             android:parentActivityName=".activities.visitSummaryActivity.TimelineVisitSummaryActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"
-            android:windowSoftInputMode="adjustPan" />
+            android:windowSoftInputMode="adjustResize" />
 
         <receiver
             android:name=".utilities.RTCMessageReceiver"
@@ -174,7 +174,7 @@
             android:label="@string/title_search_patient"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"
-            android:windowSoftInputMode="adjustNothing|adjustPan">
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.SEARCH" />
             </intent-filter>
@@ -202,7 +202,7 @@
             android:label="@string/app_name"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"
-            android:windowSoftInputMode="adjustPan" />
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".activities.homeActivity.HomeActivity"
             android:configChanges="uiMode"
@@ -211,7 +211,7 @@
             android:launchMode="singleTask"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"
-            android:windowSoftInputMode="adjustPan|adjustResize">
+            android:windowSoftInputMode="adjustResize">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.intelehealth.ezazi.activities.homeActivity.HomeActivity" />
@@ -233,14 +233,14 @@
             android:configChanges="orientation|keyboardHidden|screenSize|uiMode"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"
-            android:windowSoftInputMode="adjustPan" />
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".activities.setupActivity.SetupActivity"
             android:configChanges="uiMode|keyboard|orientation|screenSize|smallestScreenSize|screenLayout"
             android:label="@string/title_activity_setup"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"
-            android:windowSoftInputMode="adjustPan" />
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".ui.rtc.activity.EzaziChatActivity"
             android:configChanges="uiMode"

@@ -248,4 +248,16 @@ public class PatientAttributesModel implements Serializable {
     @SerializedName("HospitalID")
     @Expose
     private String hospitalId;
+
+    @SerializedName("ruptureMembraneOption")
+    @Expose
+    private String ruptureMembraneOption;
+
+    public String getRuptureMembraneOption() {
+        return ruptureMembraneOption;
+    }
+
+    public void setRuptureMembraneOption(String ruptureMembraneOption) {
+        this.ruptureMembraneOption = ruptureMembraneOption;
+    }
 }

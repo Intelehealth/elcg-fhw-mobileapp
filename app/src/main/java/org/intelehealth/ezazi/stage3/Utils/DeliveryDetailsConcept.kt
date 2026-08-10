@@ -20,6 +20,6 @@ enum class DeliveryDetailsConcept (val uuid: String) {
     APGAR_SCORE_1_MIN("8f218b75-2576-45a3-b6e6-1429dede71bd"),
     APGAR_SCORE_5_MIN("f3925225-f792-4a6e-b890-5f6fb3941c1d"),
     BIRTH_WEIGHT("debdcf33-e565-466a-aca1-6d98a8441553"),
-    TYPE_OF_STILL_BIRTH("XYZ"),
+    GESTATION("9d2d7b41-538f-11e6-9cfe-86f436325720")
 
 }
