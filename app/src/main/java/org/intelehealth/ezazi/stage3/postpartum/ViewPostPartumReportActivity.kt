@@ -46,10 +46,10 @@ class ViewPostPartumReportActivity : BaseActionBarActivity() {
         private const val TAG = "ViewPostPartumReport"
 
         // Existing LCG URL
-         val URL_LCG = BuildConfig.SERVER_URL + "/intelehealth/index.html#/epartogram/"
+        val URL_LCG = BuildConfig.SERVER_URL + "/intelehealth/index.html#/epartogram/"
 
         // New Postpartum Report URL
-         val URL_POSTPARTUM = BuildConfig.SERVER_URL + "/intelehealth/index.html#/dashboard/stage3/"
+        val URL_POSTPARTUM = BuildConfig.SERVER_URL + "/intelehealth/index.html#/dashboard/stage3/"
 
         // Intent extras
         const val EXTRA_PATIENT_UUID = "patientuuid"
@@ -118,6 +118,7 @@ class ViewPostPartumReportActivity : BaseActionBarActivity() {
                 downloadReportAsPdf()
                 true
             }
+
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -158,7 +159,7 @@ class ViewPostPartumReportActivity : BaseActionBarActivity() {
     }
 
     override fun onRequestPermissionsResult(
-        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
+        requestCode: Int, permissions: Array<out String>, grantResults: IntArray,
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_STORAGE_PERMISSION) {
@@ -180,22 +181,21 @@ class ViewPostPartumReportActivity : BaseActionBarActivity() {
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmm", Locale.US).format(Date())
         val displayName = "PostpartumReport_${visitUuid}_$timestamp.pdf"
 
-        WebViewPdfExporter.export(this, webView, displayName,
-            object : WebViewPdfExporter.Callback {
-                override fun onSuccess(uri: Uri, displayName: String) {
-                    progressDialog.dismiss()
-                    showPdfSavedDialog(uri, displayName)
-                }
+        WebViewPdfExporter.export(this, webView, displayName, object : WebViewPdfExporter.Callback {
+            override fun onSuccess(uri: Uri, displayName: String) {
+                progressDialog.dismiss()
+                showPdfSavedDialog(uri, displayName)
+            }
 
-                override fun onFailure(message: String?) {
-                    Timber.tag(TAG).e("PDF export failed: %s", message)
-                    progressDialog.dismiss()
-                    Toast.makeText(
-                        this@ViewPostPartumReportActivity,
-                        R.string.epartogram_export_failed, Toast.LENGTH_LONG
-                    ).show()
-                }
-            })
+            override fun onFailure(message: String?) {
+                Timber.tag(TAG).e("PDF export failed: %s", message)
+                progressDialog.dismiss()
+                Toast.makeText(
+                    this@ViewPostPartumReportActivity,
+                    R.string.epartogram_export_failed, Toast.LENGTH_LONG
+                ).show()
+            }
+        })
     }
 
     private fun showPdfSavedDialog(pdfUri: Uri, displayName: String) {
@@ -347,19 +347,32 @@ class ViewPostPartumReportActivity : BaseActionBarActivity() {
         }
 
         @Deprecated("Deprecated in API 23")
-        override fun onReceivedError(view: WebView, errorCode: Int, description: String, failingUrl: String) {
+        override fun onReceivedError(
+            view: WebView,
+            errorCode: Int,
+            description: String,
+            failingUrl: String,
+        ) {
             super.onReceivedError(view, errorCode, description, failingUrl)
             Log.i("WEB_VIEW_TEST", "error code: $errorCode")
         }
 
-        override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
+        override fun onReceivedError(
+            view: WebView,
+            request: WebResourceRequest,
+            error: WebResourceError,
+        ) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && request.isForMainFrame) {
                 Log.e(TAG, "Main frame error: ${error.errorCode}")
                 handleError()
             }
         }
 
-        override fun onReceivedHttpError(view: WebView, request: WebResourceRequest, errorResponse: WebResourceResponse) {
+        override fun onReceivedHttpError(
+            view: WebView,
+            request: WebResourceRequest,
+            errorResponse: WebResourceResponse,
+        ) {
             if (request.isForMainFrame) {
                 Log.e(TAG, "HTTP error: ${errorResponse.statusCode}")
                 if (errorResponse.statusCode >= 400) handleError()

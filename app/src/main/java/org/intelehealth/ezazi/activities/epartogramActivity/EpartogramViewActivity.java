@@ -2,11 +2,6 @@ package org.intelehealth.ezazi.activities.epartogramActivity;
 
 import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
 
-import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -37,12 +32,17 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
 import com.github.ajalt.timberkt.Timber;
 
 import org.intelehealth.ezazi.BuildConfig;
 import org.intelehealth.ezazi.R;
-import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
+import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
 import org.intelehealth.ezazi.utilities.FileUtils;
 import org.intelehealth.ezazi.utilities.NetworkConnection;
 import org.intelehealth.ezazi.utilities.SessionManager;
@@ -283,12 +283,8 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
         }
 
         // Pre-Android 10 needs WRITE_EXTERNAL_STORAGE to place the file in public Downloads.
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q &&
-                ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                        != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    REQUEST_STORAGE_PERMISSION);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q && ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_STORAGE_PERMISSION);
             return;
         }
 
@@ -314,22 +310,20 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmm", Locale.US).format(new Date());
         String displayName = "ePartogram_" + visitUuid + "_" + timestamp + ".pdf";
 
-        WebViewPdfExporter.export(this, webView, displayName,
-                new WebViewPdfExporter.Callback() {
-                    @Override
-                    public void onSuccess(@NonNull Uri uri, @NonNull String name) {
-                        progressDialog.dismiss();
-                        showPdfSavedDialog(uri, name);
-                    }
+        WebViewPdfExporter.export(this, webView, displayName, new WebViewPdfExporter.Callback() {
+            @Override
+            public void onSuccess(@NonNull Uri uri, @NonNull String name) {
+                progressDialog.dismiss();
+                showPdfSavedDialog(uri, name);
+            }
 
-                    @Override
-                    public void onFailure(String message) {
-                        Timber.tag(TAG).e("PDF export failed: %s", message);
-                        progressDialog.dismiss();
-                        Toast.makeText(EpartogramViewActivity.this,
-                                R.string.epartogram_export_failed, Toast.LENGTH_LONG).show();
-                    }
-                });
+            @Override
+            public void onFailure(String message) {
+                Timber.tag(TAG).e("PDF export failed: %s", message);
+                progressDialog.dismiss();
+                Toast.makeText(EpartogramViewActivity.this, R.string.epartogram_export_failed, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void showPdfSavedDialog(Uri pdfUri, String displayName) {

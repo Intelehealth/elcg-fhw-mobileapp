@@ -20,11 +20,29 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
+import kotlin.math.abs
 
 /**
  * Exports a WebView's FULL document (including content hidden inside nested
  * horizontally/vertically scrolling containers) as a single-page PDF saved to
  * public Downloads/eZazi.
+ *
+ * Units — this is what governs the exported font size:
+ * PdfDocument page dimensions are PostScript points (1/72 inch), NOT device
+ * pixels. The page is therefore sized from the document's CSS width/height at
+ * [PT_PER_CSS_PX] points per CSS pixel, and the device-pixel rendering is
+ * mapped onto it through a scaled canvas. At 1 pt per CSS px a 12px CSS font
+ * lands as real 12pt text, so the PDF at 100% zoom matches the page on screen.
+ * Feeding device pixels straight into PageInfo (CSS px x display density)
+ * yields a page roughly 3x too large in physical units, which every viewer's
+ * fit-to-page then shrinks to a couple of points — and makes the output vary
+ * with the device's screen density.
+ *
+ * All geometry is derived from [WebView.getScale] (page scale x device scale),
+ * both for the layout width and for the canvas scale, so the two cancel: the
+ * exported font size no longer depends on the user's current pinch-zoom level.
+ * A best-effort zoom reset still runs first so the capture is laid out at the
+ * document's natural width.
  *
  * Also exposes [expandAndMeasure] / [restorePageStyles] so print flows can
  * reuse the same in-page expansion logic (see EpartogramViewActivity).
@@ -40,7 +58,17 @@ object WebViewPdfExporter {
 
     private const val TAG = "WebViewPdfExporter"
     private const val RELAYOUT_DELAY_MS = 300L
-    private const val WIDTH_BUFFER = 1.03
+
+    /** PDF points emitted per CSS pixel. 1.0 keeps the page's own font sizes (12px -> 12pt). */
+    private const val PT_PER_CSS_PX = 1.0
+
+    /** Maximum page side the PDF format allows, in points (200 inches). */
+    private const val PDF_MAX_SIDE_PT = 14400
+
+    /** Insurance against clipping right-edge absolutely-positioned content. */
+    private const val WIDTH_BUFFER = 1.01
+
+    private const val PAGE_SCALE_TOLERANCE = 0.01f
 
     interface Callback {
         fun onSuccess(uri: Uri, displayName: String)
@@ -53,14 +81,23 @@ object WebViewPdfExporter {
     }
 
     /**
-     * Expands any scrolling containers so hidden columns get painted, and
-     * returns the true full content width. Original styles are stashed on the
-     * page (window.__ezSaved) so they can be restored after capture.
+     * Expands any scrolling containers so hidden columns get painted, then
+     * pins the document to the measured width in CSS pixels and reports
+     * `[width, height]`. The explicit pixel width matters: `max-content` on
+     * the document root stops wrapping text (the LCG's instructions/
+     * abbreviations footer) from wrapping at all, which inflates the measured
+     * width and shrinks everything else to compensate. Original styles are
+     * stashed on the page (window.__ezSaved) so they can be restored after
+     * capture.
      */
     private const val JS_EXPAND_AND_MEASURE =
         "(function(){" +
                 "  window.__ezSaved = [];" +
                 "  function save(el){ window.__ezSaved.push([el, el.style.cssText]); }" +
+                "  function fullWidth(){" +
+                "    return Math.ceil(Math.max(document.documentElement.scrollWidth," +
+                "                              document.body.scrollWidth));" +
+                "  }" +
                 "  var all = document.querySelectorAll('*');" +
                 "  for (var i = 0; i < all.length; i++) {" +
                 "    var el = all[i];" +
@@ -71,12 +108,15 @@ object WebViewPdfExporter {
                 "      el.style.maxWidth = 'none';" +
                 "    }" +
                 "  }" +
+                "  var w = fullWidth();" +
                 "  save(document.documentElement);" +
                 "  save(document.body);" +
-                "  document.documentElement.style.width = 'max-content';" +
-                "  document.body.style.width = 'max-content';" +
-                "  return Math.ceil(Math.max(document.documentElement.scrollWidth," +
-                "                            document.body.scrollWidth));" +
+                "  document.documentElement.style.width = w + 'px';" +
+                "  document.body.style.width = w + 'px';" +
+                "  w = Math.max(w, fullWidth());" +
+                "  var h = Math.ceil(Math.max(document.documentElement.scrollHeight," +
+                "                             document.body.scrollHeight));" +
+                "  return [w, h];" +
                 "})()"
 
     /** Puts every modified element back exactly as it was. */
@@ -93,14 +133,16 @@ object WebViewPdfExporter {
     // region ---- Public API ----
 
     /**
-     * Full export: expand -> capture -> save to Downloads -> restore.
+     * Full export: reset zoom -> expand -> capture -> save to Downloads -> restore.
      * Must be called on the main thread with a fully loaded page.
      * The callback is invoked on the main thread.
      */
     @JvmStatic
     fun export(activity: Activity, webView: WebView, displayName: String, callback: Callback) {
-        expandAndMeasure(webView) { cssWidth ->
-            capture(activity, webView, cssWidth, displayName, callback)
+        resetPageZoom(webView) {
+            expandAndMeasureContent(webView) { cssWidth, cssHeight ->
+                capture(activity, webView, cssWidth, cssHeight, displayName, callback)
+            }
         }
     }
 
@@ -111,11 +153,7 @@ object WebViewPdfExporter {
      */
     @JvmStatic
     fun expandAndMeasure(webView: WebView, callback: WidthCallback) {
-        webView.evaluateJavascript(JS_EXPAND_AND_MEASURE) { value ->
-            val cssWidth = value?.replace("\"", "")?.trim()?.toIntOrNull() ?: 0
-            // Give the page a moment to re-layout after the style changes
-            webView.postDelayed({ callback.onMeasured(cssWidth) }, RELAYOUT_DELAY_MS)
-        }
+        expandAndMeasureContent(webView) { cssWidth, _ -> callback.onMeasured(cssWidth) }
     }
 
     /** Undoes [expandAndMeasure]'s style changes (and any body zoom applied after it). */
@@ -127,13 +165,64 @@ object WebViewPdfExporter {
 
     // endregion
 
+    // region ---- Measure ----
+
+    private fun expandAndMeasureContent(webView: WebView, onMeasured: (Int, Int) -> Unit) {
+        webView.evaluateJavascript(JS_EXPAND_AND_MEASURE) { value ->
+            val (cssWidth, cssHeight) = parseSize(value)
+            // Give the page a moment to re-layout after the style changes
+            webView.postDelayed({ onMeasured(cssWidth, cssHeight) }, RELAYOUT_DELAY_MS)
+        }
+    }
+
+    private fun parseSize(value: String?): Pair<Int, Int> {
+        val parts = value?.trim()
+            ?.removeSurrounding("\"")
+            ?.trim('[', ']')
+            ?.split(',')
+            ?: return 0 to 0
+        if (parts.size < 2) return 0 to 0
+        val width = parts[0].trim().toDoubleOrNull() ?: return 0 to 0
+        val height = parts[1].trim().toDoubleOrNull() ?: return 0 to 0
+        return Math.ceil(width).toInt() to Math.ceil(height).toInt()
+    }
+
+    /**
+     * Best-effort return to 100% page scale, so the capture is laid out at the
+     * document's natural width rather than at whatever the user last pinched to.
+     */
+    @Suppress("DEPRECATION")
+    private fun resetPageZoom(webView: WebView, onReady: () -> Unit) {
+        val density = webView.resources.displayMetrics.density
+        val pageScale = if (density > 0f) webView.scale / density else 1f
+        if (!webView.settings.supportZoom() || pageScale <= 0f ||
+            abs(pageScale - 1f) <= PAGE_SCALE_TOLERANCE
+        ) {
+            onReady()
+            return
+        }
+        webView.zoomBy((1f / pageScale).coerceIn(0.01f, 100f))
+        webView.postDelayed({ onReady() }, RELAYOUT_DELAY_MS)
+    }
+
+    // endregion
+
     // region ---- Capture ----
 
+    /**
+     * Lays the WebView out at the document's full size and draws it onto one
+     * PDF page sized in points (see the unit note on [WebViewPdfExporter]).
+     *
+     * The layout pass and the draw are deliberately split across a frame:
+     * Chromium re-lays-out asynchronously when the view width changes, so
+     * drawing in the same call stack can capture the pre-resize layout.
+     */
     @Suppress("DEPRECATION") // webView.scale is the honest CSS-px -> device-px factor
     private fun capture(
         activity: Activity,
         webView: WebView,
         cssWidth: Int,
+        cssHeight: Int,
         displayName: String,
         callback: Callback
     ) {
@@ -150,58 +239,113 @@ object WebViewPdfExporter {
             originalScrollX, originalScrollY, originalLayerType
         )
 
-        try {
-            // CSS px -> device px; never narrower than the screen,
-            // small buffer for absolutely-positioned elements at the right edge
-            val contentWidthPx = Math.ceil(cssWidth * webView.scale.toDouble()).toInt()
-            val captureWidth =
-                (maxOf(originalWidth, contentWidthPx) * WIDTH_BUFFER).toInt()
+        val drawScale = webView.scale.toDouble()
+            .takeIf { it > 0.0 }
+            ?: webView.resources.displayMetrics.density.toDouble()
 
+        val contentCssWidth = if (cssWidth > 0) {
+            cssWidth
+        } else {
+            Math.ceil(originalWidth / drawScale).toInt()
+        }
+
+        val layoutWidthPx = maxOf(
+            originalWidth,
+            Math.ceil(contentCssWidth * drawScale * WIDTH_BUFFER).toInt()
+        )
+        val widthSpec = View.MeasureSpec.makeMeasureSpec(layoutWidthPx, View.MeasureSpec.EXACTLY)
+        val heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+
+        fun writePage() {
+            try {
+                // Re-measure now that Chromium has re-laid out at the full width
+                webView.measure(widthSpec, heightSpec)
+                val contentWidth = maxOf(webView.measuredWidth, layoutWidthPx)
+                val contentHeight = maxOf(
+                    webView.measuredHeight,
+                    Math.ceil(cssHeight * drawScale).toInt(),
+                    originalHeight
+                )
+                webView.layout(0, 0, contentWidth, contentHeight)
+
+                var canvasScale = PT_PER_CSS_PX / drawScale
+                val rawWidthPt = contentWidth * canvasScale
+                val rawHeightPt = contentHeight * canvasScale
+                val fit = minOf(
+                    1.0,
+                    PDF_MAX_SIDE_PT / rawWidthPt,
+                    PDF_MAX_SIDE_PT / rawHeightPt
+                )
+                if (fit < 1.0) {
+                    Timber.tag(TAG).w(
+                        "Content exceeds the %d pt PDF page limit — scaling by %.3f",
+                        PDF_MAX_SIDE_PT, fit
+                    )
+                    canvasScale *= fit
+                }
+                val pageWidthPt = Math.ceil(rawWidthPt * fit).toInt().coerceAtLeast(1)
+                val pageHeightPt = Math.ceil(rawHeightPt * fit).toInt().coerceAtLeast(1)
+
+                Timber.tag(TAG).d(
+                    "Export: css=%dx%d scale=%.2f layout=%dx%d page=%dx%d pt",
+                    contentCssWidth, cssHeight, drawScale,
+                    contentWidth, contentHeight, pageWidthPt, pageHeightPt
+                )
+
+                val document = PdfDocument()
+                val pageInfo = PdfDocument.PageInfo
+                    .Builder(pageWidthPt, pageHeightPt, 1).create()
+                val page = document.startPage(pageInfo)
+                page.canvas.drawColor(Color.WHITE)
+                page.canvas.scale(canvasScale.toFloat(), canvasScale.toFloat())
+                webView.draw(page.canvas)
+                document.finishPage(page)
+
+                try {
+                    FileOutputStream(tempFile).use { document.writeTo(it) }
+                } finally {
+                    document.close()
+                }
+
+                // Restore the WebView to its normal on-screen state
+                restore()
+
+                // Move to public Downloads and report back
+                val savedUri = savePdfToDownloads(activity, tempFile, displayName)
+                tempFile.delete()
+                callback.onSuccess(savedUri, displayName)
+
+            } catch (oom: OutOfMemoryError) {
+                Timber.tag(TAG).e("PDF generation OOM — record too long for device memory")
+                restore()
+                tempFile.delete()
+                callback.onFailure("Out of memory")
+            } catch (e: Exception) {
+                Timber.tag(TAG).e(e, "Single-page PDF generation failed")
+                restore()
+                tempFile.delete()
+                callback.onFailure(e.message)
+            }
+        }
+
+        try {
             // Capture must start from the top-left of the document
             webView.scrollTo(0, 0)
 
             // Software rendering is required for full-document capture
             webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null)
 
-            // Lay the WebView out at FULL content width and height
-            webView.measure(
-                View.MeasureSpec.makeMeasureSpec(captureWidth, View.MeasureSpec.EXACTLY),
-                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+            webView.measure(widthSpec, heightSpec)
+            webView.layout(
+                0, 0,
+                maxOf(webView.measuredWidth, layoutWidthPx),
+                maxOf(webView.measuredHeight, originalHeight)
             )
-            val contentWidth = webView.measuredWidth
-            val contentHeight = webView.measuredHeight
-            webView.layout(0, 0, contentWidth, contentHeight)
 
-            // Draw the entire document onto ONE page sized to the content
-            val document = PdfDocument()
-            val pageInfo = PdfDocument.PageInfo
-                .Builder(contentWidth, contentHeight, 1).create()
-            val page = document.startPage(pageInfo)
-            page.canvas.drawColor(Color.WHITE)
-            webView.draw(page.canvas)
-            document.finishPage(page)
+            webView.postDelayed({ writePage() }, RELAYOUT_DELAY_MS)
 
-            try {
-                FileOutputStream(tempFile).use { document.writeTo(it) }
-            } finally {
-                document.close()
-            }
-
-            // Restore the WebView to its normal on-screen state
-            restore()
-
-            // Move to public Downloads and report back
-            val savedUri = savePdfToDownloads(activity, tempFile, displayName)
-            tempFile.delete()
-            callback.onSuccess(savedUri, displayName)
-
-        } catch (oom: OutOfMemoryError) {
-            Timber.tag(TAG).e("PDF generation OOM — record too long for device memory")
-            restore()
-            tempFile.delete()
-            callback.onFailure("Out of memory")
         } catch (e: Exception) {
-            Timber.tag(TAG).e(e, "Single-page PDF generation failed")
+            Timber.tag(TAG).e(e, "PDF layout pass failed")
             restore()
             tempFile.delete()
             callback.onFailure(e.message)
