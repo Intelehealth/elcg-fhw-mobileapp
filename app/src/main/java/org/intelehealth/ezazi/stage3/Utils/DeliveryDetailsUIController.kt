@@ -173,6 +173,7 @@ class DeliveryDetailsUIController(
                 clearTextInputError(binding.etlModeOfDelivery)
                 //enableAndDisableAllFields(true)
                 changeOtherInputEnableStatus(binding.etlModeOfDeliveryOtherOption, false, null, false)
+                binding.etModeOfDeliveryOtherOption.setText("")
             }
             binding.autotvModeOfDelivery.tag = deliveryDetails.modeOfDelivery
         }
@@ -421,7 +422,7 @@ class DeliveryDetailsUIController(
      * [triggerValues] and details were entered; otherwise just [mainValue].
      * Output is always a plain string (never JSON).
      */
-    fun handleOtherField(
+/*    fun handleOtherField(
         mainValue: String?,                          // e.g. "Yes", "Other", "Normal Vaginal Delivery"
         otherValue: String?,                         // free text from the details EditText
         triggerValues: List<String> = listOf("Other") // values that unlock the details field
@@ -430,6 +431,25 @@ class DeliveryDetailsUIController(
         val details = otherValue?.trim().orEmpty()
 
         val isTriggered = triggerValues.any { it.equals(main, ignoreCase = true) }
+
+        return if (isTriggered && details.isNotEmpty()) {
+            "$main - $details"
+        } else {
+            main
+        }
+    }*/
+    fun handleOtherField(
+        mainValue: String?,                          // e.g. "Yes", "Other", "A, B, Other"
+        otherValue: String?,                         // free text from the details EditText
+        triggerValues: List<String> = listOf("Other") // values that unlock the details field
+    ): String {
+        val main = mainValue?.trim() ?: return ""
+        val details = otherValue?.trim().orEmpty()
+
+        val selectedItems = main.split(",").map { it.trim() }
+        val isTriggered = selectedItems.any { item ->
+            triggerValues.any { trigger -> trigger.equals(item, ignoreCase = true) }
+        }
 
         return if (isTriggered && details.isNotEmpty()) {
             "$main - $details"
@@ -507,6 +527,7 @@ class DeliveryDetailsUIController(
                     R.id.radioNoCommon -> {
                         deliveryDetails.placentalOrCordAbnormality = "No"
                         binding.etlPlacentalOrCordAbnormalityOtherOption.visibility = View.GONE
+                        binding.etPlacentalOrCordAbnormalityOtherOption.setText("")
                         deliveryDetails.placentalOrCordAbnormalityOther = null
                     }
                 }
@@ -572,18 +593,35 @@ class DeliveryDetailsUIController(
 
         val items = context.resources.getStringArray(R.array.congenital_anomalies_options).toList()
         val adapter = GenericMultiChoiceAdapter(context, ArrayList(items), null)
+
+        val alreadySelectedText = binding.autotvCongenitalYesOptions.text?.toString()?.trim()
+        val preSelected = if (alreadySelectedText.isNullOrEmpty())
+            emptyList()
+        else
+            alreadySelectedText.split(",").map { it.trim() }
+
+        items.forEachIndexed { index, item ->
+            if (preSelected.contains(item)) {
+                adapter.selectItem(index)
+            }
+        }
         dialog.setAdapter(adapter)
         dialog.setListener { selectedItems ->
             binding.etlCongenitalYesOtherOption.visibility = View.GONE
+            val isOtherSelected = selectedItems.contains(context.getString(R.string.other))
+            val selectedText = selectedItems.joinToString(", ")
+            binding.autotvCongenitalYesOptions.setText(selectedText, false)
             if (selectedItems.isNotEmpty()) {
-                val selectedText = selectedItems.joinToString(", ")
+                //val selectedText = selectedItems.joinToString(", ")
                 binding.etlCongenitalYesOptions.error = null
                 binding.etlCongenitalYesOptions.isErrorEnabled = false
 
-                if (selectedItems.contains(context.getString(R.string.other))) {
+                if (isOtherSelected) {
                     binding.etlCongenitalYesOtherOption.visibility = View.VISIBLE
+                } else {
+                    binding.etlCongenitalYesOtherOption.visibility = View.GONE
+                    binding.etCongenitalYesOtherOption.setText("")   // clear other value on deselection of other option
                 }
-                binding.autotvCongenitalYesOptions.setText(selectedText, false)
             }
         }
         dialog.show(fragmentManager, MultiChoiceDialogFragment::class.java.canonicalName)
