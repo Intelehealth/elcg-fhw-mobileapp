@@ -497,13 +497,14 @@ public class PatientOtherInfoFragment extends Fragment {
      */
     private String normaliseTimeString(String timeStr) {
         if (timeStr == null || timeStr.isEmpty()) return timeStr;
-        // Already has AM/PM — nothing to do
+        // Not 12-hour format — already 24-hour, nothing to convert
         String upper = timeStr.toUpperCase(Locale.ENGLISH);
         if (upper.contains("AM") || upper.contains("PM")) return timeStr;
         // Try parsing as HH:mm (24-hour)
+        // Legacy 12-hour value ("hh:mm a") — convert down to 24-hour
         try {
-            SimpleDateFormat in24  = new SimpleDateFormat("HH:mm", Locale.ENGLISH);
-            SimpleDateFormat out12 = new SimpleDateFormat("hh:mm a", Locale.ENGLISH);
+            SimpleDateFormat in24  = new SimpleDateFormat("HH:mm a", Locale.ENGLISH);
+            SimpleDateFormat out12 = new SimpleDateFormat("hh:mm", Locale.ENGLISH);
             in24.setLenient(false);
             Date parsed = in24.parse(timeStr.trim());
             if (parsed != null) return out12.format(parsed);
