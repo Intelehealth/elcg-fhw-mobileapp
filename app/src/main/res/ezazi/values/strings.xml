@@ -268,4 +268,6 @@
     <string name="lcg_alert_ref_format">LCG alert value: %1$s</string>
     <string name="action_download">Download</string>
     <string name="sac_ruptured_past_limit">Sac ruptured date cannot be more than 4 weeks before EDD</string>
+    <string name="specify_other_mother_complication_error">Please specify the other complication for the mother</string>
+    <string name="specify_other_newborn_complication_error">Please specify the other complication for the newborn</string>
 </resources>

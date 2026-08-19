@@ -175,7 +175,8 @@ object ValidateStage3Fields {
         // Validate complications first
         validateComplications(
             motherComplications,
-            R.string.select_mother_complication_error
+            R.string.select_mother_complication_error,
+            R.string.specify_other_mother_complication_error
         )?.let {
             return it
         }
@@ -276,7 +277,9 @@ object ValidateStage3Fields {
             values[KEY_COMPLICATIONS_NEWBORN] ?: ""
 
         // Validate complications first
-        validateComplications(newbornComplications, R.string.select_newborn_complication_error)?.let {
+        validateComplications(newbornComplications, R.string.select_newborn_complication_error,
+            R.string.specify_other_newborn_complication_error
+        )?.let {
             return it
         }
         //  REQUIRED: Check at least one field has value
@@ -350,51 +353,33 @@ object ValidateStage3Fields {
 
     private fun validateComplications(
         jsonValue: String?,
-        @StringRes errorRes: Int
+        @StringRes errorRes: Int,
+        @StringRes otherMissingRes: Int
     ): ValidationResult? {
 
-        if (jsonValue.isNullOrEmpty()) {
-            return null
-        }
+        if (jsonValue.isNullOrEmpty()) return null
 
         return try {
-
-            Log.d("ComplicationValidation", jsonValue)
-
             val jsonObject = JSONObject(jsonValue)
+            val answer = jsonObject.optString("any ongoing complication").trim()
+            val complications = jsonObject.optString("complications").trim()
+            val otherText = jsonObject.optString("other value").trim()
 
-            val answer = jsonObject.optString(
-                "any ongoing complication"
-            ).trim()
-
-            val complications = jsonObject.optString(
-                "complications"
-            ).trim()
-
-            Log.d("ComplicationValidation",
-                "answer=$answer complications=$complications")
-
-            if (answer.equals("yes", ignoreCase = true)
-                && complications.isBlank()
-            ) {
-
-                ValidationResult(
-                    false,
-                    errorRes
-                )
-
-            } else {
-                null
+            if (answer.equals("yes", ignoreCase = true) && complications.isBlank()) {
+                return ValidationResult(false, errorRes)
             }
 
+            val selected = complications.split(",").map { it.trim() }
+            val otherSelected = selected.any { it.equals("Other", ignoreCase = true) }
+
+            if (otherSelected && otherText.isBlank()) {
+                return ValidationResult(false, otherMissingRes)
+            }
+
+            null
         } catch (e: Exception) {
-
             e.printStackTrace()
-
-            ValidationResult(
-                false,
-                errorRes
-            )
+            ValidationResult(false, errorRes)
         }
     }
 }
