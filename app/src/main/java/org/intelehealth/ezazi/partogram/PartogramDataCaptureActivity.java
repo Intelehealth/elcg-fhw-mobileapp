@@ -53,6 +53,8 @@ import org.intelehealth.ezazi.partogram.utils.DataCaptureGenericRadioFieldHandle
 import org.intelehealth.ezazi.partogram.utils.ValidationConstants;
 import org.intelehealth.ezazi.partogram.utils.ValidateStage3Fields;
 import org.intelehealth.ezazi.stage3.Utils.DeliveryDetailsConcept;
+import org.intelehealth.ezazi.stage3.postpartum.OfflineStage3ViewActivity;
+import org.intelehealth.ezazi.stage3.postpartum.ViewPostPartumReportActivity;
 import org.intelehealth.ezazi.syncModule.SyncUtils;
 import org.intelehealth.ezazi.ui.dialog.AppDialogUtils;
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
@@ -171,6 +173,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
 
         mSaveTextView.setEnabled(accessMode != PartogramConstants.AccessMode.READ);
 
+/*
         mEpartogramTextView.setOnClickListener(v -> {
 
             boolean doesVisitHasData = new ObsDAO().getObsCountForVisit(mVisitUUID);
@@ -195,7 +198,8 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                 float smallestWidth = Math.min(widthDp, heightDp);
                 Log.v("epartog", "smallest width: " + smallestWidth);
 
-            /*if (smallestWidth >= 720) { // 8inch = 720 and 7inch == 600
+            */
+/*if (smallestWidth >= 720) { // 8inch = 720 and 7inch == 600
                 //Device is a 8" tablet
                 // Call webview here...
                 Intent intent = new Intent(this, EpartogramViewActivity.class);
@@ -206,8 +210,13 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
             else {
                 DialogUtils dialogUtils = new DialogUtils();
                 dialogUtils.showOkDialog(PartogramDataCaptureActivity.this, "",
-                        context.getString(R.string.this_option_available_tablet_device) *//*+ ": " + dpi*//*, context.getString(R.string.ok));
-            }*/
+                        context.getString(R.string.this_option_available_tablet_device) *//*
+*/
+/*+ ": " + dpi*//*
+*/
+/*, context.getString(R.string.ok));
+            }*//*
+
 
 //            boolean isTablet = getResources().getBoolean(R.bool.isTablet);
 //            if (isTablet) {
@@ -242,7 +251,23 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
             }
 
         });
+*/
 
+        mEpartogramTextView.setOnClickListener(v -> {
+            boolean doesVisitHasData = new ObsDAO().getObsCountForVisit(mVisitUUID);
+            if (!doesVisitHasData) {
+                showNoDataDialogForViewLcg(
+                        getString(R.string.no_data_for_view_lcg_title),
+                        getString(R.string.no_data_for_view_lcg_body));
+                return;
+            }
+
+            if (mStageNumber == 3) { // postpartum stage
+                showPostpartumReport();
+            } else {
+                showEpartogramView();
+            }
+        });
         Button btnChat = findViewById(R.id.btnFlipCamera);
         btnChat.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -1331,5 +1356,25 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
     @Override
     public void onNetworkLost() {
         super.onNetworkLost();
+    }
+    private void showEpartogramView() {
+        Intent intent = NetworkConnection.isOnline(this)
+                ? new Intent(this, EpartogramViewActivity.class)
+                : new Intent(this, OfflineEPartogramViewActivity.class);
+
+        intent.putExtra("patientuuid", mPatientUuid);
+        intent.putExtra("visituuid", mVisitUUID);
+        startActivity(intent);
+    }
+
+    private void showPostpartumReport() {
+        Intent intent = NetworkConnection.isOnline(this)
+                ? new Intent(this, ViewPostPartumReportActivity.class)
+                : new Intent(this, OfflineStage3ViewActivity.class);
+
+        intent.putExtra("patientName", mPatientName);
+        intent.putExtra("patientuuid", mPatientUuid);
+        intent.putExtra("visituuid", mVisitUUID);
+        startActivity(intent);
     }
 }
