@@ -487,8 +487,18 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         paramNameTextView.setText(info.getParamName());
 
         //fr general radio buttons- with yes no option
-        radioHandler.restoreRadioState(paramRadio, info);
-        radioHandler.syncRadioState(info, paramRadio, selected);
+        // Only the generic (plain yes/no) concepts should have their radio state
+        // restored/synced here. IV Fluid, Oxytocin, Medicine, Plan and Assessment
+        // manage their own RadioGroup check-state and listener further down
+        // (via handleRadioCheckListener) based on a captured value that is JSON,
+        // not a literal "YES"/"NO" string. Running the generic restore/sync for
+        // those concepts forced the group to "No" first, racing with the
+        // concept-specific logic and causing the Strength/Infusion fields to be
+        // intermittently hidden after selecting "Yes".
+        if (radioHandler.isGenericConcept(info.getConceptUUID())) {
+            radioHandler.restoreRadioState(paramRadio, info);
+            radioHandler.syncRadioState(info, paramRadio, selected);
+        }
 
 
         selected.setTag(info.getCapturedValue());
@@ -1283,8 +1293,10 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
             Medication oxytocinData = allAdministerOxytocinsList.get(0);
             Medication oxytocinDataForDb = new Medication();
             String strengthValue = oxytocinData.getStrength();
-            if (oxytocinData.getStrength().contains("(U/L)")) {
-                strengthValue = oxytocinData.getStrength().replace("(U/L)", "").trim();
+            // Strength can be null for a record saved before this field was captured;
+            // guard against NPE instead of letting it abort the whole bind.
+            if (strengthValue != null && strengthValue.contains("(U/L)")) {
+                strengthValue = strengthValue.replace("(U/L)", "").trim();
             }
 
             binding.includeLayoutPartoOxytocin.viewStrength.etvData.setText(strengthValue);

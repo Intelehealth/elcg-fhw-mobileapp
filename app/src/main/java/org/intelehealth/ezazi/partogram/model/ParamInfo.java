@@ -404,12 +404,18 @@ public class ParamInfo implements Serializable {
 
             String status = medicationData.getInfusionStatus();
             String statusAdminister = "";
-            if (status.equalsIgnoreCase("start")) {
-                statusAdminister = "Started";
-            } else if (status.equalsIgnoreCase("continue")) {
-                statusAdminister = "Continued";
-            } else if (status.equalsIgnoreCase("stop")) {
-                statusAdminister = "Stopped";
+            // status can be null for a record saved before infusion status was
+            // captured (or a partially-filled draft); guard so hydrating this
+            // one row can't throw and leave the rest of setEditData()'s captured
+            // values (and this row's Yes/No + detail fields) inconsistently set.
+            if (status != null) {
+                if (status.equalsIgnoreCase("start")) {
+                    statusAdminister = "Started";
+                } else if (status.equalsIgnoreCase("continue")) {
+                    statusAdminister = "Continued";
+                } else if (status.equalsIgnoreCase("stop")) {
+                    statusAdminister = "Stopped";
+                }
             }
             Log.d("TAG", "getMedication: conceptUUID : " + obs.getConceptuuid());
             medicationData.setInfusionStatus(statusAdminister);
@@ -420,7 +426,7 @@ public class ParamInfo implements Serializable {
                 if (obs.getConceptuuid().equals(UuidDictionary.IV_FLUIDS)) {
                     String ivFluidType = medication.getType();
 
-                    if (ivFluidType.equals("Ringer Lactate") || ivFluidType.equals("Normal Saline") || ivFluidType.equals("Dextrose 5% (D5)")) {
+                    if (ivFluidType != null && (ivFluidType.equals("Ringer Lactate") || ivFluidType.equals("Normal Saline") || ivFluidType.equals("Dextrose 5% (D5)"))) {
                         medication.setType(ivFluidType);
                     } else {
                         medication.setType("Other");
@@ -439,6 +445,13 @@ public class ParamInfo implements Serializable {
             }
             return medicationData;
         } catch (JsonSyntaxException e) {
+            e.printStackTrace();
+            return getMedication();
+        } catch (Exception e) {
+            // Any other unexpected failure while hydrating a saved Oxytocin/IV Fluid
+            // record (e.g. a null field we didn't anticipate) should degrade to the
+            // existing captured medication instead of aborting setEditData() for
+            // every other row in the section.
             e.printStackTrace();
             return getMedication();
         }
