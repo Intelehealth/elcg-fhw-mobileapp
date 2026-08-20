@@ -156,6 +156,15 @@ object WebViewPdfExporter {
         expandAndMeasureContent(webView) { cssWidth, _ -> callback.onMeasured(cssWidth) }
     }
 
+    /**
+     * Publishes an already-written PDF into Downloads/eZazi, for producers
+     * that build their own document rather than capturing a WebView.
+     */
+    @JvmStatic
+    @Throws(IOException::class)
+    fun publishToDownloads(context: Context, pdfFile: File, displayName: String): Uri =
+        savePdfToDownloads(context, pdfFile, displayName)
+
     /** Undoes [expandAndMeasure]'s style changes (and any body zoom applied after it). */
     @JvmStatic
     fun restorePageStyles(webView: WebView) {

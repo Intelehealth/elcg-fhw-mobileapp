@@ -41,6 +41,7 @@ import com.github.ajalt.timberkt.Timber;
 
 import org.intelehealth.ezazi.BuildConfig;
 import org.intelehealth.ezazi.R;
+import org.intelehealth.ezazi.activities.epartogramActivity.print.LcgPdfExport;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
 import org.intelehealth.ezazi.utilities.FileUtils;
@@ -50,9 +51,6 @@ import org.intelehealth.ezazi.utilities.WebViewPdfExporter;
 import org.intelehealth.ezazi.widget.materialprogressbar.CustomProgressDialog;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
 
 public class EpartogramViewActivity extends BaseActionBarActivity {
 
@@ -61,8 +59,6 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
 
     private static final int REQUEST_STORAGE_PERMISSION = 4321;
 
-    // A4 landscape ≈ 11.69in × 96 CSS px/in ≈ 1122; slightly less for safety
-    private static final int A4_LANDSCAPE_CSS_WIDTH = 1080;
 
     private String patientUuid, visitUuid;
     private static final String URL = BuildConfig.SERVER_URL + "/intelehealth/index.html#/epartogram/";
@@ -177,6 +173,7 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
+
     /**
      * Print / Download only make sense once the partogram has actually rendered,
      * otherwise the user exports a blank page.
@@ -201,8 +198,16 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
 
     /**
      * Expands the page's scroll containers (so the full LCG width, including
-     * Stage 2, gets painted), scales the page to fit A4 landscape, then hands
-     * the WebView's print adapter to the system PrintManager.
+     * Stage 2, gets painted) and hands the WebView's print adapter to the
+     * system PrintManager at 100%.
+     *
+     * Paper size and orientation are deliberately NOT requested. The print
+     * dialog owns them: the deployment prints on whatever the site has (A4
+     * today, larger later), and the print pipeline scales the page to whatever
+     * sheet is chosen. Requesting a sheet here achieved nothing — services
+     * substitute their own default for any size they do not stock — while
+     * pre-zooming the page could only ever make the result smaller, never
+     * larger, than that scaling already makes it.
      */
     private void printEpartogram() {
         if (!isPageLoaded || isErrorShown) {
@@ -211,17 +216,9 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
         }
         progressDialog.show();
 
-        // Step 1: expand the nested scroll containers (shared with the PDF path)
         WebViewPdfExporter.expandAndMeasure(webView, cssWidth -> {
-
-            // Step 2: scale the page down so the FULL width fits on A4 landscape
-            double zoom = (cssWidth > A4_LANDSCAPE_CSS_WIDTH)
-                    ? (double) A4_LANDSCAPE_CSS_WIDTH / cssWidth
-                    : 1.0;
-
-            webView.evaluateJavascript(
-                    "document.body.style.zoom='" + zoom + "';",
-                    ignored -> webView.postDelayed(this::launchPrintJob, 300));
+            Timber.tag(TAG).d("Print: expanded content width = " + cssWidth + " CSS px");
+            webView.postDelayed(this::launchPrintJob, 300);
         });
     }
 
@@ -233,7 +230,6 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
             PrintDocumentAdapter adapter = webView.createPrintDocumentAdapter(jobName);
 
             PrintAttributes attributes = new PrintAttributes.Builder()
-                    .setMediaSize(PrintAttributes.MediaSize.ISO_A4.asLandscape())
                     .setResolution(new PrintAttributes.Resolution("epartogram", "epartogram", 300, 300))
                     .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
                     .build();
@@ -307,23 +303,22 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
     private void generatePdf() {
         progressDialog.show();
 
-        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmm", Locale.US).format(new Date());
-        String displayName = "ePartogram_" + visitUuid + "_" + timestamp + ".pdf";
+        LcgPdfExport.export(this, visitUuid, LcgPdfExport.defaultSheet(),
+                new LcgPdfExport.Callback() {
+                    @Override
+                    public void onSuccess(@NonNull Uri uri, @NonNull String name) {
+                        progressDialog.dismiss();
+                        showPdfSavedDialog(uri, name);
+                    }
 
-        WebViewPdfExporter.export(this, webView, displayName, new WebViewPdfExporter.Callback() {
-            @Override
-            public void onSuccess(@NonNull Uri uri, @NonNull String name) {
-                progressDialog.dismiss();
-                showPdfSavedDialog(uri, name);
-            }
-
-            @Override
-            public void onFailure(String message) {
-                Timber.tag(TAG).e("PDF export failed: %s", message);
-                progressDialog.dismiss();
-                Toast.makeText(EpartogramViewActivity.this, R.string.epartogram_export_failed, Toast.LENGTH_LONG).show();
-            }
-        });
+                    @Override
+                    public void onFailure(String message) {
+                        Timber.tag(TAG).e("LCG export failed: %s", message);
+                        progressDialog.dismiss();
+                        Toast.makeText(EpartogramViewActivity.this,
+                                R.string.epartogram_export_failed, Toast.LENGTH_LONG).show();
+                    }
+                });
     }
 
     private void showPdfSavedDialog(Uri pdfUri, String displayName) {

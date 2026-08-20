@@ -662,6 +662,13 @@ object EpartogramDataTransformer {
     // ── Provider initials ────────────────────────────────────────────────────
 
     @SuppressLint("Range")
+    /**
+     * tbl_encounter.provider_uuid is a provider uuid, so it matches
+     * tbl_provider.uuid — not tbl_provider.useruuid, which is the linked user
+     * and matches tbl_obs.creatoruuid instead. Joining on useruuid here
+     * returned nothing for every encounter, which left the INITIALS row of the
+     * Labour Care Guide blank in both the printed sheet and the offline view.
+     */
     private fun getProviderInitials(db: SQLiteDatabase, providerUuid: String,
                                      cache: MutableMap<String, String>): String {
         if (providerUuid.isEmpty()) return ""
@@ -669,7 +676,7 @@ object EpartogramDataTransformer {
 
         var initials = ""
         db.rawQuery(
-            "SELECT given_name, family_name FROM tbl_provider WHERE useruuid = ? LIMIT 1",
+            "SELECT given_name, family_name FROM tbl_provider WHERE uuid = ? LIMIT 1",
             arrayOf(providerUuid)
         ).use { c ->
             if (c.moveToFirst()) {
