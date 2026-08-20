@@ -5,7 +5,6 @@ import static org.intelehealth.ezazi.app.AppConstants.EVENT_SHIFT_CHANGED;
 import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.DELIVERY_OUTCOME_STAGE3;
 
-import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -31,7 +30,6 @@ import android.view.ContextThemeWrapper;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -39,7 +37,6 @@ import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.StringRes;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
@@ -50,7 +47,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.github.ajalt.timberkt.Timber;
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.textview.MaterialTextView;
 import com.google.gson.Gson;
 
 import org.intelehealth.ezazi.R;
@@ -71,8 +67,8 @@ import org.intelehealth.ezazi.models.FamilyMemberRes;
 import org.intelehealth.ezazi.models.dto.EncounterDTO;
 import org.intelehealth.ezazi.models.dto.ObsDTO;
 import org.intelehealth.ezazi.models.dto.PatientAttributesDTO;
-import org.intelehealth.ezazi.optimized_sync.network.NetworkStatus;
 import org.intelehealth.ezazi.models.dto.ProviderDTO;
+import org.intelehealth.ezazi.optimized_sync.network.NetworkStatus;
 import org.intelehealth.ezazi.services.firebase_services.FirebaseRealTimeDBUtils;
 import org.intelehealth.ezazi.stage3.activities.WomenDeliveryDetailsActivity;
 import org.intelehealth.ezazi.stage3.postpartum.OfflineStage3ViewActivity;
@@ -584,7 +580,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         FirebaseRealTimeDBUtils.logData(log);
 
         Intent intent;
-        if (NetworkConnection.isOnline(TimelineVisitSummaryActivity.this)) {
+        if (currentNetworkStatus().getHasInternet()) {
             intent = new Intent(context, EpartogramViewActivity.class);
         } else {
             intent = new Intent(context, OfflineEPartogramViewActivity.class);
@@ -696,7 +692,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 
     private void showToastIfNoPrescription() {
         SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
-        PrescriptionRepository repository = new PrescriptionRepository(db,obsDAO);
+        PrescriptionRepository repository = new PrescriptionRepository(db, obsDAO);
         prescriptions = repository.fetchPrescription(visitUuid, PrescriptionFragment.PrescriptionType.FULL);
         if (prescriptions != null && !prescriptions.isEmpty()) {
             Drawable drawable = ContextCompat.getDrawable(this, R.drawable.ic_vector_prescription);
@@ -1229,7 +1225,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
 
                 } else if (patientsDAO.checkStage(encounter.getEncounterTypeUuid(), StageEnum.TWO)) {
                     stageTwoList.add(encounter);
-                }else if (patientsDAO.checkStage(encounter.getEncounterTypeUuid(), StageEnum.THREE)) {
+                } else if (patientsDAO.checkStage(encounter.getEncounterTypeUuid(), StageEnum.THREE)) {
                     //no need to show alert dialog for stage 3
                     return;
                 }
@@ -1611,7 +1607,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
     private void showPostpartumReport() {
         Intent intent;
 
-        if (NetworkConnection.isOnline(this)) {
+        if (currentNetworkStatus().getHasInternet()) {
             intent = new Intent(context, ViewPostPartumReportActivity.class);
         } else {
             intent = new Intent(context, OfflineStage3ViewActivity.class);
