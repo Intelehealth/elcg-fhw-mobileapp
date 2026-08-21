@@ -720,6 +720,22 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
             } else {
                 info.setCreatedDate(DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
             }
+        } else {
+            // No entry came back from the "Administered" (AdministeredActivity) picker
+            // list — this row's data was typed/selected directly into the inline
+            // Type of IV Fluid/Infusion Rate/Infusion Status fields instead. Those
+            // edits are kept on info.getMedication() (see showIVFluidDialog,
+            // manageSelectionSingleChoiceSelection and setInfusionRateTextChangeListener),
+            // but this view is rebuilt from scratch on every bind, so without this
+            // fallback the fields came back empty after any RecyclerView rebind (e.g.
+            // just from scrolling the section off/on screen) even though the typed
+            // data was still held in memory.
+            Medication ivFluidData = getMedication(info);
+            String ivFluidType = ivFluidData.getType();
+            binding.ivFluidOptions.viewTypeOfIvFluid.tvData.setText(
+                    "Other".equalsIgnoreCase(ivFluidType) ? ivFluidData.getOtherType() : ivFluidType);
+            binding.ivFluidOptions.viewInfusionRate.etvData.setText(ivFluidData.getInfusionRate());
+            binding.ivFluidOptions.viewInfusionStatus.tvData.setText(ivFluidData.getInfusionStatus());
         }
     }
 
@@ -1044,7 +1060,25 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
         Log.d(TAG, "handleRadioCheckListener: info1 : "+info.toString());
         Log.d(TAG, "handleRadioCheckListener: info2 : "+new Gson().toJson(info));
 
-        if (info.getCapturedValue() != null && !TextUtils.isEmpty(info.getCapturedValue()) && !info.getCapturedValue().equalsIgnoreCase("NO")) {
+        // Prefer the user's own explicit Yes/No choice (info.checkedRadioOption) over
+        // re-deriving it from capturedValue. For IV Fluid/Oxytocin, capturedValue is
+        // only written once every required detail field is valid (see
+        // ParamInfo.saveJson()/Medication.isValidOxytocin()/isValidIVFluid()), so a
+        // row where the user tapped "Yes" and is still mid-way through typing
+        // Strength/Infusion Rate/Infusion Status has a null/empty capturedValue.
+        // Since this view is rebuilt from scratch on every RecyclerView rebind
+        // (e.g. triggered just by scrolling the section off/on screen), relying on
+        // capturedValue alone made the row silently flip back to "No" — hiding the
+        // detail fields — the moment the user scrolled before finishing them.
+        // checkedRadioOption is set the instant the user taps Yes/No and isn't
+        // gated on completeness, so it survives rebinds correctly.
+        if (info.getCheckedRadioOption() == ParamInfo.RadioOptions.YES) {
+            radioGroup.check(R.id.radioYes);
+            listener.onCheckedYes();
+        } else if (info.getCheckedRadioOption() == ParamInfo.RadioOptions.NO) {
+            radioGroup.check(R.id.radioNo);
+            listener.onCheckedNo();
+        } else if (info.getCapturedValue() != null && !TextUtils.isEmpty(info.getCapturedValue()) && !info.getCapturedValue().equalsIgnoreCase("NO")) {
             radioGroup.check(R.id.radioYes);
             info.setCheckedRadioOption(ParamInfo.RadioOptions.YES);
             listener.onCheckedYes();
@@ -1312,6 +1346,20 @@ public class PartogramQueryListingAdapter extends RecyclerView.Adapter<RecyclerV
             } else {
                 info.setCreatedDate(DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
             }
+        } else {
+            // No entry came back from the "Administered" (AdministeredActivity) picker
+            // list — this row's data was typed directly into the inline Strength/
+            // Infusion Rate/Infusion Status fields instead. Those keystrokes are kept
+            // on info.getMedication() (see the TextWatchers in
+            // showOxytocinOptionsDetails/setInfusionRateTextChangeListener), but this
+            // view is rebuilt from scratch on every bind, so without this fallback the
+            // EditTexts came back empty after any RecyclerView rebind (e.g. just from
+            // scrolling the section off/on screen) even though the typed data was still
+            // held in memory.
+            Medication oxytocinData = getMedication(info);
+            binding.includeLayoutPartoOxytocin.viewStrength.etvData.setText(oxytocinData.getStrength());
+            binding.includeLayoutPartoOxytocin.viewInfusionRate.etvData.setText(oxytocinData.getInfusionRate());
+            binding.includeLayoutPartoOxytocin.viewInfusionStatus.tvData.setText(oxytocinData.getInfusionStatus());
         }
     }
 
