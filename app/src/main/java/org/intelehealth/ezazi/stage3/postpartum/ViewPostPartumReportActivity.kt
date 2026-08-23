@@ -32,13 +32,10 @@ import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity
 import org.intelehealth.ezazi.utilities.FileUtils
 import org.intelehealth.ezazi.utilities.NetworkConnection
 import org.intelehealth.ezazi.utilities.SessionManager
-import org.intelehealth.ezazi.utilities.WebViewPdfExporter
+import org.intelehealth.ezazi.stage3.postpartum.print.Stage3PdfExport
 import org.intelehealth.ezazi.widget.materialprogressbar.CustomProgressDialog
 import timber.log.Timber
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class ViewPostPartumReportActivity : BaseActionBarActivity() {
 
@@ -175,27 +172,35 @@ class ViewPostPartumReportActivity : BaseActionBarActivity() {
         }
     }
 
+    /**
+     * Draws the Delivery Outcome sheet from the local database rather than
+     * screenshotting the WebView, so the printed text keeps a readable size
+     * instead of being scaled down to fit the paper.
+     */
     private fun generatePdf() {
+        if (visitUuid.isEmpty()) {
+            Toast.makeText(this, R.string.epartogram_export_failed, Toast.LENGTH_LONG).show()
+            return
+        }
         progressDialog.show()
 
-        val timestamp = SimpleDateFormat("yyyyMMdd_HHmm", Locale.US).format(Date())
-        val displayName = "PostpartumReport_${visitUuid}_$timestamp.pdf"
+        Stage3PdfExport.export(
+            this, visitUuid, Stage3PdfExport.defaultSheet(),
+            object : Stage3PdfExport.Callback {
+                override fun onSuccess(uri: Uri, displayName: String) {
+                    progressDialog.dismiss()
+                    showPdfSavedDialog(uri, displayName)
+                }
 
-        WebViewPdfExporter.export(this, webView, displayName, object : WebViewPdfExporter.Callback {
-            override fun onSuccess(uri: Uri, displayName: String) {
-                progressDialog.dismiss()
-                showPdfSavedDialog(uri, displayName)
-            }
-
-            override fun onFailure(message: String?) {
-                Timber.tag(TAG).e("PDF export failed: %s", message)
-                progressDialog.dismiss()
-                Toast.makeText(
-                    this@ViewPostPartumReportActivity,
-                    R.string.epartogram_export_failed, Toast.LENGTH_LONG
-                ).show()
-            }
-        })
+                override fun onFailure(message: String?) {
+                    Timber.tag(TAG).e("Delivery outcome export failed: %s", message)
+                    progressDialog.dismiss()
+                    Toast.makeText(
+                        this@ViewPostPartumReportActivity,
+                        R.string.epartogram_export_failed, Toast.LENGTH_LONG
+                    ).show()
+                }
+            })
     }
 
     private fun showPdfSavedDialog(pdfUri: Uri, displayName: String) {

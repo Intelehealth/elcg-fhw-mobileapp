@@ -87,16 +87,17 @@ object Stage3DataTransformer {
     private val NEWBORN_UUID_TO_IDX: Map<String, Int> = mapOf(
         PartogramConstants.Params.RESPIRATORY_RATE_NEWBORN.conceptId    to 0,
         PartogramConstants.Params.SPO2_NEWBORN.conceptId                to 1,
-        PartogramConstants.Params.GRUNTING_NEWBORN.conceptId            to 2,
-        PartogramConstants.Params.CHEST_INDRAWING_NEWBORN.conceptId     to 3,
-        PartogramConstants.Params.FAST_BREATHING_NEWBORN.conceptId      to 4,
-        PartogramConstants.Params.FEET_WARM_NEWBORN.conceptId           to 5,
-        PartogramConstants.Params.SKIN_COLOR_NEWBORN.conceptId          to 6,
-        PartogramConstants.Params.UC_OOZING_NEWBORN.conceptId           to 7,
-        PartogramConstants.Params.SUCKING_FEEDING_NEWBORN.conceptId     to 8,
-        PartogramConstants.Params.ONGOING_COMPLICATIONS_NEWBORN.conceptId to 9,
-        PartogramConstants.Params.ASSESSMENT_NEWBORN.conceptId          to 10,
-        PartogramConstants.Params.PLAN_NEWBORN.conceptId                to 11
+        PartogramConstants.Params.TEMPERATURE_NEWBORN.conceptId         to 2,
+        PartogramConstants.Params.GRUNTING_NEWBORN.conceptId            to 3,
+        PartogramConstants.Params.CHEST_INDRAWING_NEWBORN.conceptId     to 4,
+        PartogramConstants.Params.FAST_BREATHING_NEWBORN.conceptId      to 5,
+        PartogramConstants.Params.FEET_WARM_NEWBORN.conceptId           to 6,
+        PartogramConstants.Params.SKIN_COLOR_NEWBORN.conceptId          to 7,
+        PartogramConstants.Params.UC_OOZING_NEWBORN.conceptId           to 8,
+        PartogramConstants.Params.SUCKING_FEEDING_NEWBORN.conceptId     to 9,
+        PartogramConstants.Params.ONGOING_COMPLICATIONS_NEWBORN.conceptId to 10,
+        PartogramConstants.Params.ASSESSMENT_NEWBORN.conceptId          to 11,
+        PartogramConstants.Params.PLAN_NEWBORN.conceptId                to 12
     )
 
     private val MATERNAL_PARAM_NAMES = listOf(
@@ -107,11 +108,11 @@ object Stage3DataTransformer {
     private val MATERNAL_TEXTAREA_IDX = setOf(9, 10)
 
     private val NEWBORN_PARAM_NAMES = listOf(
-        "Respiratory Rate", "SPO2", "Grunting", "Chest Indrawing", "Fast Breathing",
-        "Feet (warm)", "Skin Color", "Umbilical Cord Oozing", "Sucking / Feeding",
-        "Complications", "Assessment (Newborn)", "Plan (Newborn)"
+        "Respiratory Rate", "SPO2", "Temperature", "Grunting", "Chest Indrawing",
+        "Fast Breathing", "Feet (warm)", "Skin Color", "Umbilical Cord Oozing",
+        "Sucking / Feeding", "Complications", "Assessment (Newborn)", "Plan (Newborn)"
     )
-    private val NEWBORN_TEXTAREA_IDX = setOf(10, 11)
+    private val NEWBORN_TEXTAREA_IDX = setOf(11, 12)
 
     // ── Public API ──────────────────────────────────────────────────────────
 
@@ -203,6 +204,7 @@ object Stage3DataTransformer {
         out.put("skinToSkin", textOrDash(obs[DeliveryDetailsConcept.SKIN_CONTACT.uuid]))
         out.put("breastfeedingInOneHour", textOrDash(obs[DeliveryDetailsConcept.BREASTFED_FIRSTHOUR.uuid]))
         out.put("congenitalDisorders", formatCongenitalDisorders(obs[DeliveryDetailsConcept.CONGENITAL_ANOMALY.uuid]))
+        out.put("gestationWeeks", textOrDash(obs[DeliveryDetailsConcept.GESTATION.uuid]))
 
         return out
     }
@@ -268,8 +270,10 @@ object Stage3DataTransformer {
         val encounters = fetchStage3Encounters(db, visitUuid)
         for ((idx, enc) in encounters.withIndex()) {
             if (idx >= NUM_COLS) break
-            colTimes[idx] = enc.second
-            fillObsForEncounter(db, enc.first, idx, maternalValues, newbornValues)
+            colTimes[idx] = enc.isoTime
+            fillObsForEncounter(
+                db, enc.uuid, idx, maternalValues, newbornValues, enc.provider, enc.isoTime
+            )
         }
 
         root.put("colTimes", stringArrayToJson(colTimes))
@@ -277,49 +281,113 @@ object Stage3DataTransformer {
         root.put("newbornParams",  buildParamsJson(NEWBORN_PARAM_NAMES,  NEWBORN_TEXTAREA_IDX,  newbornValues))
     }
 
-    /** Returns ordered list of (encounterUuid, isoEncounterTime) for Stage3_Hour* encounters. */
+    /** One Stage 3 slot: the encounter, when it happened, and who recorded it. */
+    private data class Stage3Encounter(
+        val uuid: String,
+        val isoTime: String,
+        val provider: String
+    )
+
+    /**
+     * Stage 3 encounters in time order, each carrying its provider's display
+     * name. tbl_encounter.provider_uuid matches tbl_provider.uuid — not
+     * useruuid, which is the linked user and matches tbl_obs.creatoruuid.
+     */
     @SuppressLint("Range")
-    private fun fetchStage3Encounters(db: SQLiteDatabase, visitUuid: String): List<Pair<String, String>> {
-        val out = mutableListOf<Pair<String, String>>()
+    private fun fetchStage3Encounters(db: SQLiteDatabase, visitUuid: String): List<Stage3Encounter> {
+        val out = mutableListOf<Stage3Encounter>()
         val placeholders = STAGE3_HOUR_TYPE_UUIDS.joinToString(",") { "?" }
         val args = arrayOf(visitUuid) + STAGE3_HOUR_TYPE_UUIDS.toTypedArray()
+        val providerCache = mutableMapOf<String, String>()
         db.rawQuery(
-            "SELECT uuid, encounter_time FROM tbl_encounter " +
+            "SELECT uuid, encounter_time, provider_uuid FROM tbl_encounter " +
             "WHERE visituuid = ? " +
             "  AND encounter_type_uuid IN ($placeholders) " +
             "  AND (voided = '0' OR voided = 'false' OR voided = 'FALSE') " +
             "ORDER BY encounter_time ASC",
             args
         ).use { c ->
+            val uuidIdx = c.getColumnIndex("uuid")
+            val timeIdx = c.getColumnIndex("encounter_time")
+            val providerIdx = c.getColumnIndex("provider_uuid")
             while (c.moveToNext()) {
-                out += c.getString(c.getColumnIndex("uuid")).orEmpty() to
-                        toIsoOrRaw(c.getString(c.getColumnIndex("encounter_time")).orEmpty())
+                val providerUuid =
+                    if (providerIdx >= 0) c.getString(providerIdx).orEmpty() else ""
+                out += Stage3Encounter(
+                    uuid = if (uuidIdx >= 0) c.getString(uuidIdx).orEmpty() else "",
+                    isoTime = toIsoOrRaw(
+                        if (timeIdx >= 0) c.getString(timeIdx).orEmpty() else ""
+                    ),
+                    provider = resolveProvider(db, providerUuid, providerCache)
+                )
             }
         }
         return out
     }
 
+    /** "mounika M nurse" — given name, family name, and the role without its prefix. */
+    @SuppressLint("Range")
+    private fun resolveProvider(
+        db: SQLiteDatabase,
+        providerUuid: String,
+        cache: MutableMap<String, String>
+    ): String {
+        if (providerUuid.isEmpty()) return ""
+        cache[providerUuid]?.let { return it }
+
+        var label = ""
+        db.rawQuery(
+            "SELECT given_name, family_name, role FROM tbl_provider WHERE uuid = ? LIMIT 1",
+            arrayOf(providerUuid)
+        ).use { c ->
+            if (c.moveToFirst()) {
+                val given = c.getString(c.getColumnIndex("given_name")).orEmpty()
+                val family = c.getString(c.getColumnIndex("family_name")).orEmpty()
+                val role = c.getString(c.getColumnIndex("role")).orEmpty()
+                    .substringAfterLast(":").trim().lowercase(Locale.getDefault())
+                label = listOf(given, family, role)
+                    .filter { it.isNotEmpty() }
+                    .joinToString(" ")
+            }
+        }
+        cache[providerUuid] = label
+        return label
+    }
+
     @SuppressLint("Range")
     private fun fillObsForEncounter(
         db: SQLiteDatabase, encounterUuid: String, colIdx: Int,
-        maternalValues: Array<Array<Any?>>, newbornValues: Array<Array<Any?>>
+        maternalValues: Array<Array<Any?>>, newbornValues: Array<Array<Any?>>,
+        provider: String, isoTime: String
     ) {
         db.rawQuery(
-            "SELECT conceptuuid, value FROM tbl_obs " +
+            "SELECT conceptuuid, value, comment FROM tbl_obs " +
             "WHERE encounteruuid = ? AND (voided = '0' OR voided = 'false' OR voided = 'FALSE')",
             arrayOf(encounterUuid)
         ).use { c ->
+            // Resolved once, and tolerated if absent: a missing alert flag must not
+            // cost the whole report.
+            val conceptIdx = c.getColumnIndex("conceptuuid")
+            val valueIdx = c.getColumnIndex("value")
+            val commentIdx = c.getColumnIndex("comment")
             while (c.moveToNext()) {
-                val conceptUuid = c.getString(c.getColumnIndex("conceptuuid")).orEmpty()
-                val value = c.getString(c.getColumnIndex("value")).orEmpty()
+                val conceptUuid = if (conceptIdx >= 0) c.getString(conceptIdx).orEmpty() else ""
+                val value = if (valueIdx >= 0) c.getString(valueIdx).orEmpty() else ""
+                 val comment = if (commentIdx >= 0) c.getString(commentIdx).orEmpty() else ""
 
                 MATERNAL_UUID_TO_IDX[conceptUuid]?.let { paramIdx ->
-                    assignMaternalObs(paramIdx, conceptUuid, value, colIdx, maternalValues)
+                    assignMaternalObs(
+                        paramIdx, conceptUuid, value, comment, colIdx, maternalValues,
+                        provider, isoTime
+                    )
                     return@let
                 }
                 NEWBORN_UUID_TO_IDX[conceptUuid]?.let { paramIdx ->
-                    assignObs(paramIdx, value, colIdx, newbornValues, NEWBORN_TEXTAREA_IDX,
-                              isComplication = paramIdx == 9)
+                    assignObs(
+                        paramIdx, value, comment, colIdx, newbornValues,
+                        NEWBORN_TEXTAREA_IDX, isComplication = paramIdx == 10,
+                        provider = provider, isoTime = isoTime
+                    )
                 }
             }
         }
@@ -331,32 +399,59 @@ object Stage3DataTransformer {
      * routes through [assignObs].
      */
     private fun assignMaternalObs(
-        paramIdx: Int, conceptUuid: String, value: String,
-        colIdx: Int, maternalValues: Array<Array<Any?>>
+        paramIdx: Int, conceptUuid: String, value: String, comment: String,
+        colIdx: Int, maternalValues: Array<Array<Any?>>,
+        provider: String = "", isoTime: String = ""
     ) {
         if (paramIdx == 1) {
-            val existing = (maternalValues[1][colIdx] as? JSONObject)?.optString("value", "") ?: ""
-            val parts = existing.split("/").let { if (it.size < 2) listOf(it.firstOrNull().orEmpty(), "") else it }
-            val sys = if (conceptUuid == PartogramConstants.Params.SYSTOLIC_BP.conceptId) value else parts[0]
-            val dia = if (conceptUuid == PartogramConstants.Params.DIASTOLIC_BP.conceptId) value else parts[1]
-            val combined = if (sys.isNotEmpty() && dia.isNotEmpty()) "$sys/$dia" else (sys + dia)
-            maternalValues[1][colIdx] = JSONObject().put("value", combined)
+            // The two halves arrive as separate observations in whatever order the
+            // cursor returns them. Splitting the combined string back apart lost a
+            // half whenever diastolic was read first, so each is kept in its own
+            // field and only joined for display.
+            val existing = maternalValues[1][colIdx] as? JSONObject
+            val isSystolic = conceptUuid == PartogramConstants.Params.SYSTOLIC_BP.conceptId
+            val isDiastolic = conceptUuid == PartogramConstants.Params.DIASTOLIC_BP.conceptId
+            val sys = if (isSystolic) value else existing?.optString("systolic").orEmpty()
+            val dia = if (isDiastolic) value else existing?.optString("diastolic").orEmpty()
+            val combined = listOf(sys, dia).filter { it.isNotEmpty() }.joinToString("/")
+            val existingComment = existing?.optString("comment").orEmpty()
+            maternalValues[1][colIdx] = JSONObject()
+                .put("value", combined)
+                .put("systolic", sys)
+                .put("diastolic", dia)
+                .put("comment", comment.ifEmpty { existingComment })
             return
         }
-        assignObs(paramIdx, value, colIdx, maternalValues, MATERNAL_TEXTAREA_IDX,
-                  isComplication = paramIdx == 8)
+        assignObs(
+            paramIdx, value, comment, colIdx, maternalValues, MATERNAL_TEXTAREA_IDX,
+            isComplication = paramIdx == 8, provider = provider, isoTime = isoTime
+        )
     }
 
+    /**
+     * The observation's own alert flag travels in tbl_obs.comment — the same
+     * column that drives the circled values on the Labour Care Guide. It is
+     * carried through so the printed report can mark abnormal observations
+     * without thresholds being duplicated on the client.
+     */
     private fun assignObs(
-        paramIdx: Int, value: String, colIdx: Int,
-        store: Array<Array<Any?>>, textareaIdxs: Set<Int>, isComplication: Boolean
+        paramIdx: Int, value: String, comment: String, colIdx: Int,
+        store: Array<Array<Any?>>, textareaIdxs: Set<Int>, isComplication: Boolean,
+        provider: String = "", isoTime: String = ""
     ) {
         if (paramIdx in textareaIdxs) {
             val arr = store[paramIdx][colIdx] as? JSONArray ?: JSONArray().also { store[paramIdx][colIdx] = it }
-            arr.put(JSONObject().put("value", value))
+            arr.put(
+                JSONObject()
+                    .put("value", value)
+                    .put("provider", provider)
+                    .put("obsDatetime", isoTime)
+            )
         } else {
             val displayValue = if (isComplication) formatComplication(value) else value
-            store[paramIdx][colIdx] = JSONObject().put("value", displayValue)
+            store[paramIdx][colIdx] = JSONObject()
+                .put("value", displayValue)
+                .put("comment", comment)
         }
     }
 
@@ -427,17 +522,45 @@ object Stage3DataTransformer {
     }
 
     /** "Ongoing complications" may be plain Y/N or a JSON object {complications: "..."}. */
+    /**
+     * Complications are stored as
+     * {"any ongoing complication":"yes","complications":"… , Other","other value":"Poor latching"}.
+     *
+     * Two things the old version dropped: the free-text behind "Other", which the
+     * web report substitutes in place of the token, and the "no" flag, which the
+     * report shows as N rather than as a blank.
+     */
     private fun formatComplication(raw: String?): String {
         if (raw.isNullOrEmpty()) return "-"
         val trimmed = raw.trim()
-        if (trimmed.startsWith("{")) {
-            try {
-                val obj = JSONObject(trimmed)
-                val txt = obj.optString("complications").ifEmpty { obj.optString("Complications") }
-                return if (txt.isNotEmpty()) txt else "-"
-            } catch (_: JSONException) {}
+        if (!trimmed.startsWith("{")) return trimmed
+
+        return try {
+            val obj = JSONObject(trimmed)
+            val ongoing = obj.optString("any ongoing complication")
+                .ifEmpty { obj.optString("Any ongoing complication") }
+            val list = obj.optString("complications").ifEmpty { obj.optString("Complications") }
+            val other = obj.optString("other value").ifEmpty { obj.optString("Other value") }
+
+            when {
+                list.isNotEmpty() -> substituteOther(list, other)
+                ongoing.equals("no", ignoreCase = true) -> "N"
+                ongoing.equals("yes", ignoreCase = true) -> "Y"
+                else -> "-"
+            }
+        } catch (_: JSONException) {
+            trimmed
         }
-        return trimmed
+    }
+
+    /** Replaces the "Other" token with the free text the clinician actually typed. */
+    private fun substituteOther(list: String, other: String): String {
+        if (other.isEmpty()) return list
+        return list.split(",")
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .map { if (it.equals("Other", ignoreCase = true)) other else it }
+            .joinToString(", ")
     }
 
     /** Congenital disorders may be plain text, a JSON array, or {CONGENITAL_ANOMALY: [...], other_text: "..."}. */
