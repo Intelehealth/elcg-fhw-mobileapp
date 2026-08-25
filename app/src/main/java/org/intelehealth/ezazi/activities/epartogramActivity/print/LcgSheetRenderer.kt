@@ -56,6 +56,14 @@ object LcgSheetRenderer {
     private class Section(val title: String, val rows: List<Row>, val rowHeight: Float)
 
 
+    /**
+     * One record inside an hour-spanning cell, still tied to the sub-column it
+     * was recorded in. The medication and shared-decision cells span the whole
+     * hour to leave room to write, so without this the second record of an hour
+     * inherits the first record's clock time.
+     */
+    private class HourEntry(val text: String, val col: Col)
+
     /** One grid entry whose text did not fit its cell, listed in full below. */
     private class NoteLine(
         val section: String,
@@ -507,18 +515,13 @@ object LcgSheetRenderer {
                 val x = dataLeft + startIdx * colWidth
                 val w = (endIdx - startIdx + 1) * colWidth
                 cell(canvas, x, y, w, rowHeight)
-                val text = medicationHourText(params, paramIdx, cols, startIdx, endIdx)
+                val entries = medicationHourEntries(params, paramIdx, cols, startIdx, endIdx)
+                val text = cellTextOf(entries)
                 if (text.isNotEmpty()) {
                     val shortened =
                         drawRotatedText(canvas, text, x, y, w, rowHeight, body)
                     if (shortened) {
-                        overflow.add(
-                            NoteLine(
-                                label.uppercase(Locale.US),
-                                cols[startIdx].stage, cols[startIdx].hour,
-                                cols[startIdx].time, text
-                            )
-                        )
+                        overflow += noteLinesOf(label.uppercase(Locale.US), entries)
                     }
                 }
             }
@@ -529,21 +532,23 @@ object LcgSheetRenderer {
     }
 
     /** Every medication entry recorded anywhere within one hour's sub-columns. */
-    private fun medicationHourText(
+    private fun medicationHourEntries(
         params: JSONArray,
         paramIdx: Int,
         cols: List<Col>,
         startIdx: Int,
         endIdx: Int
-    ): String {
-        val parts = mutableListOf<String>()
+    ): List<HourEntry> {
+        val parts = mutableListOf<HourEntry>()
         for (i in startIdx..endIdx) {
             cellEntries(params, paramIdx, cols[i]).forEach { entry ->
                 val text = medicationText(paramIdx, entry)
-                if (text.isNotEmpty() && !isNothingGiven(text)) parts.add(text)
+                if (text.isNotEmpty() && !isNothingGiven(text)) {
+                    parts.add(HourEntry(text, cols[i]))
+                }
             }
         }
-        return parts.joinToString(" \u00b7 ")
+        return parts
     }
 
     /**
@@ -574,18 +579,13 @@ object LcgSheetRenderer {
                 val x = dataLeft + startIdx * colWidth
                 val w = (endIdx - startIdx + 1) * colWidth
                 cell(canvas, x, y, w, rowHeight)
-                val text = hourText(params, paramIdx, cols, startIdx, endIdx)
+                val entries = hourEntries(params, paramIdx, cols, startIdx, endIdx)
+                val text = cellTextOf(entries)
                 if (text.isNotEmpty()) {
                     val shortened =
                         drawRotatedText(canvas, text, x, y, w, rowHeight, body)
                     if (shortened) {
-                        overflow.add(
-                            NoteLine(
-                                label.uppercase(Locale.US),
-                                cols[startIdx].stage, cols[startIdx].hour,
-                                cols[startIdx].time, text
-                            )
-                        )
+                        overflow += noteLinesOf(label.uppercase(Locale.US), entries)
                     }
                 }
             }
@@ -596,22 +596,43 @@ object LcgSheetRenderer {
     }
 
     /** Joins every entry recorded anywhere within one hour's sub-columns. */
-    private fun hourText(
+    private fun hourEntries(
         params: JSONArray,
         paramIdx: Int,
         cols: List<Col>,
         startIdx: Int,
         endIdx: Int
-    ): String {
-        val parts = mutableListOf<String>()
+    ): List<HourEntry> {
+        val parts = mutableListOf<HourEntry>()
         for (i in startIdx..endIdx) {
             cellEntries(params, paramIdx, cols[i]).forEach { entry ->
                 val text = describeValue(entry.opt("value"))
-                if (text.isNotEmpty()) parts.add(text)
+                if (text.isNotEmpty()) parts.add(HourEntry(text, cols[i]))
             }
         }
-        return parts.joinToString(" · ")
+        return parts
     }
+
+    /**
+     * The hour's records as one line of cell text. A lone record reads exactly
+     * as it always did; two or more are each stamped with their own clock time,
+     * so a later reading cannot be mistaken for a continuation of the first.
+     */
+    private fun cellTextOf(entries: List<HourEntry>): String =
+        if (entries.size <= 1) {
+            entries.firstOrNull()?.text.orEmpty()
+        } else {
+            entries.joinToString("   ·   ") { entry ->
+                val clock = localTime(entry.col.time)
+                if (clock.isEmpty()) entry.text else clock + " " + entry.text
+            }
+        }
+
+    /** One note per record, each carrying the time it was actually recorded. */
+    private fun noteLinesOf(section: String, entries: List<HourEntry>): List<NoteLine> =
+        entries.map { entry ->
+            NoteLine(section, entry.col.stage, entry.col.hour, entry.col.time, entry.text)
+        }
 
     /** Delivery outcome, drawn under the grid on the last sheet. */
     private fun drawDeliveryBlock(

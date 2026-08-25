@@ -113,6 +113,21 @@ object EpartogramDataTransformer {
         var subCol: Int = 0    // 1-based sub-column, assigned by allocateSubColumns
     ) {
         fun isSos() = typeUuid == UuidDictionary.LCG_SOS
+
+        /**
+         * Whether this encounter belongs on the Labour Care Guide at all.
+         *
+         * Stage 3 (postpartum) encounters share the labour visit and their type
+         * names parse cleanly as Stage3_HourN, so without this they fall into
+         * the second-stage arm of the fill pass and overwrite real stage-2
+         * readings. Keyed on the resolved stage rather than the type name
+         * because an SOS raised during stage 3 is stored as Stage3_HourN_SOSk
+         * and reaches the same place without the name ever being consulted.
+         *
+         * The Angular component drops them the same way (readStageData, the
+         * trailing `else { continue; }`); stage 3 has its own transformer.
+         */
+        fun isPartogramStage() = stage == 1 || stage == 2
     }
 
     // ── Public API ──────────────────────────────────────────────────────────
@@ -287,7 +302,7 @@ object EpartogramDataTransformer {
 
         // ── Second pass: fill observations + time/encounter tracking ─────────
         for (enc in encounters) {
-            if (enc.stage == 0) continue
+            if (!enc.isPartogramStage()) continue
             val hourIdx    = enc.hour - 1
             val subIdx     = enc.subCol - 1
             val hourStarts = if (enc.stage == 1) s1HourStarts else s2HourStarts

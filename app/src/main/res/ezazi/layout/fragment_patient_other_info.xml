@@ -294,16 +294,16 @@
                             android:id="@+id/et_gravida"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:clickable="false"
+                            android:cursorVisible="false"
+                            android:enabled="false"
+                            android:focusable="false"
+                            android:focusableInTouchMode="false"
                             android:gravity="center_vertical"
                             android:hint="@string/gravida_hint"
-                            android:enabled="false"
                             android:imeOptions="actionNext"
                             android:importantForAutofill="no"
                             android:maxLength="2"
-                            android:focusable="false"
-                            android:focusableInTouchMode="false"
-                            android:clickable="false"
-                            android:cursorVisible="false"
                             android:maxLines="1"
                             android:singleLine="true"
                             android:textSize="@dimen/input_inner_size" />
@@ -326,12 +326,13 @@
                     android:visibility="gone" />
 
             </LinearLayout>
+
             <include
                 android:id="@+id/view_lmp_edd_layout"
                 layout="@layout/view_lmp_edd_layout"
-                android:layout_marginTop="@dimen/titles_margin_top"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/titles_margin_top" />
 
             <TextView
                 android:id="@+id/textView6"
@@ -548,15 +549,16 @@
                     android:layout_marginTop="@dimen/other_info_checkbox_margin_top"
                     android:fontFamily="@font/dm_sans_medium"
                     android:gravity="center"
-                    android:visibility="gone"
                     android:layoutDirection="rtl"
                     android:padding="5dp"
                     android:text="@string/unknown"
                     android:textAppearance="@style/Theme.EZazi.Caption"
                     android:textColor="@color/colorHighAlert"
                     android:textSize="10sp"
+                    android:visibility="gone"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintRight_toRightOf="parent" />
+
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/dropdown_sac_ruptured_options"
                     style="@style/Theme.EZazi.Material.CardView"
@@ -609,7 +611,8 @@
                 android:orientation="vertical"
                 android:visibility="gone"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textView8">
+                app:layout_constraintTop_toBottomOf="@+id/textView8"
+                tools:visibility="visible">
 
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/card_sac_ruptured_date"
