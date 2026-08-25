@@ -11,6 +11,7 @@ import org.intelehealth.ezazi.R
 import org.intelehealth.ezazi.optimized_sync.network.NetworkStatus
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity
+import org.intelehealth.ezazi.utilities.NepaliDateConverter
 import org.intelehealth.ezazi.utilities.SessionManager
 import org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding
 
@@ -48,7 +49,10 @@ class OfflineEPartogramViewActivity : BaseActionBarActivity() {
     private fun initializeViews() {
         webView = findViewById(R.id.webview_epartogram)
         tvLastUpdated = findViewById(R.id.tv_last_updated_date_time)
-        tvLastUpdated.text = getString(R.string.last_updated_on, manager.lastSyncDateTime)
+        tvLastUpdated.text = getString(
+            R.string.last_updated_on,
+            NepaliDateConverter.gregStringToBsDisplay(manager.lastSyncDateTime)
+        )
     }
 
     @Suppress("DEPRECATION")

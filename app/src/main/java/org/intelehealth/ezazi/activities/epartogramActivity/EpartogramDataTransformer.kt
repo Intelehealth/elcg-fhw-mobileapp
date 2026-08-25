@@ -110,7 +110,7 @@ object EpartogramDataTransformer {
         val providerUuid: String,
         var stage: Int  = 0,   // 1 or 2 (0 = unresolved)
         var hour: Int   = 0,   // 1-based
-        var subCol: Int = 1    // 1-based sub-column within this hour
+        var subCol: Int = 0    // 1-based sub-column, assigned by allocateSubColumns
     ) {
         fun isSos() = typeUuid == UuidDictionary.LCG_SOS
     }
@@ -235,6 +235,7 @@ object EpartogramDataTransformer {
         val initialsCache = mutableMapOf<String, String>()
 
         encounters.forEach { resolveStageHour(it, db) }
+        allocateSubColumns(encounters)
 
         // ── First pass: compute effective sub-column count per (stage, hour) ─
         // maxSubCol tracks the highest subCol seen for each hour.
@@ -415,6 +416,12 @@ object EpartogramDataTransformer {
     // ── Stage/hour resolution ────────────────────────────────────────────────
 
     @SuppressLint("Range")
+    /**
+     * Resolves which stage and hour an encounter belongs to. Deliberately does
+     * NOT derive the sub-column: the Angular component discards the trailing
+     * index in both `Stage1_Hour3_2` and `Stage1_Hour3_SOS1`, taking only the
+     * stage and the hour from the name. See [allocateSubColumns].
+     */
     private fun resolveStageHour(enc: EncounterRecord, db: SQLiteDatabase) {
         if (enc.isSos()) {
             db.rawQuery(
@@ -426,9 +433,8 @@ object EpartogramDataTransformer {
                 if (c.moveToFirst()) {
                     val m = SOS_STAGE_HOUR_PATTERN.matcher(c.getString(0).orEmpty())
                     if (m.find()) {
-                        enc.stage  = m.group(1)!!.toInt()
-                        enc.hour   = m.group(2)!!.toInt()
-                        enc.subCol = m.group(3)!!.toInt()
+                        enc.stage = m.group(1)!!.toInt()
+                        enc.hour  = m.group(2)!!.toInt()
                         return
                     }
                 }
@@ -437,9 +443,32 @@ object EpartogramDataTransformer {
 
         val m = STAGE_HOUR_PATTERN.matcher(enc.typeName)
         if (m.find()) {
-            enc.stage  = m.group(1)!!.toInt()
-            enc.hour   = m.group(2)!!.toInt()
-            enc.subCol = m.group(3)?.takeIf { it.isNotEmpty() }?.toInt() ?: 1
+            enc.stage = m.group(1)!!.toInt()
+            enc.hour  = m.group(2)!!.toInt()
+        }
+    }
+
+    /**
+     * Hands each encounter the next free sub-column within its hour, walking the
+     * list in encounter-time order. Ported from the Angular component's
+     * `nextSubColPerHour` counter (epartogram.component.ts, readStageData).
+     *
+     * Regular and SOS encounters draw from the same counter, which is what makes
+     * an SOS reading widen its hour instead of landing on top of the reading
+     * already there — and, because slots are handed out chronologically, keeps
+     * the printed columns in clock order without a separate sort.
+     *
+     * Encounters whose stage/hour never resolved are skipped so they cannot
+     * consume a column.
+     */
+    private fun allocateSubColumns(encounters: List<EncounterRecord>) {
+        val next = mutableMapOf<String, Int>()
+        for (enc in encounters) {
+            if (enc.stage == 0) continue
+            val key = "s${enc.stage}_h${enc.hour}"
+            val slot = next[key] ?: 1
+            enc.subCol = slot
+            next[key] = slot + 1
         }
     }
 
