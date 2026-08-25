@@ -23,7 +23,12 @@ object Stage3SheetGeometry {
     private const val BASE_WIDTH = 555f
 
     const val MARGIN = 20f
-    const val COLUMNS = 8
+    /** The nominal slot count. The real count comes from the payload, which grows
+     *  by one for every SOS raised during stage 3. */
+    const val DEFAULT_COLUMNS = 8
+
+    /** Floor for a column, so an empty payload cannot divide by zero. */
+    const val MIN_COLUMN = 24f
 
     private const val LABEL_COL = 95f
 
@@ -65,8 +70,9 @@ object Stage3SheetGeometry {
 
     fun labelWidth(page: PageSpec): Float = LABEL_COL * scale(page)
 
-    fun columnWidth(page: PageSpec): Float =
-        (usableWidth(page) - labelWidth(page)) / COLUMNS
+    fun columnWidth(page: PageSpec, columns: Int): Float =
+        if (columns <= 0) MIN_COLUMN
+        else (usableWidth(page) - labelWidth(page)) / columns
 
     fun margin(page: PageSpec): Float = MARGIN * scale(page)
 

@@ -36,13 +36,20 @@ object Stage3SheetRenderer {
     private const val INK = 0xFF14110F.toInt()
     private const val VALUE_BLUE = 0xFF0B62D0.toInt()
     private const val ALERT_RED = 0xFFC5221F.toInt()
+
+    /**
+     * Fill behind an SOS column header. Deliberately the same #d32f2f the offline
+     * stage3.html uses, not [ALERT_RED], so the printed sheet and the screen mark
+     * an SOS with one colour.
+     */
+    private const val SOS_FILL = 0xFFD32F2F.toInt()
     private const val ALERT_FILL = 0xFFFCE8E6.toInt()
     private const val NARRATIVE_FILL = 0xFFE8F0FE.toInt()
     private const val GRID = 0xFF8D8681.toInt()
     private const val MUTED = 0xFF5D5751.toInt()
 
     /** One time slot: the transformer's label plus the encounter instant. */
-    private class Slot(val label: String, val time: Date?)
+    private class Slot(val label: String, val time: Date?, val isSos: Boolean = false)
 
     /** One grid row, with its eight cells already reduced to display text. */
     private class Row(
@@ -71,8 +78,8 @@ object Stage3SheetRenderer {
     ): Int {
         val g = Stage3SheetGeometry
         val slots = buildSlots(data)
-        val maternal = buildRows(data.optJSONArray("maternalParams"))
-        val newborn = buildRows(data.optJSONArray("newbornParams"))
+        val maternal = buildRows(data.optJSONArray("maternalParams"), slots.size)
+        val newborn = buildRows(data.optJSONArray("newbornParams"), slots.size)
         val overflow = mutableListOf<Overflow>()
 
         val pdfPage = document.startPage(pageInfo(page, startNumber))
@@ -112,10 +119,14 @@ object Stage3SheetRenderer {
     private fun buildSlots(data: JSONObject): List<Slot> {
         val labels = data.optJSONArray("colLabels")
         val times = data.optJSONArray("colTimes")
-        return (0 until Stage3SheetGeometry.COLUMNS).map { i ->
+        val sos = data.optJSONArray("colIsSos")
+        // takeIf, because an empty JSONArray reports length 0 rather than being null.
+        val count = labels?.length()?.takeIf { it > 0 } ?: Stage3SheetGeometry.DEFAULT_COLUMNS
+        return (0 until count).map { i ->
             Slot(
                 labels?.optString(i, "").orEmpty(),
-                parseInstant(times?.optString(i, null))
+                parseInstant(times?.optString(i, null)),
+                sos?.optBoolean(i, false) ?: false
             )
         }
     }
@@ -125,7 +136,7 @@ object Stage3SheetRenderer {
      * either absent, a single observation object, or a list of them for the
      * free-text rows — all three collapse to one string here.
      */
-    private fun buildRows(params: JSONArray?): List<Row> {
+    private fun buildRows(params: JSONArray?, columns: Int): List<Row> {
         if (params == null) return emptyList()
         val rows = mutableListOf<Row>()
         for (i in 0 until params.length()) {
@@ -134,7 +145,7 @@ object Stage3SheetRenderer {
             if (name.isEmpty()) continue
             val narrative = p.optBoolean("isTextarea", false)
             val values = p.optJSONArray("values")
-            val cells = (0 until Stage3SheetGeometry.COLUMNS).map { c ->
+            val cells = (0 until columns).map { c ->
                 readCell(values?.opt(c), narrative, name)
             }
             rows.add(Row(displayName(name), cells))
@@ -153,7 +164,7 @@ object Stage3SheetRenderer {
                 val text = entry.optString("value").trim()
                 if (text.isEmpty()) return@mapNotNull null
                 val who = entry.optString("provider").trim()
-                val at = clockAmPm(entry.optString("obsDatetime"))
+                val at = clock24(entry.optString("obsDatetime"))
                 val credit = listOf(who, at).filter { it.isNotEmpty() && it != "-" }
                     .joinToString(" ")
                 if (credit.isEmpty()) text else "$text ($credit)"
@@ -392,7 +403,7 @@ object Stage3SheetRenderer {
     ): Float {
         val g = Stage3SheetGeometry
         val labelWidth = g.labelWidth(page)
-        val colWidth = g.columnWidth(page)
+        val colWidth = g.columnWidth(page, slots.size)
         val dataLeft = left + labelWidth
         var y = top
 
@@ -484,9 +495,17 @@ object Stage3SheetRenderer {
 
         slots.forEachIndexed { i, slot ->
             val x = dataLeft + i * colWidth
+            if (slot.isSos) {
+                canvas.drawRect(x, top, x + colWidth, top + height, fillPaint(SOS_FILL))
+            }
             cell(canvas, x, top, colWidth, height)
             val cx = x + colWidth / 2f
-            canvas.drawText(slot.label, cx, top + g.slotText(page) + g.cellPad(page), label)
+            label.color = if (slot.isSos) Color.WHITE else INK
+            time.color = if (slot.isSos) Color.WHITE else MUTED
+            canvas.drawText(
+                clip(slot.label, colWidth - g.cellPad(page) * 2f, label),
+                cx, top + g.slotText(page) + g.cellPad(page), label
+            )
             slot.time?.let {
                 canvas.drawText(localTime(it), cx, top + height - g.cellPad(page) * 1.6f, time)
             }
@@ -736,12 +755,18 @@ object Stage3SheetRenderer {
         return localTime(date)
     }
 
-    /** "02:51 PM" — the form the web report credits entries with. */
-    private fun clockAmPm(raw: String?): String {
+    /**
+     * "14:51" — the clock an entry is credited with.
+     *
+     * 24-hour, matching every other time on this sheet and on the offline screen.
+     * It used to be "02:51 PM", which left the credit disagreeing with the column
+     * header directly above it.
+     */
+    private fun clock24(raw: String?): String {
         val text = raw?.trim().orEmpty()
         if (text.isEmpty() || text == "null") return ""
         val date = parseInstant(text) ?: parseFlexible(text) ?: return ""
-        return SimpleDateFormat("hh:mm a", Locale.US).format(date)
+        return SimpleDateFormat("HH:mm", Locale.US).format(date)
     }
 
     private fun bsDateTime(date: Date?): String =

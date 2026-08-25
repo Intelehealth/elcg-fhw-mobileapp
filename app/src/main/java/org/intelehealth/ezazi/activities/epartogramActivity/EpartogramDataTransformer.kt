@@ -6,6 +6,7 @@ import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.intelehealth.ezazi.app.AppConstants
+import org.intelehealth.ezazi.utilities.NepaliDateConverter
 import org.intelehealth.ezazi.utilities.UuidDictionary
 import org.json.JSONArray
 import org.json.JSONException
@@ -79,6 +80,15 @@ object EpartogramDataTransformer {
 
     // pInfo keys whose raw DB values must be converted from "dd/MM/yyyy hh:mm a" to ISO 8601
     private val DATE_PINFO_KEYS = setOf("ActiveLaborDiagnosed", "MembraneRupturedTimestamp")
+
+    /**
+     * Header fields the offline screen shows as dates, and therefore needs in Bikram
+     * Sambat. LMP and EDD are here too: they reach the asset with no formatter at all,
+     * so before this they printed the raw Gregorian "dd/MM/yyyy" verbatim.
+     */
+    private val BS_PINFO_KEYS = listOf(
+        "ActiveLaborDiagnosed", "MembraneRupturedTimestamp", "LMP", "EDD"
+    )
 
     // Mapping from tbl_patient_attribute_master.name → JSON key in pInfo
     private val ATTR_TO_PINFO_KEY = mapOf(
@@ -205,7 +215,23 @@ object EpartogramDataTransformer {
             }
         }
 
+        addBsTwins(pInfo)
         return pInfo
+    }
+
+    /**
+     * Adds a "<key>Bs" companion for each date the offline header renders.
+     *
+     * The raw value stays exactly as it was, because two of these fields are drawn
+     * twice — once as a date and once as a clock — and because the asset's fmtDate()
+     * prints "NA" for anything new Date() cannot parse, so overwriting the original
+     * with a BS string would blank the field rather than translate it.
+     */
+    private fun addBsTwins(pInfo: JSONObject) {
+        BS_PINFO_KEYS.forEach { key ->
+            val bs = NepaliDateConverter.localDayToBsDisplay(pInfo.optString(key))
+            if (bs.isNotEmpty()) pInfo.put(key + "Bs", bs)
+        }
     }
 
     /**
@@ -348,6 +374,8 @@ object EpartogramDataTransformer {
         // Emit time / encounter arrays
         root.put("timeFullStage1",  nullableStringArrayToJson(timeFullS1))
         root.put("timeFullStage2",  nullableStringArrayToJson(timeFullS2))
+        root.put("timeFullStage1Bs", bsDatesOf(timeFullS1))
+        root.put("timeFullStage2Bs", bsDatesOf(timeFullS2))
         root.put("encuuid1Full",    encInfoArrayToJson(encuuid1Full))
         root.put("encuuid2Full",    encInfoArrayToJson(encuuid2Full))
         root.put("encuuid1",        nullableStringArrayToJson(encuuid1))
@@ -389,6 +417,18 @@ object EpartogramDataTransformer {
     }
 
     // ── Array helpers ───────────────────────────────────────────────────────
+
+    /**
+     * Bikram Sambat dates parallel to a column-time array, "" where a column has no
+     * encounter. Emitted alongside the raw instants rather than replacing them: the
+     * asset prints this on the date line of each time cell and keeps reading the raw
+     * instant for the clock line beneath it.
+     */
+    private fun bsDatesOf(times: Array<String?>): JSONArray {
+        val out = JSONArray()
+        times.forEach { out.put(NepaliDateConverter.localDayToBsDisplay(it.orEmpty())) }
+        return out
+    }
 
     private fun nullableStringArrayToJson(arr: Array<String?>): JSONArray {
         val out = JSONArray()

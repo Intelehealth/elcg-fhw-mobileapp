@@ -9,6 +9,7 @@ import org.intelehealth.ezazi.app.AppConstants
 import org.intelehealth.ezazi.app.IntelehealthApplication
 import org.intelehealth.ezazi.partogram.PartogramConstants
 import org.intelehealth.ezazi.stage3.Utils.DeliveryDetailsConcept
+import org.intelehealth.ezazi.utilities.NepaliDateConverter
 import org.intelehealth.ezazi.utilities.SessionManager
 import org.intelehealth.ezazi.utilities.UuidDictionary
 import org.json.JSONArray
@@ -46,7 +47,6 @@ object Stage3DataTransformer {
     }
 
     // 8 fixed sub-columns matching stage3.component.ts COL_OFFSETS / COL_LABELS.
-    private const val NUM_COLS = 8
     private val COL_LABELS = listOf(
         "0 min", "+15m", "+30m", "+45m", "+1h 15m", "+1h 45m", "+2h 45m", "+3h 45m"
     )
@@ -130,7 +130,6 @@ object Stage3DataTransformer {
             root.put("pinfo", buildPinfo(db, patientUuid))
             root.put("deliveryOutcome", buildDeliveryOutcome(db, visitUuid))
 
-            root.put("colLabels", JSONArray(COL_LABELS))
             buildStageData(db, visitUuid, root)
 
             root.toString()
@@ -183,6 +182,8 @@ object Stage3DataTransformer {
 
         out.put("deliveryDate", toIsoOrRaw(obs[DeliveryDetailsConcept.DATE_OF_DELIVERY.uuid]
             ?: encounterTime))
+        out.put("deliveryDateBs",
+            NepaliDateConverter.localDayToBsDisplay(out.optString("deliveryDate")))
         out.put("deliveryTime", toIsoOrRaw(obs[DeliveryDetailsConcept.TIME_OF_DELIVERY.uuid]
             ?: encounterTime))
         out.put("deliveryMode", textOrDash(obs[DeliveryDetailsConcept.MODE_OF_DELIVERY.uuid]))
@@ -256,21 +257,52 @@ object Stage3DataTransformer {
     // ── Stage 3 hourly grid ──────────────────────────────────────────────────
 
     @SuppressLint("Range")
+    /**
+     * The printed columns: the eight nominal time-offset slots, plus one extra column
+     * for every SOS raised during stage 3, inserted at the point in time it happened.
+     *
+     * A nominal slot takes its label from its OWN encounter type rather than from its
+     * arrival order, so a missing or duplicated hourly card cannot shift another
+     * column's label. An SOS consumes none of the eight — it widens the grid, which is
+     * what the web report does and what the Labour Care Guide fix established.
+     */
+    private fun buildColumns(encounters: List<Stage3Encounter>): List<Stage3Column> {
+        val cols = MutableList(COL_LABELS.size) { i ->
+            Stage3Column(
+                COL_LABELS[i], false,
+                encounters.firstOrNull { !it.isSos() && it.typeUuid == STAGE3_HOUR_TYPE_UUIDS[i] }
+            )
+        }
+        encounters.filter { it.isSos() }.forEach { sos ->
+            var at = 0
+            cols.forEachIndexed { i, c ->
+                val t = c.enc?.rawTime
+                if (t != null && t <= sos.rawTime) at = i + 1
+            }
+            cols.add(at, Stage3Column("SOS", true, sos))
+        }
+        return cols
+    }
+
+    @SuppressLint("Range")
     private fun buildStageData(db: SQLiteDatabase, visitUuid: String, root: JSONObject) {
+        val encounters = fetchStage3Encounters(db, visitUuid)
+        val columns = buildColumns(encounters)
+        val colCount = columns.size
+
         val maternalValues = Array(MATERNAL_PARAM_NAMES.size) { idx ->
-            if (idx in MATERNAL_TEXTAREA_IDX) Array<Any?>(NUM_COLS) { JSONArray() }
-            else arrayOfNulls<Any?>(NUM_COLS)
+            if (idx in MATERNAL_TEXTAREA_IDX) Array<Any?>(colCount) { JSONArray() }
+            else arrayOfNulls<Any?>(colCount)
         }
         val newbornValues = Array(NEWBORN_PARAM_NAMES.size) { idx ->
-            if (idx in NEWBORN_TEXTAREA_IDX) Array<Any?>(NUM_COLS) { JSONArray() }
-            else arrayOfNulls<Any?>(NUM_COLS)
+            if (idx in NEWBORN_TEXTAREA_IDX) Array<Any?>(colCount) { JSONArray() }
+            else arrayOfNulls<Any?>(colCount)
         }
-        val colTimes = arrayOfNulls<String>(NUM_COLS)
+        val colTimes = arrayOfNulls<String>(colCount)
 
-        val encounters = fetchStage3Encounters(db, visitUuid)
         val creatorCache = mutableMapOf<String, String>()
-        for ((idx, enc) in encounters.withIndex()) {
-            if (idx >= NUM_COLS) break
+        columns.forEachIndexed { idx, col ->
+            val enc = col.enc ?: return@forEachIndexed
             colTimes[idx] = enc.isoTime
             fillObsForEncounter(
                 db, enc.uuid, idx, maternalValues, newbornValues, enc.provider, enc.isoTime,
@@ -278,17 +310,38 @@ object Stage3DataTransformer {
             )
         }
 
+        root.put("colLabels", JSONArray(columns.map { it.label }))
+        root.put("colIsSos", JSONArray(columns.map { it.isSos }))
         root.put("colTimes", stringArrayToJson(colTimes))
-        root.put("maternalParams", buildParamsJson(MATERNAL_PARAM_NAMES, MATERNAL_TEXTAREA_IDX, maternalValues))
-        root.put("newbornParams",  buildParamsJson(NEWBORN_PARAM_NAMES,  NEWBORN_TEXTAREA_IDX,  newbornValues))
+        root.put("colTimesBs", bsDatesOf(colTimes))
+        root.put(
+            "maternalParams",
+            buildParamsJson(MATERNAL_PARAM_NAMES, MATERNAL_TEXTAREA_IDX, maternalValues, colCount)
+        )
+        root.put(
+            "newbornParams",
+            buildParamsJson(NEWBORN_PARAM_NAMES, NEWBORN_TEXTAREA_IDX, newbornValues, colCount)
+        )
     }
 
     /** One Stage 3 slot: the encounter, when it happened, and who recorded it. */
     private data class Stage3Encounter(
         val uuid: String,
+        val rawTime: String,
         val isoTime: String,
-        val provider: String
-    )
+        val provider: String,
+        val typeUuid: String
+    ) {
+        fun isSos() = typeUuid == UuidDictionary.LCG_SOS
+    }
+
+    /**
+     * One printed column: a nominal time-offset slot, or an SOS raised between two of
+     * them. [enc] is null for a slot whose encounter has not been recorded yet, which
+     * is why the eight nominal columns always exist and a fresh visit still prints the
+     * blank form.
+     */
+    private class Stage3Column(val label: String, val isSos: Boolean, val enc: Stage3Encounter?)
 
     /**
      * Stage 3 encounters in time order, each carrying its provider's display
@@ -299,28 +352,38 @@ object Stage3DataTransformer {
     private fun fetchStage3Encounters(db: SQLiteDatabase, visitUuid: String): List<Stage3Encounter> {
         val out = mutableListOf<Stage3Encounter>()
         val placeholders = STAGE3_HOUR_TYPE_UUIDS.joinToString(",") { "?" }
-        val args = arrayOf(visitUuid) + STAGE3_HOUR_TYPE_UUIDS.toTypedArray()
+        val args = arrayOf(visitUuid) + STAGE3_HOUR_TYPE_UUIDS.toTypedArray() +
+                arrayOf(UuidDictionary.LCG_SOS, UuidDictionary.SOS_STAGE_HOUR)
         val providerCache = mutableMapOf<String, String>()
         db.rawQuery(
-            "SELECT uuid, encounter_time, provider_uuid FROM tbl_encounter " +
-            "WHERE visituuid = ? " +
-            "  AND encounter_type_uuid IN ($placeholders) " +
-            "  AND (voided = '0' OR voided = 'false' OR voided = 'FALSE') " +
-            "ORDER BY encounter_time ASC",
+            "SELECT e.uuid, e.encounter_type_uuid, e.encounter_time, e.provider_uuid " +
+            "FROM tbl_encounter e " +
+            "WHERE e.visituuid = ? " +
+            "  AND (e.voided = '0' OR e.voided = 'false' OR e.voided = 'FALSE') " +
+            "  AND ( e.encounter_type_uuid IN ($placeholders) " +
+            "        OR ( e.encounter_type_uuid = ? AND EXISTS ( " +
+            "               SELECT 1 FROM tbl_obs o " +
+            "               WHERE o.encounteruuid = e.uuid AND o.conceptuuid = ? " +
+            "                 AND o.value LIKE 'Stage3=_%' ESCAPE '=' " +
+            "                 AND (o.voided = '0' OR o.voided = 'false' " +
+            "                      OR o.voided = 'FALSE') ) ) ) " +
+            "ORDER BY e.encounter_time ASC, e.uuid ASC",
             args
         ).use { c ->
             val uuidIdx = c.getColumnIndex("uuid")
             val timeIdx = c.getColumnIndex("encounter_time")
             val providerIdx = c.getColumnIndex("provider_uuid")
+            val typeIdx = c.getColumnIndex("encounter_type_uuid")
             while (c.moveToNext()) {
                 val providerUuid =
                     if (providerIdx >= 0) c.getString(providerIdx).orEmpty() else ""
+                val rawTime = if (timeIdx >= 0) c.getString(timeIdx).orEmpty() else ""
                 out += Stage3Encounter(
                     uuid = if (uuidIdx >= 0) c.getString(uuidIdx).orEmpty() else "",
-                    isoTime = toIsoOrRaw(
-                        if (timeIdx >= 0) c.getString(timeIdx).orEmpty() else ""
-                    ),
-                    provider = resolveProvider(db, providerUuid, providerCache)
+                    rawTime = rawTime,
+                    isoTime = toIsoOrRaw(rawTime),
+                    provider = resolveProvider(db, providerUuid, providerCache),
+                    typeUuid = if (typeIdx >= 0) c.getString(typeIdx).orEmpty() else ""
                 )
             }
         }
@@ -513,13 +576,14 @@ object Stage3DataTransformer {
     }
 
     private fun buildParamsJson(
-        names: List<String>, textareaIdxs: Set<Int>, values: Array<Array<Any?>>
+        names: List<String>, textareaIdxs: Set<Int>, values: Array<Array<Any?>>,
+        colCount: Int
     ): JSONArray {
         val out = JSONArray()
         for (i in names.indices) {
             val isTextarea = i in textareaIdxs
             val valArr = JSONArray()
-            for (c in 0 until NUM_COLS) {
+            for (c in 0 until colCount) {
                 val cell = values[i][c]
                 when {
                     cell == null -> valArr.put(JSONObject.NULL)
@@ -679,6 +743,20 @@ object Stage3DataTransformer {
             } catch (_: Exception) {}
         }
         return raw
+    }
+
+    /**
+     * Bikram Sambat dates parallel to [colTimes], "" for a slot with no encounter.
+     *
+     * Emitted next to the raw instants rather than replacing them, because each column
+     * header shows a BS date and a 24-hour clock built from the same value. The asset
+     * cannot compute this itself: the Bikram Sambat table it shipped ran out in April
+     * 2025, so every current date fell through to Gregorian.
+     */
+    private fun bsDatesOf(times: Array<String?>): JSONArray {
+        val out = JSONArray()
+        times.forEach { out.put(NepaliDateConverter.localDayToBsDisplay(it.orEmpty())) }
+        return out
     }
 
     private fun stringArrayToJson(arr: Array<String?>): JSONArray {

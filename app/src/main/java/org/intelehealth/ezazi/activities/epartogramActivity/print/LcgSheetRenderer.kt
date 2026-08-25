@@ -39,8 +39,26 @@ object LcgSheetRenderer {
     private const val AMBER = 0xFFEF6C00.toInt()
     private const val VALUE_BLUE = 0xFF0B5FA5.toInt()
 
-    /** The "HH:mm -" stamp that prefixes each record in a shared cell. */
-    private val CLOCK_STAMP = Regex("""\d{1,2}:\d{2} -""")
+    /**
+     * Separator between a record's clock and its text. The gap is a non-breaking
+     * space on purpose: [wrapLines] splits on plain spaces, so with an ordinary one
+     * the clock and its hyphen are two tokens and a wrap can land between them —
+     * which broke [CLOCK_STAMP] and left that clock blue while its neighbours were
+     * black. As one token the stamp moves to the next line whole.
+     */
+    private const val STAMP_GAP = "\u00A0- "
+
+    /**
+     * The clock stamp prefixing each record in a shared cell.
+     *
+     * The non-breaking space from [STAMP_GAP] is REQUIRED, and that is what makes the
+     * match trustworthy: a clinician typing "recheck at 13:45" into an assessment
+     * produces an ordinary space, so their time can never be mistaken for a record
+     * boundary and blackened. Accepting a plain space here would repaint any time in
+     * free text — and black is supposed to mean "a new record starts", so a false
+     * positive tells the reader there are more records than there are.
+     */
+    private val CLOCK_STAMP = Regex("\\d{1,2}:\\d{2}\u00A0-")
     private const val GRID = 0xFF333333.toInt()
     private const val GRID_LIGHT = 0xFF9E9E9E.toInt()
 
@@ -630,18 +648,17 @@ object LcgSheetRenderer {
     }
 
     /**
-     * The hour's records as one line of cell text. A lone record reads exactly
-     * as it always did; two or more are each stamped with their own clock time,
-     * so a later reading cannot be mistaken for a continuation of the first.
+     * The hour's records as one line of cell text.
+     *
+     * Every record carries its own clock time, a lone one included: stamping only
+     * the crowded cells left the sheet marking some times and not others, which
+     * reads as a rendering fault rather than as a rule. A record whose time could
+     * not be resolved is the sole exception, since a blank stamp says nothing.
      */
     private fun cellTextOf(entries: List<HourEntry>): String =
-        if (entries.size <= 1) {
-            entries.firstOrNull()?.text.orEmpty()
-        } else {
-            entries.joinToString("   ·   ") { entry ->
-                val clock = localTime(entry.time)
-                if (clock.isEmpty()) entry.text else clock + " - " + entry.text
-            }
+        entries.joinToString("   ·   ") { entry ->
+            val clock = localTime(entry.time)
+            if (clock.isEmpty()) entry.text else clock + STAMP_GAP + entry.text
         }
 
     /** One note per record, each carrying the time it was actually recorded. */
@@ -825,7 +842,7 @@ object LcgSheetRenderer {
         val bulletX = left + 8f
         val textX = left + 20f
 
-        canvas.drawText("SHORTENED ON THE GRID \u2014 FULL TEXT", left, y, heading)
+        canvas.drawText("SHORTENED ON THE GRID — FULL TEXT", left, y, heading)
         y += 16f
 
         groups.forEach { (section, lines) ->
@@ -949,6 +966,28 @@ object LcgSheetRenderer {
     }
 
     /**
+     * Like [clip], but never cuts through a clock stamp.
+     *
+     * The ellipsis lands wherever the width runs out, and a cut inside "14:50 - "
+     * leaves a fragment that no longer matches [CLOCK_STAMP] — so that one clock
+     * would print blue among black ones, which is exactly the inconsistency the
+     * stamp exists to remove. When the cut falls inside a stamp the whole stamp is
+     * dropped instead; the record is reproduced in full on the notes page either way.
+     */
+    private fun clipOutsideStamps(text: String, maxWidth: Float, paint: Paint): String {
+        val clipped = clip(text, maxWidth, paint)
+        if (clipped == text) return clipped
+
+        val kept = clipped.removeSuffix("…").length
+        val straddling = CLOCK_STAMP.findAll(text)
+            .firstOrNull { it.range.first < kept && it.range.last >= kept }
+            ?: return clipped
+
+        val safe = text.substring(0, straddling.range.first).trimEnd()
+        return if (safe.isEmpty()) "…" else safe + " …"
+    }
+
+    /**
      * Sideways text reading bottom-to-top, wrapped so each line runs along the
      * cell's height and successive lines stack across its width.
      */
@@ -974,7 +1013,8 @@ object LcgSheetRenderer {
         val shortened = lines.size > maxLines
         if (shortened) {
             val kept = lines.take(maxLines).toMutableList()
-            kept[maxLines - 1] = clip(kept[maxLines - 1] + " …", lineLength, paint)
+            kept[maxLines - 1] =
+                clipOutsideStamps(kept[maxLines - 1] + " …", lineLength, paint)
             lines = kept
         }
         canvas.save()
