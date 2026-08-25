@@ -64,7 +64,7 @@ object Stage3DataTransformer {
         "3d71ad42-7b6e-4687-b096-f0dd89e84647", // Stage3_Hour2_1
         "3b3960f4-c9d2-4d41-aed9-f376312fc33e", // Stage3_Hour2_2
         "0ca40a73-3581-47ae-9cb2-0c6cde17158e", // Stage3_Hour3_1
-        "746e8cc9-e8e8-4055-87a2-2687888cf7f8"  // Stage3_Hour4_1
+        "746e8cc9-e8e8-4055-87a2-2687888c7f88"  // Stage3_Hour4_1
     )
 
     // Concept-UUID → param-index for maternalParams (order MUST match the
@@ -268,11 +268,13 @@ object Stage3DataTransformer {
         val colTimes = arrayOfNulls<String>(NUM_COLS)
 
         val encounters = fetchStage3Encounters(db, visitUuid)
+        val creatorCache = mutableMapOf<String, String>()
         for ((idx, enc) in encounters.withIndex()) {
             if (idx >= NUM_COLS) break
             colTimes[idx] = enc.isoTime
             fillObsForEncounter(
-                db, enc.uuid, idx, maternalValues, newbornValues, enc.provider, enc.isoTime
+                db, enc.uuid, idx, maternalValues, newbornValues, enc.provider, enc.isoTime,
+                creatorCache
             )
         }
 
@@ -325,6 +327,43 @@ object Stage3DataTransformer {
         return out
     }
 
+    /**
+     * The author of a single observation, in the same "given family role" shape as
+     * [resolveProvider].
+     *
+     * tbl_obs.creatoruuid is a USER uuid, so this joins tbl_provider.useruuid, where
+     * [resolveProvider] joins tbl_provider.uuid for an encounter's provider_uuid.
+     * Using either query with the other kind of uuid returns nothing without
+     * failing, so the two keep separate caches.
+     */
+    @SuppressLint("Range")
+    private fun resolveCreator(
+        db: SQLiteDatabase,
+        creatorUuid: String,
+        cache: MutableMap<String, String>
+    ): String {
+        if (creatorUuid.isEmpty()) return ""
+        cache[creatorUuid]?.let { return it }
+
+        var label = ""
+        db.rawQuery(
+            "SELECT given_name, family_name, role FROM tbl_provider WHERE useruuid = ? LIMIT 1",
+            arrayOf(creatorUuid)
+        ).use { c ->
+            if (c.moveToFirst()) {
+                val given = c.getString(c.getColumnIndex("given_name")).orEmpty()
+                val family = c.getString(c.getColumnIndex("family_name")).orEmpty()
+                val role = c.getString(c.getColumnIndex("role")).orEmpty()
+                    .substringAfterLast(":").trim().lowercase(Locale.getDefault())
+                label = listOf(given, family, role)
+                    .filter { it.isNotEmpty() }
+                    .joinToString(" ")
+            }
+        }
+        cache[creatorUuid] = label
+        return label
+    }
+
     /** "mounika M nurse" — given name, family name, and the role without its prefix. */
     @SuppressLint("Range")
     private fun resolveProvider(
@@ -355,14 +394,24 @@ object Stage3DataTransformer {
     }
 
     @SuppressLint("Range")
+    /**
+     * Fills one Stage 3 slot from one encounter's observations.
+     *
+     * The credit shown against a free-text entry is the observation's own author and
+     * recorded time, not the encounter's — a nurse and a doctor can both write into
+     * one slot minutes apart. The encounter's provider and time remain the fallback
+     * for rows whose own values never synced.
+     */
     private fun fillObsForEncounter(
         db: SQLiteDatabase, encounterUuid: String, colIdx: Int,
         maternalValues: Array<Array<Any?>>, newbornValues: Array<Array<Any?>>,
-        provider: String, isoTime: String
+        provider: String, isoTime: String,
+        creatorCache: MutableMap<String, String>
     ) {
         db.rawQuery(
-            "SELECT conceptuuid, value, comment FROM tbl_obs " +
-            "WHERE encounteruuid = ? AND (voided = '0' OR voided = 'false' OR voided = 'FALSE')",
+            "SELECT conceptuuid, value, comment, created_date, creatoruuid FROM tbl_obs " +
+            "WHERE encounteruuid = ? AND (voided = '0' OR voided = 'false' OR voided = 'FALSE') " +
+            "ORDER BY created_date ASC",
             arrayOf(encounterUuid)
         ).use { c ->
             // Resolved once, and tolerated if absent: a missing alert flag must not
@@ -370,15 +419,23 @@ object Stage3DataTransformer {
             val conceptIdx = c.getColumnIndex("conceptuuid")
             val valueIdx = c.getColumnIndex("value")
             val commentIdx = c.getColumnIndex("comment")
+            val createdIdx = c.getColumnIndex("created_date")
+            val creatorIdx = c.getColumnIndex("creatoruuid")
             while (c.moveToNext()) {
                 val conceptUuid = if (conceptIdx >= 0) c.getString(conceptIdx).orEmpty() else ""
                 val value = if (valueIdx >= 0) c.getString(valueIdx).orEmpty() else ""
-                 val comment = if (commentIdx >= 0) c.getString(commentIdx).orEmpty() else ""
+                val comment = if (commentIdx >= 0) c.getString(commentIdx).orEmpty() else ""
+                val createdRaw = if (createdIdx >= 0) c.getString(createdIdx).orEmpty() else ""
+                val creatorUuid = if (creatorIdx >= 0) c.getString(creatorIdx).orEmpty() else ""
+
+                val obsTime = toIsoOrRaw(createdRaw).ifEmpty { isoTime }
+                val obsProvider =
+                    resolveCreator(db, creatorUuid, creatorCache).ifEmpty { provider }
 
                 MATERNAL_UUID_TO_IDX[conceptUuid]?.let { paramIdx ->
                     assignMaternalObs(
                         paramIdx, conceptUuid, value, comment, colIdx, maternalValues,
-                        provider, isoTime
+                        obsProvider, obsTime
                     )
                     return@let
                 }
@@ -386,7 +443,7 @@ object Stage3DataTransformer {
                     assignObs(
                         paramIdx, value, comment, colIdx, newbornValues,
                         NEWBORN_TEXTAREA_IDX, isComplication = paramIdx == 10,
-                        provider = provider, isoTime = isoTime
+                        provider = obsProvider, isoTime = obsTime
                     )
                 }
             }

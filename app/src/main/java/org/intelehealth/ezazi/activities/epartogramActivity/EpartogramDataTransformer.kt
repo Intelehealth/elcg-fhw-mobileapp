@@ -248,6 +248,7 @@ object EpartogramDataTransformer {
     private fun buildStageData(db: SQLiteDatabase, visitUuid: String, root: JSONObject) {
         val encounters    = fetchEncounters(db, visitUuid)
         val initialsCache = mutableMapOf<String, String>()
+        val creatorCache  = mutableMapOf<String, String>()
 
         encounters.forEach { resolveStageHour(it, db) }
         allocateSubColumns(encounters)
@@ -314,7 +315,9 @@ object EpartogramDataTransformer {
             if (colIdx >= values[0].size) continue
 
             val initials = getProviderInitials(db, enc.providerUuid, initialsCache)
-            fillObservations(db, enc.uuid, enc.encounterTime, initials, colIdx, values)
+            fillObservations(
+                db, enc.uuid, enc.encounterTime, initials, colIdx, values, creatorCache
+            )
 
             // Track time and encounter metadata for each occupied sub-column slot
             val encInfo = JSONObject().apply {
@@ -490,26 +493,48 @@ object EpartogramDataTransformer {
     // ── Observation filling ─────────────────────────────────────────────────
 
     @SuppressLint("Range")
+    /**
+     * Fills one column from one encounter's observations.
+     *
+     * Each observation carries its own recorded time and its own author, which is
+     * what the web report credits entries with: two notes typed into one encounter
+     * by a nurse and a doctor minutes apart are separate records, not one. The
+     * encounter's time and provider stay as fallbacks, so a row missing either
+     * degrades to the previous behaviour instead of printing a blank.
+     */
     private fun fillObservations(db: SQLiteDatabase, encounterUuid: String,
                                   encounterTime: String, initials: String,
-                                  colIdx: Int, values: Array<Array<JSONObject?>>) {
+                                  colIdx: Int, values: Array<Array<JSONObject?>>,
+                                  creatorCache: MutableMap<String, String>) {
         db.rawQuery(
-            "SELECT conceptuuid, value, comment FROM tbl_obs " +
+            "SELECT conceptuuid, value, comment, created_date, creatoruuid FROM tbl_obs " +
             "WHERE encounteruuid = ? " +
-            "  AND (voided = '0' OR voided = 'false' OR voided = 'FALSE')",
+            "  AND (voided = '0' OR voided = 'false' OR voided = 'FALSE') " +
+            "ORDER BY created_date ASC",
             arrayOf(encounterUuid)
         ).use { c ->
+            val conceptIdx = c.getColumnIndex("conceptuuid")
+            val valueIdx   = c.getColumnIndex("value")
+            val commentIdx = c.getColumnIndex("comment")
+            val createdIdx = c.getColumnIndex("created_date")
+            val creatorIdx = c.getColumnIndex("creatoruuid")
             while (c.moveToNext()) {
-                val conceptUuid = c.getString(c.getColumnIndex("conceptuuid")).orEmpty()
-                val value       = c.getString(c.getColumnIndex("value")).orEmpty()
-                val comment     = c.getString(c.getColumnIndex("comment")).orEmpty()
+                val conceptUuid = if (conceptIdx >= 0) c.getString(conceptIdx).orEmpty() else ""
+                val value       = if (valueIdx   >= 0) c.getString(valueIdx).orEmpty() else ""
+                val comment     = if (commentIdx >= 0) c.getString(commentIdx).orEmpty() else ""
+                val createdRaw  = if (createdIdx >= 0) c.getString(createdIdx).orEmpty() else ""
+                val creatorUuid = if (creatorIdx >= 0) c.getString(creatorIdx).orEmpty() else ""
 
                 val paramIdx = UUID_TO_PARAM_IDX[conceptUuid] ?: continue
                 if (paramIdx >= values.size || colIdx >= values[paramIdx].size) continue
 
+                val obsTime = convertEncounterTime(createdRaw).ifEmpty { encounterTime }
+                val obsInitials =
+                    getCreatorInitials(db, creatorUuid, creatorCache).ifEmpty { initials }
+
                 try {
                     values[paramIdx][colIdx] = buildObsValue(
-                        paramIdx, value, comment, encounterTime, initials,
+                        paramIdx, value, comment, obsTime, obsInitials,
                         values[paramIdx][colIdx]
                     )
                 } catch (e: JSONException) {
@@ -552,6 +577,8 @@ object EpartogramDataTransformer {
             else -> JSONObject().apply {
                 put("value", value)
                 put("comment", comment)
+                put("initial", initials)
+                put("obsDatetime", obsDatetime)
             }
         }
     }
@@ -733,6 +760,39 @@ object EpartogramDataTransformer {
         }
 
         cache[providerUuid] = initials
+        return initials
+    }
+
+    /**
+     * Initials for the author of a single observation.
+     *
+     * tbl_obs.creatoruuid is a USER uuid, so this joins tbl_provider.useruuid — the
+     * mirror image of [getProviderInitials], which resolves an encounter's
+     * provider_uuid against tbl_provider.uuid. Swapping the two returns an empty
+     * string for every row without failing, so they keep separate caches: the key
+     * spaces differ and one shared cache would cross-contaminate them.
+     */
+    @SuppressLint("Range")
+    private fun getCreatorInitials(db: SQLiteDatabase, creatorUuid: String,
+                                    cache: MutableMap<String, String>): String {
+        if (creatorUuid.isEmpty()) return ""
+        cache[creatorUuid]?.let { return it }
+
+        var initials = ""
+        db.rawQuery(
+            "SELECT given_name, family_name FROM tbl_provider WHERE useruuid = ? LIMIT 1",
+            arrayOf(creatorUuid)
+        ).use { c ->
+            if (c.moveToFirst()) {
+                val given  = c.getString(c.getColumnIndex("given_name")).orEmpty()
+                val family = c.getString(c.getColumnIndex("family_name")).orEmpty()
+                initials = buildString {
+                    given.firstOrNull()?.let { append(it.uppercaseChar()) }
+                    family.firstOrNull()?.let { append(it.uppercaseChar()) }
+                }
+            }
+        }
+        cache[creatorUuid] = initials
         return initials
     }
 

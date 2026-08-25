@@ -38,6 +38,9 @@ object LcgSheetRenderer {
     private const val RED = 0xFFC62828.toInt()
     private const val AMBER = 0xFFEF6C00.toInt()
     private const val VALUE_BLUE = 0xFF0B5FA5.toInt()
+
+    /** The "HH:mm -" stamp that prefixes each record in a shared cell. */
+    private val CLOCK_STAMP = Regex("""\d{1,2}:\d{2} -""")
     private const val GRID = 0xFF333333.toInt()
     private const val GRID_LIGHT = 0xFF9E9E9E.toInt()
 
@@ -62,7 +65,7 @@ object LcgSheetRenderer {
      * hour to leave room to write, so without this the second record of an hour
      * inherits the first record's clock time.
      */
-    private class HourEntry(val text: String, val col: Col)
+    private class HourEntry(val text: String, val col: Col, val time: Date?)
 
     /** One grid entry whose text did not fit its cell, listed in full below. */
     private class NoteLine(
@@ -503,6 +506,7 @@ object LcgSheetRenderer {
         val rowHeight = g.ROW_MEDICATION
         val body = paint(g.TEXT_NOTE)
         body.color = VALUE_BLUE
+        val stamp = paint(g.TEXT_NOTE)
 
         val rows = listOf(
             Triple("Oxytocin", "U/L, drops", PARAM_OXYTOCIN),
@@ -519,7 +523,7 @@ object LcgSheetRenderer {
                 val text = cellTextOf(entries)
                 if (text.isNotEmpty()) {
                     val shortened =
-                        drawRotatedText(canvas, text, x, y, w, rowHeight, body)
+                        drawRotatedText(canvas, text, x, y, w, rowHeight, body, stamp)
                     if (shortened) {
                         overflow += noteLinesOf(label.uppercase(Locale.US), entries)
                     }
@@ -544,7 +548,7 @@ object LcgSheetRenderer {
             cellEntries(params, paramIdx, cols[i]).forEach { entry ->
                 val text = medicationText(paramIdx, entry)
                 if (text.isNotEmpty() && !isNothingGiven(text)) {
-                    parts.add(HourEntry(text, cols[i]))
+                    parts.add(HourEntry(text, cols[i], entryTime(entry, cols[i])))
                 }
             }
         }
@@ -572,6 +576,7 @@ object LcgSheetRenderer {
         val rowHeight = g.ROW_SHARED_DECISION
         val body = paint(g.TEXT_NOTE)
         body.color = VALUE_BLUE
+        val stamp = paint(g.TEXT_NOTE)
 
         listOf("ASSESSMENT" to PARAM_ASSESSMENT, "PLAN" to PARAM_PLAN).forEach { (label, paramIdx) ->
             drawLabelCell(canvas, label, "", left, y, rowHeight)
@@ -583,7 +588,7 @@ object LcgSheetRenderer {
                 val text = cellTextOf(entries)
                 if (text.isNotEmpty()) {
                     val shortened =
-                        drawRotatedText(canvas, text, x, y, w, rowHeight, body)
+                        drawRotatedText(canvas, text, x, y, w, rowHeight, body, stamp)
                     if (shortened) {
                         overflow += noteLinesOf(label.uppercase(Locale.US), entries)
                     }
@@ -595,7 +600,16 @@ object LcgSheetRenderer {
         return y
     }
 
-    /** Joins every entry recorded anywhere within one hour's sub-columns. */
+    /**
+     * When a record was written, preferring the observation's own timestamp over the
+     * encounter's. Two notes entered into one encounter minutes apart are separate
+     * records and must not share a stamp; the column time remains the fallback for
+     * rows whose observation time never synced.
+     */
+    private fun entryTime(entry: JSONObject, col: Col): Date? =
+        parseInstant(entry.optString("obsDatetime")) ?: col.time
+
+    /** Every entry recorded anywhere within one hour's sub-columns, in order. */
     private fun hourEntries(
         params: JSONArray,
         paramIdx: Int,
@@ -607,7 +621,9 @@ object LcgSheetRenderer {
         for (i in startIdx..endIdx) {
             cellEntries(params, paramIdx, cols[i]).forEach { entry ->
                 val text = describeValue(entry.opt("value"))
-                if (text.isNotEmpty()) parts.add(HourEntry(text, cols[i]))
+                if (text.isNotEmpty()) {
+                    parts.add(HourEntry(text, cols[i], entryTime(entry, cols[i])))
+                }
             }
         }
         return parts
@@ -623,15 +639,15 @@ object LcgSheetRenderer {
             entries.firstOrNull()?.text.orEmpty()
         } else {
             entries.joinToString("   ·   ") { entry ->
-                val clock = localTime(entry.col.time)
-                if (clock.isEmpty()) entry.text else clock + " " + entry.text
+                val clock = localTime(entry.time)
+                if (clock.isEmpty()) entry.text else clock + " - " + entry.text
             }
         }
 
     /** One note per record, each carrying the time it was actually recorded. */
     private fun noteLinesOf(section: String, entries: List<HourEntry>): List<NoteLine> =
         entries.map { entry ->
-            NoteLine(section, entry.col.stage, entry.col.hour, entry.col.time, entry.text)
+            NoteLine(section, entry.col.stage, entry.col.hour, entry.time, entry.text)
         }
 
     /** Delivery outcome, drawn under the grid on the last sheet. */
@@ -936,6 +952,11 @@ object LcgSheetRenderer {
      * Sideways text reading bottom-to-top, wrapped so each line runs along the
      * cell's height and successive lines stack across its width.
      */
+    /**
+     * Sideways cell text. Any "HH:mm -" stamp inside it is drawn in black while the
+     * record itself stays blue, so a reader can tell at a glance where one record
+     * ends and the next begins. Returns whether the text had to be shortened.
+     */
     private fun drawRotatedText(
         canvas: Canvas,
         text: String,
@@ -943,7 +964,8 @@ object LcgSheetRenderer {
         y: Float,
         w: Float,
         h: Float,
-        paint: Paint
+        paint: Paint,
+        stamp: Paint = paint
     ): Boolean {
         val lineLength = h - 5f
         val pitch = paint.textSize * 1.35f
@@ -959,10 +981,43 @@ object LcgSheetRenderer {
         canvas.translate(x, y + h)
         canvas.rotate(-90f)
         lines.forEachIndexed { i, line ->
-            canvas.drawText(line, 3f, (i + 1) * pitch - 1.5f, paint)
+            drawStampedLine(canvas, line, (i + 1) * pitch - 1.5f, paint, stamp)
         }
         canvas.restore()
         return shortened
+    }
+
+    /**
+     * One already-wrapped line, split into clock stamps and record text. Both paints
+     * share a text size, so advancing by measureText keeps the runs flush. A stamp
+     * broken across a wrap simply misses the pattern and draws in the body colour.
+     */
+    private fun drawStampedLine(
+        canvas: Canvas,
+        line: String,
+        baseline: Float,
+        body: Paint,
+        stamp: Paint
+    ) {
+        if (body === stamp) {
+            canvas.drawText(line, 3f, baseline, body)
+            return
+        }
+        var cursor = 0
+        var cx = 3f
+        for (match in CLOCK_STAMP.findAll(line)) {
+            if (match.range.first > cursor) {
+                val plain = line.substring(cursor, match.range.first)
+                canvas.drawText(plain, cx, baseline, body)
+                cx += body.measureText(plain)
+            }
+            canvas.drawText(match.value, cx, baseline, stamp)
+            cx += stamp.measureText(match.value)
+            cursor = match.range.last + 1
+        }
+        if (cursor < line.length) {
+            canvas.drawText(line.substring(cursor), cx, baseline, body)
+        }
     }
 
     private fun drawLabelCell(

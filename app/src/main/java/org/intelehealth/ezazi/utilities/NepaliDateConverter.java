@@ -273,16 +273,22 @@ public class NepaliDateConverter {
 
         // Each entry: { parse-format, time-output-format-or-null }
         // time-output-format is non-null only for formats that contain a time component.
+        //
+        // ORDER IS LOAD-BEARING. SimpleDateFormat.parse(String) stops as soon as the
+        // pattern is satisfied and ignores whatever trails it, so a date-only pattern
+        // happily consumes "28 Jun 2024 14:30" and silently drops the clock. Every
+        // time-bearing format must therefore be tried before the date-only ones; a
+        // date-only input simply misses them and falls through.
         String[][] formats = {
+                {"yyyy-MM-dd'T'HH:mm:ss.SSSZ",  "HH:mm:ss"},
+                {"yyyy-MM-dd HH:mm:ss",         "HH:mm:ss"},
+                {"dd MMM, yyyy hh:mm a",        "hh:mm a"},   // "15 Apr, 2026 06:21 PM"
+                {"dd MMM yyyy hh:mm a",         "hh:mm a"},   // "15 Apr 2026 06:21 PM"
+                {"dd MMM yyyy HH:mm",           "HH:mm"},     // "28 Jun 2024 14:30"
                 {"yyyy-MM-dd",                  null},
                 {"dd/MM/yyyy",                  null},
                 {"dd MMM yyyy",                 null},
                 {"dd MMM, yyyy",                null},
-                {"dd MMM, yyyy hh:mm a",        "hh:mm a"},   // "15 Apr, 2026 06:21 PM"
-                {"dd MMM yyyy hh:mm a",         "hh:mm a"},   // "15 Apr 2026 06:21 PM"
-                {"dd MMM yyyy HH:mm",           "HH:mm"},     // "28 Jun 2024 14:30"
-                {"yyyy-MM-dd HH:mm:ss",         "HH:mm:ss"},
-                {"yyyy-MM-dd'T'HH:mm:ss.SSSZ",  "HH:mm:ss"},
         };
 
         for (String[] entry : formats) {
