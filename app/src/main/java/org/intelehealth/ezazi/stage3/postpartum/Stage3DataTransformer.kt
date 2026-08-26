@@ -700,6 +700,15 @@ object Stage3DataTransformer {
                 val arr = obj.optJSONArray("CONGENITAL_ANOMALY") ?: obj.optJSONArray("congenital_anomaly")
                 arr?.let { (0 until it.length()).forEach { i -> items.add(it.optString(i)) } }
                 obj.optString("other_text").takeIf { it.isNotEmpty() }?.let { items.add(it) }
+                // A plain answer such as "No" is stored as a STRING, not an array, so the
+                // optJSONArray above finds nothing and the field used to collapse to "-" —
+                // which the report then hides entirely. "No congenital disorders" is a
+                // finding worth printing, not an absence of one.
+                if (items.isEmpty()) {
+                    val plain = obj.optString("CONGENITAL_ANOMALY")
+                        .ifEmpty { obj.optString("congenital_anomaly") }
+                    plain.trim().takeIf { it.isNotEmpty() }?.let { items.add(it) }
+                }
             } catch (_: JSONException) {}
             trimmed.startsWith("[") -> try {
                 val arr = JSONArray(trimmed)
