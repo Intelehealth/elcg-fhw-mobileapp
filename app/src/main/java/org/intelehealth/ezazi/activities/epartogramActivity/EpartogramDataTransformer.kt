@@ -99,7 +99,8 @@ object EpartogramDataTransformer {
         "Risk factors"                      to "Riskfactors",
         "Gravida"                           to "Gravida",
         "Last Menstrual Period (LMP)"       to "LMP",
-        "Estimated Date of Delivery (EDD)"  to "EDD"
+        "Estimated Date of Delivery (EDD)"  to "EDD",
+        "Hospital ID"                       to "HospitalID"
     )
 
     private val STAGE_HOUR_PATTERN     = Pattern.compile("Stage(\\d+)_Hour(\\d+)(?:_(\\d+))?")
@@ -216,6 +217,7 @@ object EpartogramDataTransformer {
         }
 
         addBsTwins(pInfo)
+        pInfo.put("MembraneRupturedDisplay", membraneDisplay(pInfo))
         return pInfo
     }
 
@@ -227,6 +229,53 @@ object EpartogramDataTransformer {
      * prints "NA" for anything new Date() cannot parse, so overwriting the original
      * with a BS string would blank the field rather than translate it.
      */
+    /**
+     * The ruptured-membranes field as it should read on screen.
+     *
+     * This attribute is not a timestamp column — the intake form writes one of three
+     * things (PatientOtherInfoFragment, where the dropdown is turned into a value):
+     * "U" for Unknown, "I" for Intact, or "<dd/MM/yyyy> <hh:mm a>" when a rupture time
+     * is actually known. The same screen maps the codes back to those words when it
+     * reloads a patient, so the words are the app's own, not a mapping invented here.
+     *
+     * The decision is made in Kotlin rather than in the asset because JavaScript's
+     * new Date() cannot read a day-first "28/06/2024 07:30", so the asset could not
+     * tell a real rupture date from a code and printed the raw string either way.
+     */
+    private fun membraneDisplay(pInfo: JSONObject): String {
+        val raw = pInfo.optString("MembraneRupturedTimestamp").trim()
+        if (raw.isEmpty() || raw == "null") return "NA"
+        if (raw.equals("U", ignoreCase = true)) return "Unknown"
+        if (raw.equals("I", ignoreCase = true)) return "Intact"
+
+        val bs = NepaliDateConverter.localDayToBsDisplay(raw)
+        if (bs.isEmpty()) return raw
+        val clock = clockOf(raw)
+        return if (clock.isEmpty()) "[Date $bs]" else "[Date $bs Time $clock]"
+    }
+
+    /** The 24-hour clock inside a stored attribute timestamp, or "" if it has none. */
+    private fun clockOf(raw: String): String {
+        PATIENT_TIME_FORMATS.forEach { pattern ->
+            try {
+                val inFmt = SimpleDateFormat(pattern, Locale.ENGLISH)
+                inFmt.isLenient = false
+                if (pattern.endsWith("Z'")) inFmt.timeZone = TimeZone.getTimeZone("UTC")
+                val date = inFmt.parse(raw) ?: return@forEach
+                return SimpleDateFormat("HH:mm", Locale.ENGLISH).format(date)
+            } catch (_: Exception) {
+            }
+        }
+        return ""
+    }
+
+    private val PATIENT_TIME_FORMATS = listOf(
+        "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+        "dd/MM/yyyy hh:mm a",
+        "dd/MM/yyyy HH:mm",
+        "yyyy-MM-dd HH:mm:ss"
+    )
+
     private fun addBsTwins(pInfo: JSONObject) {
         BS_PINFO_KEYS.forEach { key ->
             val bs = NepaliDateConverter.localDayToBsDisplay(pInfo.optString(key))
@@ -278,6 +327,7 @@ object EpartogramDataTransformer {
 
         encounters.forEach { resolveStageHour(it, db) }
         allocateSubColumns(encounters)
+        root.put("hasStage3Data", hasStage3Data(encounters))
 
         // ── First pass: compute effective sub-column count per (stage, hour) ─
         // maxSubCol tracks the highest subCol seen for each hour.
@@ -519,6 +569,20 @@ object EpartogramDataTransformer {
      * Encounters whose stage/hour never resolved are skipped so they cannot
      * consume a column.
      */
+    /**
+     * Whether this visit has reached stage 3.
+     *
+     * When it has, the delivery outcome belongs to the postpartum report and the
+     * Labour Care Guide should not repeat it — the same rule the web reference applies
+     * with *ngIf="!hasStage3Data". Detected either from an hourly Stage3 encounter
+     * (resolveStageHour parses those to stage 3) or from the delivery-outcome
+     * encounter, which carries no Stage/Hour name of its own.
+     */
+    private fun hasStage3Data(encounters: List<EncounterRecord>): Boolean =
+        encounters.any {
+            it.stage == 3 || it.typeUuid == UuidDictionary.DELIVERY_OUTCOME_STAGE3
+        }
+
     private fun allocateSubColumns(encounters: List<EncounterRecord>) {
         val next = mutableMapOf<String, Int>()
         for (enc in encounters) {

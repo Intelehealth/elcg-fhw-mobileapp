@@ -224,6 +224,12 @@ public class NepaliDateConverter {
             yIdx++;
         }
 
+        // The table ends at BS 2086 (AD 2030-04-13). Past that yIdx is out of range and
+        // the month loop below would throw. Returning null lets callers fall back to a
+        // Gregorian date; without this one out-of-range LMP or EDD took down every
+        // report on all four surfaces, because the conversion happens inside buildPinfo.
+        if (yIdx >= BS_MONTHS_DATA.length) return null;
+
         for (int m = 1; m <= 12; m++) {
             int daysInMonth = BS_MONTHS_DATA[yIdx][m];
             if (remaining < daysInMonth) {

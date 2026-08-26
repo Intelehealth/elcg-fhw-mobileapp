@@ -124,21 +124,58 @@ object LcgSheetRenderer {
             .filter { it.isNotEmpty() }
         var written = 0
 
+        // Once stage 3 exists the outcome is the postpartum report's to state, so the
+        // guide stops repeating it — matching the web reference.
+        val wantsDelivery = data.optBoolean("visitCompleted", false) &&
+                !data.optBoolean("hasStage3Data", false)
+        val deliveryFitsInline = g.fitsWithDeliveryBlock(page)
+
         sheets.forEachIndexed { index, cols ->
             val pdfPage = document.startPage(pageInfo(page, startNumber + written))
             drawSheet(
                 pdfPage.canvas, data, page, cols, overflow,
                 index + 1, sheets.size,
-                showDelivery = index == sheets.size - 1
+                showDelivery = wantsDelivery && index == sheets.size - 1
             )
             document.finishPage(pdfPage)
             written++
         }
 
+        if (wantsDelivery && !deliveryFitsInline) {
+            written += renderDeliveryPage(document, data, page, startNumber + written)
+        }
         if (overflow.isNotEmpty()) {
             written += renderNotes(document, data, page, startNumber + written, overflow)
         }
         return written
+    }
+
+    /**
+     * The delivery outcome on a page of its own.
+     *
+     * Used when [LcgSheetGeometry.fitsWithDeliveryBlock] says the sheet has no room
+     * beneath the footer, which is the case on A4 portrait. Drawing it inline anyway
+     * pushed half its fields past the bottom edge, and a PDF discards those silently —
+     * so a short extra page is the honest trade.
+     */
+    private fun renderDeliveryPage(
+        document: PdfDocument,
+        data: JSONObject,
+        page: PageSpec,
+        number: Int
+    ): Int {
+        val g = LcgSheetGeometry
+        val pdfPage = document.startPage(pageInfo(page, number))
+        val canvas = pdfPage.canvas
+        val left = g.MARGIN
+        val right = page.widthPt - g.MARGIN
+
+        val title = paint(g.TEXT_TITLE, bold = true)
+        canvas.drawText("DELIVERY OUTCOME", left, g.MARGIN + g.TEXT_TITLE, title)
+        drawDeliveryBlock(canvas, data, left, right, g.MARGIN + g.TEXT_TITLE + 10f)
+
+        document.finishPage(pdfPage)
+        return 1
     }
 
     private fun pageInfo(page: PageSpec, number: Int) = PdfDocument.PageInfo
@@ -219,7 +256,7 @@ object LcgSheetRenderer {
         drawStageDivider(canvas, cols, dataLeft, colWidth, gridTop, y)
         y = drawFooter(canvas, left, right, y, page, sheetNumber, sheetCount)
 
-        if (showDelivery && data.optBoolean("visitCompleted", false)) {
+        if (showDelivery && g.fitsWithDeliveryBlock(page)) {
             drawDeliveryBlock(canvas, data, left, right, y + 6f)
         }
     }
@@ -248,13 +285,20 @@ object LcgSheetRenderer {
 
         val row1 = listOf(
             "Name" to patientName(p),
+            // The "Hospital ID" patient attribute only. NOT openmrsId, which is a
+            // different identifier from a different table and appears under its own
+            // label elsewhere — substituting it here printed the wrong number under
+            // the wrong name, which on a record someone reads a patient ID off is a
+            // misidentification risk, not a blank-field convenience.
+            "Hospital ID" to p.optString("HospitalID").ifEmpty { "NA" },
             "Gravida" to p.optString("Gravida", "NA"),
             "Parity" to p.optString("Parity", "NA"),
             "Labour onset" to p.optString("LaborOnset", "NA")
         )
         val row2 = listOf(
             "Active labour" to patientDate(p.optString("ActiveLaborDiagnosed")),
-            "Membranes ruptured" to patientDate(p.optString("MembraneRupturedTimestamp")),
+            "Membranes ruptured" to
+                    p.optString("MembraneRupturedDisplay").ifEmpty { "NA" },
             "Risk factors" to p.optString("Riskfactors", "NA"),
             "LMP" to patientDate(p.optString("LMP")),
             "EDD" to patientDate(p.optString("EDD"))
@@ -482,10 +526,12 @@ object LcgSheetRenderer {
         ).forEach { (paramIdx, levels, glyph) ->
             val sectionTop = y
             levels.forEachIndexed { rowIdx, level ->
-                val label = if (rowIdx == 0) {
-                    if (paramIdx == 17) "Cervix [X]" else "Descent [O]"
-                } else ""
-                drawLabelCell(canvas, label, level.first, left, y, g.ROW_PLOT)
+                // The name column carries the dilatation/station, the alert column the
+                // lag time. Both were previously collapsed into one: the number was
+                // passed as the alert, so level.second - the "at 9 cm, alert after 2h"
+                // thresholds that are the whole point of the cervix plot - was never
+                // drawn at all. The band still names itself via drawSectionTitle below.
+                drawLabelCell(canvas, level.first, level.second, left, y, g.ROW_PLOT)
                 cols.forEachIndexed { i, col ->
                     val x = dataLeft + i * colWidth
                     cell(canvas, x, y, colWidth, g.ROW_PLOT)
@@ -760,16 +806,17 @@ object LcgSheetRenderer {
         val g = LcgSheetGeometry
         val text = paint(g.TEXT_FOOTER)
         text.color = GRID
-        canvas.drawText(
-            "INSTRUCTIONS: CIRCLE ANY OBSERVATION MEETING THE CRITERIA IN THE 'ALERT' COLUMN, " +
-                    "ALERT THE SENIOR MIDWIFE OR DOCTOR AND RECORD THE ASSESSMENT AND ACTION TAKEN.",
-            left, top + 9f, text
-        )
-        canvas.drawText(
-            "Y Yes · N No · D Declined · U Unknown · SP Supine · MO Mobile · E Early · L Late · " +
-                    "V Variable · I Intact · C Clear · M Meconium · B Blood · A Anterior · P Posterior · T Transverse",
-            left, top + 18f, text
-        )
+
+        // Wrapped rather than drawn as single lines: the legend alone is wider than
+        // A4's 555pt at this size, so it used to run past the right margin, and the
+        // two sentences the WHO form ends with had nowhere to go at all.
+        var y = top + 9f
+        FOOTER_PARAGRAPHS.forEach { paragraph ->
+            wrapLines(paragraph, right - left, text).forEach { line ->
+                canvas.drawText(line, left, y, text)
+                y += g.TEXT_FOOTER * 1.35f
+            }
+        }
         val corner = page.heightPt - g.MARGIN
         val paper = paint(g.TEXT_FOOTER)
         paper.color = GRID_LIGHT
@@ -1412,6 +1459,27 @@ object LcgSheetRenderer {
     private val NOTE_SECTION_ORDER =
         listOf("OXYTOCIN", "MEDICINE", "IV FLUIDS", "ASSESSMENT", "PLAN")
 
+    /**
+     * The static text the WHO form carries beneath the grid, in its order.
+     *
+     * The second and third were missing entirely: the sheet stopped at "ACTION TAKEN."
+     * without the instruction to continue on a new guide past 12h, the legend omitted
+     * the two codes its own alert column uses (P3+/P4+ and A3+/A4+), and the cervix
+     * plotting note — which explains what the lag times in the ALERT column mean —
+     * appeared nowhere.
+     */
+    private val FOOTER_PARAGRAPHS = listOf(
+        "INSTRUCTIONS: CIRCLE ANY OBSERVATION MEETING THE CRITERIA IN THE 'ALERT' COLUMN, " +
+                "ALERT THE SENIOR MIDWIFE OR DOCTOR AND RECORD THE ASSESSMENT AND ACTION " +
+                "TAKEN. IF LABOUR EXTENDS BEYOND 12H, PLEASE CONTINUE ON A NEW LABOUR CARE GUIDE.",
+        "Abbreviations: Y Yes · N No · D Declined · U Unknown · SP Supine · MO Mobile · " +
+                "E Early · L Late · V Variable · I Intact · C Clear · M Meconium · B Blood · " +
+                "A Anterior · P Posterior · T Transverse · P+ Protein · A+ Acetone",
+        "CERVIX / DESCENT: in active first stage plot X for cervical dilatation and O " +
+                "for descent; the ALERT column gives the lag time after which, with no " +
+                "progress, an alert is triggered. In second stage P marks when pushing begins."
+    )
+
     private val CERVIX_LEVELS = listOf(
         "10" to "", "9" to "≥2h", "8" to "≥2.5h", "7" to "≥3h", "6" to "≥5h", "5" to "≥6h"
     )
@@ -1444,7 +1512,7 @@ object LcgSheetRenderer {
                 Row("Pulse", "<60, ≥120", 10),
                 Row("Systolic BP", "<80, ≥140", 11),
                 Row("Diastolic BP", "≥90", 12),
-                Row("Temperature °C", "<35, ≥37.5", 13),
+                Row("Temperature °F", "<95.0, ≥99.5", 13),
                 Row("Urine protein", "P3+, P4+", 14),
                 Row("Urine acetone", "A3+, A4+", 25)
             ), LcgSheetGeometry.ROW_DATA

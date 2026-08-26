@@ -78,8 +78,8 @@ object Stage3SheetRenderer {
     ): Int {
         val g = Stage3SheetGeometry
         val slots = buildSlots(data)
-        val maternal = buildRows(data.optJSONArray("maternalParams"), slots.size)
-        val newborn = buildRows(data.optJSONArray("newbornParams"), slots.size)
+        val maternal = buildRows(data.optJSONArray("maternalParams"), slots.size, MATERNAL)
+        val newborn = buildRows(data.optJSONArray("newbornParams"), slots.size, NEWBORN)
         val overflow = mutableListOf<Overflow>()
 
         val pdfPage = document.startPage(pageInfo(page, startNumber))
@@ -136,7 +136,7 @@ object Stage3SheetRenderer {
      * either absent, a single observation object, or a list of them for the
      * free-text rows — all three collapse to one string here.
      */
-    private fun buildRows(params: JSONArray?, columns: Int): List<Row> {
+    private fun buildRows(params: JSONArray?, columns: Int, section: String): List<Row> {
         if (params == null) return emptyList()
         val rows = mutableListOf<Row>()
         for (i in 0 until params.length()) {
@@ -146,17 +146,22 @@ object Stage3SheetRenderer {
             val narrative = p.optBoolean("isTextarea", false)
             val values = p.optJSONArray("values")
             val cells = (0 until columns).map { c ->
-                readCell(values?.opt(c), narrative, name)
+                readCell(values?.opt(c), narrative, name, section)
             }
             rows.add(Row(displayName(name), cells))
         }
         return rows
     }
 
-    private fun readCell(raw: Any?, narrative: Boolean, paramName: String): Cell = when (raw) {
+    private fun readCell(
+        raw: Any?,
+        narrative: Boolean,
+        paramName: String,
+        section: String
+    ): Cell = when (raw) {
         null, JSONObject.NULL -> Cell("", alert = false, narrative = narrative)
         is JSONObject -> raw.optString("value").trim().let { text ->
-            Cell(text, alert = isAlert(paramName, text), narrative = narrative)
+            Cell(text, alert = isAlert(section, paramName, text), narrative = narrative)
         }
         is JSONArray -> {
             val parts = (0 until raw.length()).mapNotNull { i ->
@@ -174,19 +179,33 @@ object Stage3SheetRenderer {
         else -> Cell(raw.toString().trim(), alert = false, narrative = narrative)
     }
 
+    /** Which band a row belongs to. Four rules read differently for a newborn. */
+    private const val MATERNAL = "maternal"
+    private const val NEWBORN = "newborn"
+
     /**
-     * The abnormal-value rules, ported from isAlert() in stage3.html so the
-     * printed sheet marks exactly what the report on screen marks. Keyed on the
-     * transformer's own parameter name, before any display renaming.
+     * The abnormal-value rules, keyed on the transformer's own parameter name
+     * (before any display renaming) and on which band the row is in.
      *
-     * Deliberately not thresholds of my own invention, and deliberately not the
-     * observation comment column — that carries R/G flags for some rows only,
-     * and treating any comment as abnormal reddened normal observations.
+     * The band matters for four of them, and getting it wrong is silent:
+     * "Respiratory Rate", "Temperature" and "Complication(s)" appear in BOTH
+     * param lists, so a section-blind rule applied the mother's thresholds to the
+     * newborn. A newborn at 96 °F or breathing 45/min read as normal on paper while
+     * our own capture engine had already flagged it red. SPO2 had no rule at all,
+     * so desaturation was never marked; and the newborn row is named
+     * "Complications", which the singular key never matched.
+     *
+     * Thresholds are not invented here — they agree with both
+     * stage3.component.ts isAlert() and PartogramAlertEngine's newborn branch.
+     * Deliberately not the observation comment column: that carries R/G flags for
+     * some rows only, and treating any comment as abnormal reddened normal
+     * observations.
      */
-    private fun isAlert(paramName: String, value: String): Boolean {
+    private fun isAlert(section: String, paramName: String, value: String): Boolean {
         val v = value.trim().lowercase(Locale.US)
         if (v.isEmpty() || v == "-") return false
         val num = v.toFloatOrNull()
+        val newborn = section == NEWBORN
 
         return when (paramName) {
             "Pulse" -> num != null && (num < 60f || num >= 120f)
@@ -197,14 +216,16 @@ object Stage3SheetRenderer {
                 (systolic != null && (systolic < 80f || systolic >= 140f)) ||
                         (diastolic != null && diastolic >= 90f)
             }
-            "Temperature" -> num != null && (num < 95f || num >= 99.5f)
-            "Respiratory Rate" -> num != null && num > 30f
+            "Temperature" -> num != null &&
+                    if (newborn) (num < 97.7f || num > 99.5f) else (num < 95f || num >= 99.5f)
+            "Respiratory Rate" -> num != null && num > (if (newborn) 60f else 30f)
+            "SPO2" -> num != null && num < 92f
             "Blood Loss" -> num != null && num >= 500f
             "Uterus Contracted", "Urine Passed", "Sucking / Feeding",
             "Feet (warm)", "Feet Temperature" -> v == "n" || v == "no"
             "Hematoma", "Grunting", "Chest Indrawing", "Fast Breathing",
             "Skin Color", "Umbilical Cord Oozing" -> v == "y" || v == "yes"
-            "Complication" -> v != "no" && v != "n"
+            "Complication", "Complications" -> v != "no" && v != "n"
             else -> false
         }
     }
@@ -212,7 +233,7 @@ object Stage3SheetRenderer {
     /** Row labels the report spells differently from the concept names. */
     private fun displayName(name: String): String = when (name) {
         "BP" -> "BP (systolic/diastolic)"
-        "Temperature" -> "Temprature °f"
+        "Temperature" -> "Temperature °F"
         else -> name
     }
 
@@ -307,7 +328,7 @@ object Stage3SheetRenderer {
             Field("Placenta Delivery Time", clockOnly(o.optString("placentaDeliveryTime"))),
             Field(
                 "Placenta/Cord Abnormality",
-                o.optString("placentaCordAbnormality").ifEmpty { "-" }
+                o.optString("placentaCordAbnormality").ifEmpty { "-" }, span = 2
             ),
             Field("Perineal Laceration", o.optString("perinealLaceration").ifEmpty { "-" }),
             Field("Degree of Tear", o.optString("degreeOfTear").ifEmpty { "-" }),
@@ -354,12 +375,17 @@ object Stage3SheetRenderer {
         if (col != 0) y += g.fieldLine(page)
 
         // the two list-valued fields get the full width so they can wrap
+        // AMTSL is always shown, like the web report: an empty medication row is a
+        // clinical statement, not an absence. Only Congenital Disorders is conditional.
         listOf(
             "AMTSL Medication" to o.optString("amtslMedication"),
             "Congenital Disorders" to o.optString("congenitalDisorders")
         ).forEach { (label, raw) ->
-            val value = raw.replace("\n", " · ").trim()
-            if (value.isEmpty() || value == "-") return@forEach
+            val trimmed = raw.replace("\n", " · ").trim()
+            if (label.startsWith("Congenital") && (trimmed.isEmpty() || trimmed == "-")) {
+                return@forEach
+            }
+            val value = trimmed.ifEmpty { "-" }
             val head = "$label: "
             val headWidth = labelPaint.measureText(head)
             canvas.drawText(head, left, y, labelPaint)
@@ -461,8 +487,21 @@ object Stage3SheetRenderer {
                 } else {
                     valuePaint.color = if (c.alert) ALERT_RED else VALUE_BLUE
                     valuePaint.isFakeBoldText = c.alert
+                    // Measured with prosePaint above but drawn with the larger
+                    // valuePaint, so a value can still be too wide here. Record it the
+                    // way the prose branch does: a shortened scalar used to vanish with
+                    // no continuation entry at all.
+                    val fitted = clip(c.text, room, valuePaint)
+                    if (fitted != c.text) {
+                        overflow.add(
+                            Overflow(
+                                row.name, slots.getOrNull(i)?.label.orEmpty(),
+                                slots.getOrNull(i)?.time, c.text
+                            )
+                        )
+                    }
                     canvas.drawText(
-                        clip(c.text, room, valuePaint),
+                        fitted,
                         x + colWidth / 2f, y + height - g.cellPad(page) * 1.8f, valuePaint
                     )
                 }

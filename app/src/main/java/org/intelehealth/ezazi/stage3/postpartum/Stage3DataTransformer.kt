@@ -398,6 +398,12 @@ object Stage3DataTransformer {
      * [resolveProvider] joins tbl_provider.uuid for an encounter's provider_uuid.
      * Using either query with the other kind of uuid returns nothing without
      * failing, so the two keep separate caches.
+     *
+     * The label is given + family name only. The role is deliberately NOT appended: the
+     * web report prints OpenMRS's person.display verbatim, which carries no role, and
+     * appending ours produced "mounika nurse nurse" whenever a provider's family name
+     * already matched their role. tbl_provider has no display or middle-name column, so
+     * "mounika nurse" is as close as this schema gets to the web's "mounika M nurse".
      */
     @SuppressLint("Range")
     private fun resolveCreator(
@@ -410,15 +416,13 @@ object Stage3DataTransformer {
 
         var label = ""
         db.rawQuery(
-            "SELECT given_name, family_name, role FROM tbl_provider WHERE useruuid = ? LIMIT 1",
+            "SELECT given_name, family_name FROM tbl_provider WHERE useruuid = ? LIMIT 1",
             arrayOf(creatorUuid)
         ).use { c ->
             if (c.moveToFirst()) {
                 val given = c.getString(c.getColumnIndex("given_name")).orEmpty()
                 val family = c.getString(c.getColumnIndex("family_name")).orEmpty()
-                val role = c.getString(c.getColumnIndex("role")).orEmpty()
-                    .substringAfterLast(":").trim().lowercase(Locale.getDefault())
-                label = listOf(given, family, role)
+                label = listOf(given, family)
                     .filter { it.isNotEmpty() }
                     .joinToString(" ")
             }
@@ -439,15 +443,13 @@ object Stage3DataTransformer {
 
         var label = ""
         db.rawQuery(
-            "SELECT given_name, family_name, role FROM tbl_provider WHERE uuid = ? LIMIT 1",
+            "SELECT given_name, family_name FROM tbl_provider WHERE uuid = ? LIMIT 1",
             arrayOf(providerUuid)
         ).use { c ->
             if (c.moveToFirst()) {
                 val given = c.getString(c.getColumnIndex("given_name")).orEmpty()
                 val family = c.getString(c.getColumnIndex("family_name")).orEmpty()
-                val role = c.getString(c.getColumnIndex("role")).orEmpty()
-                    .substringAfterLast(":").trim().lowercase(Locale.getDefault())
-                label = listOf(given, family, role)
+                label = listOf(given, family)
                     .filter { it.isNotEmpty() }
                     .joinToString(" ")
             }
@@ -533,7 +535,10 @@ object Stage3DataTransformer {
             val isDiastolic = conceptUuid == PartogramConstants.Params.DIASTOLIC_BP.conceptId
             val sys = if (isSystolic) value else existing?.optString("systolic").orEmpty()
             val dia = if (isDiastolic) value else existing?.optString("diastolic").orEmpty()
-            val combined = listOf(sys, dia).filter { it.isNotEmpty() }.joinToString("/")
+            // Always "systolic/diastolic", even when one half is missing. Dropping the
+            // empty half made a lone diastolic parse as a systolic, so a diastolic of
+            // 95 was read as a systolic of 95 and never alerted.
+            val combined = if (sys.isEmpty() && dia.isEmpty()) "" else "$sys/$dia"
             val existingComment = existing?.optString("comment").orEmpty()
             maternalValues[1][colIdx] = JSONObject()
                 .put("value", combined)
