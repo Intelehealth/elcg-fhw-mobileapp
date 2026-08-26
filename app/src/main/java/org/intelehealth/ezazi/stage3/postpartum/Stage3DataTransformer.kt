@@ -9,6 +9,7 @@ import org.intelehealth.ezazi.app.AppConstants
 import org.intelehealth.ezazi.app.IntelehealthApplication
 import org.intelehealth.ezazi.partogram.PartogramConstants
 import org.intelehealth.ezazi.stage3.Utils.DeliveryDetailsConcept
+import org.intelehealth.ezazi.utilities.NepaliDateConverter
 import org.intelehealth.ezazi.utilities.SessionManager
 import org.intelehealth.ezazi.utilities.UuidDictionary
 import org.json.JSONArray
@@ -46,7 +47,6 @@ object Stage3DataTransformer {
     }
 
     // 8 fixed sub-columns matching stage3.component.ts COL_OFFSETS / COL_LABELS.
-    private const val NUM_COLS = 8
     private val COL_LABELS = listOf(
         "0 min", "+15m", "+30m", "+45m", "+1h 15m", "+1h 45m", "+2h 45m", "+3h 45m"
     )
@@ -64,7 +64,7 @@ object Stage3DataTransformer {
         "3d71ad42-7b6e-4687-b096-f0dd89e84647", // Stage3_Hour2_1
         "3b3960f4-c9d2-4d41-aed9-f376312fc33e", // Stage3_Hour2_2
         "0ca40a73-3581-47ae-9cb2-0c6cde17158e", // Stage3_Hour3_1
-        "746e8cc9-e8e8-4055-87a2-2687888cf7f8"  // Stage3_Hour4_1
+        "746e8cc9-e8e8-4055-87a2-2687888c7f88"  // Stage3_Hour4_1
     )
 
     // Concept-UUID → param-index for maternalParams (order MUST match the
@@ -87,16 +87,17 @@ object Stage3DataTransformer {
     private val NEWBORN_UUID_TO_IDX: Map<String, Int> = mapOf(
         PartogramConstants.Params.RESPIRATORY_RATE_NEWBORN.conceptId    to 0,
         PartogramConstants.Params.SPO2_NEWBORN.conceptId                to 1,
-        PartogramConstants.Params.GRUNTING_NEWBORN.conceptId            to 2,
-        PartogramConstants.Params.CHEST_INDRAWING_NEWBORN.conceptId     to 3,
-        PartogramConstants.Params.FAST_BREATHING_NEWBORN.conceptId      to 4,
-        PartogramConstants.Params.FEET_WARM_NEWBORN.conceptId           to 5,
-        PartogramConstants.Params.SKIN_COLOR_NEWBORN.conceptId          to 6,
-        PartogramConstants.Params.UC_OOZING_NEWBORN.conceptId           to 7,
-        PartogramConstants.Params.SUCKING_FEEDING_NEWBORN.conceptId     to 8,
-        PartogramConstants.Params.ONGOING_COMPLICATIONS_NEWBORN.conceptId to 9,
-        PartogramConstants.Params.ASSESSMENT_NEWBORN.conceptId          to 10,
-        PartogramConstants.Params.PLAN_NEWBORN.conceptId                to 11
+        PartogramConstants.Params.TEMPERATURE_NEWBORN.conceptId         to 2,
+        PartogramConstants.Params.GRUNTING_NEWBORN.conceptId            to 3,
+        PartogramConstants.Params.CHEST_INDRAWING_NEWBORN.conceptId     to 4,
+        PartogramConstants.Params.FAST_BREATHING_NEWBORN.conceptId      to 5,
+        PartogramConstants.Params.FEET_WARM_NEWBORN.conceptId           to 6,
+        PartogramConstants.Params.SKIN_COLOR_NEWBORN.conceptId          to 7,
+        PartogramConstants.Params.UC_OOZING_NEWBORN.conceptId           to 8,
+        PartogramConstants.Params.SUCKING_FEEDING_NEWBORN.conceptId     to 9,
+        PartogramConstants.Params.ONGOING_COMPLICATIONS_NEWBORN.conceptId to 10,
+        PartogramConstants.Params.ASSESSMENT_NEWBORN.conceptId          to 11,
+        PartogramConstants.Params.PLAN_NEWBORN.conceptId                to 12
     )
 
     private val MATERNAL_PARAM_NAMES = listOf(
@@ -107,11 +108,11 @@ object Stage3DataTransformer {
     private val MATERNAL_TEXTAREA_IDX = setOf(9, 10)
 
     private val NEWBORN_PARAM_NAMES = listOf(
-        "Respiratory Rate", "SPO2", "Grunting", "Chest Indrawing", "Fast Breathing",
-        "Feet (warm)", "Skin Color", "Umbilical Cord Oozing", "Sucking / Feeding",
-        "Complications", "Assessment (Newborn)", "Plan (Newborn)"
+        "Respiratory Rate", "SPO2", "Temperature", "Grunting", "Chest Indrawing",
+        "Fast Breathing", "Feet (warm)", "Skin Color", "Umbilical Cord Oozing",
+        "Sucking / Feeding", "Complications", "Assessment (Newborn)", "Plan (Newborn)"
     )
-    private val NEWBORN_TEXTAREA_IDX = setOf(10, 11)
+    private val NEWBORN_TEXTAREA_IDX = setOf(11, 12)
 
     // ── Public API ──────────────────────────────────────────────────────────
 
@@ -129,7 +130,6 @@ object Stage3DataTransformer {
             root.put("pinfo", buildPinfo(db, patientUuid))
             root.put("deliveryOutcome", buildDeliveryOutcome(db, visitUuid))
 
-            root.put("colLabels", JSONArray(COL_LABELS))
             buildStageData(db, visitUuid, root)
 
             root.toString()
@@ -182,6 +182,8 @@ object Stage3DataTransformer {
 
         out.put("deliveryDate", toIsoOrRaw(obs[DeliveryDetailsConcept.DATE_OF_DELIVERY.uuid]
             ?: encounterTime))
+        out.put("deliveryDateBs",
+            NepaliDateConverter.localDayToBsDisplay(out.optString("deliveryDate")))
         out.put("deliveryTime", toIsoOrRaw(obs[DeliveryDetailsConcept.TIME_OF_DELIVERY.uuid]
             ?: encounterTime))
         out.put("deliveryMode", textOrDash(obs[DeliveryDetailsConcept.MODE_OF_DELIVERY.uuid]))
@@ -203,6 +205,7 @@ object Stage3DataTransformer {
         out.put("skinToSkin", textOrDash(obs[DeliveryDetailsConcept.SKIN_CONTACT.uuid]))
         out.put("breastfeedingInOneHour", textOrDash(obs[DeliveryDetailsConcept.BREASTFED_FIRSTHOUR.uuid]))
         out.put("congenitalDisorders", formatCongenitalDisorders(obs[DeliveryDetailsConcept.CONGENITAL_ANOMALY.uuid]))
+        out.put("gestationWeeks", textOrDash(obs[DeliveryDetailsConcept.GESTATION.uuid]))
 
         return out
     }
@@ -254,72 +257,257 @@ object Stage3DataTransformer {
     // ── Stage 3 hourly grid ──────────────────────────────────────────────────
 
     @SuppressLint("Range")
-    private fun buildStageData(db: SQLiteDatabase, visitUuid: String, root: JSONObject) {
-        val maternalValues = Array(MATERNAL_PARAM_NAMES.size) { idx ->
-            if (idx in MATERNAL_TEXTAREA_IDX) Array<Any?>(NUM_COLS) { JSONArray() }
-            else arrayOfNulls<Any?>(NUM_COLS)
+    /**
+     * The printed columns: the eight nominal time-offset slots, plus one extra column
+     * for every SOS raised during stage 3, inserted at the point in time it happened.
+     *
+     * A nominal slot takes its label from its OWN encounter type rather than from its
+     * arrival order, so a missing or duplicated hourly card cannot shift another
+     * column's label. An SOS consumes none of the eight — it widens the grid, which is
+     * what the web report does and what the Labour Care Guide fix established.
+     */
+    private fun buildColumns(encounters: List<Stage3Encounter>): List<Stage3Column> {
+        val cols = MutableList(COL_LABELS.size) { i ->
+            Stage3Column(
+                COL_LABELS[i], false,
+                encounters.firstOrNull { !it.isSos() && it.typeUuid == STAGE3_HOUR_TYPE_UUIDS[i] }
+            )
         }
-        val newbornValues = Array(NEWBORN_PARAM_NAMES.size) { idx ->
-            if (idx in NEWBORN_TEXTAREA_IDX) Array<Any?>(NUM_COLS) { JSONArray() }
-            else arrayOfNulls<Any?>(NUM_COLS)
+        encounters.filter { it.isSos() }.forEach { sos ->
+            var at = 0
+            cols.forEachIndexed { i, c ->
+                val t = c.enc?.rawTime
+                if (t != null && t <= sos.rawTime) at = i + 1
+            }
+            cols.add(at, Stage3Column("SOS", true, sos))
         }
-        val colTimes = arrayOfNulls<String>(NUM_COLS)
-
-        val encounters = fetchStage3Encounters(db, visitUuid)
-        for ((idx, enc) in encounters.withIndex()) {
-            if (idx >= NUM_COLS) break
-            colTimes[idx] = enc.second
-            fillObsForEncounter(db, enc.first, idx, maternalValues, newbornValues)
-        }
-
-        root.put("colTimes", stringArrayToJson(colTimes))
-        root.put("maternalParams", buildParamsJson(MATERNAL_PARAM_NAMES, MATERNAL_TEXTAREA_IDX, maternalValues))
-        root.put("newbornParams",  buildParamsJson(NEWBORN_PARAM_NAMES,  NEWBORN_TEXTAREA_IDX,  newbornValues))
+        return cols
     }
 
-    /** Returns ordered list of (encounterUuid, isoEncounterTime) for Stage3_Hour* encounters. */
     @SuppressLint("Range")
-    private fun fetchStage3Encounters(db: SQLiteDatabase, visitUuid: String): List<Pair<String, String>> {
-        val out = mutableListOf<Pair<String, String>>()
+    private fun buildStageData(db: SQLiteDatabase, visitUuid: String, root: JSONObject) {
+        val encounters = fetchStage3Encounters(db, visitUuid)
+        val columns = buildColumns(encounters)
+        val colCount = columns.size
+
+        val maternalValues = Array(MATERNAL_PARAM_NAMES.size) { idx ->
+            if (idx in MATERNAL_TEXTAREA_IDX) Array<Any?>(colCount) { JSONArray() }
+            else arrayOfNulls<Any?>(colCount)
+        }
+        val newbornValues = Array(NEWBORN_PARAM_NAMES.size) { idx ->
+            if (idx in NEWBORN_TEXTAREA_IDX) Array<Any?>(colCount) { JSONArray() }
+            else arrayOfNulls<Any?>(colCount)
+        }
+        val colTimes = arrayOfNulls<String>(colCount)
+
+        val creatorCache = mutableMapOf<String, String>()
+        columns.forEachIndexed { idx, col ->
+            val enc = col.enc ?: return@forEachIndexed
+            colTimes[idx] = enc.isoTime
+            fillObsForEncounter(
+                db, enc.uuid, idx, maternalValues, newbornValues, enc.provider, enc.isoTime,
+                creatorCache
+            )
+        }
+
+        root.put("colLabels", JSONArray(columns.map { it.label }))
+        root.put("colIsSos", JSONArray(columns.map { it.isSos }))
+        root.put("colTimes", stringArrayToJson(colTimes))
+        root.put("colTimesBs", bsDatesOf(colTimes))
+        root.put(
+            "maternalParams",
+            buildParamsJson(MATERNAL_PARAM_NAMES, MATERNAL_TEXTAREA_IDX, maternalValues, colCount)
+        )
+        root.put(
+            "newbornParams",
+            buildParamsJson(NEWBORN_PARAM_NAMES, NEWBORN_TEXTAREA_IDX, newbornValues, colCount)
+        )
+    }
+
+    /** One Stage 3 slot: the encounter, when it happened, and who recorded it. */
+    private data class Stage3Encounter(
+        val uuid: String,
+        val rawTime: String,
+        val isoTime: String,
+        val provider: String,
+        val typeUuid: String
+    ) {
+        fun isSos() = typeUuid == UuidDictionary.LCG_SOS
+    }
+
+    /**
+     * One printed column: a nominal time-offset slot, or an SOS raised between two of
+     * them. [enc] is null for a slot whose encounter has not been recorded yet, which
+     * is why the eight nominal columns always exist and a fresh visit still prints the
+     * blank form.
+     */
+    private class Stage3Column(val label: String, val isSos: Boolean, val enc: Stage3Encounter?)
+
+    /**
+     * Stage 3 encounters in time order, each carrying its provider's display
+     * name. tbl_encounter.provider_uuid matches tbl_provider.uuid — not
+     * useruuid, which is the linked user and matches tbl_obs.creatoruuid.
+     */
+    @SuppressLint("Range")
+    private fun fetchStage3Encounters(db: SQLiteDatabase, visitUuid: String): List<Stage3Encounter> {
+        val out = mutableListOf<Stage3Encounter>()
         val placeholders = STAGE3_HOUR_TYPE_UUIDS.joinToString(",") { "?" }
-        val args = arrayOf(visitUuid) + STAGE3_HOUR_TYPE_UUIDS.toTypedArray()
+        val args = arrayOf(visitUuid) + STAGE3_HOUR_TYPE_UUIDS.toTypedArray() +
+                arrayOf(UuidDictionary.LCG_SOS, UuidDictionary.SOS_STAGE_HOUR)
+        val providerCache = mutableMapOf<String, String>()
         db.rawQuery(
-            "SELECT uuid, encounter_time FROM tbl_encounter " +
-            "WHERE visituuid = ? " +
-            "  AND encounter_type_uuid IN ($placeholders) " +
-            "  AND (voided = '0' OR voided = 'false' OR voided = 'FALSE') " +
-            "ORDER BY encounter_time ASC",
+            "SELECT e.uuid, e.encounter_type_uuid, e.encounter_time, e.provider_uuid " +
+            "FROM tbl_encounter e " +
+            "WHERE e.visituuid = ? " +
+            "  AND (e.voided = '0' OR e.voided = 'false' OR e.voided = 'FALSE') " +
+            "  AND ( e.encounter_type_uuid IN ($placeholders) " +
+            "        OR ( e.encounter_type_uuid = ? AND EXISTS ( " +
+            "               SELECT 1 FROM tbl_obs o " +
+            "               WHERE o.encounteruuid = e.uuid AND o.conceptuuid = ? " +
+            "                 AND o.value LIKE 'Stage3=_%' ESCAPE '=' " +
+            "                 AND (o.voided = '0' OR o.voided = 'false' " +
+            "                      OR o.voided = 'FALSE') ) ) ) " +
+            "ORDER BY e.encounter_time ASC, e.uuid ASC",
             args
         ).use { c ->
+            val uuidIdx = c.getColumnIndex("uuid")
+            val timeIdx = c.getColumnIndex("encounter_time")
+            val providerIdx = c.getColumnIndex("provider_uuid")
+            val typeIdx = c.getColumnIndex("encounter_type_uuid")
             while (c.moveToNext()) {
-                out += c.getString(c.getColumnIndex("uuid")).orEmpty() to
-                        toIsoOrRaw(c.getString(c.getColumnIndex("encounter_time")).orEmpty())
+                val providerUuid =
+                    if (providerIdx >= 0) c.getString(providerIdx).orEmpty() else ""
+                val rawTime = if (timeIdx >= 0) c.getString(timeIdx).orEmpty() else ""
+                out += Stage3Encounter(
+                    uuid = if (uuidIdx >= 0) c.getString(uuidIdx).orEmpty() else "",
+                    rawTime = rawTime,
+                    isoTime = toIsoOrRaw(rawTime),
+                    provider = resolveProvider(db, providerUuid, providerCache),
+                    typeUuid = if (typeIdx >= 0) c.getString(typeIdx).orEmpty() else ""
+                )
             }
         }
         return out
     }
 
+    /**
+     * The author of a single observation, in the same "given family role" shape as
+     * [resolveProvider].
+     *
+     * tbl_obs.creatoruuid is a USER uuid, so this joins tbl_provider.useruuid, where
+     * [resolveProvider] joins tbl_provider.uuid for an encounter's provider_uuid.
+     * Using either query with the other kind of uuid returns nothing without
+     * failing, so the two keep separate caches.
+     */
     @SuppressLint("Range")
+    private fun resolveCreator(
+        db: SQLiteDatabase,
+        creatorUuid: String,
+        cache: MutableMap<String, String>
+    ): String {
+        if (creatorUuid.isEmpty()) return ""
+        cache[creatorUuid]?.let { return it }
+
+        var label = ""
+        db.rawQuery(
+            "SELECT given_name, family_name, role FROM tbl_provider WHERE useruuid = ? LIMIT 1",
+            arrayOf(creatorUuid)
+        ).use { c ->
+            if (c.moveToFirst()) {
+                val given = c.getString(c.getColumnIndex("given_name")).orEmpty()
+                val family = c.getString(c.getColumnIndex("family_name")).orEmpty()
+                val role = c.getString(c.getColumnIndex("role")).orEmpty()
+                    .substringAfterLast(":").trim().lowercase(Locale.getDefault())
+                label = listOf(given, family, role)
+                    .filter { it.isNotEmpty() }
+                    .joinToString(" ")
+            }
+        }
+        cache[creatorUuid] = label
+        return label
+    }
+
+    /** "mounika M nurse" — given name, family name, and the role without its prefix. */
+    @SuppressLint("Range")
+    private fun resolveProvider(
+        db: SQLiteDatabase,
+        providerUuid: String,
+        cache: MutableMap<String, String>
+    ): String {
+        if (providerUuid.isEmpty()) return ""
+        cache[providerUuid]?.let { return it }
+
+        var label = ""
+        db.rawQuery(
+            "SELECT given_name, family_name, role FROM tbl_provider WHERE uuid = ? LIMIT 1",
+            arrayOf(providerUuid)
+        ).use { c ->
+            if (c.moveToFirst()) {
+                val given = c.getString(c.getColumnIndex("given_name")).orEmpty()
+                val family = c.getString(c.getColumnIndex("family_name")).orEmpty()
+                val role = c.getString(c.getColumnIndex("role")).orEmpty()
+                    .substringAfterLast(":").trim().lowercase(Locale.getDefault())
+                label = listOf(given, family, role)
+                    .filter { it.isNotEmpty() }
+                    .joinToString(" ")
+            }
+        }
+        cache[providerUuid] = label
+        return label
+    }
+
+    @SuppressLint("Range")
+    /**
+     * Fills one Stage 3 slot from one encounter's observations.
+     *
+     * The credit shown against a free-text entry is the observation's own author and
+     * recorded time, not the encounter's — a nurse and a doctor can both write into
+     * one slot minutes apart. The encounter's provider and time remain the fallback
+     * for rows whose own values never synced.
+     */
     private fun fillObsForEncounter(
         db: SQLiteDatabase, encounterUuid: String, colIdx: Int,
-        maternalValues: Array<Array<Any?>>, newbornValues: Array<Array<Any?>>
+        maternalValues: Array<Array<Any?>>, newbornValues: Array<Array<Any?>>,
+        provider: String, isoTime: String,
+        creatorCache: MutableMap<String, String>
     ) {
         db.rawQuery(
-            "SELECT conceptuuid, value FROM tbl_obs " +
-            "WHERE encounteruuid = ? AND (voided = '0' OR voided = 'false' OR voided = 'FALSE')",
+            "SELECT conceptuuid, value, comment, created_date, creatoruuid FROM tbl_obs " +
+            "WHERE encounteruuid = ? AND (voided = '0' OR voided = 'false' OR voided = 'FALSE') " +
+            "ORDER BY created_date ASC",
             arrayOf(encounterUuid)
         ).use { c ->
+            // Resolved once, and tolerated if absent: a missing alert flag must not
+            // cost the whole report.
+            val conceptIdx = c.getColumnIndex("conceptuuid")
+            val valueIdx = c.getColumnIndex("value")
+            val commentIdx = c.getColumnIndex("comment")
+            val createdIdx = c.getColumnIndex("created_date")
+            val creatorIdx = c.getColumnIndex("creatoruuid")
             while (c.moveToNext()) {
-                val conceptUuid = c.getString(c.getColumnIndex("conceptuuid")).orEmpty()
-                val value = c.getString(c.getColumnIndex("value")).orEmpty()
+                val conceptUuid = if (conceptIdx >= 0) c.getString(conceptIdx).orEmpty() else ""
+                val value = if (valueIdx >= 0) c.getString(valueIdx).orEmpty() else ""
+                val comment = if (commentIdx >= 0) c.getString(commentIdx).orEmpty() else ""
+                val createdRaw = if (createdIdx >= 0) c.getString(createdIdx).orEmpty() else ""
+                val creatorUuid = if (creatorIdx >= 0) c.getString(creatorIdx).orEmpty() else ""
+
+                val obsTime = toIsoOrRaw(createdRaw).ifEmpty { isoTime }
+                val obsProvider =
+                    resolveCreator(db, creatorUuid, creatorCache).ifEmpty { provider }
 
                 MATERNAL_UUID_TO_IDX[conceptUuid]?.let { paramIdx ->
-                    assignMaternalObs(paramIdx, conceptUuid, value, colIdx, maternalValues)
+                    assignMaternalObs(
+                        paramIdx, conceptUuid, value, comment, colIdx, maternalValues,
+                        obsProvider, obsTime
+                    )
                     return@let
                 }
                 NEWBORN_UUID_TO_IDX[conceptUuid]?.let { paramIdx ->
-                    assignObs(paramIdx, value, colIdx, newbornValues, NEWBORN_TEXTAREA_IDX,
-                              isComplication = paramIdx == 9)
+                    assignObs(
+                        paramIdx, value, comment, colIdx, newbornValues,
+                        NEWBORN_TEXTAREA_IDX, isComplication = paramIdx == 10,
+                        provider = obsProvider, isoTime = obsTime
+                    )
                 }
             }
         }
@@ -331,43 +519,71 @@ object Stage3DataTransformer {
      * routes through [assignObs].
      */
     private fun assignMaternalObs(
-        paramIdx: Int, conceptUuid: String, value: String,
-        colIdx: Int, maternalValues: Array<Array<Any?>>
+        paramIdx: Int, conceptUuid: String, value: String, comment: String,
+        colIdx: Int, maternalValues: Array<Array<Any?>>,
+        provider: String = "", isoTime: String = ""
     ) {
         if (paramIdx == 1) {
-            val existing = (maternalValues[1][colIdx] as? JSONObject)?.optString("value", "") ?: ""
-            val parts = existing.split("/").let { if (it.size < 2) listOf(it.firstOrNull().orEmpty(), "") else it }
-            val sys = if (conceptUuid == PartogramConstants.Params.SYSTOLIC_BP.conceptId) value else parts[0]
-            val dia = if (conceptUuid == PartogramConstants.Params.DIASTOLIC_BP.conceptId) value else parts[1]
-            val combined = if (sys.isNotEmpty() && dia.isNotEmpty()) "$sys/$dia" else (sys + dia)
-            maternalValues[1][colIdx] = JSONObject().put("value", combined)
+            // The two halves arrive as separate observations in whatever order the
+            // cursor returns them. Splitting the combined string back apart lost a
+            // half whenever diastolic was read first, so each is kept in its own
+            // field and only joined for display.
+            val existing = maternalValues[1][colIdx] as? JSONObject
+            val isSystolic = conceptUuid == PartogramConstants.Params.SYSTOLIC_BP.conceptId
+            val isDiastolic = conceptUuid == PartogramConstants.Params.DIASTOLIC_BP.conceptId
+            val sys = if (isSystolic) value else existing?.optString("systolic").orEmpty()
+            val dia = if (isDiastolic) value else existing?.optString("diastolic").orEmpty()
+            val combined = listOf(sys, dia).filter { it.isNotEmpty() }.joinToString("/")
+            val existingComment = existing?.optString("comment").orEmpty()
+            maternalValues[1][colIdx] = JSONObject()
+                .put("value", combined)
+                .put("systolic", sys)
+                .put("diastolic", dia)
+                .put("comment", comment.ifEmpty { existingComment })
             return
         }
-        assignObs(paramIdx, value, colIdx, maternalValues, MATERNAL_TEXTAREA_IDX,
-                  isComplication = paramIdx == 8)
+        assignObs(
+            paramIdx, value, comment, colIdx, maternalValues, MATERNAL_TEXTAREA_IDX,
+            isComplication = paramIdx == 8, provider = provider, isoTime = isoTime
+        )
     }
 
+    /**
+     * The observation's own alert flag travels in tbl_obs.comment — the same
+     * column that drives the circled values on the Labour Care Guide. It is
+     * carried through so the printed report can mark abnormal observations
+     * without thresholds being duplicated on the client.
+     */
     private fun assignObs(
-        paramIdx: Int, value: String, colIdx: Int,
-        store: Array<Array<Any?>>, textareaIdxs: Set<Int>, isComplication: Boolean
+        paramIdx: Int, value: String, comment: String, colIdx: Int,
+        store: Array<Array<Any?>>, textareaIdxs: Set<Int>, isComplication: Boolean,
+        provider: String = "", isoTime: String = ""
     ) {
         if (paramIdx in textareaIdxs) {
             val arr = store[paramIdx][colIdx] as? JSONArray ?: JSONArray().also { store[paramIdx][colIdx] = it }
-            arr.put(JSONObject().put("value", value))
+            arr.put(
+                JSONObject()
+                    .put("value", value)
+                    .put("provider", provider)
+                    .put("obsDatetime", isoTime)
+            )
         } else {
             val displayValue = if (isComplication) formatComplication(value) else value
-            store[paramIdx][colIdx] = JSONObject().put("value", displayValue)
+            store[paramIdx][colIdx] = JSONObject()
+                .put("value", displayValue)
+                .put("comment", comment)
         }
     }
 
     private fun buildParamsJson(
-        names: List<String>, textareaIdxs: Set<Int>, values: Array<Array<Any?>>
+        names: List<String>, textareaIdxs: Set<Int>, values: Array<Array<Any?>>,
+        colCount: Int
     ): JSONArray {
         val out = JSONArray()
         for (i in names.indices) {
             val isTextarea = i in textareaIdxs
             val valArr = JSONArray()
-            for (c in 0 until NUM_COLS) {
+            for (c in 0 until colCount) {
                 val cell = values[i][c]
                 when {
                     cell == null -> valArr.put(JSONObject.NULL)
@@ -427,17 +643,45 @@ object Stage3DataTransformer {
     }
 
     /** "Ongoing complications" may be plain Y/N or a JSON object {complications: "..."}. */
+    /**
+     * Complications are stored as
+     * {"any ongoing complication":"yes","complications":"… , Other","other value":"Poor latching"}.
+     *
+     * Two things the old version dropped: the free-text behind "Other", which the
+     * web report substitutes in place of the token, and the "no" flag, which the
+     * report shows as N rather than as a blank.
+     */
     private fun formatComplication(raw: String?): String {
         if (raw.isNullOrEmpty()) return "-"
         val trimmed = raw.trim()
-        if (trimmed.startsWith("{")) {
-            try {
-                val obj = JSONObject(trimmed)
-                val txt = obj.optString("complications").ifEmpty { obj.optString("Complications") }
-                return if (txt.isNotEmpty()) txt else "-"
-            } catch (_: JSONException) {}
+        if (!trimmed.startsWith("{")) return trimmed
+
+        return try {
+            val obj = JSONObject(trimmed)
+            val ongoing = obj.optString("any ongoing complication")
+                .ifEmpty { obj.optString("Any ongoing complication") }
+            val list = obj.optString("complications").ifEmpty { obj.optString("Complications") }
+            val other = obj.optString("other value").ifEmpty { obj.optString("Other value") }
+
+            when {
+                list.isNotEmpty() -> substituteOther(list, other)
+                ongoing.equals("no", ignoreCase = true) -> "N"
+                ongoing.equals("yes", ignoreCase = true) -> "Y"
+                else -> "-"
+            }
+        } catch (_: JSONException) {
+            trimmed
         }
-        return trimmed
+    }
+
+    /** Replaces the "Other" token with the free text the clinician actually typed. */
+    private fun substituteOther(list: String, other: String): String {
+        if (other.isEmpty()) return list
+        return list.split(",")
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .map { if (it.equals("Other", ignoreCase = true)) other else it }
+            .joinToString(", ")
     }
 
     /** Congenital disorders may be plain text, a JSON array, or {CONGENITAL_ANOMALY: [...], other_text: "..."}. */
@@ -499,6 +743,20 @@ object Stage3DataTransformer {
             } catch (_: Exception) {}
         }
         return raw
+    }
+
+    /**
+     * Bikram Sambat dates parallel to [colTimes], "" for a slot with no encounter.
+     *
+     * Emitted next to the raw instants rather than replacing them, because each column
+     * header shows a BS date and a 24-hour clock built from the same value. The asset
+     * cannot compute this itself: the Bikram Sambat table it shipped ran out in April
+     * 2025, so every current date fell through to Gregorian.
+     */
+    private fun bsDatesOf(times: Array<String?>): JSONArray {
+        val out = JSONArray()
+        times.forEach { out.put(NepaliDateConverter.localDayToBsDisplay(it.orEmpty())) }
+        return out
     }
 
     private fun stringArrayToJson(arr: Array<String?>): JSONArray {

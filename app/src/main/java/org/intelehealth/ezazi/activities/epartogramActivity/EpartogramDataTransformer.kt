@@ -6,6 +6,7 @@ import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.intelehealth.ezazi.app.AppConstants
+import org.intelehealth.ezazi.utilities.NepaliDateConverter
 import org.intelehealth.ezazi.utilities.UuidDictionary
 import org.json.JSONArray
 import org.json.JSONException
@@ -80,6 +81,15 @@ object EpartogramDataTransformer {
     // pInfo keys whose raw DB values must be converted from "dd/MM/yyyy hh:mm a" to ISO 8601
     private val DATE_PINFO_KEYS = setOf("ActiveLaborDiagnosed", "MembraneRupturedTimestamp")
 
+    /**
+     * Header fields the offline screen shows as dates, and therefore needs in Bikram
+     * Sambat. LMP and EDD are here too: they reach the asset with no formatter at all,
+     * so before this they printed the raw Gregorian "dd/MM/yyyy" verbatim.
+     */
+    private val BS_PINFO_KEYS = listOf(
+        "ActiveLaborDiagnosed", "MembraneRupturedTimestamp", "LMP", "EDD"
+    )
+
     // Mapping from tbl_patient_attribute_master.name → JSON key in pInfo
     private val ATTR_TO_PINFO_KEY = mapOf(
         "Parity"                            to "Parity",
@@ -110,9 +120,24 @@ object EpartogramDataTransformer {
         val providerUuid: String,
         var stage: Int  = 0,   // 1 or 2 (0 = unresolved)
         var hour: Int   = 0,   // 1-based
-        var subCol: Int = 1    // 1-based sub-column within this hour
+        var subCol: Int = 0    // 1-based sub-column, assigned by allocateSubColumns
     ) {
         fun isSos() = typeUuid == UuidDictionary.LCG_SOS
+
+        /**
+         * Whether this encounter belongs on the Labour Care Guide at all.
+         *
+         * Stage 3 (postpartum) encounters share the labour visit and their type
+         * names parse cleanly as Stage3_HourN, so without this they fall into
+         * the second-stage arm of the fill pass and overwrite real stage-2
+         * readings. Keyed on the resolved stage rather than the type name
+         * because an SOS raised during stage 3 is stored as Stage3_HourN_SOSk
+         * and reaches the same place without the name ever being consulted.
+         *
+         * The Angular component drops them the same way (readStageData, the
+         * trailing `else { continue; }`); stage 3 has its own transformer.
+         */
+        fun isPartogramStage() = stage == 1 || stage == 2
     }
 
     // ── Public API ──────────────────────────────────────────────────────────
@@ -190,7 +215,23 @@ object EpartogramDataTransformer {
             }
         }
 
+        addBsTwins(pInfo)
         return pInfo
+    }
+
+    /**
+     * Adds a "<key>Bs" companion for each date the offline header renders.
+     *
+     * The raw value stays exactly as it was, because two of these fields are drawn
+     * twice — once as a date and once as a clock — and because the asset's fmtDate()
+     * prints "NA" for anything new Date() cannot parse, so overwriting the original
+     * with a BS string would blank the field rather than translate it.
+     */
+    private fun addBsTwins(pInfo: JSONObject) {
+        BS_PINFO_KEYS.forEach { key ->
+            val bs = NepaliDateConverter.localDayToBsDisplay(pInfo.optString(key))
+            if (bs.isNotEmpty()) pInfo.put(key + "Bs", bs)
+        }
     }
 
     /**
@@ -233,8 +274,10 @@ object EpartogramDataTransformer {
     private fun buildStageData(db: SQLiteDatabase, visitUuid: String, root: JSONObject) {
         val encounters    = fetchEncounters(db, visitUuid)
         val initialsCache = mutableMapOf<String, String>()
+        val creatorCache  = mutableMapOf<String, String>()
 
         encounters.forEach { resolveStageHour(it, db) }
+        allocateSubColumns(encounters)
 
         // ── First pass: compute effective sub-column count per (stage, hour) ─
         // maxSubCol tracks the highest subCol seen for each hour.
@@ -286,7 +329,7 @@ object EpartogramDataTransformer {
 
         // ── Second pass: fill observations + time/encounter tracking ─────────
         for (enc in encounters) {
-            if (enc.stage == 0) continue
+            if (!enc.isPartogramStage()) continue
             val hourIdx    = enc.hour - 1
             val subIdx     = enc.subCol - 1
             val hourStarts = if (enc.stage == 1) s1HourStarts else s2HourStarts
@@ -298,7 +341,9 @@ object EpartogramDataTransformer {
             if (colIdx >= values[0].size) continue
 
             val initials = getProviderInitials(db, enc.providerUuid, initialsCache)
-            fillObservations(db, enc.uuid, enc.encounterTime, initials, colIdx, values)
+            fillObservations(
+                db, enc.uuid, enc.encounterTime, initials, colIdx, values, creatorCache
+            )
 
             // Track time and encounter metadata for each occupied sub-column slot
             val encInfo = JSONObject().apply {
@@ -329,6 +374,8 @@ object EpartogramDataTransformer {
         // Emit time / encounter arrays
         root.put("timeFullStage1",  nullableStringArrayToJson(timeFullS1))
         root.put("timeFullStage2",  nullableStringArrayToJson(timeFullS2))
+        root.put("timeFullStage1Bs", bsDatesOf(timeFullS1))
+        root.put("timeFullStage2Bs", bsDatesOf(timeFullS2))
         root.put("encuuid1Full",    encInfoArrayToJson(encuuid1Full))
         root.put("encuuid2Full",    encInfoArrayToJson(encuuid2Full))
         root.put("encuuid1",        nullableStringArrayToJson(encuuid1))
@@ -370,6 +417,18 @@ object EpartogramDataTransformer {
     }
 
     // ── Array helpers ───────────────────────────────────────────────────────
+
+    /**
+     * Bikram Sambat dates parallel to a column-time array, "" where a column has no
+     * encounter. Emitted alongside the raw instants rather than replacing them: the
+     * asset prints this on the date line of each time cell and keeps reading the raw
+     * instant for the clock line beneath it.
+     */
+    private fun bsDatesOf(times: Array<String?>): JSONArray {
+        val out = JSONArray()
+        times.forEach { out.put(NepaliDateConverter.localDayToBsDisplay(it.orEmpty())) }
+        return out
+    }
 
     private fun nullableStringArrayToJson(arr: Array<String?>): JSONArray {
         val out = JSONArray()
@@ -415,6 +474,12 @@ object EpartogramDataTransformer {
     // ── Stage/hour resolution ────────────────────────────────────────────────
 
     @SuppressLint("Range")
+    /**
+     * Resolves which stage and hour an encounter belongs to. Deliberately does
+     * NOT derive the sub-column: the Angular component discards the trailing
+     * index in both `Stage1_Hour3_2` and `Stage1_Hour3_SOS1`, taking only the
+     * stage and the hour from the name. See [allocateSubColumns].
+     */
     private fun resolveStageHour(enc: EncounterRecord, db: SQLiteDatabase) {
         if (enc.isSos()) {
             db.rawQuery(
@@ -426,9 +491,8 @@ object EpartogramDataTransformer {
                 if (c.moveToFirst()) {
                     val m = SOS_STAGE_HOUR_PATTERN.matcher(c.getString(0).orEmpty())
                     if (m.find()) {
-                        enc.stage  = m.group(1)!!.toInt()
-                        enc.hour   = m.group(2)!!.toInt()
-                        enc.subCol = m.group(3)!!.toInt()
+                        enc.stage = m.group(1)!!.toInt()
+                        enc.hour  = m.group(2)!!.toInt()
                         return
                     }
                 }
@@ -437,35 +501,80 @@ object EpartogramDataTransformer {
 
         val m = STAGE_HOUR_PATTERN.matcher(enc.typeName)
         if (m.find()) {
-            enc.stage  = m.group(1)!!.toInt()
-            enc.hour   = m.group(2)!!.toInt()
-            enc.subCol = m.group(3)?.takeIf { it.isNotEmpty() }?.toInt() ?: 1
+            enc.stage = m.group(1)!!.toInt()
+            enc.hour  = m.group(2)!!.toInt()
+        }
+    }
+
+    /**
+     * Hands each encounter the next free sub-column within its hour, walking the
+     * list in encounter-time order. Ported from the Angular component's
+     * `nextSubColPerHour` counter (epartogram.component.ts, readStageData).
+     *
+     * Regular and SOS encounters draw from the same counter, which is what makes
+     * an SOS reading widen its hour instead of landing on top of the reading
+     * already there — and, because slots are handed out chronologically, keeps
+     * the printed columns in clock order without a separate sort.
+     *
+     * Encounters whose stage/hour never resolved are skipped so they cannot
+     * consume a column.
+     */
+    private fun allocateSubColumns(encounters: List<EncounterRecord>) {
+        val next = mutableMapOf<String, Int>()
+        for (enc in encounters) {
+            if (enc.stage == 0) continue
+            val key = "s${enc.stage}_h${enc.hour}"
+            val slot = next[key] ?: 1
+            enc.subCol = slot
+            next[key] = slot + 1
         }
     }
 
     // ── Observation filling ─────────────────────────────────────────────────
 
     @SuppressLint("Range")
+    /**
+     * Fills one column from one encounter's observations.
+     *
+     * Each observation carries its own recorded time and its own author, which is
+     * what the web report credits entries with: two notes typed into one encounter
+     * by a nurse and a doctor minutes apart are separate records, not one. The
+     * encounter's time and provider stay as fallbacks, so a row missing either
+     * degrades to the previous behaviour instead of printing a blank.
+     */
     private fun fillObservations(db: SQLiteDatabase, encounterUuid: String,
                                   encounterTime: String, initials: String,
-                                  colIdx: Int, values: Array<Array<JSONObject?>>) {
+                                  colIdx: Int, values: Array<Array<JSONObject?>>,
+                                  creatorCache: MutableMap<String, String>) {
         db.rawQuery(
-            "SELECT conceptuuid, value, comment FROM tbl_obs " +
+            "SELECT conceptuuid, value, comment, created_date, creatoruuid FROM tbl_obs " +
             "WHERE encounteruuid = ? " +
-            "  AND (voided = '0' OR voided = 'false' OR voided = 'FALSE')",
+            "  AND (voided = '0' OR voided = 'false' OR voided = 'FALSE') " +
+            "ORDER BY created_date ASC",
             arrayOf(encounterUuid)
         ).use { c ->
+            val conceptIdx = c.getColumnIndex("conceptuuid")
+            val valueIdx   = c.getColumnIndex("value")
+            val commentIdx = c.getColumnIndex("comment")
+            val createdIdx = c.getColumnIndex("created_date")
+            val creatorIdx = c.getColumnIndex("creatoruuid")
             while (c.moveToNext()) {
-                val conceptUuid = c.getString(c.getColumnIndex("conceptuuid")).orEmpty()
-                val value       = c.getString(c.getColumnIndex("value")).orEmpty()
-                val comment     = c.getString(c.getColumnIndex("comment")).orEmpty()
+                val conceptUuid = if (conceptIdx >= 0) c.getString(conceptIdx).orEmpty() else ""
+                val value       = if (valueIdx   >= 0) c.getString(valueIdx).orEmpty() else ""
+                val comment     = if (commentIdx >= 0) c.getString(commentIdx).orEmpty() else ""
+                val createdRaw  = if (createdIdx >= 0) c.getString(createdIdx).orEmpty() else ""
+                val creatorUuid = if (creatorIdx >= 0) c.getString(creatorIdx).orEmpty() else ""
 
                 val paramIdx = UUID_TO_PARAM_IDX[conceptUuid] ?: continue
                 if (paramIdx >= values.size || colIdx >= values[paramIdx].size) continue
 
+                val obsTime = convertEncounterTime(createdRaw).ifEmpty { encounterTime }
+                val obsInitials =
+                    getCreatorInitials(db, creatorUuid, creatorCache).ifEmpty { initials }
+
                 try {
                     values[paramIdx][colIdx] = buildObsValue(
-                        paramIdx, value, comment, encounterTime, initials,
+                        paramIdx, value, comment, obsTime, obsInitials,
                         values[paramIdx][colIdx]
                     )
                 } catch (e: JSONException) {
@@ -508,6 +617,8 @@ object EpartogramDataTransformer {
             else -> JSONObject().apply {
                 put("value", value)
                 put("comment", comment)
+                put("initial", initials)
+                put("obsDatetime", obsDatetime)
             }
         }
     }
@@ -662,6 +773,13 @@ object EpartogramDataTransformer {
     // ── Provider initials ────────────────────────────────────────────────────
 
     @SuppressLint("Range")
+    /**
+     * tbl_encounter.provider_uuid is a provider uuid, so it matches
+     * tbl_provider.uuid — not tbl_provider.useruuid, which is the linked user
+     * and matches tbl_obs.creatoruuid instead. Joining on useruuid here
+     * returned nothing for every encounter, which left the INITIALS row of the
+     * Labour Care Guide blank in both the printed sheet and the offline view.
+     */
     private fun getProviderInitials(db: SQLiteDatabase, providerUuid: String,
                                      cache: MutableMap<String, String>): String {
         if (providerUuid.isEmpty()) return ""
@@ -669,7 +787,7 @@ object EpartogramDataTransformer {
 
         var initials = ""
         db.rawQuery(
-            "SELECT given_name, family_name FROM tbl_provider WHERE useruuid = ? LIMIT 1",
+            "SELECT given_name, family_name FROM tbl_provider WHERE uuid = ? LIMIT 1",
             arrayOf(providerUuid)
         ).use { c ->
             if (c.moveToFirst()) {
@@ -682,6 +800,39 @@ object EpartogramDataTransformer {
         }
 
         cache[providerUuid] = initials
+        return initials
+    }
+
+    /**
+     * Initials for the author of a single observation.
+     *
+     * tbl_obs.creatoruuid is a USER uuid, so this joins tbl_provider.useruuid — the
+     * mirror image of [getProviderInitials], which resolves an encounter's
+     * provider_uuid against tbl_provider.uuid. Swapping the two returns an empty
+     * string for every row without failing, so they keep separate caches: the key
+     * spaces differ and one shared cache would cross-contaminate them.
+     */
+    @SuppressLint("Range")
+    private fun getCreatorInitials(db: SQLiteDatabase, creatorUuid: String,
+                                    cache: MutableMap<String, String>): String {
+        if (creatorUuid.isEmpty()) return ""
+        cache[creatorUuid]?.let { return it }
+
+        var initials = ""
+        db.rawQuery(
+            "SELECT given_name, family_name FROM tbl_provider WHERE useruuid = ? LIMIT 1",
+            arrayOf(creatorUuid)
+        ).use { c ->
+            if (c.moveToFirst()) {
+                val given  = c.getString(c.getColumnIndex("given_name")).orEmpty()
+                val family = c.getString(c.getColumnIndex("family_name")).orEmpty()
+                initials = buildString {
+                    given.firstOrNull()?.let { append(it.uppercaseChar()) }
+                    family.firstOrNull()?.let { append(it.uppercaseChar()) }
+                }
+            }
+        }
+        cache[creatorUuid] = initials
         return initials
     }
 

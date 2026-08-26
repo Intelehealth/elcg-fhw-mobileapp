@@ -1,5 +1,6 @@
 package org.intelehealth.ezazi.utilities;
 
+import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -253,6 +254,85 @@ public class NepaliDateConverter {
     }
 
     /**
+     * Every Gregorian shape this project's transformers emit, with the timezone the
+     * shape implies. Instants carry an explicit UTC marker or come from the DB in
+     * UTC; bare calendar dates are already local wall-clock dates.
+     */
+    private static final String[][] ANY_GREGORIAN_FORMATS = {
+            {"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", "UTC"},
+            {"yyyy-MM-dd'T'HH:mm:ss'Z'",     "UTC"},
+            {"yyyy-MM-dd HH:mm:ss",          "UTC"},
+            {"dd/MM/yyyy hh:mm a",           "LOCAL"},
+            {"dd/MM/yyyy HH:mm",             "LOCAL"},
+            {"dd/MM/yyyy",                   "LOCAL"},
+            {"yyyy-MM-dd",                   "LOCAL"},
+    };
+
+    /**
+     * Parses any of {@link #ANY_GREGORIAN_FORMATS}, requiring the WHOLE string to be
+     * consumed.
+     *
+     * The full-consumption check is the point. SimpleDateFormat.parse(String) stops as
+     * soon as its pattern is satisfied and ignores the rest, so "dd/MM/yyyy" happily
+     * eats "28/06/2024 14:30" and silently discards the clock. Insisting the parse
+     * position reach the end makes the order of this table irrelevant and stops a
+     * loose pattern claiming a string that belongs to a stricter one.
+     *
+     * @return the parsed instant, or null if nothing matched exactly.
+     */
+    private static Date parseAnyGregorian(String raw) {
+        for (String[] entry : ANY_GREGORIAN_FORMATS) {
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat(entry[0], Locale.ENGLISH);
+                sdf.setLenient(false);
+                if ("UTC".equals(entry[1])) {
+                    sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+                }
+                ParsePosition pos = new ParsePosition(0);
+                Date parsed = sdf.parse(raw, pos);
+                if (parsed != null && pos.getIndex() == raw.length()) {
+                    return parsed;
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        return null;
+    }
+
+    /**
+     * BS display date for the LOCAL calendar day of a Gregorian timestamp string,
+     * e.g. "2024-06-28T09:15:00.000Z" or "28/06/2024" to "15 Asar 2081 BS".
+     *
+     * This exists because the offline WebView screens cannot do the conversion
+     * themselves: epartogram.html carries no Bikram Sambat code at all, and the table
+     * stage3.html shipped both ran out in April 2025 and disagreed with the table here
+     * on most of its rows. Rather than maintain a second calendar in JavaScript, the
+     * transformers call this and inject the finished string alongside the raw value —
+     * the asset renders this on its date line and keeps using the raw instant for its
+     * clock line, which is why the two are emitted as separate keys.
+     *
+     * Reducing to the local day first is required: {@link #gregorianToBs} counts whole
+     * days from UTC midnight, so anything after 18:15 UTC would otherwise resolve to
+     * the previous day in Nepal.
+     *
+     * @param raw a Gregorian date or timestamp in any supported shape.
+     * @return the BS display string, or "" when raw is empty or unparseable.
+     */
+    public static String localDayToBsDisplay(String raw) {
+        if (raw == null || raw.trim().isEmpty()) return "";
+        Date instant = parseAnyGregorian(raw.trim());
+        if (instant == null) return "";
+
+        Calendar local = Calendar.getInstance();
+        local.setTime(instant);
+        Calendar day = utcMidnight(
+                local.get(Calendar.YEAR),
+                local.get(Calendar.MONTH),
+                local.get(Calendar.DAY_OF_MONTH));
+        return dateToBsDisplay(day.getTime());
+    }
+
+    /**
      * Converts a Gregorian date <em>string</em> in any of the common formats used
      * in this project to a Nepali BS display string: "DD MonthName YYYY BS"
      *
@@ -273,16 +353,22 @@ public class NepaliDateConverter {
 
         // Each entry: { parse-format, time-output-format-or-null }
         // time-output-format is non-null only for formats that contain a time component.
+        //
+        // ORDER IS LOAD-BEARING. SimpleDateFormat.parse(String) stops as soon as the
+        // pattern is satisfied and ignores whatever trails it, so a date-only pattern
+        // happily consumes "28 Jun 2024 14:30" and silently drops the clock. Every
+        // time-bearing format must therefore be tried before the date-only ones; a
+        // date-only input simply misses them and falls through.
         String[][] formats = {
+                {"yyyy-MM-dd'T'HH:mm:ss.SSSZ",  "HH:mm:ss"},
+                {"yyyy-MM-dd HH:mm:ss",         "HH:mm:ss"},
+                {"dd MMM, yyyy hh:mm a",        "hh:mm a"},   // "15 Apr, 2026 06:21 PM"
+                {"dd MMM yyyy hh:mm a",         "hh:mm a"},   // "15 Apr 2026 06:21 PM"
+                {"dd MMM yyyy HH:mm",           "HH:mm"},     // "28 Jun 2024 14:30"
                 {"yyyy-MM-dd",                  null},
                 {"dd/MM/yyyy",                  null},
                 {"dd MMM yyyy",                 null},
                 {"dd MMM, yyyy",                null},
-                {"dd MMM, yyyy hh:mm a",        "hh:mm a"},   // "15 Apr, 2026 06:21 PM"
-                {"dd MMM yyyy hh:mm a",         "hh:mm a"},   // "15 Apr 2026 06:21 PM"
-                {"dd MMM yyyy HH:mm",           "HH:mm"},     // "28 Jun 2024 14:30"
-                {"yyyy-MM-dd HH:mm:ss",         "HH:mm:ss"},
-                {"yyyy-MM-dd'T'HH:mm:ss.SSSZ",  "HH:mm:ss"},
         };
 
         for (String[] entry : formats) {

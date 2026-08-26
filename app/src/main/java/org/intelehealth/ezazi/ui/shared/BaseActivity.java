@@ -190,8 +190,12 @@ public class BaseActivity extends AppCompatActivity implements SocketManager.Not
         networkManager.removeListener(this);
     }
 
+    protected NetworkStatus currentNetworkStatus() {
+        return networkManager.getCurrentStatus();
+    }
+
     protected void handleCurrentInternetStatus() {
-        NetworkStatus status = networkManager.getCurrentStatus();
+        NetworkStatus status = currentNetworkStatus();
         if (status.isConnected()) {
             onNetworkAvailable(status);
         } else {
