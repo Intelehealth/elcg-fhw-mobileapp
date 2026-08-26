@@ -91,7 +91,17 @@ object LcgSheetGeometry {
     const val ROW_SHARED_DECISION = 65f
 
     const val ROW_INITIALS = 13f
-    const val ROW_FOOTER = 24f
+    /**
+     * The footer block: the instructions, the abbreviation legend and the cervix
+     * plotting note, each wrapped to the page width — six lines on A4 portrait, with
+     * room for a seventh if a paragraph wraps wider.
+     *
+     * This does NOT leave room for the delivery block underneath. A4 portrait gives
+     * 802pt usable, the grid above the footer is 713pt, so a footer this tall leaves
+     * 13pt and the block needs 56pt. [fitsWithDeliveryBlock] is what decides; when it
+     * says no, the block is drawn on its own page instead of running off the paper.
+     */
+    const val ROW_FOOTER = 76f
 
     /** Delivery details block, drawn under the grid on sheet 2. */
     const val DELIVERY_BLOCK = 50f
@@ -125,6 +135,14 @@ object LcgSheetGeometry {
     fun fitsVertically(page: PageSpec): Boolean = gridHeight() <= usableHeight(page)
 
     /** Whether sheet 2's delivery block also clears the height. */
+    /**
+     * Whether the delivery-outcome block fits beneath the grid on one sheet.
+     *
+     * Load-bearing, not diagnostic: [gridHeight] plus the block must clear the page,
+     * and on A4 portrait it does not. Drawing it anyway put the Apgar scores, baby
+     * sex and status, and the visit-complete reason past the bottom edge, where a PDF
+     * silently discards them.
+     */
     fun fitsWithDeliveryBlock(page: PageSpec): Boolean =
         gridHeight() + DELIVERY_BLOCK <= usableHeight(page)
 
