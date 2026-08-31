@@ -10,11 +10,11 @@ android {
     def date = df.format(new Date())
 
     productFlavors {
-
         ezazi {
             dimension client
             isDefault = true
-            archivesBaseName = "intelehealth-ezazi" + versionName + " - " + date
+            archivesBaseName = "ezazi-default-" + versionName + " - " + date
+            ext.endpointKey = "EZAZI"
         }
 
         elcg {
@@ -22,47 +22,39 @@ android {
             applicationId "org.intelehealth.elcg"
             versionCode 1
             versionName '1.0'
-            archivesBaseName = "intelehealth_elcg-" + versionName + " - " + date
+            archivesBaseName = "elcg-nepal-" + versionName + " - " + date
+            ext.endpointKey = "ELCG"
         }
+
         // This flavor used to handle different type of endpoint
         dev {
             dimension server
             buildConfigField "boolean", "ACTIVE_CRASH", "false"
+            ext.endpointKey = "DEV"
         }
 
         staging {
             dimension server
             buildConfigField "boolean", "ACTIVE_CRASH", "true"
+            ext.endpointKey = "STAGE"
         }
 
         production {
             dimension server
             buildConfigField "boolean", "ACTIVE_CRASH", "true"
+            ext.endpointKey = "PROD"
         }
     }
 
-    applicationVariants.configureEach {
-        def name = it.name
-        def domain
-
-        if (name.contains("ezazi")) {
-            domain = "EZAZI"
-        } else if (name.contains("elcg")) {
-            domain = "ELCG"
-        }  else {
-            domain = "EZAZI"
+    applicationVariants.configureEach { variant ->
+        def keyFor = { String dim ->
+            def flavour = variant.productFlavors.find { it.dimension == dim }
+            if (flavour == null) throw new GradleException("No flavour for dimension '${dim}'")
+            if (!flavour.ext.has("endpointKey"))
+                throw new GradleException("Flavour '${flavour.name}' is missing ext.endpointKey")
+            return flavour.ext.get("endpointKey")
         }
-
-        // Specific values
-        if (name.contains("Dev")) {
-            domain = domain.concat("_").concat("DEV")
-        } else if (name.contains("Staging")) {
-            domain = domain.concat("_").concat("STAGE")
-        } else if (name.contains("Production")) {
-            domain = domain.concat("_").concat("PROD")
-        }
-
-        buildVariantConfigField(domain, it)
+        buildVariantConfigField("${keyFor('client')}_${keyFor('server')}", variant)
     }
 }
 
@@ -77,10 +69,13 @@ def buildVariantConfigField(clientServer, variant) {
 
     def endPointPropertyFile = file('../endpoint.properties')
     def property = new Properties()
-
     if (endPointPropertyFile.canRead()) {
         property.load(new FileInputStream(endPointPropertyFile))
     }
+
+    def keys = [serverUrl, realTimeFbUrl, liveKitUrl, socketUrl, fbRtDb].collect { clientServer + it }
+    def missing = keys.findAll { !property.containsKey(it) }
+    if (missing) throw new GradleException("endpoint.properties missing: ${missing.join(', ')}")
 
     def buildServerUrl = property[clientServer + serverUrl].toString()
     def buildRealTimeFbUrl = property[clientServer + realTimeFbUrl].toString()
