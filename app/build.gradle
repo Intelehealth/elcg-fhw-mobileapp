@@ -27,8 +27,12 @@ android {
         applicationId "org.intelehealth.ezazi"
         minSdk 26
         targetSdk 34
+        // These are ezaziDefault's versions. It is the isDefault flavour and deliberately declares none of
+        // its own -- a flavour declaration would override defaultConfig and silently swallow a bump made
+        // here (see bb21866, where a Nepal release bumped this line and became eZazi's version).
+        // eZazi Play release -> bump here. Nepal delivery -> bump elcgNepal in whitelabel.gradle.
         versionCode 18
-        versionName '3.1.1'
+        versionName '3.0.0'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         //Change this to true to enable multidex support for Kitkat
         multiDexEnabled true

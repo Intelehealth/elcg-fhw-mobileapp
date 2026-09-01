@@ -13,16 +13,18 @@ android {
         ezaziDefault {
             dimension client
             isDefault = true
-            archivesBaseName = "ezazi-default-" + versionName + " - " + date
             ext.endpointKey = "EZAZI_DEFAULT"
         }
 
         elcgNepal {
             dimension client
             applicationId "org.intelehealth.elcg"
-            versionCode 1
-            versionName '1.0'
-            archivesBaseName = "elcg-nepal-" + versionName + " - " + date
+            // org.intelehealth.elcg has never shipped. 18/3.1.1 continues the Nepal PRODUCT's version
+            // across the applicationId change -- the APK in the field is org.intelehealth.ezazi at
+            // 18/3.1.1 -- so this is version continuity, not an install base. Do not correct it to 1.
+            // Side effect worth keeping: it lifts the SplashActivity force-update floor from 2 to 19.
+            versionCode 18
+            versionName '3.1.1'
             ext.endpointKey = "ELCG_NEPAL"
         }
 
@@ -47,14 +49,29 @@ android {
     }
 
     applicationVariants.configureEach { variant ->
-        def keyFor = { String dim ->
-            def flavour = variant.productFlavors.find { it.dimension == dim }
-            if (flavour == null) throw new GradleException("No flavour for dimension '${dim}'")
-            if (!flavour.ext.has("endpointKey"))
-                throw new GradleException("Flavour '${flavour.name}' is missing ext.endpointKey")
-            return flavour.ext.get("endpointKey")
+        def flavourFor = { String dim ->
+            def f = variant.productFlavors.find { it.dimension == dim }
+            if (f == null) throw new GradleException("Variant '${variant.name}' has no flavour for dimension '${dim}'")
+            return f
         }
+        def keyFor = { String dim ->
+            def f = flavourFor(dim)
+            if (!f.ext.has("endpointKey"))
+                throw new GradleException("Flavour '${f.name}' is missing ext.endpointKey")
+            return f.ext.get("endpointKey")
+        }
+
         buildVariantConfigField("${keyFor('client')}_${keyFor('server')}", variant)
+
+        // <brand>-<versionName>-<timestamp>-<serverTier>-<buildType>.apk
+        // outputFileName replaces the WHOLE name, so archivesBaseName plays no part -- which is why
+        // the per-flavour archivesBaseName lines were removed; they were project-global and dead.
+        // variant.versionName is the merged per-flavour value: elcgNepal 3.1.1, ezaziDefault 3.0.0.
+        def brand = flavourFor('client').name
+        def tier = flavourFor('server').name
+        variant.outputs.all {
+            outputFileName = "${brand}-${variant.versionName}-${date}-${tier}-${variant.buildType.name}.apk"
+        }
     }
 }
 
