@@ -161,7 +161,7 @@ public class PatientAddressInfoFragment extends Fragment {
 
         etAddress1.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
         etCityVillage.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
-       // etAddress1.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
+        // etAddress1.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
         etAddress2.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
 
 
@@ -311,7 +311,7 @@ public class PatientAddressInfoFragment extends Fragment {
                     // autotvState.setSelection(stateAdapter.getPosition(String.valueOf(patientDTO.getStateprovince())));
                     autotvState.setText(patientDTO.getStateprovince(), false);
 
-                   // setDistAdapter(mStateName);
+                    // setDistAdapter(mStateName);
                     Log.d(TAG, "onActivityCreated: mDistName : " + mDistName);
                     if (mDistName != null && mDistName.isEmpty())
                         // autotvDistrict.setSelection(districtAdapter.getPosition(district));
@@ -472,13 +472,13 @@ public class PatientAddressInfoFragment extends Fragment {
 
         patientDTO.setStateprovince(StringUtils.getValue(state));
 
-        //since elcg (Nepal) doesn't required the district, added this logic
+        //since elcgNepal (Nepal) doesn't required the district, added this logic
         //':' causing issue on the ui part
         String districtCity;
-        if(BuildConfig.FLAVOR_client.equals(FlavorKeys.ELCG)){
+        if (BuildConfig.FLAVOR_client.equalsIgnoreCase(FlavorKeys.EZAZI_DEFAULT)) {
+            districtCity = StringUtils.getValue((isIndiaOrNepal ? autotvDistrict.getText().toString() : mDistName) + ":" + mCityVillageName);
+        } else {
             districtCity = mCityVillageName;
-        }else{
-            districtCity = district + ":" + mCityVillageName;
         }
 
         patientDTO.setCityvillage(districtCity);
@@ -544,17 +544,14 @@ public class PatientAddressInfoFragment extends Fragment {
 
             patientDTO.setStateprovince(StringUtils.getValue(isIndiaOrNepal ? autotvState.getText().toString() : mStateName));
 
-            //since elcg (Nepal) doesn't required the district, added this logic
-            //':' causing issue on the ui part
             String districtCity;
-            if(BuildConfig.FLAVOR_client.equals(FlavorKeys.ELCG)){
-                districtCity = mCityVillageName;
-            }else{
+            if (BuildConfig.FLAVOR_client.equalsIgnoreCase(FlavorKeys.EZAZI_DEFAULT)) {
                 districtCity = StringUtils.getValue((isIndiaOrNepal ? autotvDistrict.getText().toString() : mDistName) + ":" + mCityVillageName);
+            } else {
+                districtCity = mCityVillageName;
             }
 
             patientDTO.setCityvillage(districtCity);
-
 
             if (!sessionManager.getAppLanguage().equals("en")) {
                 patientDTO.setCountry(StringUtils.getValue(mCountryNameEn));
@@ -668,18 +665,18 @@ public class PatientAddressInfoFragment extends Fragment {
         }
         if (!mCountryName.equalsIgnoreCase(sessionManager.getAppLanguage().equals("en") ? "Nepal" : "नेपाल")) {
 
-        String isDistrictString = searchForDistrict(autotvDistrict.getText().toString());
-        if (TextUtils.isEmpty(autotvDistrict.getText().toString())) {
+            String isDistrictString = searchForDistrict(autotvDistrict.getText().toString());
+            if (TextUtils.isEmpty(autotvDistrict.getText().toString())) {
 
             /*tvDistrictError.setVisibility(View.VISIBLE);
             tvDistrictError.setText(getString(R.string.select_district));*/
-            cardDistrict.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
-            errorDetailsList.add(new ErrorManagerModel(autotvDistrict, tvDistrictError, getString(R.string.select_district), cardDistrict));
+                cardDistrict.setStrokeColor(ContextCompat.getColor(mContext, R.color.error_red));
+                errorDetailsList.add(new ErrorManagerModel(autotvDistrict, tvDistrictError, getString(R.string.select_district), cardDistrict));
 
-        } else {
-            tvDistrictError.setVisibility(View.GONE);
-            cardDistrict.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
-        }
+            } else {
+                tvDistrictError.setVisibility(View.GONE);
+                cardDistrict.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+            }
         }
         if (TextUtils.isEmpty(etCityVillage.getText().toString())) {
 
@@ -929,6 +926,7 @@ public class PatientAddressInfoFragment extends Fragment {
         view.getLocationOnScreen(location);
         return new Point(location[0], location[1]);
     }
+
     private void setProvinceAdapter() {
         List<StateData> sourceList = mStateDistMaster.getNepalProvinceList();
         if (sourceList == null) sourceList = new ArrayList<>();

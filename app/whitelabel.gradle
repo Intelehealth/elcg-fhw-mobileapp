@@ -10,20 +10,20 @@ android {
     def date = df.format(new Date())
 
     productFlavors {
-        ezazi {
+        ezaziDefault {
             dimension client
             isDefault = true
             archivesBaseName = "ezazi-default-" + versionName + " - " + date
-            ext.endpointKey = "EZAZI"
+            ext.endpointKey = "EZAZI_DEFAULT"
         }
 
-        elcg {
+        elcgNepal {
             dimension client
             applicationId "org.intelehealth.elcg"
             versionCode 1
             versionName '1.0'
             archivesBaseName = "elcg-nepal-" + versionName + " - " + date
-            ext.endpointKey = "ELCG"
+            ext.endpointKey = "ELCG_NEPAL"
         }
 
         // This flavor used to handle different type of endpoint
