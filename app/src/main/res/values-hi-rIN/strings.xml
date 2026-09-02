@@ -1,9 +1,4 @@
 <resources>
-    <string name="app_name" translatable="false">इंटेलेहेल्थ</string>
-<!--
-    <string name="notification_title">Realtime sync is ON!</string>
--->
-    <string name="notification_title">eZazi बैकग्राउंड में चल रहा है।</string>
     //Generic
     <string name="generic_the_flipping_word_next" translatable="false">आगे</string>
     <string name="hint_required" translatable="false">अपेक्षित</string>
@@ -42,7 +37,6 @@
     <string name="db_patient_id3" translatable="false">patient_identifier3</string>
 
     //Login Screen
-    <string name="title_activity_login" translatable="false">इंटेलीहेल्थ</string>
     <string name="prompt_email" translatable="false">उपयोगकर्ता नाम</string>
     <string name="prompt_password" translatable="false">कुंजिका</string>
     <string name="prompt_admin_password" translatable="false">व्यवस्थापक कुंजी</string>

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ઇન્ટેલહેલ્થ</string>
 
     //Generic
 
@@ -41,7 +40,6 @@
     <string name="db_patient_id3" translatable="false">patient_identifier3</string>
 
     //Login Screen
-    <string name="title_activity_login">ઇન્ટેલહેલ્થ</string>
     <string name="prompt_email">વપરાશકર્તા નામ</string>
     <string name="prompt_password">પાસવર્ડ</string>
     <string name="prompt_admin_password">એડમિન પાસવર્ડ</string>

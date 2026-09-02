@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ഇന്റലിഹെൽത്ത്</string>
     <string name="generic_the_flipping_word_next" translatable="false">അടുത്ത</string>
     <string name="hint_required" translatable="false">" ആവശ്യമായ"</string>
     <string name="hint_optional" translatable="false">" ഓപ്ഷണൽ"</string>
@@ -18,7 +17,6 @@
     <string name="generic_warning" translatable="false">മുന്നറിയപ്പ്</string>
     <string name="generic_update" translatable="false">അപ്ഡേറ്റ്</string>
     <string name="generic_deleted" translatable="false">" ഇല്ലാതാക്കി"</string>
-    <string name="title_activity_login" translatable="false">ഇന്റലിഹെൽത്ത്</string>
     <string name="prompt_email" translatable="false">യൂസർ നെയിം</string>
     <string name="prompt_password" translatable="false">പാസ്സ്‌വേർഡ്</string>
     <string name="prompt_admin_password" translatable="false">" അഡ്മിൻ പാസ്സ്‌വേർഡ്"</string>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">eZazi</string>
+    <string name="notification_title">eZazi is running in the background</string>
+    <string name="title_activity_login">eZazi</string>
+</resources>

@@ -232,9 +232,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, channelId)
-                //.setSmallIcon(R.drawable.ezazi_logo)
                 //.setContentTitle("Firebase Push Notification")
-                .setSmallIcon(R.drawable.app_lanucher_logi_nepal)
+                .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(messageTitle)
                 .setContentText(messageBody)
                 .setAutoCancel(true)

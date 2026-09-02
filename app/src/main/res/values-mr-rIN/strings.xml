@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">इंटेलहेल्थ</string>
 
     //Generic
     <string name="generic_the_flipping_word_next">पुढे</string>
@@ -40,7 +39,6 @@
     <string name="db_patient_id3">patient_identifier3</string>
 
     //Login Screen
-    <string name="title_activity_login">इंटेलहेल्थ</string>
     <string name="prompt_email">वापरकर्तानाव</string>
     <string name="prompt_password">संकेतशब्द</string>
     <string name="prompt_admin_password">प्रशासन संकेतशब्द</string>

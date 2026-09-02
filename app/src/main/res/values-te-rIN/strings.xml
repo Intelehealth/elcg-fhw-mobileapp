@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">ఇంటెలిహెల్త్</string>
     <string name="generic_coming_soon" translatable="false">"త్వరలో....."</string>
-    <string name="title_activity_login" translatable="false">"ఇంటెలిహెల్త్"</string>
     <string name="prompt_email" translatable="false">"వినియోగదారు పేరు"</string>
     <string name="prompt_password" translatable="false">పాస్‌వర్డ్</string>
     <string name="prompt_admin_password" translatable="false">"అడ్మిన్ పాస్వర్డ్"</string>

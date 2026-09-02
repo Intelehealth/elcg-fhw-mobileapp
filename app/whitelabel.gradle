@@ -18,7 +18,9 @@ android {
 
         elcgNepal {
             dimension client
-            applicationId "org.intelehealth.elcg"
+            // Commented out per PM decision P1 (2026-09-02): Nepal keeps org.intelehealth.ezazi
+            // for now. The id will be used for a later release -- do not delete this line.
+            //applicationId "org.intelehealth.elcg"
             // org.intelehealth.elcg has never shipped. 18/3.1.1 continues the Nepal PRODUCT's version
             // across the applicationId change -- the APK in the field is org.intelehealth.ezazi at
             // 18/3.1.1 -- so this is version continuity, not an install base. Do not correct it to 1.

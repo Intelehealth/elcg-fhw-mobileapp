@@ -1,5 +1,4 @@
 <resources>
-    <string name="app_name" translatable="false">Телемед KG</string>
 
     //Generic
     <string name="generic_the_flipping_word_next" translatable="false">Далее</string>
@@ -40,7 +39,6 @@
 
     //Login Screen
     <!--    <string name="title_activity_login" translatable="false">Intelehealth</string>-->
-    <string name="title_activity_login" translatable="false">Телемед КГ - ПРИЛОЖЕНИЕ</string>
     <string name="prompt_email" translatable="false">Имя пользователя</string>
     <string name="prompt_password" translatable="false">Пароль</string>
     <string name="prompt_admin_password" translatable="false">Пароль администратора</string>
@@ -682,7 +680,6 @@
     <string name="not_connected_txt">Нет подключения к Интернету!</string>
     <string name="config_error">Ошибка конфигурации</string>
 
-    <string name="notification_title">Синхронизация в реальном времени включена!</string>
     <string name="notification_message"></string>
     <string name="ticker_text">Ищу новую задачу</string>
     <string name="identification_screen_prompt_citizen_id">ПИН (*)</string>

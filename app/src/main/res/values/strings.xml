@@ -1,15 +1,4 @@
 <resources>
-    <string name="app_name" translatable="false">eLCG नेपाल</string>
-<!-- for default app
-    <string name="app_name" translatable="false">eZazi</string>
--->
-    <!--
-    <string name="notification_title">Realtime sync is ON!</string>
--->
-<!--
-    <string name="notification_title">eZazi is running in the background</string>
--->
-    <string name="notification_title">eLCG नेपाल is running in the background</string>
     <string name="notificationTitle_Timeline">Patient: %1s</string>
     //Generic
     <string name="generic_the_flipping_word_next">Next</string>
@@ -49,7 +38,6 @@
     <string name="db_patient_id3" translatable="false">patient_identifier3</string>
 
     //Login Screen
-    <string name="title_activity_login">eZazi</string>
     <string name="prompt_email">Username</string>
     <string name="prompt_password">Password</string>
     <string name="prompt_admin_password">Admin Password</string>
