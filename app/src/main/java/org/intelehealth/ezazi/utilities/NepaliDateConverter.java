@@ -25,7 +25,7 @@ import java.util.TimeZone;
  */
 public class NepaliDateConverter {
 
-    // ── Lookup table: BS 2000 → 2085 ─────────────────────────────────────────
+    // ── Lookup table: BS 2000 → 2086 (87 rows; derive the bound, never hardcode it) ────────
     // Each row: { totalDaysInYear, daysInMonth1 … daysInMonth12 }
     private static final int[][] BS_MONTHS_DATA = {
             {365, 30,32,31,32,31,30,30,30,29,30,29,31}, // 2000
@@ -119,10 +119,29 @@ public class NepaliDateConverter {
 
     private static final int BS_YEAR_START = 2000;
 
+    /**
+     * The last BS year this converter can represent, derived from the lookup table so it can never
+     * drift from it. Any UI offering a year beyond this would index past the table.
+     */
+    public static int getMaxSupportedBsYear() {
+        return BS_YEAR_START + BS_MONTHS_DATA.length - 1;
+    }
+
+    public static int getMinSupportedBsYear() {
+        return BS_YEAR_START;
+    }
+
     // Reference epoch: BS 2000 Baisakh 1 = AD 1943 April 14
     private static final int REF_AD_YEAR  = 1943;
     private static final int REF_AD_MONTH = 4;  // April (1-based)
     private static final int REF_AD_DAY   = 14;
+
+    /**
+     * The Gregorian rendering used by every region that does not use Bikram Sambat. Deliberately a
+     * single constant so all three display entry points agree, and pinned to ENGLISH so a device
+     * locale with a non-Latin numbering system cannot emit non-ASCII digits.
+     */
+    private static final String GREGORIAN_DISPLAY_FORMAT = "dd MMM yyyy";
 
     private static final String[] BS_DISPLAY_MONTHS = {
             "Baisakh", "Jestha", "Asar", "Shrawan",
@@ -164,9 +183,19 @@ public class NepaliDateConverter {
      * preventing DST-driven off-by-one errors on devices in non-UTC zones
      * (e.g. Nepal UTC+5:45).
      */
+    /**
+     * Converts a BS date to Gregorian, or returns null when the year falls outside the lookup table.
+     *
+     * <p>Returning null rather than throwing matters: the table has a hard end, and every caller
+     * already has to cope with an unconvertible date. Indexing past it previously raised an
+     * uncaught ArrayIndexOutOfBoundsException from inside a picker callback.
+     */
     public static Date bsToGregorian(int bsYear, int bsMonth, int bsDay) {
         long totalDays = 0;
         int yearIdx = bsYear - BS_YEAR_START;
+        if (yearIdx < 0 || yearIdx >= BS_MONTHS_DATA.length || bsMonth < 1 || bsMonth > 12) {
+            return null;
+        }
 
         for (int y = 0; y < yearIdx; y++) {
             totalDays += BS_MONTHS_DATA[y][0];
@@ -253,10 +282,47 @@ public class NepaliDateConverter {
      *
      * @param date Gregorian date to convert; returns empty string if null.
      */
+    /**
+     * Renders a date that has ALREADY been reduced to the intended calendar day, expressed as UTC
+     * midnight. This is the contract both PDF renderers honour, and the one
+     * {@link #localDayToBsDisplay(String)} produces.
+     *
+     * <p>For a raw instant that has not been reduced, call {@link #instantToBsDisplay(Date)} instead.
+     * Passing a raw instant here reads the UTC calendar day, which is the previous day for any
+     * local time before the UTC offset on a positive-offset device such as Nepal (UTC+5:45).
+     *
+     * <p>Outside Nepal this formats in UTC deliberately: the argument is UTC midnight, so a
+     * device-local formatter would shift the rendered day backwards on any negative-offset device.
+     */
     public static String dateToBsDisplay(Date date) {
         if (date == null) return "";
+        if (!AppRegion.usesBikramSambat()) {
+            SimpleDateFormat sdf = new SimpleDateFormat(GREGORIAN_DISPLAY_FORMAT, Locale.ENGLISH);
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+            return sdf.format(date);
+        }
         int[] bs = gregorianToBs(date);
+        if (bs == null) {
+            SimpleDateFormat sdf = new SimpleDateFormat(GREGORIAN_DISPLAY_FORMAT, Locale.ENGLISH);
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+            return sdf.format(date);
+        }
         return bs[2] + " " + BS_DISPLAY_MONTHS[bs[1] - 1] + " " + bs[0] + " BS";
+    }
+
+    /**
+     * Renders a raw instant, reducing it to the calendar day the device is currently in before
+     * converting. Use this whenever the argument is a timestamp rather than an already-reduced day.
+     */
+    public static String instantToBsDisplay(Date instant) {
+        if (instant == null) return "";
+        Calendar local = Calendar.getInstance();
+        local.setTime(instant);
+        Calendar day = utcMidnight(
+                local.get(Calendar.YEAR),
+                local.get(Calendar.MONTH),
+                local.get(Calendar.DAY_OF_MONTH));
+        return dateToBsDisplay(day.getTime());
     }
 
     /**
@@ -356,6 +422,7 @@ public class NepaliDateConverter {
      */
     public static String gregStringToBsDisplay(String gregorianDateStr) {
         if (gregorianDateStr == null || gregorianDateStr.trim().isEmpty()) return "";
+        if (!AppRegion.usesBikramSambat()) return gregorianDateStr;
 
         // Each entry: { parse-format, time-output-format-or-null }
         // time-output-format is non-null only for formats that contain a time component.

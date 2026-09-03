@@ -33,7 +33,7 @@
         android:layout_width="@dimen/splash_logo_width_nepal"
         android:layout_height="@dimen/splash_logo_height_nepal"
         android:layout_gravity="center"
-        android:src="@drawable/nepal_ezazi_spalsh_icon"
+        android:src="@drawable/logo_ezazi"
         app:layout_constraintBottom_toTopOf="@+id/ivBottomLightVector"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

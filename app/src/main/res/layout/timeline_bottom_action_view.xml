@@ -56,7 +56,6 @@
         style="@style/Theme.EZazi.Button.Icon.Blue"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
-        android:visibility="gone"
         android:contentDescription="@string/video_call"
         app:icon="@drawable/ic_video_call"
         app:layout_constraintBottom_toBottomOf="@id/btnEndStage"

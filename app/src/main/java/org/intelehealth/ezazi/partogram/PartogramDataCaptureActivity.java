@@ -27,6 +27,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
 
+import org.intelehealth.ezazi.utilities.AppRegion;
 import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.activities.epartogramActivity.EpartogramViewActivity;
 import org.intelehealth.ezazi.activities.epartogramActivity.OfflineEPartogramViewActivity;
@@ -301,6 +302,7 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
             }
         });
         Button btnVideoCall = findViewById(R.id.btnVideoOnOff);
+        btnVideoCall.setVisibility(AppRegion.showsVideoCall() ? View.VISIBLE : View.GONE);
         btnVideoCall.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

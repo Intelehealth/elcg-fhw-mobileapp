@@ -103,9 +103,27 @@ class OfflineEPartogramViewActivity : BaseActionBarActivity() {
         )
     }
 
+    /**
+     * Loads the offline sheet, or shows the load-error dialog when the asset is not bundled.
+     *
+     * The sheet is a per-deployment asset, so a build that does not ship it must say so rather
+     * than hand the WebView a missing file and render its built-in error page inside what looks
+     * like a working screen.
+     */
     private fun loadEpartogramAssets() {
+        if (!isAssetBundled(EPARTOGRAM_FILE_NAME)) {
+            showPageLoadingErrorDialog()
+            return
+        }
         val epartogramUrl = "$BASE_URL/$EPARTOGRAM_FILE_NAME"
         webView.loadUrl(epartogramUrl)
+    }
+
+    private fun isAssetBundled(name: String): Boolean = try {
+        assets.open(name).close()
+        true
+    } catch (e: Exception) {
+        false
     }
 
     override fun getScreenTitle(): Int = 0

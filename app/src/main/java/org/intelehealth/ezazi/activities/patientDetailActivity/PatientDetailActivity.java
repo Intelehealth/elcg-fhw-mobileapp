@@ -47,6 +47,7 @@ import org.intelehealth.ezazi.models.dto.EncounterDTO;
 import org.intelehealth.ezazi.models.dto.VisitDTO;
 import org.intelehealth.ezazi.optimized_sync.network.NetworkStatus;
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
+import org.intelehealth.ezazi.utilities.AppRegion;
 import org.intelehealth.ezazi.utilities.DateAndTimeUtils;
 import org.intelehealth.ezazi.utilities.DownloadFilesUtils;
 import org.intelehealth.ezazi.utilities.FileUtils;
@@ -471,12 +472,11 @@ public class PatientDetailActivity extends BaseActionBarActivity {
         Log.d(TAG, "setDisplay: gregDob = " + gregDob);
 
         if (gregDob != null && !gregDob.isEmpty()) {
-            String bsDobDisplay = gregDobToBsDisplay(gregDob);
+            String bsDobDisplay = AppRegion.usesBikramSambat() ? gregDobToBsDisplay(gregDob) : "";
             if (!bsDobDisplay.isEmpty()) {
                 dobView.setText(bsDobDisplay + " BS");
             } else {
-                dobView.setText(DateAndTimeUtils.getFormatedDateOfBirthAsView(gregDob) + " BS");
-                Log.w(TAG, "setDisplay: BS conversion failed, showing Gregorian DOB");
+                dobView.setText(DateAndTimeUtils.getFormatedDateOfBirthAsView(gregDob));
             }
         } else {
             dobView.setText(getString(R.string.not_provided));
@@ -558,7 +558,7 @@ public class PatientDetailActivity extends BaseActionBarActivity {
 
         // ── 14. Click listeners (WhatsApp / Call) ─────────────────────────────
         whatsapp_no.setOnClickListener(v -> {
-            String phoneNumberWithCountryCode = "+977" + phoneView.getText().toString();
+            String phoneNumberWithCountryCode = AppRegion.dialCode() + phoneView.getText().toString();
             String message = getString(R.string.hello_my_name_is) + sessionManager.getChwname();
             startActivity(new Intent(Intent.ACTION_VIEW,
                     Uri.parse(String.format("https://api.whatsapp.com/send?phone=%s&text=%s",

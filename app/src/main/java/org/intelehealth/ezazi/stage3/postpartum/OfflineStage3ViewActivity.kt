@@ -103,9 +103,27 @@ class OfflineStage3ViewActivity : BaseActionBarActivity() {
         )
     }
 
+    /**
+     * Loads the offline sheet, or shows the load-error dialog when the asset is not bundled.
+     *
+     * The sheet is a per-deployment asset, so a build that does not ship it must say so rather
+     * than hand the WebView a missing file and render its built-in error page inside what looks
+     * like a working screen.
+     */
     private fun loadStage3Assets() {
+        if (!isAssetBundled(STAGE3_FILE_NAME)) {
+            showPageLoadingErrorDialog()
+            return
+        }
         val stage3Url = "$BASE_URL/$STAGE3_FILE_NAME"
         webView.loadUrl(stage3Url)
+    }
+
+    private fun isAssetBundled(name: String): Boolean = try {
+        assets.open(name).close()
+        true
+    } catch (e: Exception) {
+        false
     }
 
     override fun getScreenTitle(): Int = 0

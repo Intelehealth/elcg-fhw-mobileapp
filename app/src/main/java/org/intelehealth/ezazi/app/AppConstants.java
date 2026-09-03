@@ -74,7 +74,6 @@ public class AppConstants {
     public static final long INTERVAL_TWENTY_FIVE_MINUTES = 1500000L;
 
     //App url
-    public static final String APP_URL = "ezazi.intelehealth.org";
     public static final String PROTOCOL = "https://";
 
     public static final String PORT_NUMBER = "3004";

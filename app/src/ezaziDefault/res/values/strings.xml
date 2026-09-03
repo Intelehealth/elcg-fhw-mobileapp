@@ -3,4 +3,8 @@
     <string name="app_name" translatable="false">eZazi</string>
     <string name="notification_title">eZazi is running in the background</string>
     <string name="title_activity_login">eZazi</string>
+    <string name="country_name" translatable="false">India</string>
+    <string name="enter_postal_limit">Please enter 6 digits valid postal code</string>
+    <string name="default_country_code" translatable="false">IN</string>
+    <string name="country_preference" translatable="false">in,np</string>
 </resources>

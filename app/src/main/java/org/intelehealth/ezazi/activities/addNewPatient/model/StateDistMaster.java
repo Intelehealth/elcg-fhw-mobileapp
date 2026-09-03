@@ -22,15 +22,4 @@ public class StateDistMaster implements Serializable {
     public void setStateDataList(List<StateData> stateDataList) {
         this.stateDataList = stateDataList;
     }
-    @Expose
-    @SerializedName("nepal")
-    private List<StateData> nepalProvinceList;
-
-    public List<StateData> getNepalProvinceList() {
-        return nepalProvinceList;
-    }
-
-    public void setNepalProvinceList(List<StateData> nepalProvinceList) {
-        this.nepalProvinceList = nepalProvinceList;
-    }
 }

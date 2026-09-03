@@ -3,4 +3,8 @@
     <string name="app_name" translatable="false">eLCG नेपाल</string>
     <string name="notification_title">eLCG is running in the background</string>
     <string name="title_activity_login" translatable="false">eLCG नेपाल</string>
+    <string name="country_name" translatable="false">Nepal</string>
+    <string name="enter_postal_limit">Please enter 5 digits valid postal code</string>
+    <string name="default_country_code" translatable="false">NP</string>
+    <string name="country_preference" translatable="false">np,in</string>
 </resources>

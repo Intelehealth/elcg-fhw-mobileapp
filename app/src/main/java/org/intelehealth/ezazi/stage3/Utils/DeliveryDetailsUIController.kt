@@ -20,6 +20,7 @@ import org.intelehealth.ezazi.stage3.BirthType
 import org.intelehealth.ezazi.stage3.Utils.NepaliDateUtils.BS_MONTH_NAMES
 import org.intelehealth.ezazi.stage3.Utils.NepaliDateUtils.toGregFmt
 import org.intelehealth.ezazi.stage3.models.DeliveryDetails
+import org.intelehealth.ezazi.utilities.AppRegion
 import org.intelehealth.ezazi.ui.dialog.CalendarDialog
 import org.intelehealth.ezazi.ui.dialog.MultiChoiceDialogFragment
 import org.intelehealth.ezazi.ui.dialog.ThemeTimePickerDialog
@@ -216,30 +217,7 @@ class DeliveryDetailsUIController(
     private fun handleClickListeners() {
 
         // ---- End Icon Clicks ----
-        binding.etlDateOfDelivery.setEndIconOnClickListener {
-            showNepaliDatePicker(
-                R.string.select_date_of_delivery,
-                NepaliDateUtils.gregStringToBs(dateOfDelivery)
-            ) { y, m, d ->
-                val selectedGreg = toGregFmt(NepaliDateConverter.bsToGregorian(y, m, d))
-
-                // ← FIX: reject future dates right here in the picker callback,
-                //   same as PatientOtherInfoFragment's areValidFields() date check.
-                //   isAfterToday uses local-TZ parseGregDate — consistent with Calendar.
-                /*if (NepaliDateUtils.isAfterToday(selectedGreg)) {
-                    setFieldError(
-                        binding.etlDateOfDelivery,
-                        context.getString(R.string.date_of_delivery_future_not_allowed)
-                    )
-                    return@showNepaliDatePicker
-                }*/
-
-                dateOfDelivery = selectedGreg
-                binding.etDateOfDelivery.setText(NepaliDateUtils.formatBsDate(y, m, d))
-                clearTextInputError(binding.etlDateOfDelivery)
-                deliveryDetails.dateOfDelivery = dateOfDelivery
-            }
-        }
+        binding.etlDateOfDelivery.setEndIconOnClickListener { pickDeliveryDate() }
 
         binding.etlTimeOfDelivery.setEndIconOnClickListener {
             selectTimeForAllParameters("timeOfDelivery")
@@ -254,30 +232,7 @@ class DeliveryDetailsUIController(
         }
 
         // ---- Field Clicks ----
-        binding.etDateOfDelivery.setOnClickListener {
-        //selectDeliveryDate()
-            showNepaliDatePicker(
-                R.string.select_date_of_delivery,
-                NepaliDateUtils.gregStringToBs(dateOfDelivery)
-            ) { y, m, d ->
-                val selectedGreg = toGregFmt(NepaliDateConverter.bsToGregorian(y, m, d))
-
-                /*if (NepaliDateUtils.isAfterToday(selectedGreg)) {
-                    setFieldError(
-                        binding.etlDateOfDelivery,
-                        context.getString(R.string.date_of_delivery_future_not_allowed)
-                    )
-                    return@showNepaliDatePicker
-                }*/
-
-                dateOfDelivery = selectedGreg
-                binding.etDateOfDelivery.setText(NepaliDateUtils.formatBsDate(y, m, d))
-                clearTextInputError(binding.etlDateOfDelivery)
-                deliveryDetails.dateOfDelivery = dateOfDelivery
-                Log.d("datedd", "handleClickListeners: dateOfDeliveryview : " + binding.etDateOfDelivery.text.toString())
-                Log.d("datedd", "handleClickListeners: dateOfDelivery : " + dateOfDelivery)
-            }
-        }
+        binding.etDateOfDelivery.setOnClickListener { pickDeliveryDate() }
 
         binding.etTimeOfDelivery.setOnClickListener { selectTimeForAllParameters("timeOfDelivery") }
 
@@ -285,6 +240,32 @@ class DeliveryDetailsUIController(
 
         binding.actvAmtsl.setOnClickListener { showAmtslDialog() }
     }
+    /**
+     * Single entry point for choosing the date of delivery. Nepal gets the Bikram Sambat wheel
+     * picker; every other region gets the standard Gregorian calendar dialog.
+     *
+     * <p>Both paths must assign the private [dateOfDelivery] field, because that is what
+     * [getDateOfDelivery] returns and what validation reads. Assigning only
+     * `deliveryDetails.dateOfDelivery` is not enough: that object is re-created during setup, so the
+     * value is discarded and the field reads as empty forever.
+     */
+    private fun pickDeliveryDate() {
+        if (!AppRegion.usesBikramSambat()) {
+            selectDeliveryDate()
+            return
+        }
+        showNepaliDatePicker(
+            R.string.select_date_of_delivery,
+            NepaliDateUtils.gregStringToBs(dateOfDelivery)
+        ) { y, m, d ->
+            val greg = NepaliDateConverter.bsToGregorian(y, m, d) ?: return@showNepaliDatePicker
+            dateOfDelivery = toGregFmt(greg)
+            binding.etDateOfDelivery.setText(NepaliDateUtils.formatBsDate(y, m, d))
+            clearTextInputError(binding.etlDateOfDelivery)
+            deliveryDetails.dateOfDelivery = dateOfDelivery
+        }
+    }
+
     private fun selectDeliveryDate() {
        val isTablet = context.resources.getBoolean(R.bool.isTabletSize)
         val maxHeight = context.resources.getDimensionPixelOffset(R.dimen.std_430dp)
@@ -297,8 +278,10 @@ class DeliveryDetailsUIController(
 
         dialog.setListener { day, month, year, value ->
             val selectedDate = value
+            dateOfDelivery = selectedDate
             binding.etDateOfDelivery.setText(selectedDate)
-            deliveryDetails.dateOfDelivery = selectedDate
+            clearTextInputError(binding.etlDateOfDelivery)
+            deliveryDetails.dateOfDelivery = dateOfDelivery
         }
         dialog.show(fragmentManager, "DatePicker")
     }
@@ -717,8 +700,8 @@ class DeliveryDetailsUIController(
         val monthPicker = NumberPicker(context)
         val dayPicker = NumberPicker(context)
 
-        yearPicker.minValue = 2000
-        yearPicker.maxValue = 2090
+        yearPicker.minValue = NepaliDateConverter.getMinSupportedBsYear()
+        yearPicker.maxValue = NepaliDateConverter.getMaxSupportedBsYear()
         yearPicker.value = initY
 
         // min/max MUST be set before displayedValues

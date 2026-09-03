@@ -37,6 +37,8 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.gson.Gson;
 
+import org.intelehealth.ezazi.ui.dialog.CalendarDialog;
+import org.intelehealth.ezazi.utilities.AppRegion;
 import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.activities.patientDetailActivity.PatientDetailActivity;
 import org.intelehealth.ezazi.app.AppConstants;
@@ -407,6 +409,55 @@ public class PatientOtherInfoFragment extends Fragment {
         void onSelected(int bsYear, int bsMonth, int bsDay);
     }
 
+    /**
+     * Delivers the chosen date as a Gregorian {@code dd/MM/yyyy} string, so callers never handle
+     * Bikram Sambat components and do not change when the calendar does.
+     */
+    private interface OnGregorianDateSelectedListener {
+        void onSelected(String gregorianDdMmYyyy);
+    }
+
+    /**
+     * Single entry point for every obstetric date field. Nepal gets the Bikram Sambat wheel picker;
+     * every other region gets the standard Gregorian calendar dialog. Both hand the caller the same
+     * Gregorian string, which is also what gets persisted.
+     */
+    private void showDatePicker(int titleRes, String currentGreg, OnGregorianDateSelectedListener listener) {
+        if (AppRegion.usesBikramSambat()) {
+            showNepaliDatePicker(titleRes, gregStringToBs(currentGreg), (y, m, d) -> {
+                Date greg = NepaliDateConverter.bsToGregorian(y, m, d);
+                if (greg == null) return;
+                listener.onSelected(toGregFmt(greg));
+            });
+            return;
+        }
+        CalendarDialog dialog = new CalendarDialog.Builder(mContext)
+                .title(getString(titleRes))
+                .positiveButtonLabel(R.string.ok)
+                .build();
+        dialog.setDateFormat(GREG_FMT);
+        Long seed = gregStringToMillis(currentGreg);
+        if (seed != null) dialog.setDefaultDate(seed);
+        dialog.setListener((day, month, year, value) -> listener.onSelected(value));
+        dialog.show(getParentFragmentManager(), "DatePicker");
+    }
+
+    /**
+     * Parses a stored {@code dd/MM/yyyy} value to epoch millis for seeding the Gregorian picker, or
+     * null when there is nothing stored yet.
+     */
+    private Long gregStringToMillis(String gregDdMmYyyy) {
+        if (gregDdMmYyyy == null || gregDdMmYyyy.isEmpty()) return null;
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat(GREG_FMT, Locale.ENGLISH);
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+            Date d = sdf.parse(gregDdMmYyyy);
+            return d == null ? null : d.getTime();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     private void showNepaliDatePicker(int titleRes,
                                       @Nullable int[] currentBsDate,
                                       OnBsDateSelectedListener listener) {
@@ -426,8 +477,8 @@ public class PatientOtherInfoFragment extends Fragment {
         NumberPicker monthPicker = new NumberPicker(mContext);
         NumberPicker dayPicker = new NumberPicker(mContext);
 
-        yearPicker.setMinValue(2000);
-        yearPicker.setMaxValue(2090);
+        yearPicker.setMinValue(NepaliDateConverter.getMinSupportedBsYear());
+        yearPicker.setMaxValue(NepaliDateConverter.getMaxSupportedBsYear());
         yearPicker.setValue(initY);
 
         // min/max MUST be set before setDisplayedValues; array length must == max-min+1 == 12
@@ -489,8 +540,28 @@ public class PatientOtherInfoFragment extends Fragment {
         return sdf.format(date);
     }
 
+    /**
+     * Renders a stored Gregorian {@code dd/MM/yyyy} date for display.
+     *
+     * <p>Nepal renders Bikram Sambat. Every other region renders the stored Gregorian string
+     * unchanged; choosing a friendlier Gregorian format is deferred to open decision Q6.
+     */
+    /**
+     * Returns the leading two characters used to build the registration number.
+     *
+     * <p>The output is byte-identical to {@code substring(0, 2)} for every value of two characters or
+     * more, which is every realistic country, province and village name. It differs only where the
+     * old code threw: a null, empty, or single-character value. The registration number format is
+     * therefore unchanged for all existing and future records; this only removes a crash on Save.
+     */
+    private String regNumberPart(String value) {
+        if (value == null || value.isEmpty()) return "";
+        return value.length() >= 2 ? value.substring(0, 2) : value;
+    }
+
     private String gregToDisplay(String gregDdMmYyyy) {
         if (gregDdMmYyyy == null || gregDdMmYyyy.isEmpty()) return "";
+        if (!AppRegion.usesBikramSambat()) return gregDdMmYyyy;
         try {
             // ── FIX: pin to UTC so the parsed midnight matches the UTC-based
             // NepaliDateConverter. Without this, Nepal TZ (UTC+5:45) would shift
@@ -630,47 +701,47 @@ public class PatientOtherInfoFragment extends Fragment {
     // ═════════════════════════════════════════════════════════════════════
 
     private void pickAdmissionDate() {
-        showNepaliDatePicker(R.string.select_admission_date, gregStringToBs(mAdmissionDateString),
-                (y, m, d) -> {
-                    mAdmissionDateString = toGregFmt(NepaliDateConverter.bsToGregorian(y, m, d));
-                    mAdmissionDateTextView.setText(formatBsDate(y, m, d));
+        showDatePicker(R.string.select_admission_date, mAdmissionDateString,
+                greg -> {
+                    mAdmissionDateString = greg;
+                    mAdmissionDateTextView.setText(gregToDisplay(greg));
                     clearError(tvErrorAdmissionDate, cardAdmissionDate);
                 });
     }
 
     private void pickActiveLaborDate() {
-        showNepaliDatePicker(R.string.select_labor_diagnosed_date, gregStringToBs(mActiveLaborDiagnosedDate),
-                (y, m, d) -> {
-                    mActiveLaborDiagnosedDate = toGregFmt(NepaliDateConverter.bsToGregorian(y, m, d));
-                    mActiveLaborDiagnosedDateTextView.setText(formatBsDate(y, m, d));
+        showDatePicker(R.string.select_labor_diagnosed_date, mActiveLaborDiagnosedDate,
+                greg -> {
+                    mActiveLaborDiagnosedDate = greg;
+                    mActiveLaborDiagnosedDateTextView.setText(gregToDisplay(greg));
                     clearError(tvErrorLabourDiagnosedDate, cardDiagnosedDate);
                 });
     }
 
     private void pickSacRupturedDate() {
-        showNepaliDatePicker(R.string.select_sac_ruptured_date, gregStringToBs(mMembraneRupturedDate),
-                (y, m, d) -> {
-                    mMembraneRupturedDate = toGregFmt(NepaliDateConverter.bsToGregorian(y, m, d));
-                    mMembraneRupturedDateTextView.setText(formatBsDate(y, m, d));
+        showDatePicker(R.string.select_sac_ruptured_date, mMembraneRupturedDate,
+                greg -> {
+                    mMembraneRupturedDate = greg;
+                    mMembraneRupturedDateTextView.setText(gregToDisplay(greg));
                     clearError(tvErrorSacRupturedDate, cardSacRupturedDate);
                 });
     }
 
     private void pickLmpDate() {
-        showNepaliDatePicker(R.string.select_lmp_date, gregStringToBs(mLmpDate),
-                (y, m, d) -> {
-                    mLmpDate = toGregFmt(NepaliDateConverter.bsToGregorian(y, m, d));
-                    mLmpDateTextView.setText(formatBsDate(y, m, d));
+        showDatePicker(R.string.select_lmp_date, mLmpDate,
+                greg -> {
+                    mLmpDate = greg;
+                    mLmpDateTextView.setText(gregToDisplay(greg));
                     clearError(tvErrorLmpDate, null);
                     calculateEDDFromLMP(mLmpDate);
                 });
     }
 
     private void pickEddDate() {
-        showNepaliDatePicker(R.string.select_edd_date, gregStringToBs(mEDD),
-                (y, m, d) -> {
-                    mEDD = toGregFmt(NepaliDateConverter.bsToGregorian(y, m, d));
-                    mEDDTextView.setText(formatBsDate(y, m, d));
+        showDatePicker(R.string.select_edd_date, mEDD,
+                greg -> {
+                    mEDD = greg;
+                    mEDDTextView.setText(gregToDisplay(greg));
                     clearError(tvErrorEDD, null);
                 });
     }
@@ -700,9 +771,7 @@ public class PatientOtherInfoFragment extends Fragment {
             // Convert back to string (Ensure toGregFmt uses UTC!)
             mEDD = toGregFmt(eddGreg);
 
-            // Convert to Nepali BS Calendar
-            int[] bs = NepaliDateConverter.gregorianToBs(eddGreg);
-            mEDDTextView.setText(formatBsDate(bs[0], bs[1], bs[2]));
+            mEDDTextView.setText(gregToDisplay(mEDD));
 
             clearError(tvErrorEDD, null);
         } catch (Exception e) { e.printStackTrace(); }
@@ -731,9 +800,7 @@ public class PatientOtherInfoFragment extends Fragment {
             // Convert back to string (Ensure toGregFmt uses UTC!)
             mEDD = toGregFmt(eddGreg);
 
-            // Convert to Nepali BS Calendar
-            int[] bs = NepaliDateConverter.gregorianToBs(eddGreg);
-            mEDDTextView.setText(formatBsDate(bs[0], bs[1], bs[2]));
+            mEDDTextView.setText(gregToDisplay(mEDD));
 
             clearError(tvErrorEDD, null);
         } catch (Exception e) {
@@ -1785,7 +1852,7 @@ public class PatientOtherInfoFragment extends Fragment {
             attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.SECONDARY_DOCTOR.value, StringUtils.getValue(mSecondaryDoctorUUIDString) + "@#@" + mSecondaryDoctorTextView.getText()));
         int num = (int) (Math.random() * (99999999 - 100 + 1) + 100);
         attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.REGISTRATION_NUMBER.value,
-                patientDTO.getCountry().substring(0, 2) + "/" + patientDTO.getStateprovince().substring(0, 2) + "/" + patientDTO.getCityvillage().substring(0, 2) + "/" + num));
+                regNumberPart(patientDTO.getCountry()) + "/" + regNumberPart(patientDTO.getStateprovince()) + "/" + regNumberPart(patientDTO.getCityvillage()) + "/" + num));
         attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.BED_NUMBER.value,
                 !TextUtils.isEmpty(etBedNumber.getText().toString()) ? StringUtils.getValue(etBedNumber.getText().toString()) : StringUtils.getValue(AppConstants.NOT_APPLICABLE)));
         attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.ALTERNATE_NO.value, StringUtils.getValue(mAlternateNumberString)));

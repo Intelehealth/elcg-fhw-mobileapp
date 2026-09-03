@@ -49,6 +49,7 @@ import com.github.ajalt.timberkt.Timber;
 import com.google.android.material.button.MaterialButton;
 import com.google.gson.Gson;
 
+import org.intelehealth.ezazi.utilities.AppRegion;
 import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.activities.epartogramActivity.EpartogramViewActivity;
 import org.intelehealth.ezazi.activities.epartogramActivity.OfflineEPartogramViewActivity;
@@ -594,6 +595,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
     private void initUI() {
         fabSOS = findViewById(R.id.btnSOS);
         fabv = findViewById(R.id.btnVideoOnOff);
+        fabv.setVisibility(AppRegion.showsVideoCall() ? View.VISIBLE : View.GONE);
         outcomeTV = findViewById(R.id.outcomeTV);
         fabc = findViewById(R.id.btnFlipCamera);
         fabPrescription = findViewById(R.id.btnPrescription);

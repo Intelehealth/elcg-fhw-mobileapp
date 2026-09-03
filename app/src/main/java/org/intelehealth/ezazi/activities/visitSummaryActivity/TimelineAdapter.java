@@ -249,7 +249,7 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.Timeli
 
                 encounterTimeAmPmFormat = DateTimeUtils.formatToLocalDate(timeDateType, DateTimeUtils.TIME_FORMAT);
                 // ── Convert encounter date from Gregorian → Nepali BS for display ──────
-                encounterDate = NepaliDateConverter.dateToBsDisplay(timeDateType);
+                encounterDate = NepaliDateConverter.instantToBsDisplay(timeDateType);
                 Log.v("timeline", "AM Format: " + encounterTimeAmPmFormat);
 
                 if (submitted == EncounterDTO.Status.SUBMITTED) { // This so that once submitted it should be closed and not allowed to edit again.

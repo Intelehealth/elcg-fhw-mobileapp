@@ -1,7 +1,11 @@
 *.iml
 *.json
 .gradle
-/assets
+# Any directory named "assets", at any depth, in any source set or module.
+# Asset payloads are per-deployment and handed over out of band: the app is open
+# source and the assets are not. The trailing slash matches directories only, so a
+# file such as app/src/main/assets-1-03-2024.zip is unaffected.
+assets/
 salt.env
 .idea/misc.xml
 /local.properties
@@ -21,5 +25,4 @@ salt.env
 .idea/
 /webrtc/build/
 /app/release/
-/app/src/main/assets
 *.txt

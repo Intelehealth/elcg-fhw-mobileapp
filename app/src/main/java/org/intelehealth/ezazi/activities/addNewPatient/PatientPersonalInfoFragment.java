@@ -53,6 +53,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 
+import org.intelehealth.ezazi.ui.dialog.CalendarDialog;
 import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.activities.cameraActivity.CameraActivity;
 import org.intelehealth.ezazi.activities.setupActivity.SetupActivity;
@@ -67,6 +68,7 @@ import org.intelehealth.ezazi.models.dto.PatientDTO;
 import org.intelehealth.ezazi.models.dto.ProviderDTO;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
 import org.intelehealth.ezazi.ui.validation.UpperCaseAlphabetsInputFilter;
+import org.intelehealth.ezazi.utilities.AppRegion;
 import org.intelehealth.ezazi.utilities.DateAndTimeUtils;
 import org.intelehealth.ezazi.utilities.FileUtils;
 import org.intelehealth.ezazi.utilities.NepaliDateConverter;
@@ -241,8 +243,10 @@ public class PatientPersonalInfoFragment extends Fragment {
             mDOB.setShowSoftInputOnFocus(false);
         }
 
-        int[] todayBs = NepaliDateConverter.getCurrentBsDate();
-        tvDobForDb.setText(formatBsDate(todayBs[0], todayBs[1], todayBs[2]));
+        if (AppRegion.usesBikramSambat()) {
+            int[] todayBs = NepaliDateConverter.getCurrentBsDate();
+            tvDobForDb.setText(formatBsDate(todayBs[0], todayBs[1], todayBs[2]));
+        }
 
         mFirstName.addTextChangedListener(new MyTextWatcher(mFirstName));
         mLastName.addTextChangedListener(new MyTextWatcher(mLastName));
@@ -263,8 +267,8 @@ public class PatientPersonalInfoFragment extends Fragment {
     }
 
     private void handleClickListeners() {
-        etLayoutDob.setEndIconOnClickListener(v -> showNepaliDatePicker());
-        mDOB.setOnClickListener(v -> showNepaliDatePicker());
+        etLayoutDob.setEndIconOnClickListener(v -> pickDateOfBirth());
+        mDOB.setOnClickListener(v -> pickDateOfBirth());
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -294,7 +298,7 @@ public class PatientPersonalInfoFragment extends Fragment {
         NumberPicker monthPicker = new NumberPicker(mContext);
         NumberPicker dayPicker   = new NumberPicker(mContext);
 
-        yearPicker.setMinValue(2000);
+        yearPicker.setMinValue(NepaliDateConverter.getMinSupportedBsYear());
         yearPicker.setMaxValue(maxBsYear);
         yearPicker.setValue(initYear);
 
@@ -362,30 +366,78 @@ public class PatientPersonalInfoFragment extends Fragment {
      *   - mAge field (years only, since mAge is numeric-only)
      *   - tvAgeDob  (full "X years Y months Z days" breakdown)
      */
-    private void onBsDateSelected(int bsYear, int bsMonth, int bsDay) {
-        Date gregDate = NepaliDateConverter.bsToGregorian(bsYear, bsMonth, bsDay);
-
-        AgeYmd ymd = calcAgeYmd(gregDate);
-        if (ymd.years < 13) {
-            showAgeError();
+    /**
+     * Chooses the date-of-birth picker for this region. Nepal gets the Bikram Sambat wheel picker;
+     * every other region gets the standard Gregorian calendar dialog capped at today minus thirteen
+     * years, which is the same minimum age the Bikram Sambat picker enforces through its bounds.
+     */
+    private void pickDateOfBirth() {
+        if (AppRegion.usesBikramSambat()) {
+            showNepaliDatePicker();
             return;
         }
+        Calendar maxGreg = Calendar.getInstance();
+        maxGreg.add(Calendar.YEAR, -13);
 
+        CalendarDialog dialog = new CalendarDialog.Builder(mContext)
+                .title(getString(R.string.select_dob))
+                .positiveButtonLabel(R.string.ok)
+                .build();
+        dialog.setDateFormat(DB_DATE_FORMAT);
+        dialog.setMaxDate(maxGreg.getTimeInMillis());
+        Date seed = parseDbDate(dobToDb);
+        dialog.setDefaultDate(seed != null ? seed.getTime() : maxGreg.getTimeInMillis());
+        dialog.setListener((day, month, year, value) -> {
+            Date picked = parseDbDate(value);
+            if (picked != null) onDobSelected(picked);
+        });
+        dialog.show(getParentFragmentManager(), "DobPicker");
+    }
+
+    /**
+     * Parses the Gregorian storage format in UTC, matching {@link #toGregorianDbFormat(Date)}.
+     * Returns null rather than throwing so callers can ignore an unparseable value.
+     */
+    private Date parseDbDate(String yyyyMMdd) {
+        if (yyyyMMdd == null || yyyyMMdd.isEmpty()) return null;
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat(DB_DATE_FORMAT, Locale.ENGLISH);
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+            return sdf.parse(yyyyMMdd);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private void onBsDateSelected(int bsYear, int bsMonth, int bsDay) {
+        Date gregDate = NepaliDateConverter.bsToGregorian(bsYear, bsMonth, bsDay);
+        if (gregDate == null || !onDobSelected(gregDate)) return;
         selectedBsYear  = bsYear;
         selectedBsMonth = bsMonth;
         selectedBsDay   = bsDay;
+    }
+
+    /**
+     * Shared date-of-birth handling for both calendars. Validates the minimum age, then persists the
+     * Gregorian value and refreshes the fields. Returns false when the date was rejected, so a
+     * calendar-specific caller can avoid recording picker state for a date that was not accepted.
+     */
+    private boolean onDobSelected(Date gregDate) {
+        AgeYmd ymd = calcAgeYmd(gregDate);
+        if (ymd.years < 13) {
+            showAgeError();
+            return false;
+        }
 
         dobToDb = toGregorianDbFormat(gregDate);
         patient1.setDate_of_birth(dobToDb);
         patientDTO.setDateofbirth(dobToDb);
 
-        String bsDisplay = formatBsDate(bsYear, bsMonth, bsDay);
-
         isSyncing = true;
         try {
-            mDOB.setText(bsDisplay);
-            tvDobForDb.setText(bsDisplay);
-            setSelectedDob(mContext, bsDisplay);
+            mDOB.setText(dobForDisplay(dobToDb));
+            tvDobForDb.setText(dobForDisplay(dobToDb));
+            setSelectedDob(mContext, dobToDb);
 
             mAgeYears = ymd.years;
             mAge.setText(String.valueOf(mAgeYears));
@@ -397,6 +449,7 @@ public class PatientPersonalInfoFragment extends Fragment {
         tvErrorAge.setVisibility(View.GONE);
         cardDob.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
         cardAge.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+        return true;
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -419,21 +472,24 @@ public class PatientPersonalInfoFragment extends Fragment {
         birthGreg.add(Calendar.YEAR, -ageInYears);
         Date birthDate = birthGreg.getTime();
 
-        int[] bs = NepaliDateConverter.gregorianToBs(birthDate);
-        selectedBsYear  = bs[0];
-        selectedBsMonth = bs[1];
-        selectedBsDay   = bs[2];
+        if (AppRegion.usesBikramSambat()) {
+            int[] bs = NepaliDateConverter.gregorianToBs(birthDate);
+            if (bs != null) {
+                selectedBsYear  = bs[0];
+                selectedBsMonth = bs[1];
+                selectedBsDay   = bs[2];
+            }
+        }
 
-        String bsDisplay = formatBsDate(bs[0], bs[1], bs[2]);
         dobToDb = toGregorianDbFormat(birthDate);
         patient1.setDate_of_birth(dobToDb);
         patientDTO.setDateofbirth(dobToDb);
 
         isSyncing = true;
         try {
-            mDOB.setText(bsDisplay);
-            tvDobForDb.setText(bsDisplay);
-            setSelectedDob(mContext, bsDisplay);
+            mDOB.setText(dobForDisplay(dobToDb));
+            tvDobForDb.setText(dobForDisplay(dobToDb));
+            setSelectedDob(mContext, dobToDb);
         } finally {
             isSyncing = false;
         }
@@ -441,7 +497,7 @@ public class PatientPersonalInfoFragment extends Fragment {
         tvErrorDob.setVisibility(View.GONE);
         cardDob.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
 
-        Log.d(TAG, "calculateDobFromAge → BS: " + bsDisplay + " | DB: " + dobToDb);
+        Log.d(TAG, "calculateDobFromAge → display: " + dobForDisplay(dobToDb) + " | DB: " + dobToDb);
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -508,9 +564,11 @@ public class PatientPersonalInfoFragment extends Fragment {
                 ymd.years, ymd.months, ymd.days);
     }
 
+    private static final String DB_DATE_FORMAT = "yyyy-MM-dd";
+
     /** Formats a Date as yyyy-MM-dd (Gregorian) for DB storage. */
     private String toGregorianDbFormat(Date date) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+        SimpleDateFormat sdf = new SimpleDateFormat(DB_DATE_FORMAT, Locale.ENGLISH);
         sdf.setTimeZone(TimeZone.getTimeZone("UTC")); // consistent with NepaliDateConverter
         return sdf.format(date);
     }
@@ -520,12 +578,14 @@ public class PatientPersonalInfoFragment extends Fragment {
      * Used when loading existing patient data from DB.
      */
     private String gregDbDateToBsDisplay(String yyyyMMdd) {
+        if (!AppRegion.usesBikramSambat()) return dobForDisplay(yyyyMMdd);
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
             sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
             Date date = sdf.parse(yyyyMMdd);
             if (date == null) return "";
             int[] bs = NepaliDateConverter.gregorianToBs(date);
+            if (bs == null) return dobForDisplay(yyyyMMdd);
             selectedBsYear  = bs[0];
             selectedBsMonth = bs[1];
             selectedBsDay   = bs[2];
@@ -576,10 +636,10 @@ public class PatientPersonalInfoFragment extends Fragment {
                 mMobileNumber.setText(patientDTO.getPhonenumber());
                 mAlternateNumber.setText(mAlternateNumberString);
 
-                String savedBsDisplay = getSelectedDob(mContext);
-                if (savedBsDisplay != null && !savedBsDisplay.isEmpty()) {
-                    mDOB.setText(savedBsDisplay);
-                    tvDobForDb.setText(savedBsDisplay);
+                String savedDob = getSelectedDob(mContext);
+                if (savedDob != null && !savedDob.isEmpty()) {
+                    mDOB.setText(dobForDisplay(savedDob));
+                    tvDobForDb.setText(dobForDisplay(savedDob));
                 }
 
                 if (patientDTO.getDateofbirth() != null && !patientDTO.getDateofbirth().isEmpty()) {
@@ -980,6 +1040,25 @@ public class PatientPersonalInfoFragment extends Fragment {
                 .getString("dobPatient", "");
     }
 
+    /**
+     * Formats a Gregorian {@code yyyy-MM-dd} date of birth for display.
+     *
+     * <p>Nepal renders Bikram Sambat. Every other region currently renders the stored Gregorian
+     * string unchanged; picking a friendlier Gregorian display format is deliberately deferred to
+     * the open decision Q6 in docs/WHITELABEL-CHECKLIST.md rather than invented here.
+     */
+    private String dobForDisplay(String gregorianDbDate) {
+        if (gregorianDbDate == null || gregorianDbDate.isEmpty()) return "";
+        return NepaliDateConverter.gregStringToBsDisplay(gregorianDbDate);
+    }
+
+    /**
+     * Persists the date of birth in the Gregorian storage format, never in Bikram Sambat.
+     *
+     * <p>This preference file is app-private and both brands ship one applicationId, so a build of
+     * either brand installed over the other reads whatever the previous one wrote. Storing Gregorian
+     * keeps that value meaningful to both.
+     */
     public void setSelectedDob(Context context, String dob) {
         context.getApplicationContext()
                 .getSharedPreferences("dobPatient", 0)

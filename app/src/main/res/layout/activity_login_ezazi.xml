@@ -23,7 +23,7 @@
         android:layout_width="@dimen/login_logo_width_nepal"
         android:layout_height="@dimen/login_logo_height_nepal"
         android:adjustViewBounds="true"
-        android:src="@drawable/nepal_ezazi_spalsh_icon"
+        android:src="@drawable/login_screen_icon"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="@dimen/home_screen_container_margin_top"
         app:layout_constraintStart_toStartOf="parent"

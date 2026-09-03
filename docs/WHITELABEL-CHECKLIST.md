@@ -1141,54 +1141,573 @@ Phase 5 will have touched these files in between.
 
 ---
 
-## Phase 6 — Region axis (biggest, riskiest, last)
-*Nepal logic currently lives in `main` for every variant. This is where clinical data is at stake.*
+## Phase 6 — Region axis
 
-- [ ] **6.1** Add `DEPLOYMENT_REGION` as a `buildConfigField` on each client flavour. Use BuildConfig,
-      not a resource — the consumers (data transformers, validators) often have no `Context`.
-- [ ] **6.2** Split location data per country (**A4**) and select by `DEPLOYMENT_REGION`. Two things to
-      know first: `state_district_tehsil.json` already has top-level keys `["india","nepal"]` but
-      `StateDistMaster.java:14-16` binds `@SerializedName("states")`, so it deserialises to `null`
-      today; and **all 7 Nepal provinces have empty district arrays** — a content gap no mechanism fixes.
-- [ ] **6.3** Gate the address logic: country literal, district visibility, the `":"` join
-      (`PatientAddressInfoFragment.java:221-226`, `:478`, `:550`). **This changes the persisted
-      OpenMRS `cityvillage` shape** — confirm with the backend before shipping.
-- [ ] **6.4** Gate the 5-digit postal rule (`:697`, `:797`), the `+977` WhatsApp prefix
-      (`PatientDetailActivity.java:561`), and the `"91"`-only phone-length branch
-      (`ForgotPasswordFragment.java:82-84`).
-- [ ] **6.5** Gate Bikram Sambat — **16 files, 73 references, no seam today.** Note the existing prior
-      art: `Stage3DataTransformer.kt:44-47` emits `isNepalClient` which `stage3.html` honours, but the
-      native PDF renderers ignore it and convert unconditionally. Screen and printed sheet can already
-      disagree on the calendar for the same visit.
-- [ ] **6.6** Remove the forced `sessionManager.setAppLanguage("en")` at
-      `PatientAddressInfoFragment.java:221` — it discards the user's language choice mid-registration.
+*Rewritten 2026-09-02 (second pass) after owner review. Supersedes the first rewrite. Every file:line
+was opened during this pass; unobserved claims are labelled **INFERENCE**. Several claims in the first
+rewrite were wrong and are corrected inline — see "Corrections to the first pass".*
 
-> **Stop condition:** register a patient end-to-end on each flavour and compare the persisted record
-> against what the backend expects. Do **not** rely on UI inspection alone here.
+### 6.0 — What this phase is
+
+**Region was never expressed in code. There is no gate to restore.** The switch is a human editing
+comments before a build — `PatientAddressInfoFragment.java:102` is literally
+`private boolean mIsIndiaSelected = false; // for india make it true`. The same pattern runs through
+Java, layouts and string resources: India commented out, Nepal live, in shared `main`.
+
+Neither flavour has a `java/`, `kotlin/` or `assets/` dir, so both brands compile identical code today.
+Estimate this phase as **new design work**, not a regression fix.
+
+**The mechanism already exists — do not build a new one.** `BuildConfig.FLAVOR_client` is generated from
+the existing `client` dimension and is already used as a brand gate at `PatientAddressInfoFragment.java:478`
+and `:548` against `FlavorKeys` (`FlavorKeys.kt:5-6`). **No new flavour dimension, no `DEPLOYMENT_REGION`
+field, no gradle change** for the gating itself. *(Q1 closed by owner, 2026-09-02: region is not its own
+dimension. A third dimension would take variants from 6 to 12 and permit nonsense combinations like
+`elcgNepal + india`.)*
+
+**Write every check as "is this Nepal?", never "is this not-India?"** Same result for the two brands
+today; different for brand 3. `if (!ezaziDefault)` hands Bangladesh a Nepali calendar. `if (elcgNepal)`
+hands it Gregorian. Gregorian is the default; Bikram Sambat is the opt-in.
+
+**Priority tagging.** Per **P4** eZazi India never ships to users. **[NEPAL-LIVE]** outranks
+**[INDIA-DEMO]**.
+
+---
+
+### Decisions — status
+
+| # | Question | Status |
+|---|---|---|
+| Q1 | Region as its own flavour dimension? | **CLOSED — no.** Use `BuildConfig.FLAVOR_client` + `FlavorKeys`. |
+| Q2 | What is persisted as `country` for India? | **ANSWERED — `"India"`.** `git show origin/development_master:…PatientAddressInfoFragment.java:216` stores `"India"` / `"भारत"`, exactly parallel to today's Nepal. Display name in the app language, no ISO codes. |
+| Q3 | Does the `cityvillage` colon form survive for India? | **ANSWERED — yes, permanently, and it is India-only.** Nepal stores the bare village name. |
+| Q4 | Does `REGISTRATION_NUMBER` keep its shape? | **EFFECTIVELY ANSWERED — the format is free.** `grep` finds two writes and the enum declaration; **nothing in the app reads it back**. One residual question for the backend team: does any server-side report or consumer read the `Ezazi Registration Number` person attribute? If not, the format is unconstrained. |
+| Q5 | Must postal code be mandatory? | **ANSWERED 2026-09-03 — no, it stays optional; only the LENGTH varies by flavour.** The owner initially said mandatory, then asked whether it ever had been. It has not, on any branch: `origin/development_master:622`, `origin/development_master_nepal_deployment:697` and `origin/dev_kaveri_nepal_sprint_46:697` all carry `!postalCode.isEmpty() &&`, so a blank postal code has always saved for both countries. The UI agrees — `strings.xml:926` is `Postal Code` with no asterisk, while required fields carry one (`:922` `State*`). Making it mandatory was implemented and then **reverted**, because it would have blocked registrations that currently succeed on the live Nepal product, and would have shown a validation error on a field that does not claim to be required. |
+| Q6 | Canonical India date display format? | **CLOSED 2026-09-03 — India displays the stored Gregorian string, unchanged, and will continue to.** No new format is to be introduced. |
+| Q7 | ~~Nepal support helpline number?~~ | **VOID 2026-09-03 — the question was an error; there is no such feature.** The only `tel:` in the tree is `PatientDetailActivity:569`, which dials the *patient*. An earlier pass observed "no non-Indian support number exists" and that was mistakenly turned into a question about a helpline. 6.6 was never blocked by it. |
+
+---
+
+### 6.1 — ✅ DONE 2026-09-03 — Location data: split the asset per flavour **[BOTH]**
+
+*Depends on: nothing. Can start immediately.*
+
+**Owner's design, 2026-09-02.** The current single asset is the bug. Read from disk, today's
+`app/src/main/assets/state_district_tehsil.json` is
+`{"india": [ { "states": [ 35 states ] } ], "nepal": [ 7 provinces ] }` — while
+`StateDistMaster.java:15` binds `@SerializedName("states")` at the **top** level, matching neither key,
+so `stateDataList` is **null**. `:26` binds `@SerializedName("nepal")`, which matches, so
+`nepalProvinceList` works.
+
+Someone wrapped the original India-only file (which was `{"states": [...]}` and bound correctly) into
+that two-key envelope and added a second binding, without fixing the first. **Unwrapping it is the fix.**
+
+| file | contents | key |
+|---|---|---|
+| `app/src/main/assets/state_district_tehsil.json` | India data — the original unwrapped shape | `states` |
+| `app/src/elcgNepal/assets/state_district_tehsil.json` | the 7 provinces | `states` — **same key** |
+| `app/src/ezaziDefault/` | nothing — inherits main | — |
+
+**Identical key in both files** (owner's requirement), so one `@SerializedName("states")` serves both.
+Then in `StateDistMaster.java`: delete the `nepal` field, `getNepalProvinceList()` and
+`setNepalProvinceList()`, and repoint the single caller at `PatientAddressInfoFragment.java:931` to
+`getStateDataList()`. **The model gets smaller, not larger** — no wrapper type, no nesting, no null
+dereference.
+
+Verified mechanics:
+- **`StateData` already covers both shapes** — it declares `state`, `state-hi`, `districts`. Nepal's
+  provinces carry all three; India's states carry two.
+- **No gradle `assets` override** in `app/build.gradle` or `app/whitelabel.gradle`, so the default
+  per-flavour layout applies. Assets do **file-level replacement**: a flavour file at the same relative
+  path wins entirely over main's. No merging, no conflict.
+- **Assets stay untracked — this is a standing law**, see [[assets-folder-stays-ignored]]. `.gitignore:2`
+  is `*.json` unanchored, so flavour assets are already ignored by that rule; **no gitignore change, and
+  do not propose a negation to track them.** Consequence for the onboarding checklist (A12): a fresh
+  clone has no location data for either brand, and it fails **hard** — `FileUtils.encodeJSON` returns
+  null and `PatientAddressInfoFragment.java:220` NPEs on `.toString()`.
+- **Size is a non-issue** — 147.6 KB today vs 146.6 KB India-only; the whole Nepal addition is ~1 KB.
+  Do this for correctness and editability, not size.
+
+**Stop:** both flavours populate the state/province dropdown, and the Nepal build shows 7 provinces.
+
+---
+
+### 6.2 — ✅ DONE 2026-09-03 — Country name and the string round-trip **[BOTH]**
+
+*Depends on: 6.1 (the India branch needs a non-null list). Blocks: 6.3.*
+
+Today the code sets a country string and then asks itself what it just set:
+
+```java
+:223   mCountryName = sessionManager.getAppLanguage().equals("en") ? "Nepal" : "नेपाल";
+:224   if (mCountryName.equalsIgnoreCase(… "Nepal" : "नेपाल")) {   // tautology — always true
+```
+
+`:224` and `:446` are always true; `:666` is always false; `:288` and `:409` compare against `"India"` and
+are permanently dead. **Owner's instruction: replace all of it with a flavour check.**
+
+**Two mechanisms, because there are two jobs** (owner-approved 2026-09-02):
+
+| job | mechanism | why |
+|---|---|---|
+| the **label** shown on screen | per-flavour `<string name="country_name">` — `Nepal` / `India` | localisable later; and the layout can reference it directly with no code |
+| the **value persisted** to OpenMRS | per-flavour `buildConfigField "String", "COUNTRY_NAME"` | a BuildConfig field **cannot** be localised by accident, so a future translation can never corrupt stored data |
+| every **behaviour** branch | `BuildConfig.FLAVOR_client` vs `FlavorKeys` | already exists at `:478`/`:548` |
+
+Steps:
+1. Add `country_name` to each flavour's `strings.xml`. **Additive, flavour files only** — main untouched,
+   so no tension with **P6**.
+2. `fragment_patient_address_info.xml:65`: `@string/str_check_India` → `@string/country_name`. **This also
+   fixes a live bug** — the layout paints "India" at inflate and code overwrites it with "Nepal" at `:445`.
+3. **Delete `:444-445`** — no code needed once the layout is right.
+4. Replace `:224`, `:446`, `:666`, `:288`, `:409` with the flavour check.
+5. `:557` `patientDTO.setCountry(mCountryNameEn)` reads the new BuildConfig field.
+
+Net effect: `mCountryName`, `mCountryNameEn`, `mIsIndiaSelected` and `mIsNepalSelected` stop driving any
+branch.
+
+**Stop:** the country field paints correctly at inflate on both brands with no flicker, and the persisted
+`country` is `"India"` / `"Nepal"` respectively.
+
+---
+
+### 6.3 — ✅ DONE 2026-09-03 — `cityvillage`, district visibility, postal **[BOTH]**
+
+**⚠ PERSISTED CLINICAL DATA / OpenMRS contract.** *Depends on: 6.2.*
+
+- **`cityvillage`** — colon form is India-only (Q3); Nepal stores the bare village name. Already correct
+  at `:478-482` → `:484`.
+- **Dead-by-overwrite duplicates:** `:463` (`setStateprovince`) is superseded by `:473`, and `:465`
+  (`setCityvillage` with an **unconditional** colon) is superseded by `:484`. So there is **no live
+  unconditional-colon write** — the clean story holds. Both lines go on the removal list.
+- **The prefill guard is a NEPAL-LIVE defect.** `:278-279` does `split(":")` then `length == 2`. Nepal's
+  bare village name gives length 1, so **City/Village blanks on edit and on back-navigation** today,
+  independent of any India work. Fix this regardless of the rest of the phase.
+- **Postal is FOUR layers, not three** *(corrected — the first pass said three, and an earlier note said
+  one)*:
+
+| layer | current |
+|---|---|
+| `PatientAddressInfoFragment.java:694` | `postalCode.length() != 5` — `//5 for nepal. previously its 6` |
+| `:794` | `val.length() != 5` — same comment |
+| `view_common_input_patient_address.xml:231` | `android:maxLength="5"` |
+| `values/strings.xml:1132` | the live 5-digit message, tagged `<!--For nepal deployment -->` |
+
+  Plus the India 6-digit message sitting **inside a comment** at `strings.xml:1002-1004`, headed
+  `for india/ or regular ezazi flow`. Because it is commented, there is **no duplicate resource today** —
+  uncommenting creates one. A Java-only fix passes review and is still broken on device, because the
+  input filter swallows the sixth keystroke.
+
+**Stop:** register a patient on each flavour and compare the **persisted** `cityvillage`, `country` and
+postal code against what the backend expects. Not UI inspection.
+
+---
+
+### 6.4 — ✅ SKIPPED by owner 2026-09-03 — `REGISTRATION_NUMBER` hardening **[low priority]**
+
+*Depends on: nothing. Downgraded from the first pass — see corrections.*
+
+There are **two copies** of the same construction:
+
+| | |
+|---|---|
+| `PatientAddressInfoFragment.java:594` | **dead** — inside a `/* */` block at `:588-595` |
+| `PatientOtherInfoFragment.java:1788` | **live** — `country[0:2] + "/" + state[0:2] + "/" + village[0:2] + "/" + random` |
+
+`substring(0, 2)` throws on any string shorter than two characters. **But it is not realistically
+reachable:** province is a required field (`:660`) and city/village is a required field (`:681`), so
+neither can be empty at submit, and the only remaining trigger is a genuinely one-character province or
+village name. *(Owner's challenge, 2026-09-02: Nepali village names are not one character. Correct — the
+first pass called this a live NEPAL-LIVE crash, which was overstated.)*
+
+Treat as **defensive hardening**, not a defect. Fix the `substring` to be length-safe when the file is
+open for other reasons. Per Q4 the format itself is unconstrained by the app.
+
+---
+
+### 6.5 — ✅ DONE 2026-09-03 — Bikram Sambat becomes elcgNepal-only **[BOTH]**
+
+*Depends on: 6.0's flavour check. This is the item that blocks device testing of elcg.*
+
+#### The storage answer, first
+
+**No Bikram Sambat value reaches SQLite or OpenMRS.** Five independent verifiers established this by
+different routes, and it was then spot-checked by hand. Every picker converts on the line it fires:
+
+```java
+:635  mAdmissionDateString      = toGregFmt(NepaliDateConverter.bsToGregorian(y, m, d));
+:644  mActiveLaborDiagnosedDate = toGregFmt(…);
+:653  mMembraneRupturedDate     = toGregFmt(…);
+:662  mLmpDate                  = toGregFmt(…);
+```
+
+The BS integer triple never escapes the callback, and `toGregFmt` (`:482-490`) pins **UTC** and
+**`Locale.ENGLISH`**, with a comment naming the Nepal UTC+5:45 day-roll it exists to prevent.
+
+**So this is a display and capture change, not a clinical-data change.** No backend agreement, no concept
+negotiation, no row migration. This is the single biggest de-risking in the phase.
+
+#### The seam — change the function, not the callers
+
+About a dozen sites call something like `dateToBsDisplay(date)` and hand the result to a `TextView`.
+Rather than visiting each and wrapping it in a condition, make the **function** brand-aware. The callers
+do not change at all. *(Owner-approved 2026-09-02: "just the underlying code changes, nothing with the
+UI".)*
+
+Three functions in `NepaliDateConverter.java` carry 12 sites, 11 of them with **zero** edits at the site:
+
+| function | Nepal | everyone else |
+|---|---|---|
+| `gregStringToBsDisplay` `:357` | BS string | return the input unchanged — its own existing fallback at `:406` |
+| `dateToBsDisplay` `:256` | BS string | `"dd MMM yyyy"` |
+| `localDayToBsDisplay` `:327` | BS string | `""` |
+
+#### Do NOT gate these four
+
+`toGregFmt`, `parseGregDate`, `parseGregDateTime`, `isAfterToday` live in "Nepali"-named files but do
+plain Gregorian work and are used by **both** brands. Gating them breaks India worse than Nepal.
+*(Owner confirmed: leave them alone despite where they live.)*
+
+#### The pickers — three if-elses
+
+The Nepal picker is built in code with `new NumberPicker(context)`; `grep NumberPicker` across every
+`res/` dir returns **nothing**. So **no resource override can reach it** — it needs a code branch
+choosing between the Nepali number-wheels and the standard Android calendar dialog. Three dispatchers:
+
+| site | notes |
+|---|---|
+| `PatientOtherInfoFragment.java:410` | entry points `:633`, `:642`, `:651`, `:660`; `" (BS)"` title at `:457`; year range 2000-2090 at `:429-430` |
+| `PatientPersonalInfoFragment.java:274` | wired at `:266`/`:267`; bounds express "today − 13 years" **in BS** at `:275-277` — the non-trivial one |
+| `DeliveryDetailsUIController.kt:704` | wired **twice** on one field, `:220` and `:259`; title at `:761` |
+
+The hardcoded `" (BS)"` titles die by not entering these paths, not by editing strings.
+
+#### `dateToBsDisplay` needs two overloads
+
+It has **two incompatible input contracts**: `TimelineAdapter.java:252` passes a raw instant (local-day
+formatting correct), while `LcgSheetRenderer.kt:1356-1367` and `Stage3SheetRenderer.kt:768-778` pass a
+Date already reduced to **UTC midnight of the local day** — formatting that with a device-local formatter
+shifts the printed PDF date back a day on any negative-UTC-offset device.
+**Owner's decision: two overloaded functions, one per contract.** The compiler then enforces which
+contract each caller uses, instead of a blanket rule that is wrong for half of them.
+
+#### `dobPatient` — store Gregorian, display per flavour
+
+`PatientPersonalInfoFragment` writes a BS **display** string into durable SharedPreferences and reads it
+straight back into the DOB field:
+
+```java
+:378   dobToDb = toGregorianDbFormat(gregDate);   // ← the Gregorian value, already computed
+:382   String bsDisplay = formatBsDate(bsYear, bsMonth, bsDay);
+:388   setSelectedDob(mContext, bsDisplay);       // ← but this stores the BS one
+:436   setSelectedDob(mContext, bsDisplay);       // ← and again
+:579-582   savedBsDisplay → mDOB.setText(…) and tvDobForDb.setText(…)
+```
+
+Because both brands ship `org.intelehealth.ezazi` under **P1**, that pref file is **shared** — and same
+applicationId plus one signing key (A18) means Android treats an install as a **version update**, so
+app-private data **survives**. An eZazi build installed over a Nepal one therefore reads `2081-Asar-05`
+into an India DOB field.
+
+**Fix (owner-approved): store `dobToDb` at `:388` and `:436`, and format on the way out at `:579-582`
+through the seam.** Then no Bikram Sambat exists in durable storage anywhere, cross-brand install is safe,
+and there is one fewer thing to gate.
+
+#### Calendar-sensitive arithmetic — the part that produces wrong numbers, not odd-looking ones
+
+Gate the display and the arithmetic together, or an India build shows a Gregorian date **labelled BS**:
+the `" BS"` suffix and Nepali month names are concatenated at some **call sites**, not inside the
+utility, so they do not flip when the function is gated. Also check anything computing EDD from LMP,
+gestational age, age from DOB, or day counts — those are different operations in BS than in Gregorian.
+
+#### Reference counting — do not quote a headline number
+
+Earlier drafts quoted 73, 43 and ~35. Those count different symbol sets: `NepaliDateConverter` occurs 58
+times, `NepaliDateUtils` 15, `formatBsDate` 17, `gregToDisplay` 12, and some matches are comments or sit
+in commented blocks. **There is no single defensible figure.** The checkable inventory is the one above —
+three functions free, then the enumerated picker and per-site edits.
+
+**Stop:** for one patient, compare the persisted date rows on each flavour, and confirm the on-screen date
+and the exported PDF agree with each other. Test the PDF on a device in a negative-UTC-offset timezone,
+or the overload bug stays invisible.
+
+---
+
+### 6.6 — ✅ DONE 2026-09-03 — Phone and contact **[BOTH]** *Depends on: 6.0, Q7.*
+
+`PatientDetailActivity.java:561` hardcodes `"+977" + phoneView.getText()`, consumed by a WhatsApp deep
+link. An India clinician tapping it on `9876543210` opens `+9779876543210` — a well-formed number that may
+reach a real, unrelated Nepali subscriber, one tap from patient-identifying text. Also the country-code
+picker default and the `"91"` phone-length branch. Cannot complete without Q7.
+
+---
+
+### 6.7 — ✅ DONE 2026-09-03 — Splash / login / home logos **[BOTH]** *Depends on: nothing.*
+
+Does **not** need a region flag. Four shared `main` layouts hardcode Nepal artwork and Nepal-named
+dimensions. The eZazi originals are **still declared in both qualifier buckets and orphaned**:
+
+| dimen | `values/` | `values-sw600dp/` | layout refs |
+|---|---|---|---|
+| `splash_logo_width` | `180dp` | `@dimen/wrap_content` | **0** |
+| `splash_logo_height` | `156dp` | `@dimen/wrap_content` | **0** |
+| `login_logo_size` | `@dimen/std_56dp` | `@dimen/std_100dp` | **0** |
+
+Repointing the four layouts to those names plus per-flavour drawables restores eZazi's geometry at phone
+**and** tablet, with no renaming.
+**Do not add a flavour `values/dimens.xml`** — the `*_nepal` names are declared in `values-sw600dp/` too,
+neither flavour has that bucket, and on any smallestWidth ≥ 600dp device it is the better config match, so
+the flavour's default-bucket value is never consulted. This app is tablet-targeted, so that is the common
+case.
+
+**Stop:** check both brands on a phone **and** a ≥600dp tablet.
+
+---
+
+### 6.8 — ✅ DONE 2026-09-03 — Removal list **[BOTH]**
+
+*Owner approved removal 2026-09-02, gated on two checks per item.*
+
+**Gate — verify BOTH before removing anything:**
+1. it is commented out (wherever a comment could exist), **and**
+2. it has zero references
+
+Per [[verify-before-delete]], re-run both checks immediately before deletion, not from this table.
+
+| site | what | verified |
+|---|---|---|
+| `PatientAddressInfoFragmentOLD.java` | **entire file** | 0 external refs |
+| `PatientAddressInfoFragment:102` | `mIsIndiaSelected` + `// for india make it true` | after 6.2 |
+| `:113` | `mIsNepalSelected = true` | after 6.2 |
+| `:222` | commented India country line | commented |
+| `:272-276` | commented `countryIndex` block (contains `:275`) | commented |
+| `:288-302` | India branch, unreachable via `:223` | replaced by 6.2 |
+| `:307` | `//setStateAdapter(mCountryName);` | commented |
+| `:409` | India comparison, unreachable | replaced by 6.2 |
+| `:444` | commented `setText(str_check_India)` | commented |
+| `:463`, `:465` | **dead by overwrite** — superseded by `:473` and `:484` | live code, dead effect |
+| `:540-541`, `:558`, `:560` | four commented DTO writes | commented |
+| `:571` | `//patientDTO.setCountry("India");` | commented |
+| `:588-595` | dead `REGISTRATION_NUMBER` block | commented — remove **after** 6.4 fixes the live copy |
+| `ELCGStageHeaderHolderOLD.kt` | another `*OLD*` sibling | **needs its own reference check** |
+| `strings.xml:1002-1004` | commented 6-digit India postal message | **KEEP** — it is the India wording 6.3 needs back |
+
+---
+
+
+### Implementation record — 2026-09-03
+
+Implemented against HEAD `4ee57d5`. Both flavours compile and both APKs were rebuilt and inspected.
+New shared entry point: `app/src/main/java/org/intelehealth/ezazi/utilities/AppRegion.java`, deriving
+region from `BuildConfig.FLAVOR_client` and exposing named capabilities. Every check reads
+"is this Nepal?", so a third brand defaults to Gregorian and Indian-style address handling.
+
+| item | what landed |
+|---|---|
+| **6.1** | Asset split. `main/assets` now holds India unwrapped (35 states, key `states`); `elcgNepal/assets` holds the 7 provinces under the **same** key. `StateDistMaster` lost the `nepal` binding and both accessors; `setProvinceAdapter` repointed to `getStateDataList()`; `setStateAdapter` given a null guard. The original wrapped asset is backed up outside the repo. Both files stay untracked per [[assets-folder-stays-ignored]]. |
+| **6.2** | `COUNTRY_NAME` `buildConfigField` per client flavour; `country_name` string per flavour; `fragment_patient_address_info.xml` now reads `@string/country_name`, so the field paints correctly at inflate and the two lines that used to overwrite it are gone. Five country-string comparisons replaced by flavour checks. The three-way country branch collapsed to two, and its unreachable third arm was removed. |
+| **6.3** | `cityvillage` colon join and the district required-check now flavour-gated. **The prefill guard was the live Nepal defect and is fixed** — it tolerates `District:Village`, legacy `:Village` and bare `Village`, so City/Village no longer blanks on edit or back-navigation. Postal length now `AppRegion.postalCodeLength()` at both Java gates, and the keystroke limit is set programmatically via an `InputFilter`, which supersedes the XML `maxLength`. |
+| **6.4** | **Skipped on the owner's instruction** — `REGISTRATION_NUMBER` is left exactly as it is, format and all, to avoid any change to data already being sent. The `substring(0, 2)` hardening is therefore not done and remains only theoretically reachable (a one-character province or village name; both fields are required so neither can be empty). |
+| **6.5** | Bikram Sambat is now elcgNepal-only. Three display functions gated in `NepaliDateConverter`, which carries most sites with no edit at the site. `dateToBsDisplay` gained the **two-contract split** the owner asked for: it keeps the already-reduced contract, and a new `instantToBsDisplay` handles raw instants — which also fixes `TimelineAdapter`'s latent local-day off-by-one. All **three** pickers gated behind one entry point each, reusing the existing Gregorian `CalendarDialog`; the obstetric dispatcher was refactored so its listener delivers a Gregorian string, making all five callbacks calendar-agnostic. `dobPatient` now stores **Gregorian** and formats on the way out, so no Bikram Sambat value exists in durable storage anywhere. Four sites that ran unconditionally were caught in a sweep and gated: the DOB view-create seed, both EDD-from-LMP displays, and the patient-detail DOB — the last of which also stopped labelling a Gregorian date `" BS"` when conversion fails. |
+| **6.6** | Dial code now `AppRegion.dialCode()`, so the WhatsApp deep link no longer prefixes `+977` for India. **Partial**: the country-code picker default and the `"91"` phone-length branch are untouched, and Q7 (a Nepal helpline number) is still unanswered. |
+| **6.7** | The four shared layouts no longer reference Nepal-named artwork; `elcgNepal/res/drawable/` now carries the Nepal images under neutral names. Verified in the APKs — `logo_ezazi.png` is 13,853 B for eZazi and 51,213 B for Nepal. **Geometry deliberately untouched**: the `*_nepal` dimens still drive both brands, because Nepal is the live product and repointing them would change its splash sizing as a side effect. eZazi therefore renders its logo in Nepal's box, which is cosmetic on a build that never ships to users (P4). |
+| **6.8** | Ten removals, each re-verified against both gates immediately beforehand: `PatientAddressInfoFragmentOLD.java` (whole file, 0 references), the commented `countryIndex` block, four commented DTO-write lines, the commented `setCountry("India")`, a commented pair, the misleading `// for india make it true`, and the two **dead-by-overwrite** assignments at the former `:454`/`:456`, whose supersession by the later assignments in the same method was re-confirmed line-by-line first. |
+
+**Failed the gate, deliberately left alone:** `ELCGStageHeaderHolderOLD.kt` has **1 external reference**, so
+it does not pass "not referenced" and was not removed. `mIsIndiaSelected` / `mIsNepalSelected` are now
+vestigial — nothing assigns them any more — but three live expressions still read them, so they are not
+yet dead; `isIndiaOrNepal` is now a constant `true` and simplifying it is a separate change.
+`strings.xml:1002-1004` kept, as it is the India postal wording. `mCountryNameEn` and
+`mCityVillageNameEn` are now declaration-only but share a line with live siblings.
+
+**Verified in the built APKs**, not just at compile time:
+
+| | ezaziDefault | elcgNepal |
+|---|---|---|
+| label / version | `eZazi` 18/3.0.0 | `eLCG नेपाल` 18/3.1.1 |
+| `COUNTRY_NAME` | `India` | `Nepal` |
+| `string/country_name` | `India` | `Nepal` |
+| bundled asset | 35 states, first `Andhra Pradesh` | 7 provinces, first `Koshi Province` |
+| `logo_ezazi.png` | 13,853 B | 51,213 B |
+| `home_logo.png` | 7,064 B | 68,065 B |
+
+**Still open:** Q5 (is postal mandatory), Q6 (canonical India date format — India currently renders the
+stored Gregorian string unchanged rather than an invented format), Q7 (Nepal helpline). The Phase 6 stop
+condition has not been run: no patient has been registered end-to-end on either flavour, and no persisted
+record has been compared against the backend.
+
+
+### Second implementation pass — 2026-09-03 (assets, contact, postal)
+
+**Assets deployed from the owner's two folders.** Layout as instructed: the ezazi set into both `main`
+and `ezaziDefault`, the Nepal set into `elcgNepal`.
+
+| source set | files | location JSON |
+|---|---|---|
+| `main/assets` | 31, 903 KB | `{"states": [35 India]}` |
+| `ezaziDefault/assets` | 31, 903 KB | same |
+| `elcgNepal/assets` | 33, 844 KB | `{"states": [7 provinces]}`, converted from `{"india":…,"nepal":[7]}` |
+
+All three now use the **same** `states` key, which is what `StateDistMaster` reads, so no model change was
+needed beyond the `nepal` binding removed in the first pass.
+
+**Two findings from diffing the incoming folders:**
+- Of the 31 shared files, **30 are byte-identical**. The only difference between the two deployments'
+  assets is the location JSON.
+- `epartogram.html` and `stage3.html` exist **only** in the Nepal set, and `main` had been carrying them
+  — byte-identical to the Nepal copies, with `IS_NEPAL_CLIENT` ×4 and `gregorianToBs` ×3 inside
+  `stage3.html`. So shared `main` was carrying Nepal-flavoured HTML, the same brand-leak class as the rest
+  of this phase. The owner's folder layout correctly moves them out. **Consequence to be deliberate
+  about:** `ezaziDefault` no longer has the offline epartogram/stage3 sheets. Correct, since they are
+  Nepal features, but it is a functional difference rather than a cosmetic one.
+
+The previous `main/assets` is backed up outside the repo, since assets are untracked and git cannot undo
+the overwrite.
+
+**6.6 completed.** The country-code picker now reads per-flavour strings —
+`content_forgot_password.xml` uses `@string/default_country_code` (`IN` / `NP`) and
+`@string/country_preference` (`in,np` / `np,in`). `ccp_clickable="false"` is left as-is, which is right
+now that the country follows the build rather than the user. `ForgotPasswordFragment:82` needed **no
+change**: `mSelectedMobileNumberValidationLength` already defaults to `10` (`:41`) and the `"91"` branch
+also sets `10` (`:83`), so it is a no-op — both countries use 10-digit mobiles. It is live-but-inert code,
+so it fails the "commented out" removal gate and was left in place.
+
+**Postal.** Length is flavour-driven at all three layers — both Java gates via
+`AppRegion.postalCodeLength()` and the keystroke limit via a programmatic `InputFilter` that supersedes
+the XML `maxLength`. `enter_postal_limit` is overridden per flavour (6 digits / 5 digits) with main's left
+untouched as the fallback; verified it is declared only in `values/`, with no qualified buckets and no
+other module, so there is no shadowing risk. Mandatoriness reverted per Q5.
+
+**Verified in the rebuilt APKs:**
+
+| | ezaziDefault | elcgNepal |
+|---|---|---|
+| `country_name` | India | Nepal |
+| `default_country_code` | IN | NP |
+| `country_preference` | in,np | np,in |
+| `enter_postal_limit` | 6 digits | 5 digits |
+| bundled asset | key `states`, 35, first *Andhra Pradesh* | key `states`, 7, first *Koshi Province* |
+| Nepal-only HTML sheets | 0 | 2 |
+
+
+### `values-v21` shadowing removed — 2026-09-03
+
+The bucket is gone: **63 strings** plus a `styles.xml` that declared nothing. `minSdk 26` means `-v21`
+matched **every** device, so its values were what shipped and the bucket could never have served an
+API-level purpose.
+
+**Classification before touching anything** — 63 declared, all of type `string`:
+
+| | count | action |
+|---|---|---|
+| byte-identical to `values/` | **61** | delete; pure no-op |
+| differ from `values/` | **2** | promote the v21 value into `values/`, then delete |
+| declared *only* in v21 | **0** | nothing could dangle |
+
+The two that differed turned out to make `values/` the odd one out — every other non-locale bucket
+already agreed with v21:
+
+| name | `values/` was | v21 · sw600dp · w720dp · w820dp | promoted to |
+|---|---|---|---|
+| `search_visits_hint` | `Search cases...` | `Search visits...` | `Search visits...` |
+| `seconday_doct_val_txt` | `Please select secondary Doctor` | `Please select seconday Doctor` | `Please select seconday Doctor` |
+
+**The `seconday` typo was preserved deliberately.** It is what ships and what QA tested; silently
+correcting it would have changed user-visible text under cover of a structural cleanup. Fixing it is a
+separate, visible decision.
+
+**Note on P6.** This edited two values in `main/res/values/strings.xml`, which P6 otherwise forbids. It
+was the only way to remove the trap without changing behaviour: the edit makes `values/` agree with what
+already ships. No string was added, removed, or reworded.
+
+**Verification — behaviour-preservation proven from the APKs, not modelled.** All 63 names' resolved
+values were captured from both built APKs with `aapt2 dump resources` *before* the change, then again
+after a rebuild. The rule applied: since v21 matched every device, the pre-change v21 value is what users
+saw, so the post-change default bucket must carry exactly that.
+
+| | ezaziDefaultStaging | elcgNepalStaging |
+|---|---|---|
+| names checked via APK diff | 61 | 61 |
+| `v21` configs left in the APK | **0** | **0** |
+| effective value changed | **0** | **0** |
+
+The 2 names the APK dump did not surface (`missed_interval`, `submitted_interval`) were checked directly
+against source and are byte-identical, so their removal is also a no-op. All 63 are accounted for.
+
+**One process note worth keeping.** The promotion script errored on a Windows path split *before* its
+write, while the `git rm` in the same command chain still ran — leaving the tree briefly with v21 deleted
+and the two values un-promoted, which is precisely the state that changes behaviour. Caught and corrected
+immediately. When a change needs two edits to stay behaviour-neutral, they belong in one atomic step, not
+in a shell chain where a later step can succeed after an earlier one fails.
+
+### Corrections to the first pass
+
+| First pass said | Actually |
+|---|---|
+| Nepal's empty `districts` arrays are a **content gap** blocking the phase | **Wrong.** The district card is hidden for Nepal (`:224-226`, `:446-448`), so Nepal never uses districts. Empty arrays are correct. Removed as a concern. |
+| The `substring(0,2)` crash is a live NEPAL-LIVE defect at `PatientAddressInfoFragment:594` | **Wrong twice.** That copy is dead (`/* */` at `:588-595`); the live copy is `PatientOtherInfoFragment:1788`. And it is not realistically reachable — province and village are both required fields. Downgraded to hardening. |
+| Postal is three layers | **Four** — `:694` *and* `:794`, plus the XML `maxLength` and the string. |
+| India's location data needs a wrapper class for `india[0].states` | **Moot** — the per-flavour split (6.1) unwraps it instead, and the model gets smaller. |
+| "43 call sites" for Bikram Sambat | Not defensible; different symbol sets give 58 / 15 / 17 / 12. Use the enumerated inventory. |
+| A `.gitignore` negation could track flavour assets | **Overruled.** All assets stay untracked, always — [[assets-folder-stays-ignored]]. |
+
+---
+
+### Noted for Phase 7
+
+- **`CalendarDialog.getDateFormatter` uses `Locale.getDefault()`.** Verified harmless today: `APP_LANGUAGE`
+  defaults to `"en"` and its only two writers write the literal `"en"`, and `Locale.setDefault(new
+  Locale("en"))` fires at splash and in eight activities. But under a non-Latin numbering locale (`as`,
+  `bn`, `mr`, `or`) a stored date would carry non-ASCII digits while every reader pins English.
+  **So English-only (P5) is now load-bearing for data integrity, not merely a product preference.**
+  Cheap hardening: pass `Locale.ENGLISH` explicitly there and anywhere else formatting a date that gets
+  stored.
+
+---
+
+> **Phase 6 stop condition.** Register a patient end-to-end on **each** flavour and diff the **persisted
+> record** — in `localrecords.db` and on OpenMRS — against what the backend expects. Pull the database
+> **before** any uninstall. Confirm `country`, `cityvillage` shape, postal code and every date field. Do
+> not rely on UI inspection.
+
 
 ---
 
 ## Phase 7 — Deferred cleanups
+
+> **Phase-boundary note — 2026-09-03.** Several deletions that belonged in this phase were carried out
+> earlier, during and just after Phase 6, rather than here. They were done under the same
+> verify-before-delete gate (commented-out where applicable **and** zero references, re-checked
+> immediately beforehand), and each is recorded where it happened — but the phase discipline was not
+> respected and that is worth stating plainly rather than leaving the record implying otherwise.
+>
+> Pulled forward out of Phase 7:
+> `app_lanucher_logi_nepal.png` + `app_lanucher_logo_nepal.png` (666 KB) · `app/environment.gradle` ·
+> `AppConstants.APP_URL` · klivekit `DateTimeUtils.TIME_ZONE_ISD` · 39 dead demographic arrays ·
+> the whole `values-v21` bucket · `timeline_bottom_action_view_backup.xml`.
+>
+> Legitimately Phase 6 and not affected by this: the 6.8 removal list, `elcgNepal/res/values/colors.xml`
+> (P15) and the four Jhpiego drawables (P9).
+
 *Per [[verify-before-delete]]: these must happen, but only after their own check. Make it report
 before you make it delete.* Full table in `WHITELABEL.md` → "Supporting moves".
 
-- [ ] Re-enable `MissingTranslation` lint (safe to trial — `abortOnError false` is set, so warnings only)
+- [ ] Re-enable `MissingTranslation` lint — **largely moot under P5** (English only), since the check exists to catch missing translations. Still worth one run to see what it says about the 11 locale buckets that remain in `main`.
 - [ ] Add the flavour/qualifier collision check — **make it report first**, fail the build only once clean
-- [ ] **Delete the 100 dead brand-bearing `<string>` entries** (11 names, 0 references),
+- [ ] **Delete the 100 dead brand-bearing `<string>` entries** — **BLOCKED by P6** ("do not touch any string file"). Needs an explicit exception before proceeding. The Ayu subset is separately settled: P7 says keep, do not delete.
       listed in the Phase 5 triage above: `Ayu_name`, both `hello_...ayu...` variants,
       `intelehealth_name`, `intelehealth_a_telemedicine_platform`,
       `hello_thankyou_for_using_intelehealth_app...`, `whatsapp_presc_toast`, `user_logged_in`,
       `country_matching_String_forIndia`, `setupUrl`, `hello_blank_fragment`. Most span all 12
       locale buckets. **Re-confirm 0 references immediately before deleting** -- Phase 5 touches
       these same files. Removing them also retires the fourth product brand ("Ayu") entirely.
-- [ ] Delete stale `values-v21` string overrides (keep `search_visits_hint`, `seconday_doct_val_txt`,
+- [x] **`values-v21` bucket deleted entirely. ✅ DONE 2026-09-03.** All **63** strings removed, plus `values-v21/styles.xml`. `minSdk 26` means `-v21` matched every device, so there was never a reason for the bucket to exist and its values were what shipped.
       and `am` / `click_to_enter` in `values-w820dp` — re-confirm that list independently)
-- [ ] Delete `values-v21/styles.xml` (malformed `<resources>>`, declares nothing, but a `-v21` styles
+- [x] **`values-v21/styles.xml` deleted. ✅ DONE 2026-09-03.** Verified first: the stray `>` in `<resources>>` is text content, so it parsed to **0 elements** and declared nothing.
       override would win on every device)
-- [ ] Delete the 11 locale `app_name` overrides (`translatable="false"`, so the translations are wrong
+- [x] **11 locale `app_name` overrides deleted. ✅ DONE 2026-09-01 in Phase 5.1**, together with `notification_title` and `title_activity_login` — 32 live entries across 12 buckets, replaced by 7 entries in the flavour files.
       on their own terms)
-- [ ] Decide `ACTIVE_CRASH`: wire it up or drop it (declared on all 12 variants, read by zero code)
-- [ ] 🔔 **Language picker decision** — see `WHITELABEL.md` → Open items. Settle this *before* the
+- [x] **`ACTIVE_CRASH` wired. ✅ DONE 2026-09-02, during Phase 6.** `IntelehealthApplication.java` now passes `BuildConfig.ACTIVE_CRASH` to `setCrashlyticsCollectionEnabled` instead of a hardcoded `true`. Already `false` on dev and `true` on staging/production.
+- [x] 🔔 **Language picker decision. ✅ ANSWERED 2026-09-02 (P5).** English only, for every deployment including Bangladesh. No picker is wanted and none exists. Note this is now **load-bearing for data integrity**, not just a product preference — see the `CalendarDialog` `Locale.getDefault()` note.
       locale-bucket cleanup: if the picker goes, most of main's 11 locale buckets become dead weight
       and this phase shrinks considerably.
 

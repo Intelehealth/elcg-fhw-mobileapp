@@ -43,6 +43,7 @@ import org.intelehealth.ezazi.models.dto.PatientAttributesDTO;
 import org.intelehealth.ezazi.models.dto.PatientAttributesModel;
 import org.intelehealth.ezazi.models.dto.PatientDTO;
 import org.intelehealth.ezazi.ui.validation.FirstLetterUpperCaseInputFilter;
+import org.intelehealth.ezazi.utilities.AppRegion;
 import org.intelehealth.ezazi.utilities.FileUtils;
 import org.intelehealth.ezazi.utilities.FlavorKeys;
 import org.intelehealth.ezazi.utilities.Logger;
@@ -99,7 +100,7 @@ public class PatientAddressInfoFragment extends Fragment {
     String[] cityVillagesArr;
     String[] districtsArr;
     boolean isLoadFirstTime;
-    private boolean mIsIndiaSelected = false; // for india make it true
+    private boolean mIsIndiaSelected = false;
     private String mCountryName = "", mStateName = "", mDistName = "", mCityVillageName = "";
     private String mCountryNameEn = "", mStateNameEn = "", mDistNameEn = "", mCityVillageNameEn = "";
     private String[] mCountryList = null;
@@ -161,6 +162,7 @@ public class PatientAddressInfoFragment extends Fragment {
 
         etAddress1.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
         etCityVillage.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
+        etPostalCode.setFilters(new InputFilter[]{new InputFilter.LengthFilter(AppRegion.postalCodeLength())});
         // etAddress1.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
         etAddress2.setFilters(new InputFilter[]{new FirstLetterUpperCaseInputFilter()});
 
@@ -219,9 +221,8 @@ public class PatientAddressInfoFragment extends Fragment {
 
         mStateDistMaster = new Gson().fromJson(FileUtils.encodeJSON(mContext, "state_district_tehsil.json").toString(), StateDistMaster.class);
         sessionManager.setAppLanguage("en");
-        //mCountryName = sessionManager.getAppLanguage().equals("en") ? "India" : "भारत";
-        mCountryName = sessionManager.getAppLanguage().equals("en") ? "Nepal" : "नेपाल";
-        if (mCountryName.equalsIgnoreCase(sessionManager.getAppLanguage().equals("en") ? "Nepal" : "नेपाल")) {
+        mCountryName = getString(R.string.country_name);
+        if (!AppRegion.usesDistrictField()) {
             cardDistrict.setVisibility(View.GONE);
         }
 //        ivPersonal.setImageDrawable(getResources().getDrawable(R.drawable.ic_personal_info_done));
@@ -269,24 +270,23 @@ public class PatientAddressInfoFragment extends Fragment {
             autotvState.setText(patientDTO.getStateprovince());
             mStateName = patientDTO.getStateprovince();
 
-           /* int countryIndex = countryAdapter.getPosition(String.valueOf(patientDTO.getCountry()));
-            if (countryIndex <= 0) {
-                countryIndex = countryAdapter.getPosition(sessionManager.getAppLanguage().equals("en") ? "India" : "भारत");
-                mCountryName = sessionManager.getAppLanguage().equals("en") ? "India" : "भारत";
-            }*/
             if (patientDTO.getCityvillage() != null && !patientDTO.getCityvillage().isEmpty()) {
-                String[] district_city = patientDTO.getCityvillage().trim().split(":");
+                String storedCityVillage = patientDTO.getCityvillage().trim();
+                String[] district_city = storedCityVillage.split(":");
                 if (district_city.length == 2) {
                     district = mDistName = district_city[0];
                     city_village = mCityVillageName = district_city[1];
-                    etCityVillage.setText(city_village);
+                } else {
+                    district = mDistName = "";
+                    city_village = mCityVillageName = storedCityVillage;
+                }
+                etCityVillage.setText(city_village);
+                if (AppRegion.usesDistrictField()) {
                     autotvDistrict.setText(district, false);
-
                 }
             }
 
-            if (mCountryName.equalsIgnoreCase(sessionManager.getAppLanguage().equals("en") ? "India" : "भारत")) {
-                mIsIndiaSelected = true;
+            if (AppRegion.usesDistrictField()) {
                 setStateAdapter(mCountryName);
                 Log.v(TAG, "mStateName -" + mStateName + "??");
                 if (mStateName != null && !mStateName.isEmpty()) {
@@ -300,11 +300,8 @@ public class PatientAddressInfoFragment extends Fragment {
                         autotvDistrict.setText(district, false);
                 }
 
-            } else if (mCountryName.equalsIgnoreCase(sessionManager.getAppLanguage().equals("en") ? "Nepal" : "नेपाल")) {
+            } else {
                 layoutState.setHint(getString(R.string.province));
-                mIsNepalSelected = true;
-                mIsIndiaSelected = false;
-                //setStateAdapter(mCountryName);
                 setProvinceAdapter();
                 Log.v(TAG, "mStateName -" + mStateName + "??");
                 if (mStateName != null && !mStateName.isEmpty()) {
@@ -318,15 +315,6 @@ public class PatientAddressInfoFragment extends Fragment {
                         autotvDistrict.setText(district, false);
                 }
 
-            } else {
-                mIsIndiaSelected = false;
-                mIsNepalSelected = false;
-                //mStateEditText.setVisibility(View.VISIBLE);
-                autotvState.setVisibility(View.GONE);
-                //mStateEditText.setText(patientDTO.getStateprovince() != null ? String.valueOf(patientDTO.getStateprovince()) : "");
-                etDistrict.setVisibility(View.VISIBLE);
-                autotvDistrict.setVisibility(View.GONE);
-                etDistrict.setText(String.valueOf(district));
             }
 
 
@@ -406,7 +394,7 @@ public class PatientAddressInfoFragment extends Fragment {
                     Log.d(TAG, "onItemSelected:mCountryName :  " + mCountryName);
                     Log.d(TAG, "onItemSelected:language :  " + sessionManager.getAppLanguage());
 
-                    if (mCountryName.equalsIgnoreCase(sessionManager.getAppLanguage().equals("en") ? "India" : "भारत")) {
+                    if (AppRegion.usesDistrictField()) {
                         Log.d(TAG, "onItemSelected: in if");
                         etDistrict.setVisibility(View.GONE);
                         autotvDistrict.setVisibility(View.VISIBLE);
@@ -441,9 +429,7 @@ public class PatientAddressInfoFragment extends Fragment {
 
         // State based district - end
 
-        //autotvCountry.setText(getResources().getString(R.string.str_check_India));
-        autotvCountry.setText(getResources().getString(R.string.str_check_nepal));
-        if (mCountryName.equalsIgnoreCase(sessionManager.getAppLanguage().equals("en") ? "Nepal" : "नेपाल")) {
+        if (!AppRegion.usesDistrictField()) {
             cardDistrict.setVisibility(View.GONE);
         }
     }
@@ -460,10 +446,6 @@ public class PatientAddressInfoFragment extends Fragment {
         patientDTO.setPostalcode(etPostalCode.getText().toString());
         patientDTO.setCountry(autotvCountry.getText().toString());
 
-        patientDTO.setStateprovince(StringUtils.getValue(mIsIndiaSelected ? autotvState.getText().toString() : mStateName));
-
-        patientDTO.setCityvillage(StringUtils.getValue((mIsIndiaSelected ? autotvDistrict.getText().toString() : mDistName) + ":" + mCityVillageName));
-
         boolean isIndiaOrNepal = mIsIndiaSelected || mIsNepalSelected;
 
         String state = isIndiaOrNepal ? autotvState.getText().toString() : mStateName;
@@ -475,15 +457,13 @@ public class PatientAddressInfoFragment extends Fragment {
         //since elcgNepal (Nepal) doesn't required the district, added this logic
         //':' causing issue on the ui part
         String districtCity;
-        if (BuildConfig.FLAVOR_client.equalsIgnoreCase(FlavorKeys.EZAZI_DEFAULT)) {
+        if (AppRegion.cityVillageUsesColonForm()) {
             districtCity = StringUtils.getValue((isIndiaOrNepal ? autotvDistrict.getText().toString() : mDistName) + ":" + mCityVillageName);
         } else {
             districtCity = mCityVillageName;
         }
 
         patientDTO.setCityvillage(districtCity);
-        // patientDTO.setStateprovince(autotvState.getText().toString());
-        //  patientDTO.setCityvillage(autotvCity.getText().toString());
 
         Bundle bundle = new Bundle();
         bundle.putSerializable("patientDTO", (Serializable) patientDTO);
@@ -537,15 +517,13 @@ public class PatientAddressInfoFragment extends Fragment {
             mDistName = etDistrict.getText().toString().trim();
 
             mCityVillageName = etCityVillage.getText().toString().trim();
-            //patientDTO.setStateprovince(StringUtils.getValue(mIsIndiaSelected ? autotvState.getText().toString() : mStateName));
-            //patientDTO.setCityvillage(StringUtils.getValue((mIsIndiaSelected ? autotvDistrict.getText().toString() : mDistName) + ":" + mCityVillageName));
 
             boolean isIndiaOrNepal = mIsIndiaSelected || mIsNepalSelected;
 
             patientDTO.setStateprovince(StringUtils.getValue(isIndiaOrNepal ? autotvState.getText().toString() : mStateName));
 
             String districtCity;
-            if (BuildConfig.FLAVOR_client.equalsIgnoreCase(FlavorKeys.EZAZI_DEFAULT)) {
+            if (AppRegion.cityVillageUsesColonForm()) {
                 districtCity = StringUtils.getValue((isIndiaOrNepal ? autotvDistrict.getText().toString() : mDistName) + ":" + mCityVillageName);
             } else {
                 districtCity = mCityVillageName;
@@ -554,10 +532,8 @@ public class PatientAddressInfoFragment extends Fragment {
             patientDTO.setCityvillage(districtCity);
 
             if (!sessionManager.getAppLanguage().equals("en")) {
-                patientDTO.setCountry(StringUtils.getValue(mCountryNameEn));
-                ///patientDTO.setStateprovince(StringUtils.getValue(mIsIndiaSelected ? mStateNameEn : mStateName));
+                patientDTO.setCountry(AppRegion.persistedCountryName());
 
-                //patientDTO.setCityvillage(StringUtils.getValue((mIsIndiaSelected ? mDistNameEn : mDistName) + ":" + mCityVillageName));
 
                 boolean isEnglishSelected = mIsIndiaSelected || mIsNepalSelected;
                 patientDTO.setStateprovince(StringUtils.getValue(isEnglishSelected ? mStateNameEn : mStateName));
@@ -568,7 +544,6 @@ public class PatientAddressInfoFragment extends Fragment {
             patientDTO.setAddress1(StringUtils.getValue(etAddress1.getText().toString()));
             patientDTO.setAddress2(StringUtils.getValue(etAddress2.getText().toString()));
             patientDTO.setPostalcode(StringUtils.getValue(etPostalCode.getText().toString()));
-            //patientDTO.setCountry("India");
             patientDTO.setCountry(autotvCountry.getText().toString());
 
             /*patientAttributesDTO = new PatientAttributesDTO();
@@ -663,7 +638,7 @@ public class PatientAddressInfoFragment extends Fragment {
             cardState.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
 
         }
-        if (!mCountryName.equalsIgnoreCase(sessionManager.getAppLanguage().equals("en") ? "Nepal" : "नेपाल")) {
+        if (AppRegion.usesDistrictField()) {
 
             String isDistrictString = searchForDistrict(autotvDistrict.getText().toString());
             if (TextUtils.isEmpty(autotvDistrict.getText().toString())) {
@@ -691,7 +666,7 @@ public class PatientAddressInfoFragment extends Fragment {
             cardCityVillage.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
         }
         String postalCode = etPostalCode.getText().toString();
-        if (!postalCode.isEmpty() && postalCode.length() != 5) {  //5 for nepal. previously its 6
+        if (!postalCode.isEmpty() && postalCode.length() != AppRegion.postalCodeLength()) {
 
         /*    tvErrorPostalCode.setVisibility(View.VISIBLE);
             tvErrorPostalCode.setText(getString(R.string.enter_postal_limit));
@@ -791,7 +766,7 @@ public class PatientAddressInfoFragment extends Fragment {
                         tvErrorCityVillage.setVisibility(View.GONE);
                         cardCityVillage.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
                     }
-                } else if (!val.isEmpty() && val.length() != 5) { //5 for nepal. previously its 6
+                } else if (!val.isEmpty() && val.length() != AppRegion.postalCodeLength()) {
 
                     tvErrorPostalCode.setVisibility(View.VISIBLE);
                     tvErrorPostalCode.setText(getString(R.string.enter_postal_limit));
@@ -860,6 +835,10 @@ public class PatientAddressInfoFragment extends Fragment {
     }
 
     private void setStateAdapter(String countryName) {
+        if (mStateDistMaster == null || mStateDistMaster.getStateDataList() == null) {
+            Logger.logD(TAG, "setStateAdapter: no state data in the shipped asset");
+            return;
+        }
         mLastSelectedStateList = mStateDistMaster.getStateDataList();
         String[] stateList = new String[mStateDistMaster.getStateDataList().size() + 1];
         stateArr = new String[mStateDistMaster.getStateDataList().size() + 1];
@@ -927,18 +906,29 @@ public class PatientAddressInfoFragment extends Fragment {
         return new Point(location[0], location[1]);
     }
 
+    /**
+     * Populates the province dropdown for regions that collect province instead of state.
+     *
+     * <p>The index contract must match {@link #setStateAdapter(String)} exactly: a placeholder at
+     * index 0 and real entries from index 1. The shared item-click listener skips position 0 and
+     * reads {@code mLastSelectedStateList.get(position - 1)}, so a list without a placeholder made
+     * the first province unselectable and shifted every other selection by one.
+     */
     private void setProvinceAdapter() {
-        List<StateData> sourceList = mStateDistMaster.getNepalProvinceList();
-        if (sourceList == null) sourceList = new ArrayList<>();
+        if (mStateDistMaster == null || mStateDistMaster.getStateDataList() == null) {
+            Logger.logD(TAG, "setProvinceAdapter: no province data in the shipped asset");
+            return;
+        }
+        List<StateData> sourceList = mStateDistMaster.getStateDataList();
         mLastSelectedStateList = sourceList;
 
-        String[] provinceList = new String[sourceList.size()];
+        String[] provinceList = new String[sourceList.size() + 1];
         stateArr = new String[sourceList.size() + 1];
-        //provinceList[0] = getResources().getString(R.string.select_spinner);
-        for (int i = 0; i < sourceList.size(); i++) {
+        provinceList[0] = getResources().getString(R.string.select_spinner);
+        for (int i = 1; i <= sourceList.size(); i++) {
             String label = sessionManager.getAppLanguage().equals("en")
-                    ? sourceList.get(i).getState()
-                    : sourceList.get(i).getStateHindi();
+                    ? sourceList.get(i - 1).getState()
+                    : sourceList.get(i - 1).getStateHindi();
             provinceList[i] = label;
             stateArr[i] = label;
         }

@@ -832,7 +832,7 @@
     <string name="am15">06:15 AM</string>
     <string name="am30">06:30 AM</string>
     <string name="am45">06:45 AM</string>
-    <string name="search_visits_hint">Search cases...</string>
+    <string name="search_visits_hint">Search visits...</string>
     <string name="daughter_wife_of">Daughter/Wife of</string>
     <string name="total_birth_count_val_txt">Please enter the total birth count</string>
     <string name="total_miscarriage_count_val_txt">Please enter the total abortion count</string>
@@ -878,7 +878,7 @@
     <string name="refer_data_submitted_successfully">Refer data submitted successfully</string>
     <string name="select_birth_outcome">Select Birth Outcome</string>
     <string name="primary_doct_val_txt">Please select primary Doctor</string>
-    <string name="seconday_doct_val_txt">Please select secondary Doctor</string>
+    <string name="seconday_doct_val_txt">Please select seconday Doctor</string>
     <string name="birth_weight">Birth Weight</string>
     <string name="apgar_1min">Apgar at 1min</string>
     <string name="apgar_5min">Apgar at 5min</string>

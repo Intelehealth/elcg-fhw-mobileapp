@@ -22,7 +22,7 @@
         android:id="@+id/ivAppLogo"
         android:layout_width="@dimen/login_logo_width_nepal"
         android:layout_height="@dimen/login_logo_height_nepal"
-        android:src="@drawable/nepal_ezazi_spalsh_icon"
+        android:src="@drawable/login_screen_icon"
         android:contentDescription="Ezazi logo"
         android:layout_marginTop="@dimen/home_screen_container_margin_top"
         app:layout_constraintBottom_toTopOf="@id/clLoginContainer"
