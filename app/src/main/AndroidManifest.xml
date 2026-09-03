@@ -82,9 +82,6 @@
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".partogram.PartogramBaseActivity"
-            android:exported="false" />
-        <activity
             android:name=".activities.addNewPatient.PatientSummaryActivity"
             android:exported="false"
             android:screenOrientation="portrait">
@@ -182,16 +179,6 @@
             <meta-data
                 android:name="android.org.searchable"
                 android:resource="@xml/searchable" />
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.intelehealth.ezazi.activities.homeActivity.HomeActivity" />
-        </activity>
-        <activity
-            android:name=".activities.settingsActivity.SettingsActivity"
-            android:configChanges="orientation|keyboardHidden|uiMode"
-            android:label="@string/title_activity_settings"
-            android:parentActivityName=".activities.homeActivity.HomeActivity"
-            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.intelehealth.ezazi.activities.homeActivity.HomeActivity" />

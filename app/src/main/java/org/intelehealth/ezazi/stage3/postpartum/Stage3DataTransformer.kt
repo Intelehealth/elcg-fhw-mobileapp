@@ -5,8 +5,8 @@ import android.database.sqlite.SQLiteDatabase
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.intelehealth.ezazi.utilities.AppRegion
 import org.intelehealth.ezazi.app.AppConstants
-import org.intelehealth.ezazi.app.IntelehealthApplication
 import org.intelehealth.ezazi.partogram.PartogramConstants
 import org.intelehealth.ezazi.stage3.Utils.DeliveryDetailsConcept
 import org.intelehealth.ezazi.utilities.NepaliDateConverter
@@ -35,16 +35,15 @@ object Stage3DataTransformer {
     private const val TAG = "Stage3Transformer"
 
     /**
-     * Runtime check that mirrors the web Angular component's isNepalClient
-     * logic (stage3.component.ts:31–33). Drives BS vs Gregorian formatting
-     * inside stage3.html. Returns true if the configured OpenMRS server URL
-     * contains "nepal" (case-insensitive) — same heuristic the web app uses
-     * on globalThis.location.hostname.
+     * Drives BS vs Gregorian formatting inside stage3.html, via the isNepalClient flag in the payload.
+     *
+     * Derived from the build, not from the server URL. The previous implementation tested
+     * SessionManager.serverUrl for the substring "nepal", mirroring what the web component does with
+     * its hostname — but on the app that value is a user-editable setup preference, so re-pointing the
+     * server silently changed the calendar on a live device. AppRegion reads the product flavour, which
+     * cannot drift at runtime.
      */
-    private fun isNepalRegion(): Boolean {
-        return SessionManager(IntelehealthApplication.getAppContext())
-            .serverUrl.orEmpty().lowercase().contains("nepal")
-    }
+    private fun isNepalRegion(): Boolean = AppRegion.usesBikramSambat()
 
     // 8 fixed sub-columns matching stage3.component.ts COL_OFFSETS / COL_LABELS.
     private val COL_LABELS = listOf(

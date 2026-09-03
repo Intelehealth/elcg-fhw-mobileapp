@@ -1329,11 +1329,6 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         Log.v("timeline", "visituuid_int_30min " + visitUuid.replaceAll("[^\\d]", ""));
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, Integer.parseInt(visitUuid.replaceAll("[^\\d]", "").substring(2, 7)), intent, NotificationUtils.getPendingIntentFlag()); // to set different alarams for different patients.
 
-        /*AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-        if (alarmManager != null) {
-            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
-                    AlarmManager.INTERVAL_HALF_HOUR, pendingIntent);
-        }*/
     }
 
     @Override
