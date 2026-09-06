@@ -100,9 +100,7 @@ public class PatientAddressInfoFragment extends Fragment {
     String[] cityVillagesArr;
     String[] districtsArr;
     boolean isLoadFirstTime;
-    private boolean mIsIndiaSelected = false;
     private String mCountryName = "", mStateName = "", mDistName = "", mCityVillageName = "";
-    private String mCountryNameEn = "", mStateNameEn = "", mDistNameEn = "", mCityVillageNameEn = "";
     private String[] mCountryList = null;
     private List<StateData> mLastSelectedStateList = new ArrayList<>();
     private List<DistData> mLastSelectedDistList = new ArrayList<>();
@@ -111,7 +109,6 @@ public class PatientAddressInfoFragment extends Fragment {
     String district;
     PatientAttributesModel patientAttributesModel;
     private NestedScrollView scrollviewAddressInfo;
-    private boolean mIsNepalSelected = true;
     private TextInputLayout layoutState;
 
     @Override
@@ -341,7 +338,6 @@ public class PatientAddressInfoFragment extends Fragment {
                     String distName = parent.getItemAtPosition(position).toString();
                     // if (!distName.equalsIgnoreCase(mDistName)) etCityVillage.setText("");
                     mDistName = parent.getItemAtPosition(position).toString();
-                    mDistNameEn = mLastSelectedDistList.get(position - 1).getName();
                     tvDistrictError.setVisibility(View.GONE);
                     //autotvDistrict.setBackgroundResource(R.drawable.ui2_spinner_background_new);
                     //etCityVillage.setBackgroundResource(R.drawable.bg_input_fieldnew);
@@ -385,7 +381,6 @@ public class PatientAddressInfoFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (position != 0) {
                     mStateName = parent.getItemAtPosition(position).toString();
-                    mStateNameEn = mLastSelectedStateList.get(position - 1).getState();
                     tvErrorState.setVisibility(View.GONE);
                     autotvDistrict.setText("");
 
@@ -438,27 +433,17 @@ public class PatientAddressInfoFragment extends Fragment {
         patientDTO.setAddress1(etAddress1.getText().toString());
         patientDTO.setAddress2(etAddress2.getText().toString());
 
-        mStateName = autotvState.getText().toString().trim();
-        mDistName = etDistrict.getText().toString().trim();
-
         mCityVillageName = etCityVillage.getText().toString().trim();
 
         patientDTO.setPostalcode(etPostalCode.getText().toString());
-        patientDTO.setCountry(autotvCountry.getText().toString());
-
-        boolean isIndiaOrNepal = mIsIndiaSelected || mIsNepalSelected;
-
-        String state = isIndiaOrNepal ? autotvState.getText().toString() : mStateName;
-
-        String district = isIndiaOrNepal ? autotvDistrict.getText().toString() : mDistName;
-
-        patientDTO.setStateprovince(StringUtils.getValue(state));
+        patientDTO.setCountry(AppRegion.persistedCountryName());
+        patientDTO.setStateprovince(StringUtils.getValue(autotvState.getText().toString()));
 
         //since elcgNepal (Nepal) doesn't required the district, added this logic
         //':' causing issue on the ui part
         String districtCity;
         if (AppRegion.cityVillageUsesColonForm()) {
-            districtCity = StringUtils.getValue((isIndiaOrNepal ? autotvDistrict.getText().toString() : mDistName) + ":" + mCityVillageName);
+            districtCity = StringUtils.getValue(autotvDistrict.getText().toString() + ":" + mCityVillageName);
         } else {
             districtCity = mCityVillageName;
         }
@@ -513,38 +498,23 @@ public class PatientAddressInfoFragment extends Fragment {
         if (cancel) {
             focusView.requestFocus();
         } else {
-            mStateName = autotvState.getText().toString().trim();
-            mDistName = etDistrict.getText().toString().trim();
-
             mCityVillageName = etCityVillage.getText().toString().trim();
 
-            boolean isIndiaOrNepal = mIsIndiaSelected || mIsNepalSelected;
-
-            patientDTO.setStateprovince(StringUtils.getValue(isIndiaOrNepal ? autotvState.getText().toString() : mStateName));
+            patientDTO.setStateprovince(StringUtils.getValue(autotvState.getText().toString()));
 
             String districtCity;
             if (AppRegion.cityVillageUsesColonForm()) {
-                districtCity = StringUtils.getValue((isIndiaOrNepal ? autotvDistrict.getText().toString() : mDistName) + ":" + mCityVillageName);
+                districtCity = StringUtils.getValue(autotvDistrict.getText().toString() + ":" + mCityVillageName);
             } else {
                 districtCity = mCityVillageName;
             }
 
             patientDTO.setCityvillage(districtCity);
 
-            if (!sessionManager.getAppLanguage().equals("en")) {
-                patientDTO.setCountry(AppRegion.persistedCountryName());
-
-
-                boolean isEnglishSelected = mIsIndiaSelected || mIsNepalSelected;
-                patientDTO.setStateprovince(StringUtils.getValue(isEnglishSelected ? mStateNameEn : mStateName));
-                patientDTO.setCityvillage(StringUtils.getValue((isEnglishSelected ? mDistNameEn : mDistName) + ":" + mCityVillageName));
-
-            }
-
             patientDTO.setAddress1(StringUtils.getValue(etAddress1.getText().toString()));
             patientDTO.setAddress2(StringUtils.getValue(etAddress2.getText().toString()));
             patientDTO.setPostalcode(StringUtils.getValue(etPostalCode.getText().toString()));
-            patientDTO.setCountry(autotvCountry.getText().toString());
+            patientDTO.setCountry(AppRegion.persistedCountryName());
 
             /*patientAttributesDTO = new PatientAttributesDTO();
             patientAttributesDTO.setUuid(UUID.randomUUID().toString());

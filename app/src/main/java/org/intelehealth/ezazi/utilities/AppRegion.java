@@ -76,6 +76,13 @@ public final class AppRegion {
      * The country value written to OpenMRS. This comes from a build config field rather than a string
      * resource so that it can never be localised by accident; a translated country name would corrupt
      * the persisted record. The on-screen label is a separate string resource.
+     *
+     * <p>Country is a property of the deployment, not of the patient. Each client flavour talks to its
+     * own server, so every record a build can reach belongs to that build's country — which makes this
+     * the definition of the correct value, not merely a sensible default. Persist it from here
+     * unconditionally, on create and on edit alike. Never read it back off the address screen's country
+     * field: that field is a label, not an input, and taking a display string as the value to store is
+     * how a tablet-only layout once wrote "India" into Nepali records.
      */
     public static String persistedCountryName() {
         return BuildConfig.COUNTRY_NAME;
