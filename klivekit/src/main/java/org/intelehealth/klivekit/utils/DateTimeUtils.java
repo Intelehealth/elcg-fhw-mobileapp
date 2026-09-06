@@ -21,18 +21,18 @@ import java.util.concurrent.TimeUnit;
 public class DateTimeUtils {
     public static final String TAG = "DateTimeUtils";
     public static final String DB_FORMAT = "EEE, dd MMM yyyy HH:mm:ss z";
-    public static final String MESSAGE_TIME_FORMAT = "h:mm a";
+    public static final String MESSAGE_TIME_FORMAT = "HH:mm";
     public static final String MESSAGE_DAY_FORMAT = "EEE, dd MMM yyyy";
     public static final String TIME_ZONE_UTC = "UTC";
 
-    public static final String TIME_FORMAT = "hh:mm a";
+    public static final String TIME_FORMAT = "HH:mm";
 
     public static final String DD_MMM_YYYY = "dd MMM yyyy";
 
     public static final String YYYY_MM_DD_HYPHEN = "yyyy-MM-dd";
     public static final String YYYY_MM_DD_WITH_SPLASH = "dd/MM/yyyy";
 
-    public static final String DD_MMM_YYYY_HH_MM_A = "dd MMM yyyy hh:mm a";
+    public static final String DD_MMM_YYYY_HH_MM = "dd MMM yyyy HH:mm";
 
     @SuppressLint("SimpleDateFormat")
     public static SimpleDateFormat getSimpleDateFormat(String format, TimeZone timeZone) {

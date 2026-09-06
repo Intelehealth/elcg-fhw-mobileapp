@@ -414,7 +414,14 @@ public class NepaliDateConverter {
      *   <li>{@code dd/MM/yyyy}          — PatientOtherInfoFragment storage format</li>
      *   <li>{@code dd MMM yyyy}         — Formatted display strings (e.g. from DateAndTimeUtils)</li>
      *   <li>{@code yyyy-MM-dd HH:mm:ss} — Full datetime strings from tbl_visit.startdate</li>
+     *   <li>{@code dd MMM, yyyy HH:mm}  — AppConstants.VISIT_FORMAT</li>
+     *   <li>{@code dd MMM, yyyy hh:mm a} — the pre-2026-09 VISIT_FORMAT, still accepted</li>
      * </ul>
+     *
+     * <p>Whatever the input's clock convention, the time is always rendered back as 24-hour
+     * {@code HH:mm}. A 12-hour input is therefore converted, not echoed: "06:21 PM" comes
+     * back as "18:21". Accepting the 12-hour shapes matters because values formatted by the
+     * older VISIT_FORMAT still reach this method from cached and already-rendered strings.
      *
      * Returns an empty string if the input is null/empty or cannot be parsed.
      *
@@ -427,17 +434,24 @@ public class NepaliDateConverter {
         // Each entry: { parse-format, time-output-format-or-null }
         // time-output-format is non-null only for formats that contain a time component.
         //
-        // ORDER IS LOAD-BEARING. SimpleDateFormat.parse(String) stops as soon as the
-        // pattern is satisfied and ignores whatever trails it, so a date-only pattern
-        // happily consumes "28 Jun 2024 14:30" and silently drops the clock. Every
-        // time-bearing format must therefore be tried before the date-only ones; a
-        // date-only input simply misses them and falls through.
+        // ORDER IS LOAD-BEARING, twice over. SimpleDateFormat.parse(String) stops as soon
+        // as the pattern is satisfied and ignores whatever trails it.
+        //
+        // First: a date-only pattern happily consumes "28 Jun 2024 14:30" and silently
+        // drops the clock, so every time-bearing format is tried before the date-only ones.
+        //
+        // Second: the 12-hour patterns must precede the 24-hour ones. "hh" accepts 06 and
+        // then ignores the trailing " PM", so "15 Apr, 2026 06:21 PM" matched against
+        // "dd MMM, yyyy HH:mm" would render 06:21 instead of 18:21. The reverse cannot
+        // happen: a 24-hour string has no AM/PM token, so the mandatory "a" fails the
+        // 12-hour patterns outright.
         String[][] formats = {
                 {"yyyy-MM-dd'T'HH:mm:ss.SSSZ",  "HH:mm:ss"},
                 {"yyyy-MM-dd HH:mm:ss",         "HH:mm:ss"},
-                {"dd MMM, yyyy hh:mm a",        "hh:mm a"},   // "15 Apr, 2026 06:21 PM"
-                {"dd MMM yyyy hh:mm a",         "hh:mm a"},   // "15 Apr 2026 06:21 PM"
-                {"dd MMM yyyy HH:mm",           "HH:mm"},     // "28 Jun 2024 14:30"
+                {"dd MMM, yyyy hh:mm a",        "HH:mm"},
+                {"dd MMM yyyy hh:mm a",         "HH:mm"},
+                {"dd MMM, yyyy HH:mm",          "HH:mm"},
+                {"dd MMM yyyy HH:mm",           "HH:mm"},
                 {"yyyy-MM-dd",                  null},
                 {"dd/MM/yyyy",                  null},
                 {"dd MMM yyyy",                 null},

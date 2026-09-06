@@ -619,7 +619,7 @@ public class DateAndTimeUtils {
                 return "";
             }
 
-            SimpleDateFormat outputDateFormat = new SimpleDateFormat("dd MMM yyyy hh:mm a", Locale.getDefault());
+            SimpleDateFormat outputDateFormat = new SimpleDateFormat("dd MMM yyyy HH:mm", Locale.getDefault());
             formattedDate = outputDateFormat.format(date);
             return formattedDate;
         }

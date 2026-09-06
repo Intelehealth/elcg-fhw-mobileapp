@@ -3,6 +3,7 @@ package org.intelehealth.ezazi.activities.epartogramActivity.print
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Rect
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
 import org.intelehealth.ezazi.utilities.NepaliDateConverter
@@ -38,6 +39,54 @@ object LcgSheetRenderer {
     private const val RED = 0xFFC62828.toInt()
     private const val AMBER = 0xFFEF6C00.toInt()
     private const val VALUE_BLUE = 0xFF0B5FA5.toInt()
+
+    /**
+     * Budgets for fitting a band title into its band. A title is rotated a quarter turn, so
+     * its advance width has to clear the band's HEIGHT while its stacked lines have to clear
+     * [LcgSheetGeometry.SECTION_COL]'s width. Those two budgets are independent, and neither
+     * is affected by any other band: a band's height is only its row count times its row
+     * height, so a title cannot borrow room from a neighbour by wrapping.
+     *
+     * [TITLE_LINE_PITCH_EM] is deliberately tighter than the 1.35em [drawRotatedLines] uses
+     * for record text. Band titles are all-caps words with no descenders, so they pack to
+     * their cap height; at 1.35em two lines would need 17.6pt against a 15pt column, which is
+     * why the generic pitch cannot wrap them at all.
+     *
+     * [TITLE_MAX_TIGHTENING] is the point past which condensing stops being invisible and a
+     * smaller size becomes the lesser evil. It is capped rather than fixed so the tracking
+     * applied is only ever what the band actually lacks.
+     *
+     * [TITLE_ACROSS_PADDING] is small on purpose and must not be widened back to a rounder
+     * number. Two 6.5pt lines occupy 11.45pt of the 15pt column, so the real clearance is
+     * 1.78pt a side. The across check spends a measured `Rect.height()`, and Rect is
+     * integral: a 4.62pt cap height arrives as 5 or 6, so a 3pt padding left a budget that
+     * the rounding alone could exceed. It did — "SUPPORTIVE CARE" was rejected for wrapping
+     * and fell through to condensing, which closed the word space and printed it as one word.
+     */
+    private const val TITLE_ALONG_PADDING = 1.5f
+    private const val TITLE_ACROSS_PADDING = 1.5f
+
+    /**
+     * Roboto's cap height as a fraction of its text size — 1456 of 2048 font units. Used by
+     * [baselineIn] to work out whether a row can afford its bottom inset.
+     *
+     * This is a constant and not a measurement on purpose. `getTextBounds` reports the tight
+     * box of the string it is given, so "Urine protein" would be charged for its 'p'
+     * descender while "Caput" would not, and the two would centre on different baselines —
+     * leaving the row labels out of line with each other down the column. Cap height is the
+     * same for every row, which is what keeps them level.
+     */
+    private const val CAP_HEIGHT_RATIO = 0.711f
+
+    /** Where a row label sits above its cell's bottom edge, when the row is tall enough. */
+    private const val LABEL_BOTTOM_INSET = 4f
+
+    /** The same, for the cervix and descent plot marks, which sit slightly lower. */
+    private const val PLOT_GLYPH_INSET = 3f
+    private const val TITLE_LINE_PITCH_EM = 1.05f
+    private const val TITLE_MAX_TIGHTENING = 0.12f
+    private const val TITLE_MIN_SIZE = 4.8f
+    private const val TITLE_BASELINE_NUDGE = 2.2f
 
     /**
      * Separator between a record's clock and its text. The gap is a non-breaking
@@ -538,7 +587,10 @@ object LcgSheetRenderer {
                     val value = cellFor(params, paramIdx, col)?.let { primitiveValue(it) }
                     if (value == level.first || (paramIdx == 17 && value == "P" && rowIdx == 0)) {
                         val glyphText = if (value == "P") "P" else glyph
-                        canvas.drawText(glyphText, x + colWidth / 2f, y + g.ROW_PLOT - 3f, mark)
+                        canvas.drawText(
+                            glyphText, x + colWidth / 2f,
+                            baselineIn(y, g.ROW_PLOT, mark.textSize, PLOT_GLYPH_INSET), mark
+                        )
                     }
                 }
                 y += g.ROW_PLOT
@@ -1107,6 +1159,26 @@ object LcgSheetRenderer {
         }
     }
 
+    /**
+     * Draws a row's name and alert threshold, sat on [LABEL_BOTTOM_INSET] unless the row is
+     * too short to afford it, in which case the label is centred instead.
+     *
+     * The inset plus 8pt label text needs 9.7pt of a cell. That is comfortable in a 12pt
+     * [LcgSheetGeometry.ROW_DATA] row but leaves 0.3pt above the glyphs in a 10pt
+     * [LcgSheetGeometry.ROW_PLOT] one, so the cervix and descent numbers printed hard against
+     * their top border while the data rows above them looked fine.
+     *
+     * The clamp is what keeps the remedy local. This method also draws Time, ALERT, INITIALS
+     * and the medication and shared-decision bands, whose rows run from 13pt to 65pt.
+     * Centring unconditionally would have lifted the medication labels 16pt and the
+     * shared-decision labels 26pt off where the sheet puts them today; every row with room
+     * for the inset keeps it and renders unchanged.
+     *
+     * Both columns share one baseline, computed from the label's size even though the alert
+     * text is smaller. Centring each on its own cap height would put the threshold 0.2pt off
+     * the name beside it; they are read across, so staying level matters more than each being
+     * independently centred.
+     */
     private fun drawLabelCell(
         canvas: Canvas,
         label: String,
@@ -1120,17 +1192,33 @@ object LcgSheetRenderer {
         val alertX = nameX + g.NAME_COL
         cell(canvas, nameX, top, g.NAME_COL, height)
         cell(canvas, alertX, top, g.ALERT_COL, height)
+        val baseline = baselineIn(top, height, g.TEXT_LABEL, LABEL_BOTTOM_INSET)
         if (label.isNotEmpty()) {
-            canvas.drawText(label, nameX + 3f, top + height - 4f, paint(g.TEXT_LABEL, bold = true))
+            canvas.drawText(label, nameX + 3f, baseline, paint(g.TEXT_LABEL, bold = true))
         }
         if (alert.isNotEmpty()) {
             canvas.drawText(
-                alert, alertX + g.ALERT_COL / 2f, top + height - 4f,
+                alert, alertX + g.ALERT_COL / 2f, baseline,
                 paint(g.TEXT_TIME, align = Paint.Align.CENTER)
             )
         }
     }
 
+    /**
+     * Draws a band's rotated title, disturbed only as far as its own band demands.
+     *
+     * Six of the eight titles clear their band at the full [LcgSheetGeometry.TEXT_FOOTER] and
+     * are drawn exactly as they were before this fitting existed. Previously nothing measured
+     * a title against its band at all, so the two that do not fit rendered past their border
+     * — "SUPPORTIVE CARE" is the longest title in the second-shortest band and overflowed by
+     * roughly a third, and "LABOUR" sat flush against both edges with no clearance.
+     *
+     * The remedies are ordered by how little they show. Wrapping at a space comes first,
+     * since a title on two lines keeps the size the rest of the sheet uses. Condensing comes
+     * next, for titles with no space to wrap at, because slightly closer letters read as the
+     * same size where a smaller size does not. Shrinking is last and in practice never fires
+     * for these eight titles; it exists so a future one cannot silently escape its border.
+     */
     private fun drawSectionTitle(
         canvas: Canvas,
         title: String,
@@ -1142,13 +1230,76 @@ object LcgSheetRenderer {
         cell(canvas, left, top, g.SECTION_COL, bottom - top)
         val cx = left + g.SECTION_COL / 2f
         val cy = (top + bottom) / 2f
+        val p = paint(g.TEXT_FOOTER, bold = true, align = Paint.Align.CENTER)
+        val lines = fitSectionTitle(
+            title, bottom - top - TITLE_ALONG_PADDING, g.SECTION_COL - TITLE_ACROSS_PADDING, p
+        )
         canvas.save()
         canvas.rotate(-90f, cx, cy)
-        canvas.drawText(
-            title, cx, cy + 2.2f,
-            paint(g.TEXT_FOOTER, bold = true, align = Paint.Align.CENTER)
-        )
+        val pitch = p.textSize * TITLE_LINE_PITCH_EM
+        val firstBaseline = TITLE_BASELINE_NUDGE - (lines.size - 1) * pitch / 2f
+        lines.forEachIndexed { i, line ->
+            canvas.drawText(line, cx, cy + firstBaseline + i * pitch, p)
+        }
         canvas.restore()
+    }
+
+    /**
+     * Returns the lines to draw for a band title, mutating [p] with whatever tracking or size
+     * change the fit needed. A returned single-line list with [p] untouched is the common
+     * case and reproduces the previous rendering exactly.
+     *
+     * The wrap is measured on real glyph bounds rather than font metrics. Roboto's ascent
+     * reserves accent space these all-caps titles never use, and charging for it would reject
+     * a two-line fit that in fact clears the column with room to spare.
+     *
+     * Condensing is offered only to titles with no space in them. Tracking is applied
+     * uniformly between every pair of characters, so on a multi-word title it closes the word
+     * space along with the letter gaps — which is exactly how "SUPPORTIVE CARE" once printed
+     * as "SUPPORTIVECARE" when its wrap was rejected. A multi-word title that cannot wrap
+     * therefore goes straight to a smaller size, where the words at least stay apart.
+     */
+    private fun fitSectionTitle(
+        title: String,
+        along: Float,
+        across: Float,
+        p: Paint
+    ): List<String> {
+        if (p.measureText(title) <= along) return listOf(title)
+
+        val wrapped = splitForWrap(title)
+        if (wrapped != null && wrapped.all { p.measureText(it) <= along }) {
+            val bounds = Rect()
+            p.getTextBounds(wrapped[0], 0, wrapped[0].length, bounds)
+            if (bounds.height() + p.textSize * TITLE_LINE_PITCH_EM <= across) return wrapped
+        }
+
+        val deficit = p.measureText(title) - along
+        val tighteningCap = if (wrapped == null) TITLE_MAX_TIGHTENING else 0f
+        p.letterSpacing = -(deficit / (title.length * p.textSize))
+            .coerceAtMost(tighteningCap)
+        val condensed = p.measureText(title)
+        if (condensed > along) {
+            p.textSize = (p.textSize * along / condensed).coerceAtLeast(TITLE_MIN_SIZE)
+        }
+        return listOf(title)
+    }
+
+    /**
+     * Splits a multi-word title at the space that leaves its longest line shortest. Returns
+     * null for a single word, which is what sends "LABOUR" down the condensing path.
+     */
+    private fun splitForWrap(title: String): List<String>? {
+        val words = title.split(' ').filter { it.isNotEmpty() }
+        if (words.size < 2) return null
+        return (1 until words.size)
+            .map { cut ->
+                listOf(
+                    words.subList(0, cut).joinToString(" "),
+                    words.subList(cut, words.size).joinToString(" ")
+                )
+            }
+            .minByOrNull { pair -> pair.maxOf { it.length } }
     }
 
     /**
@@ -1170,6 +1321,24 @@ object LcgSheetRenderer {
     private fun cell(canvas: Canvas, x: Float, y: Float, w: Float, h: Float) {
         canvas.drawRect(x, y, x + w, y + h, strokePaint(0.4f, GRID_LIGHT))
     }
+
+    /**
+     * A baseline [inset] above the bottom of a cell, falling back to a centred one when the
+     * row is too short to afford that inset.
+     *
+     * The grid is bottom-anchored by design, which is what keeps a row's name, its alert
+     * threshold and its observations reading along one line. The inset only becomes wrong
+     * when the row is short enough that the text plus the inset exceed the cell: then the
+     * whole shortfall comes off the top and the glyphs print against the border. Clamping to
+     * half the leftover space keeps every roomy row exactly where it was and centres the
+     * cramped ones, without a rule that names any particular row height.
+     *
+     * [textSize] is the size the caller will actually draw at, not a constant — the plot
+     * marks scale with the column via [LcgSheetGeometry.cellTextSize], so whether a plot row
+     * can afford its inset depends on the paper.
+     */
+    private fun baselineIn(top: Float, height: Float, textSize: Float, inset: Float): Float =
+        top + height - minOf(inset, (height - textSize * CAP_HEIGHT_RATIO) / 2f)
 
     /**
      * Circles an observation that met an alert threshold. Sized to the text,
