@@ -50,8 +50,16 @@ public class SupportUtils {
 
             Timber.tag("SupportUtils").v("MAIN-CONTENT- Activity" + activity.getLocalClassName() + "systemBars.bottom: " + systemBars.bottom + ", imeInsets.bottom: " + imeInsets.bottom + ", applied bottomPadding: " + bottomPadding);
 
-            // Apply padding to the main root layout
-            view.setPadding(systemBars.left, systemBars.top-(systemBars.top/4), systemBars.right, bottomPadding);
+            // Apply padding to the main root layout.
+            //
+            // The top inset is applied in full. It used to be reduced by a quarter, which pulled
+            // every screen up under the status bar and clipped the top of the home-screen logo.
+            // That was hand-tuning from the Android 15 upgrade, when targetSdk 36 forced
+            // edge-to-edge; targetSdk has since been reverted to 34, so the fudge outlived the
+            // requirement it was written for. Note the bottom stays bottomPadding rather than
+            // systemBars.bottom, because it is max(navBar, keyboard) so the IME cannot cover
+            // content.
+            view.setPadding(systemBars.left, systemBars.top, systemBars.right, bottomPadding);
             //view.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             // Root gets NO bottom padding
             //view.setPadding(systemBars.left, 0, systemBars.right, 0);

@@ -27,7 +27,14 @@
     <dimen name="welcome_text_size">@dimen/std_35sp</dimen>
     <dimen name="subheading_text_size">@dimen/std_23sp</dimen>
     <dimen name="home_logo_width">@dimen/std_164dp</dimen>
-    <dimen name="home_logo_height">@dimen/std_65dp</dimen>
+    <!--
+        One value for every brand. That only works because each brand's header logo is supplied
+        on the same canvas: 3.4:1, artwork filling 80% of the height and starting 5% in from the
+        left. The left inset is part of the artwork, which is why there is no margin dimen here.
+        A brand whose file ignores that convention will look the wrong size - re-frame the file
+        rather than adding a per-flavour override back.
+    -->
+    <dimen name="home_logo_height">100dp</dimen>
     <dimen name="action_menu_text_size">@dimen/std_22sp</dimen>
     <dimen name="small_btn_horizontal_padding">@dimen/std_31dp</dimen>
     <dimen name="small_btn_vertical_padding">@dimen/std_16dp</dimen>

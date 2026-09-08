@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "466269866669",
+    "firebase_url": "https://ezazi-8712a-default-rtdb.firebaseio.com",
+    "project_id": "ezazi-8712a",
+    "storage_bucket": "ezazi-8712a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:466269866669:android:53b1c53a2f6cf308b7d424",
+        "android_client_info": {
+          "package_name": "org.intelehealth.ezazi"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "466269866669-2415sphja5e3nl56j8i6vgnl97hotavq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDtbMZCBiEtHbfqIzU-7Z5f5KGOWVUr2Ew"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "466269866669-2415sphja5e3nl56j8i6vgnl97hotavq.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

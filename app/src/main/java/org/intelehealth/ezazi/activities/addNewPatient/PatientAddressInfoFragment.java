@@ -58,6 +58,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -219,9 +220,6 @@ public class PatientAddressInfoFragment extends Fragment {
         mStateDistMaster = new Gson().fromJson(FileUtils.encodeJSON(mContext, "state_district_tehsil.json").toString(), StateDistMaster.class);
         sessionManager.setAppLanguage("en");
         mCountryName = getString(R.string.country_name);
-        if (!AppRegion.usesDistrictField()) {
-            cardDistrict.setVisibility(View.GONE);
-        }
 //        ivPersonal.setImageDrawable(getResources().getDrawable(R.drawable.ic_personal_info_done));
 //        ivAddress.setImageDrawable(getResources().getDrawable(R.drawable.ic_address_active));
 //        ivOther.setImageDrawable(getResources().getDrawable(R.drawable.ic_other_unselected));
@@ -278,40 +276,20 @@ public class PatientAddressInfoFragment extends Fragment {
                     city_village = mCityVillageName = storedCityVillage;
                 }
                 etCityVillage.setText(city_village);
-                if (AppRegion.usesDistrictField()) {
-                    autotvDistrict.setText(district, false);
-                }
             }
 
-            if (AppRegion.usesDistrictField()) {
-                setStateAdapter(mCountryName);
-                Log.v(TAG, "mStateName -" + mStateName + "??");
-                if (mStateName != null && !mStateName.isEmpty()) {
-                    // autotvState.setSelection(stateAdapter.getPosition(String.valueOf(patientDTO.getStateprovince())));
-                    autotvState.setText(patientDTO.getStateprovince(), false);
-
-                    setDistAdapter(mStateName);
-                    Log.d(TAG, "onActivityCreated: mDistName : " + mDistName);
-                    if (mDistName != null && mDistName.isEmpty())
-                        // autotvDistrict.setSelection(districtAdapter.getPosition(district));
-                        autotvDistrict.setText(district, false);
-                }
-
-            } else {
+            if (AppRegion.usesProvinceLabel()) {
                 layoutState.setHint(getString(R.string.province));
-                setProvinceAdapter();
-                Log.v(TAG, "mStateName -" + mStateName + "??");
-                if (mStateName != null && !mStateName.isEmpty()) {
-                    // autotvState.setSelection(stateAdapter.getPosition(String.valueOf(patientDTO.getStateprovince())));
-                    autotvState.setText(patientDTO.getStateprovince(), false);
-
-                    // setDistAdapter(mStateName);
-                    Log.d(TAG, "onActivityCreated: mDistName : " + mDistName);
-                    if (mDistName != null && mDistName.isEmpty())
-                        // autotvDistrict.setSelection(districtAdapter.getPosition(district));
-                        autotvDistrict.setText(district, false);
-                }
-
+            }
+            setStateAdapter();
+            Log.v(TAG, "mStateName -" + mStateName + "??");
+            if (mStateName != null && !mStateName.isEmpty()) {
+                autotvState.setText(patientDTO.getStateprovince(), false);
+            }
+            applyDistrictAvailability(mStateName);
+            Log.d(TAG, "onActivityCreated: mDistName : " + mDistName);
+            if (hasDistricts(mStateName) && district != null && !district.isEmpty()) {
+                autotvDistrict.setText(district, false);
             }
 
 
@@ -389,33 +367,10 @@ public class PatientAddressInfoFragment extends Fragment {
                     Log.d(TAG, "onItemSelected:mCountryName :  " + mCountryName);
                     Log.d(TAG, "onItemSelected:language :  " + sessionManager.getAppLanguage());
 
-                    if (AppRegion.usesDistrictField()) {
-                        Log.d(TAG, "onItemSelected: in if");
-                        etDistrict.setVisibility(View.GONE);
-                        autotvDistrict.setVisibility(View.VISIBLE);
-                        //setDistAdapter(mStateName);  //commented for Nepal
-
-                        if (district != null && !district.isEmpty()) {
-                            if (fromThirdScreen || fromFirstScreen)
-                                //autotvDistrict.setSelection(districtAdapter.getPosition(String.valueOf(district)));
-                                autotvDistrict.setText(district, false);
-
-                            else
-                                //  autotvDistrict.setSelection(districtAdapter.getPosition(getResources().getString(R.string.select_spinner)));
-                                autotvDistrict.setText("");
-
-                        } else {
-                            autotvDistrict.setText("");
-
-                        }
-
-
-                    } else {
-
-                        etDistrict.setVisibility(View.VISIBLE);
-                        autotvDistrict.setVisibility(View.GONE);
-                        if (fromThirdScreen || fromFirstScreen)
-                            etDistrict.setText(String.valueOf(district));
+                    applyDistrictAvailability(mStateName);
+                    if (hasDistricts(mStateName) && (fromThirdScreen || fromFirstScreen)
+                            && district != null && !district.isEmpty()) {
+                        autotvDistrict.setText(district, false);
                     }
                 }
 
@@ -424,9 +379,7 @@ public class PatientAddressInfoFragment extends Fragment {
 
         // State based district - end
 
-        if (!AppRegion.usesDistrictField()) {
-            cardDistrict.setVisibility(View.GONE);
-        }
+        applyDistrictAvailability(mStateName);
     }
 
     private void onBackInsertIntopatientDTO() {
@@ -438,17 +391,8 @@ public class PatientAddressInfoFragment extends Fragment {
         patientDTO.setPostalcode(etPostalCode.getText().toString());
         patientDTO.setCountry(AppRegion.persistedCountryName());
         patientDTO.setStateprovince(StringUtils.getValue(autotvState.getText().toString()));
-
-        //since elcgNepal (Nepal) doesn't required the district, added this logic
-        //':' causing issue on the ui part
-        String districtCity;
-        if (AppRegion.cityVillageUsesColonForm()) {
-            districtCity = StringUtils.getValue(autotvDistrict.getText().toString() + ":" + mCityVillageName);
-        } else {
-            districtCity = mCityVillageName;
-        }
-
-        patientDTO.setCityvillage(districtCity);
+        patientDTO.setCityvillage(cityVillageValue(autotvState.getText().toString(),
+                autotvDistrict.getText().toString(), mCityVillageName));
 
         Bundle bundle = new Bundle();
         bundle.putSerializable("patientDTO", (Serializable) patientDTO);
@@ -501,15 +445,8 @@ public class PatientAddressInfoFragment extends Fragment {
             mCityVillageName = etCityVillage.getText().toString().trim();
 
             patientDTO.setStateprovince(StringUtils.getValue(autotvState.getText().toString()));
-
-            String districtCity;
-            if (AppRegion.cityVillageUsesColonForm()) {
-                districtCity = StringUtils.getValue(autotvDistrict.getText().toString() + ":" + mCityVillageName);
-            } else {
-                districtCity = mCityVillageName;
-            }
-
-            patientDTO.setCityvillage(districtCity);
+            patientDTO.setCityvillage(cityVillageValue(autotvState.getText().toString(),
+                    autotvDistrict.getText().toString(), mCityVillageName));
 
             patientDTO.setAddress1(StringUtils.getValue(etAddress1.getText().toString()));
             patientDTO.setAddress2(StringUtils.getValue(etAddress2.getText().toString()));
@@ -608,7 +545,7 @@ public class PatientAddressInfoFragment extends Fragment {
             cardState.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
 
         }
-        if (AppRegion.usesDistrictField()) {
+        if (hasDistricts(autotvState.getText().toString())) {
 
             String isDistrictString = searchForDistrict(autotvDistrict.getText().toString());
             if (TextUtils.isEmpty(autotvDistrict.getText().toString())) {
@@ -804,7 +741,16 @@ public class PatientAddressInfoFragment extends Fragment {
         return result;
     }
 
-    private void setStateAdapter(String countryName) {
+    /**
+     * Populates the first-level division dropdown — "State" in most regions, "Province" in Nepal.
+     * One method serves both: the label differs, the list and its source do not.
+     *
+     * <p>The index contract is load-bearing: a placeholder at index 0 and real entries from index 1.
+     * The item-click listener skips position 0 and reads
+     * {@code mLastSelectedStateList.get(position - 1)}, so a list without a placeholder made the
+     * first entry unselectable and shifted every other selection by one.
+     */
+    private void setStateAdapter() {
         if (mStateDistMaster == null || mStateDistMaster.getStateDataList() == null) {
             Logger.logD(TAG, "setStateAdapter: no state data in the shipped asset");
             return;
@@ -825,17 +771,75 @@ public class PatientAddressInfoFragment extends Fragment {
         autotvState.setAdapter(stateAdapter);
     }
 
-    private void setDistAdapter(String stateName) {
-        Log.v(TAG, "setDistAdapter stateName - " + stateName);
-        List<DistData> distDataList = new ArrayList<>();
-
-        for (int i = 0; i < mStateDistMaster.getStateDataList().size(); i++) {
-            String sName = sessionManager.getAppLanguage().equals("en") ? mStateDistMaster.getStateDataList().get(i).getState() : mStateDistMaster.getStateDataList().get(i).getStateHindi();
-            if (sName.equalsIgnoreCase(stateName)) {
-                distDataList = mStateDistMaster.getStateDataList().get(i).getDistDataList();
-                break;
+    /**
+     * The districts the shipped address asset lists under a state, or an empty list when it lists
+     * none, when the state is unknown, or before a state has been chosen.
+     *
+     * <p>This is the single source of truth for whether the district field exists at all. India's
+     * asset lists districts for all 35 states and Nepal's lists none for any of its 7 provinces, so
+     * asking the data reproduces what the two brands do today without either brand being named —
+     * and a state that gains or loses districts needs no code change.
+     */
+    private List<DistData> districtsFor(String stateName) {
+        if (mStateDistMaster == null || mStateDistMaster.getStateDataList() == null
+                || stateName == null || stateName.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+        for (StateData state : mStateDistMaster.getStateDataList()) {
+            String label = sessionManager.getAppLanguage().equals("en")
+                    ? state.getState() : state.getStateHindi();
+            if (label != null && label.equalsIgnoreCase(stateName.trim())) {
+                List<DistData> districts = state.getDistDataList();
+                return districts == null ? Collections.emptyList() : districts;
             }
         }
+        return Collections.emptyList();
+    }
+
+    private boolean hasDistricts(String stateName) {
+        return !districtsFor(stateName).isEmpty();
+    }
+
+    /**
+     * Shows the district field and fills its dropdown only for a state that actually has districts,
+     * and clears and hides it otherwise.
+     *
+     * <p>Called on every state change as well as on load, because the answer is per state rather
+     * than per screen. Deliberately does not clear the district when districts ARE available, so a
+     * restored value survives being re-normalised.
+     */
+    private void applyDistrictAvailability(String stateName) {
+        boolean available = hasDistricts(stateName);
+        cardDistrict.setVisibility(available ? View.VISIBLE : View.GONE);
+        tvDistrictError.setVisibility(View.GONE);
+        cardDistrict.setStrokeColor(ContextCompat.getColor(mContext, R.color.colorScrollbar));
+        if (available) {
+            autotvDistrict.setVisibility(View.VISIBLE);
+            setDistAdapter(stateName);
+        } else {
+            autotvDistrict.setText("");
+            mLastSelectedDistList = new ArrayList<>();
+        }
+    }
+
+    /**
+     * The {@code cityvillage} value to persist. India joins district and village with a colon; Nepal
+     * stores the bare village name.
+     *
+     * <p>The join is conditional on a district having actually been collected, not on the brand. With
+     * the field derived from the asset, a state with no districts would otherwise persist a leading
+     * colon — ":Sinnar" — because the hidden field reads empty. Readers of this column have to
+     * tolerate both shapes regardless, since records in both formats already exist on the server.
+     */
+    private String cityVillageValue(String stateName, String district, String village) {
+        return hasDistricts(stateName) && !district.trim().isEmpty()
+                ? StringUtils.getValue(district + ":" + village)
+                : StringUtils.getValue(village);
+    }
+
+    private void setDistAdapter(String stateName) {
+        Log.v(TAG, "setDistAdapter stateName - " + stateName);
+        List<DistData> distDataList = districtsFor(stateName);
         mLastSelectedDistList = distDataList;
 
         String[] distList = new String[distDataList.size() + 1];
@@ -876,36 +880,4 @@ public class PatientAddressInfoFragment extends Fragment {
         return new Point(location[0], location[1]);
     }
 
-    /**
-     * Populates the province dropdown for regions that collect province instead of state.
-     *
-     * <p>The index contract must match {@link #setStateAdapter(String)} exactly: a placeholder at
-     * index 0 and real entries from index 1. The shared item-click listener skips position 0 and
-     * reads {@code mLastSelectedStateList.get(position - 1)}, so a list without a placeholder made
-     * the first province unselectable and shifted every other selection by one.
-     */
-    private void setProvinceAdapter() {
-        if (mStateDistMaster == null || mStateDistMaster.getStateDataList() == null) {
-            Logger.logD(TAG, "setProvinceAdapter: no province data in the shipped asset");
-            return;
-        }
-        List<StateData> sourceList = mStateDistMaster.getStateDataList();
-        mLastSelectedStateList = sourceList;
-
-        String[] provinceList = new String[sourceList.size() + 1];
-        stateArr = new String[sourceList.size() + 1];
-        provinceList[0] = getResources().getString(R.string.select_spinner);
-        for (int i = 1; i <= sourceList.size(); i++) {
-            String label = sessionManager.getAppLanguage().equals("en")
-                    ? sourceList.get(i - 1).getState()
-                    : sourceList.get(i - 1).getStateHindi();
-            provinceList[i] = label;
-            stateArr[i] = label;
-        }
-
-        stateAdapter = new ArrayAdapter<>(getActivity(), R.layout.custom_spinner, provinceList);
-        autotvState.setDropDownBackgroundResource(R.drawable.rounded_corner_white_with_gray_stroke);
-        autotvState.setThreshold(1);
-        autotvState.setAdapter(stateAdapter);
-    }
 }

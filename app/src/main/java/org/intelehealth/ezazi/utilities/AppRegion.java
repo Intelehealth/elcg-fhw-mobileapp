@@ -37,20 +37,18 @@ public final class AppRegion {
     }
 
     /**
-     * Nepal collects province and city/village but not district, so the district card is hidden and
-     * its required-field check is skipped.
+     * Nepal labels the first-level administrative division "Province" where every other region calls
+     * it "State". This is a labelling difference only — the field, its adapter and its data are the
+     * same — so it must not be used to gate behaviour.
+     *
+     * <p>Whether a <em>district</em> field appears is deliberately NOT a region question. It is
+     * derived from the shipped address asset: a state that lists districts gets the field, one that
+     * lists none does not. Encoding "Nepal has no districts" as a brand rule is what let a Nepal-only
+     * change disable India's district loading when the two lines were merged. The asset already knows
+     * the answer, so it is the only place that is asked.
      */
-    public static boolean usesDistrictField() {
-        return !isNepal();
-    }
-
-    /**
-     * India joins district and city/village into one OpenMRS {@code cityvillage} value separated by a
-     * colon. Nepal stores the bare village name. Any reader of that field has to tolerate both shapes,
-     * because records in both formats already exist on the server.
-     */
-    public static boolean cityVillageUsesColonForm() {
-        return !isNepal();
+    public static boolean usesProvinceLabel() {
+        return isNepal();
     }
 
     /**

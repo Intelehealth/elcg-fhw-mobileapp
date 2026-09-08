@@ -34,12 +34,11 @@
 
                 <ImageView
                     android:id="@+id/imgLogo"
-                    android:layout_width="@dimen/home_screen_logo_width"
-                    android:layout_height="0dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/home_logo_height"
                     android:adjustViewBounds="true"
                     android:src="@drawable/home_logo"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintHeight_percent="0.8"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 

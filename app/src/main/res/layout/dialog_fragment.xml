@@ -20,9 +20,21 @@
             type="String" />
     </data>
 
+    <!--
+        gravity="center_vertical" is load-bearing, not cosmetic. The dialog window measures
+        taller than this layout's children actually draw - 1050px against 716px of content on a
+        tablet at 2x font scale - and the decor stretches this root to fill it. Without the
+        gravity the children pin to the top of that over-tall root and the whole dialog reads as
+        shifted up, even though the window itself is correctly centred.
+
+        The over-measure itself is unexplained; it is not the buttons, which were ruled out by
+        measurement. This centres the content within whatever height the root is given, so the
+        dialog looks right either way.
+    -->
     <androidx.appcompat.widget.LinearLayoutCompat
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_vertical"
         android:orientation="vertical"
         android:paddingStart="@dimen/screen_container_padding"
         android:paddingEnd="@dimen/screen_container_padding"
@@ -68,36 +80,52 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <androidx.appcompat.widget.LinearLayoutCompat
-            android:id="@+id/llDialogActions"
+        <!--
+            ConstraintLayout, not a weighted LinearLayout, and that is the whole point of this
+            container. With layout_width="0dp" + layout_weight, LinearLayout measures a child
+            before it knows the child's final width, so the label lays out on one line and that
+            one-line height is locked in. The width is then narrowed, the text rewraps to two
+            lines, and line two renders outside the button. Measured on a tablet at 2x font
+            scale: the row correctly sized itself to 84.9dp while both buttons stayed at 44.3dp.
+
+            ConstraintLayout resolves each child's width first and measures the text at that
+            width, so the button grows to fit. Do not convert this back to LinearLayout.
+        -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/clDialogActions"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="horizontal"
             android:paddingHorizontal="@dimen/activity_horizontal_margin"
             android:paddingVertical="@dimen/screen_container_padding"
-            android:visibility="@{submitLabel == null || submitLabel.length() == 0 ? View.GONE : View.VISIBLE}"
-            android:weightSum="2"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/clDialogContainer">
+            android:visibility="@{submitLabel == null || submitLabel.length() == 0 ? View.GONE : View.VISIBLE}">
 
+            <!--
+                Both buttons are wrap_content height. They come out equal on their own: the
+                style's minHeight is input_height (86dp on tablet) and two wrapped lines need
+                about 69dp, so both settle on the same 86dp floor.
 
+                Do NOT give either one layout_height="0dp" to force them to match. A
+                MATCH_CONSTRAINT child inside a wrap_content ConstraintLayout over-measures the
+                parent - it made this row report ~313px more than it drew, which inflated the
+                dialog window to 1050px against 716px of content and left the whole dialog
+                looking shifted up, since the window is centred but the content sits at its top.
+            -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDismiss"
                 style="@style/Theme.EZazi.Dialog.Button.Cancel"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:contentDescription="@string/cancel"
                 android:ellipsize="none"
+                android:hyphenationFrequency="none"
                 android:maxLines="10"
                 android:singleLine="false"
-                android:hyphenationFrequency="none"
                 android:text="@{dismissLabel}"
                 android:visibility="@{dismissLabel == null || dismissLabel.length() == 0 ? View.GONE : View.VISIBLE}"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/btnSubmit"
+                app:layout_constraintHorizontal_chainStyle="spread"
+                app:layout_constraintHorizontal_weight="1"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 tools:text="@string/cancel" />
@@ -107,19 +135,19 @@
                 style="@style/Theme.EZazi.Dialog.Button.Next"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:contentDescription="@string/submit"
                 android:ellipsize="none"
+                android:hyphenationFrequency="none"
                 android:maxLines="10"
                 android:singleLine="false"
-                android:hyphenationFrequency="none"
                 android:text="@{submitLabel}"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_weight="1"
                 app:layout_constraintStart_toEndOf="@id/btnDismiss"
                 app:layout_constraintTop_toTopOf="parent"
                 tools:text="@string/submit" />
 
-        </androidx.appcompat.widget.LinearLayoutCompat>
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.appcompat.widget.LinearLayoutCompat>
 </layout>

@@ -49,8 +49,12 @@ public class SupportUtils {
 
             Timber.tag("SupportUtils").v("MAIN-CONTENT- Activity" + activity.getLocalClassName() + "systemBars.bottom: " + systemBars.bottom + ", imeInsets.bottom: " + imeInsets.bottom + ", applied bottomPadding: " + bottomPadding);
 
-            // Apply padding to the main root layout
-            view.setPadding(systemBars.left, systemBars.top-(systemBars.top/4), systemBars.right, bottomPadding);
+            // Apply padding to the main root layout. Kept in step with the app module's copy of
+            // this helper in org.intelehealth.ezazi.utilities.SupportUtils: the top inset is
+            // applied in full, where it used to be reduced by a quarter and pulled content up
+            // under the status bar. This copy serves ChatActivity alone, so leaving it out of
+            // step would make chat the one screen in the app that sits higher than the rest.
+            view.setPadding(systemBars.left, systemBars.top, systemBars.right, bottomPadding);
             //view.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             // Root gets NO bottom padding
             //view.setPadding(systemBars.left, 0, systemBars.right, 0);
