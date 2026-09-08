@@ -94,7 +94,8 @@
                     android:gravity="end"
                     android:lineSpacingExtra="0sp"
                     android:text="This field is mandatory"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                    tools:visibility="visible" />
 
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/card_time_admission"
@@ -142,7 +143,8 @@
                     android:gravity="end"
                     android:lineSpacingExtra="0sp"
                     android:text="This field is mandatory"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                    tools:visibility="visible" />
 
             </LinearLayout>
 
@@ -209,7 +211,8 @@
                     android:gravity="end"
                     android:lineSpacingExtra="0sp"
                     android:text="This field is mandatory"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                    tools:visibility="visible" />
 
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/card_total_miscarraige"
@@ -255,7 +258,8 @@
                 android:gravity="end"
                 android:lineSpacingExtra="0sp"
                 android:text="@string/this_field_is_mandatory"
-                android:visibility="gone" />
+                android:visibility="gone"
+                tools:visibility="visible" />
 
             <TextView
                 android:id="@+id/textView_gravida"
@@ -294,16 +298,16 @@
                             android:id="@+id/et_gravida"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:clickable="false"
+                            android:cursorVisible="false"
+                            android:enabled="false"
                             android:focusable="true"
+                            android:focusableInTouchMode="false"
                             android:gravity="center_vertical"
                             android:hint="@string/gravida_hint"
                             android:imeOptions="actionNext"
                             android:importantForAutofill="no"
                             android:maxLength="2"
-                            android:enabled="false"
-                            android:focusableInTouchMode="false"
-                            android:clickable="false"
-                            android:cursorVisible="false"
                             android:maxLines="1"
                             android:singleLine="true"
                             android:textSize="@dimen/input_inner_size" />
@@ -323,15 +327,17 @@
                     android:gravity="end"
                     android:lineSpacingExtra="0sp"
                     android:text="This field is mandatory"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                    tools:visibility="visible" />
 
             </LinearLayout>
+
             <include
                 android:id="@+id/view_lmp_edd_layout"
                 layout="@layout/view_lmp_edd_layout"
-                android:layout_marginTop="@dimen/titles_margin_top"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/titles_margin_top" />
 
             <TextView
                 android:id="@+id/textView6"
@@ -392,7 +398,8 @@
                 android:gravity="end"
                 android:lineSpacingExtra="0sp"
                 android:text="This field is mandatory"
-                android:visibility="gone" />
+                android:visibility="gone"
+                tools:visibility="visible" />
 
             <!--    <RelativeLayout
                     android:id="@+id/textView7"
@@ -470,7 +477,8 @@
                     android:gravity="end"
                     android:lineSpacingExtra="0sp"
                     android:text="@string/this_field_is_mandatory"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                    tools:visibility="visible" />
 
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/card_diagnosed_time"
@@ -517,15 +525,17 @@
                     android:gravity="end"
                     android:lineSpacingExtra="0sp"
                     android:text="This field is mandatory"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                    tools:visibility="visible" />
 
             </LinearLayout>
 
 
-            <RelativeLayout
+            <LinearLayout
                 android:id="@+id/textView8"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:orientation="vertical"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/card_labour_diagnosed">
 
@@ -550,11 +560,11 @@
                     android:gravity="center"
                     android:layoutDirection="rtl"
                     android:padding="5dp"
-                    android:visibility="gone"
                     android:text="@string/unknown"
                     android:textAppearance="@style/Theme.EZazi.Caption"
                     android:textColor="@color/colorHighAlert"
                     android:textSize="10sp"
+                    android:visibility="gone"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintRight_toRightOf="parent" />
 
@@ -598,8 +608,10 @@
                     android:gravity="end"
                     android:lineSpacingExtra="0sp"
                     android:text="@string/this_field_is_mandatory"
-                    android:visibility="gone" />
-            </RelativeLayout>
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+            </LinearLayout>
 
 
             <LinearLayout
@@ -659,7 +671,8 @@
                     android:gravity="end"
                     android:lineSpacingExtra="0sp"
                     android:text="@string/this_field_is_mandatory"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                    tools:visibility="visible" />
 
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/card_sac_ruptured_time"
@@ -707,7 +720,8 @@
                     android:gravity="end"
                     android:lineSpacingExtra="0sp"
                     android:text="@string/this_field_is_mandatory"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                    tools:visibility="visible" />
 
             </LinearLayout>
 
