@@ -112,6 +112,11 @@ public class UuidDictionary {
 
     // BIRTH OUTCOME
     public static final String BIRTH_OUTCOME = "23601d71-50e6-483f-968d-aeef3031346d";
+    public static final String MODE_OF_DELIVERY = "57ca9fc6-82c6-487c-b05e-83bb4d2d589e";
+    // Stage 3 delivery outcome (see org.intelehealth.ezazi.stage3.Utils.DeliveryDetailsConcept,
+    // which is the Kotlin source of truth these mirror for use from Java call sites).
+    public static final String DATE_OF_DELIVERY = "79a1d8d7-b224-40f4-8d99-80e2936c96e3";
+    public static final String TIME_OF_DELIVERY = "8b30dda2-ac0a-4031-a7d1-1b72c6dae5fe";
 
     // Refer Obs
     public static final String REFER_TYPE = "9414cc17-1f97-4a27-8066-17591c11e513";

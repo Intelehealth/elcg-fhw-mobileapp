@@ -1,30 +1,18 @@
 package org.intelehealth.ezazi.ui.rtc.call;
 
-import android.util.Log;
-import android.widget.Toast;
-
 import org.intelehealth.ezazi.BuildConfig;
 import org.intelehealth.ezazi.app.AppConstants;
-import org.intelehealth.ezazi.core.data.BaseDataSource;
-import org.intelehealth.ezazi.database.dao.PatientsDAO;
-import org.intelehealth.ezazi.models.dto.EncounterDTO;
-import org.intelehealth.ezazi.models.dto.PatientAttributesDTO;
-import org.intelehealth.ezazi.models.pushRequestApiCall.Attribute;
+import org.intelehealth.ezazi.database.dao.VisitAttributeListDAO;
+import org.intelehealth.ezazi.models.dto.VisitAttributeDTO;
 import org.intelehealth.ezazi.networkApiCalls.ApiClient;
 import org.intelehealth.ezazi.networkApiCalls.ApiInterface;
 import org.intelehealth.ezazi.ui.dialog.model.SingChoiceItem;
-import org.intelehealth.ezazi.ui.password.listener.OnAPISuccessListener;
 import org.intelehealth.ezazi.ui.rtc.data.RtcTokenDataSource;
-import org.intelehealth.ezazi.ui.rtc.model.UserToken;
-import org.intelehealth.ezazi.utilities.exception.DAOException;
 import org.intelehealth.klivekit.model.RtcArgs;
 import org.intelehealth.klivekit.utils.RemoteActionType;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
-import java.util.List;
 
 /**
  * Created by Vaghela Mithun R. on 06-07-2023 - 14:19.
@@ -54,37 +42,23 @@ public class CallInitializer {
         }, args);
     }
 
-    public static LinkedList<SingChoiceItem> getDoctorsDetails(String patientUuid) {
-        PatientsDAO patientsDAO = new PatientsDAO();
-        LinkedList<SingChoiceItem> doctors;
-        try {
-            List<Attribute> patientAttributes = patientsDAO.getPatientAttributes(patientUuid);
-            Log.e("CallInitializer", "getDoctorsDetails: " + patientAttributes.size());
-            LinkedHashMap<String, SingChoiceItem> tempMap = new LinkedHashMap<>();
-            for (int i = 0; i < patientAttributes.size(); i++) {
-                String name = patientsDAO.getAttributesName(patientAttributes.get(i).getAttributeType());
-                if (name.equalsIgnoreCase(PatientAttributesDTO.Columns.PRIMARY_DOCTOR.value)) {
-                    String[] primary = splitString(patientAttributes.get(i));
-                    tempMap.put(primary[0], buildItem(primary[0], primary[1], AppConstants.PRIMARY));
-                }
-                if (name.equalsIgnoreCase(PatientAttributesDTO.Columns.SECONDARY_DOCTOR.value)) {
-                    String[] secondary = splitString(patientAttributes.get(i));
-                    if (!secondary[0].equalsIgnoreCase(AppConstants.NOT_APPLICABLE)) {
-                        tempMap.put(secondary[0], buildItem(secondary[0], secondary[1], AppConstants.SECONDARY));
-                    }
-                }
-            }
-            doctors = new LinkedList<>(tempMap.values());
-        } catch (DAOException e) {
-            throw new RuntimeException(e);
-        }
-
-
-        return doctors;
+    /**
+     * Primary and secondary doctors are stored as visit attributes (value = uuid@#@name),
+     * so they are read for the given visit rather than the patient.
+     */
+    public static LinkedList<SingChoiceItem> getDoctorsDetails(String visitUuid) {
+        VisitAttributeListDAO visitAttributeListDAO = new VisitAttributeListDAO();
+        LinkedHashMap<String, SingChoiceItem> doctors = new LinkedHashMap<>();
+        addDoctor(doctors, visitAttributeListDAO.getVisitAttributeValue(visitUuid, VisitAttributeDTO.Columns.PRIMARY_DOCTOR.uuid), AppConstants.PRIMARY);
+        addDoctor(doctors, visitAttributeListDAO.getVisitAttributeValue(visitUuid, VisitAttributeDTO.Columns.SECONDARY_DOCTOR.uuid), AppConstants.SECONDARY);
+        return new LinkedList<>(doctors.values());
     }
 
-    private static String[] splitString(Attribute attribute) {
-        return attribute.getValue().split("@#@");
+    private static void addDoctor(LinkedHashMap<String, SingChoiceItem> doctors, String value, String type) {
+        if (value == null || !value.contains("@#@")) return;
+        String[] parts = value.split("@#@");
+        if (parts.length < 2 || parts[0].isEmpty() || parts[0].equalsIgnoreCase(AppConstants.NOT_APPLICABLE)) return;
+        doctors.put(parts[0], buildItem(parts[0], parts[1], type));
     }
 
     private static SingChoiceItem buildItem(String uuid, String name, String type) {

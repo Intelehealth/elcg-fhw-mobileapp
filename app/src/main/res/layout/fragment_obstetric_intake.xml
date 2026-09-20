@@ -1,0 +1,735 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="@dimen/screen_padding">
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll_obstetric_intake"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginBottom="@dimen/screen_padding"
+        android:background="@drawable/container_bg_rounded"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:padding="@dimen/screen_container_padding"
+        android:scrollbars="none"
+        app:layout_constraintBottom_toTopOf="@id/btn_oi_save"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/LabelStyleAddPatient"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/gravida"
+                android:textColor="@color/colorBlack" />
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Theme.EZazi.Material.CardView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/admission_date_margin_top">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Theme.EZazi.Input.Add.Patient"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/list_container_padding">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_oi_gravida"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:hint="@string/gravida"
+                        android:imeOptions="actionNext"
+                        android:importantForAutofill="no"
+                        android:inputType="number"
+                        android:maxLength="2"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:textSize="@dimen/input_inner_size" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                style="@style/LabelStyleAddPatient"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/titles_margin_top"
+                android:text="@string/parity"
+                android:textColor="@color/colorBlack" />
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Theme.EZazi.Material.CardView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/admission_date_margin_top">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Theme.EZazi.Input.Add.Patient"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/list_container_padding">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_oi_total_births"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:hint="@string/total_birth"
+                        android:imeOptions="actionNext"
+                        android:importantForAutofill="no"
+                        android:inputType="number"
+                        android:maxLength="2"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:textSize="@dimen/input_inner_size" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Theme.EZazi.Material.CardView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/screen_container_padding">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Theme.EZazi.Input.Add.Patient"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/list_container_padding">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_oi_total_miscarriages"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:hint="@string/total_miscarriage"
+                        android:imeOptions="actionNext"
+                        android:importantForAutofill="no"
+                        android:inputType="number"
+                        android:maxLength="1"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:textSize="@dimen/input_inner_size" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                style="@style/LabelStyleAddPatient"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/titles_margin_top"
+                android:text="@string/lmp_title"
+                android:textColor="@color/colorBlack" />
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Theme.EZazi.Material.CardView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/admission_date_margin_top">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/etLayout_oi_lmp"
+                    style="@style/Theme.EZazi.Input.Add.Patient"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/list_container_padding"
+                    app:endIconDrawable="@drawable/ic_calendar_new"
+                    app:endIconMode="custom">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_oi_lmp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:focusable="false"
+                        android:gravity="center_vertical"
+                        android:hint="@string/date"
+                        android:importantForAutofill="no"
+                        android:inputType="none"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:textSize="@dimen/input_inner_size" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                style="@style/LabelStyleAddPatient"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/titles_margin_top"
+                android:text="@string/edd_title"
+                android:textColor="@color/colorBlack" />
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Theme.EZazi.Material.CardView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/admission_date_margin_top">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/etLayout_oi_edd"
+                    style="@style/Theme.EZazi.Input.Add.Patient"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/list_container_padding"
+                    app:endIconDrawable="@drawable/ic_calendar_new"
+                    app:endIconMode="custom">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_oi_edd"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:focusable="false"
+                        android:gravity="center_vertical"
+                        android:hint="@string/date"
+                        android:importantForAutofill="no"
+                        android:inputType="none"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:textSize="@dimen/input_inner_size" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                style="@style/LabelStyleAddPatient"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/titles_margin_top"
+                android:text="@string/admission_date"
+                android:textColor="@color/colorBlack" />
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Theme.EZazi.Material.CardView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/admission_date_margin_top">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/etLayout_oi_admission_date"
+                    style="@style/Theme.EZazi.Input.Add.Patient"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/list_container_padding"
+                    app:endIconDrawable="@drawable/ic_calendar_new"
+                    app:endIconMode="custom">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_oi_admission_date"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:focusable="false"
+                        android:gravity="center_vertical"
+                        android:hint="@string/date"
+                        android:importantForAutofill="no"
+                        android:inputType="none"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:textSize="@dimen/input_inner_size" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Theme.EZazi.Material.CardView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/screen_container_padding">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/etLayout_oi_admission_time"
+                    style="@style/Theme.EZazi.Input.Add.Patient"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/list_container_padding"
+                    app:endIconDrawable="@drawable/ic_time_drawable"
+                    app:endIconMode="custom">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_oi_admission_time"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:focusable="false"
+                        android:gravity="center_vertical"
+                        android:hint="@string/time"
+                        android:importantForAutofill="no"
+                        android:inputType="none"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:textSize="@dimen/input_inner_size" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                style="@style/LabelStyleAddPatient"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/titles_margin_top"
+                android:text="@string/labor_onset"
+                android:textColor="@color/colorBlack" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/input_add_patient_height"
+                android:layout_marginTop="@dimen/admission_date_margin_top"
+                android:orientation="horizontal"
+                android:weightSum="2">
+
+                <TextView
+                    android:id="@+id/tv_oi_spontaneous"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginEnd="@dimen/screen_container_padding"
+                    android:layout_weight="1"
+                    android:background="@drawable/button_bg_rounded_corners"
+                    android:gravity="center"
+                    android:text="@string/spontaneous"
+                    android:textColor="@color/darkGray"
+                    android:textSize="@dimen/input_inner_size" />
+
+                <TextView
+                    android:id="@+id/tv_oi_induced"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@drawable/button_bg_rounded_corners"
+                    android:gravity="center"
+                    android:text="@string/induced"
+                    android:textColor="@color/darkGray"
+                    android:textSize="@dimen/input_inner_size" />
+            </LinearLayout>
+
+            <TextView
+                style="@style/LabelStyleAddPatient"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/titles_margin_top"
+                android:text="@string/when_diagnosed"
+                android:textColor="@color/colorBlack" />
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Theme.EZazi.Material.CardView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/admission_date_margin_top">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/etLayout_oi_diagnosed_date"
+                    style="@style/Theme.EZazi.Input.Add.Patient"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/list_container_padding"
+                    app:endIconDrawable="@drawable/ic_calendar_new"
+                    app:endIconMode="custom">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_oi_diagnosed_date"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:focusable="false"
+                        android:gravity="center_vertical"
+                        android:hint="@string/date"
+                        android:importantForAutofill="no"
+                        android:inputType="none"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:textSize="@dimen/input_inner_size" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Theme.EZazi.Material.CardView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/screen_container_padding">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/etLayout_oi_diagnosed_time"
+                    style="@style/Theme.EZazi.Input.Add.Patient"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/list_container_padding"
+                    app:endIconDrawable="@drawable/ic_time_drawable"
+                    app:endIconMode="custom">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_oi_diagnosed_time"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:focusable="false"
+                        android:gravity="center_vertical"
+                        android:hint="@string/time"
+                        android:importantForAutofill="no"
+                        android:inputType="none"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:textSize="@dimen/input_inner_size" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    style="@style/LabelStyleAddPatient"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_marginTop="@dimen/titles_margin_top"
+                    android:text="@string/sac_ruptured"
+                    android:textColor="@color/colorBlack" />
+
+                <com.google.android.material.checkbox.MaterialCheckBox
+                    android:id="@+id/cb_oi_membrane_unknown"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layoutDirection="rtl"
+                    android:text="@string/unknown"
+                    android:textColor="@color/colorHighAlert"
+                    android:textSize="10sp" />
+            </RelativeLayout>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_oi_membrane_date"
+                style="@style/Theme.EZazi.Material.CardView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/admission_date_margin_top">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/etLayout_oi_membrane_date"
+                    style="@style/Theme.EZazi.Input.Add.Patient"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/list_container_padding"
+                    app:endIconDrawable="@drawable/ic_calendar_new"
+                    app:endIconMode="custom">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_oi_membrane_date"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:focusable="false"
+                        android:gravity="center_vertical"
+                        android:hint="@string/date"
+                        android:importantForAutofill="no"
+                        android:inputType="none"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:textSize="@dimen/input_inner_size" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_oi_membrane_time"
+                style="@style/Theme.EZazi.Material.CardView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/screen_container_padding">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/etLayout_oi_membrane_time"
+                    style="@style/Theme.EZazi.Input.Add.Patient"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/list_container_padding"
+                    app:endIconDrawable="@drawable/ic_time_drawable"
+                    app:endIconMode="custom">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_oi_membrane_time"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:focusable="false"
+                        android:gravity="center_vertical"
+                        android:hint="@string/time"
+                        android:importantForAutofill="no"
+                        android:inputType="none"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:textSize="@dimen/input_inner_size" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                style="@style/LabelStyleAddPatient"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/titles_margin_top"
+                android:text="@string/risk_factors_title"
+                android:textColor="@color/colorBlack" />
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Theme.EZazi.Material.CardView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/admission_date_margin_top">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/etLayout_oi_risk_factors"
+                    style="@style/Theme.EZazi.Input.Add.Patient"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/list_container_padding">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_oi_risk_factors"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:focusable="false"
+                        android:gravity="center_vertical"
+                        android:hint="@string/select_risk_factors"
+                        android:importantForAutofill="no"
+                        android:inputType="none"
+                        android:maxLines="2"
+                        android:textSize="@dimen/input_inner_size" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                style="@style/LabelStyleAddPatient"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/titles_margin_top"
+                android:text="@string/hospital_maternity_title"
+                android:textColor="@color/colorBlack" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/input_add_patient_height"
+                android:layout_marginTop="@dimen/admission_date_margin_top"
+                android:orientation="horizontal"
+                android:weightSum="3">
+
+                <TextView
+                    android:id="@+id/tv_oi_hospital"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginEnd="@dimen/screen_container_padding"
+                    android:layout_weight="1"
+                    android:background="@drawable/button_bg_rounded_corners"
+                    android:gravity="center"
+                    android:text="@string/hospital_option"
+                    android:textColor="@color/darkGray"
+                    android:textSize="@dimen/input_inner_size" />
+
+                <TextView
+                    android:id="@+id/tv_oi_maternity"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginEnd="@dimen/screen_container_padding"
+                    android:layout_weight="1"
+                    android:background="@drawable/button_bg_rounded_corners"
+                    android:gravity="center"
+                    android:text="@string/maternity_option"
+                    android:textColor="@color/darkGray"
+                    android:textSize="@dimen/input_inner_size" />
+
+                <TextView
+                    android:id="@+id/tv_oi_other"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@drawable/button_bg_rounded_corners"
+                    android:gravity="center"
+                    android:text="@string/other_option"
+                    android:textColor="@color/darkGray"
+                    android:textSize="@dimen/input_inner_size" />
+            </LinearLayout>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_oi_hospital_other"
+                style="@style/Theme.EZazi.Material.CardView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/screen_container_padding"
+                android:visibility="gone">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Theme.EZazi.Input.Add.Patient"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/list_container_padding">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_oi_hospital_other"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:hint="@string/hospital_other_hint"
+                        android:imeOptions="actionNext"
+                        android:importantForAutofill="no"
+                        android:inputType="textCapWords"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:textSize="@dimen/input_inner_size" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                style="@style/LabelStyleAddPatient"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/titles_margin_top"
+                android:text="@string/hospital_id_title"
+                android:textColor="@color/colorBlack" />
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Theme.EZazi.Material.CardView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/admission_date_margin_top">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Theme.EZazi.Input.Add.Patient"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/list_container_padding">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_oi_hospital_id"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:hint="@string/hospital_id_title"
+                        android:imeOptions="actionNext"
+                        android:importantForAutofill="no"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:textSize="@dimen/input_inner_size" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                style="@style/LabelStyleAddPatient"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/titles_margin_top"
+                android:text="@string/primary_doctor_title"
+                android:textColor="@color/colorBlack" />
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Theme.EZazi.Material.CardView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/admission_date_margin_top">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/etLayout_oi_primary_doctor"
+                    style="@style/Theme.EZazi.Input.Add.Patient"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/list_container_padding">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_oi_primary_doctor"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:focusable="false"
+                        android:gravity="center_vertical"
+                        android:hint="@string/select_doctor_hint"
+                        android:importantForAutofill="no"
+                        android:inputType="none"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:textSize="@dimen/input_inner_size" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                style="@style/LabelStyleAddPatient"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/titles_margin_top"
+                android:text="@string/secondary_doctor_title"
+                android:textColor="@color/colorBlack" />
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Theme.EZazi.Material.CardView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/admission_date_margin_top">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/etLayout_oi_secondary_doctor"
+                    style="@style/Theme.EZazi.Input.Add.Patient"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/list_container_padding">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_oi_secondary_doctor"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:focusable="false"
+                        android:gravity="center_vertical"
+                        android:hint="@string/select_doctor_hint"
+                        android:importantForAutofill="no"
+                        android:inputType="none"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:textSize="@dimen/input_inner_size" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                style="@style/LabelStyleAddPatient"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/titles_margin_top"
+                android:text="@string/bed_number_title"
+                android:textColor="@color/colorBlack" />
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Theme.EZazi.Material.CardView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/admission_date_margin_top">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Theme.EZazi.Input.Add.Patient"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/list_container_padding">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_oi_bed_number"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:hint="@string/bed_number_title"
+                        android:imeOptions="actionDone"
+                        android:importantForAutofill="no"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:textSize="@dimen/input_inner_size" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_oi_save"
+        style="@style/Theme.EZazi.Button"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/input_height"
+        android:text="@string/save_button"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -27,6 +27,20 @@ public final class AppRegion {
         return BuildConfig.FLAVOR_client.equalsIgnoreCase(FlavorKeys.ELCG_NEPAL);
     }
 
+    public static boolean isBd() {
+        return BuildConfig.FLAVOR_client.equalsIgnoreCase(FlavorKeys.EZAZI_BD);
+    }
+
+    /**
+     * Multi-visit (capturing obstetric/visit data from a dedicated "create visit" flow, with a
+     * patient able to start another visit after completing one) ships on eZazi and Bangladesh.
+     * Nepal keeps the single-visit-at-registration flow instead, so every entry point into visit
+     * creation must read this rather than assume the feature is universally available.
+     */
+    public static boolean supportsMultiVisit() {
+        return !isNepal();
+    }
+
     /**
      * Nepal captures and displays dates in Bikram Sambat. Every other region uses the Gregorian
      * calendar. Note that only capture and display vary: persisted values are Gregorian for every

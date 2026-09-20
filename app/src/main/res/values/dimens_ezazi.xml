@@ -331,4 +331,7 @@
     <dimen name="splash_logo_height_nepal">220dp</dimen>
     <dimen name="login_logo_width_nepal">240dp</dimen>
     <dimen name="login_logo_height_nepal">240dp</dimen>
+    <dimen name="item_past_visit_padding">10dp</dimen>
+    <dimen name="margin_12">12dp</dimen>
+
 </resources>

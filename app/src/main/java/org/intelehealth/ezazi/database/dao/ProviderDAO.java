@@ -265,6 +265,40 @@ public class ProviderDAO {
         return providersList;
     }
 
+    public List<ProviderDTO> getDoctorList() throws DAOException {
+        List<ProviderDTO> providersList = new ArrayList<>();
+        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
+        db.beginTransaction();
+        try {
+            String query = "select * from tbl_provider where role='Organizational: Doctor'";
+            Cursor cursor = db.rawQuery(query, new String[]{});
+            if (cursor.getCount() != 0) {
+                while (cursor.moveToNext()) {
+                    ProviderDTO providerDTO = new ProviderDTO();
+                    providerDTO.setFamilyName(cursor.getString(cursor.getColumnIndexOrThrow("family_name")));
+                    providerDTO.setGivenName(cursor.getString(cursor.getColumnIndexOrThrow("given_name")));
+                    providerDTO.setUuid(cursor.getString(cursor.getColumnIndexOrThrow("uuid")));
+                    providerDTO.setIdentifier(cursor.getString(cursor.getColumnIndexOrThrow("identifier")));
+                    providerDTO.setRole(cursor.getString(cursor.getColumnIndexOrThrow("role")));
+                    providerDTO.setUserUuid(cursor.getString(cursor.getColumnIndexOrThrow("useruuid")));
+
+                    providersList.add(providerDTO);
+
+
+                }
+            }
+            cursor.close();
+            db.setTransactionSuccessful();
+        } catch (SQLException s) {
+            FirebaseCrashlytics.getInstance().recordException(s);
+            throw new DAOException(s);
+        } finally {
+            db.endTransaction();
+
+        }
+        return providersList;
+    }
+
     public List<ProviderDTO> getNurseList(
             Boolean isFromHome
     ) throws DAOException {

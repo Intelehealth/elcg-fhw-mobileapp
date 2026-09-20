@@ -1,6 +1,7 @@
 package org.intelehealth.ezazi.activities.addNewPatient;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -97,6 +98,16 @@ public class PatientOtherInfoFragment extends Fragment {
 
     public static PatientOtherInfoFragment getInstance() {
         return new PatientOtherInfoFragment();
+    }
+
+    /**
+     * Obstetric intake at registration is Nepal's model only: eZazi and Bangladesh moved this
+     * data collection to the multi-visit "create visit" flow (see VisitCreationActivity /
+     * ObstetricIntakeFragment), so registration for those regions skips straight to saving the
+     * patient (PatientRegistrationSaver) without ever showing this step.
+     */
+    public static boolean hasFieldsToShow(Activity activity) {
+        return AppRegion.isNepal();
     }
 
     // ── UI refs ────────────────────────────────────────────────────────────

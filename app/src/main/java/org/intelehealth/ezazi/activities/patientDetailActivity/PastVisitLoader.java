@@ -1,0 +1,225 @@
+package org.intelehealth.ezazi.activities.patientDetailActivity;
+
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.text.TextUtils;
+
+import org.intelehealth.ezazi.app.AppConstants;
+import org.intelehealth.ezazi.database.dao.VisitAttributeListDAO;
+import org.intelehealth.ezazi.models.dto.VisitAttributeDTO;
+import org.intelehealth.ezazi.utilities.UuidDictionary;
+import org.intelehealth.klivekit.utils.DateTimeUtils;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
+
+/**
+ * Loads read-only Past Visit Details for a patient's closed visits: obstetric visit
+ * attributes (active labour, risk factors, parity), the actual delivery date/time captured on
+ * Stage 3's "Woman Delivery Details" encounter when present, and the delivery-outcome
+ * observations (mode of delivery, baby/mother status) recorded on the visit-complete encounter.
+ * Visits closed before Stage 3 existed fall back to the visit's enddate for delivery date.
+ * The "Final Outcome Report" document is not implemented in this app, so it stays blank.
+ */
+public class PastVisitLoader {
+
+    private PastVisitLoader() {
+    }
+
+    public static List<PastVisitDetails> loadForPatient(String patientUuid) {
+        List<PastVisitDetails> list = new ArrayList<>();
+        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
+        VisitAttributeListDAO attrDao = new VisitAttributeListDAO();
+
+        Cursor visits = db.rawQuery(
+                "SELECT uuid, startdate, enddate FROM tbl_visit WHERE patientuuid = ? " +
+                        "AND voided IN ('0','false','FALSE') " +
+                        "AND ((enddate IS NOT NULL AND enddate <> '') " +
+                        "OR uuid IN (SELECT visituuid FROM tbl_encounter WHERE encounter_type_uuid = ?)) " +
+                        "ORDER BY startdate DESC",
+                new String[]{patientUuid, UuidDictionary.ENCOUNTER_VISIT_COMPLETE});
+
+        while (visits.moveToNext()) {
+            String visitUuid = visits.getString(0);
+            String enddate = visits.getString(2);
+            PastVisitDetails details = new PastVisitDetails();
+            details.visitUuid = visitUuid;
+            details.visitDate = formatDateTimeLocal(visits.getString(1));
+            details.activeLabourDiagnosed = DateTimeUtils.formatDate(
+                    attrDao.getVisitAttributeValue(visitUuid, VisitAttributeDTO.Columns.ACTIVE_LABOR_DIAGNOSED.uuid),
+                    "dd/MM/yyyy h:mm a",
+                    "dd MMM yyyy, hh:mm a"
+            );
+            details.riskFactors = attrDao.getVisitAttributeValue(visitUuid, VisitAttributeDTO.Columns.RISK_FACTORS.uuid);
+            details.parity = formatParity(attrDao.getVisitAttributeValue(visitUuid, VisitAttributeDTO.Columns.PARITY.uuid));
+
+            String stage3Enc = deliveryOutcomeEncounter(db, visitUuid);
+            if (!stage3Enc.isEmpty()) {
+                String rawDeliveryDate = obsValue(db, stage3Enc, UuidDictionary.DATE_OF_DELIVERY);
+                if (!rawDeliveryDate.isEmpty()) {
+                    details.deliveryDate = formatDeliveryDate(rawDeliveryDate,
+                            obsValue(db, stage3Enc, UuidDictionary.TIME_OF_DELIVERY));
+                }
+            }
+
+            String vce = visitCompleteEncounter(db, visitUuid);
+            if (!vce.isEmpty()) {
+                // Legacy fallback for visits closed before Stage 3 captured an actual delivery
+                // date/time: enddate only stands in for it when a birth outcome was recorded,
+                // otherwise the visit was just closed for another reason (e.g. a referral).
+                if (details.deliveryDate.isEmpty() && !obsValue(db, vce, UuidDictionary.BIRTH_OUTCOME).isEmpty()) {
+                    details.deliveryDate = formatDateTimeLocal(enddate);
+                }
+                details.modeOfDelivery = obsValue(db, vce, UuidDictionary.MODE_OF_DELIVERY);
+                details.babyStatus = obsValue(db, vce, UuidDictionary.BABY_STATUS);
+                details.motherStatus = resolveMotherStatus(db, vce);
+            }
+            list.add(details);
+        }
+        visits.close();
+        return list;
+    }
+
+    private static String visitCompleteEncounter(SQLiteDatabase db, String visitUuid) {
+        String uuid = "";
+        Cursor cursor = db.rawQuery(
+                "SELECT uuid FROM tbl_encounter WHERE visituuid = ? AND encounter_type_uuid = ?",
+                new String[]{visitUuid, UuidDictionary.ENCOUNTER_VISIT_COMPLETE});
+        if (cursor.moveToFirst()) uuid = cursor.getString(0);
+        cursor.close();
+        return uuid == null ? "" : uuid;
+    }
+
+    /**
+     * The Stage 3 "Woman Delivery Details" encounter that carries the actual DATE_OF_DELIVERY /
+     * TIME_OF_DELIVERY obs, if the visit went through Stage 3. Older visits (or ones that never
+     * reached Stage 3) won't have one, so callers must fall back to a coarser signal.
+     */
+    private static String deliveryOutcomeEncounter(SQLiteDatabase db, String visitUuid) {
+        String uuid = "";
+        Cursor cursor = db.rawQuery(
+                "SELECT uuid FROM tbl_encounter WHERE visituuid = ? AND encounter_type_uuid = ? " +
+                        "AND voided IN ('0','false','FALSE') ORDER BY encounter_time DESC LIMIT 1",
+                new String[]{visitUuid, UuidDictionary.DELIVERY_OUTCOME_STAGE3});
+        if (cursor.moveToFirst()) uuid = cursor.getString(0);
+        cursor.close();
+        return uuid == null ? "" : uuid;
+    }
+
+    private static String obsValue(SQLiteDatabase db, String encounterUuid, String conceptUuid) {
+        String value = "";
+        Cursor cursor = db.rawQuery(
+                "SELECT value FROM tbl_obs WHERE encounteruuid = ? AND conceptuuid = ? AND voided IN ('0','false','FALSE')",
+                new String[]{encounterUuid, conceptUuid});
+        if (cursor.moveToLast()) value = cursor.getString(0);
+        cursor.close();
+        return value == null ? "" : value;
+    }
+
+    /**
+     * Mother status: the recorded status text when the mother is alive; otherwise "Deceased"
+     * if maternal death was recorded on either path — MOTHER_DECEASED_FLAG (Stage 2 completion)
+     * or MOTHER_DECEASED (Stage 1 completion). Stage-agnostic, so it works whichever way the
+     * visit was closed.
+     */
+    private static String resolveMotherStatus(SQLiteDatabase db, String vce) {
+        String status = obsValue(db, vce, UuidDictionary.MOTHER_STATUS);
+        if (!TextUtils.isEmpty(status)) return status;
+        boolean deceased = obsValue(db, vce, UuidDictionary.MOTHER_DECEASED_FLAG).equalsIgnoreCase("YES")
+                || !TextUtils.isEmpty(obsValue(db, vce, UuidDictionary.MOTHER_DECEASED));
+        return deceased ? "Deceased" : status;
+    }
+
+    private static String formatParity(String parity) {
+        return parity == null ? "" : parity.replace(",", ", ");
+    }
+
+    /**
+     * Stage 3's DATE_OF_DELIVERY / TIME_OF_DELIVERY are plain local calendar values the clinician
+     * typed in directly (dd/MM/yyyy and HH:mm) -- not UTC instants -- so unlike
+     * {@link #formatDateTimeLocal(String)} this must not reinterpret them through a timezone, or
+     * the displayed date could shift to a different day.
+     */
+    private static String formatDeliveryDate(String rawDate, String rawTime) {
+        Date parsedDate = null;
+        for (String pattern : new String[]{"dd/MM/yyyy", "yyyy-MM-dd"}) {
+            try {
+                SimpleDateFormat parser = new SimpleDateFormat(pattern, Locale.ENGLISH);
+                parser.setLenient(false);
+                parsedDate = parser.parse(rawDate.trim());
+                if (parsedDate != null) break;
+            } catch (Exception ignored) {
+            }
+        }
+        if (parsedDate == null) return rawDate;
+
+        String display = new SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH).format(parsedDate);
+
+        if (!TextUtils.isEmpty(rawTime)) {
+            try {
+                Date parsedTime = new SimpleDateFormat("HH:mm", Locale.ENGLISH).parse(rawTime.trim());
+                if (parsedTime != null) {
+                    display += ", " + new SimpleDateFormat("hh:mm a", Locale.ENGLISH).format(parsedTime);
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        return display;
+    }
+
+    private static String formatDateTime(String value) {
+        if (TextUtils.isEmpty(value)) return "";
+        String[] patterns = {"yyyy-MM-dd'T'HH:mm:ss.SSSZ", "yyyy-MM-dd'T'HH:mm:ssZ", "yyyy-MM-dd HH:mm:ss"};
+        for (String pattern : patterns) {
+            try {
+                Date parsed = new SimpleDateFormat(pattern, Locale.ENGLISH).parse(value);
+                if (parsed != null) {
+                    return new SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.ENGLISH).format(parsed);
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        return value;
+    }
+
+    private static final String[] DATE_PATTERNS = {
+            "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+            "yyyy-MM-dd'T'HH:mm:ssZ",
+            "yyyy-MM-dd HH:mm:ss",
+            "MMM d, yyyy h:mm:ss a"
+    };
+
+    /**
+     * db value is in utc format
+     * hence converting utc to local date format
+     * @param value
+     * @return
+     */
+    private static String formatDateTimeLocal(String value) {
+        if (TextUtils.isEmpty(value)) return "";
+        String normalized = value.trim()
+                .replace('\u202F', ' ')   // narrow no-break space before AM/PM
+                .replace('\u00A0', ' ');
+        TimeZone deviceZone = TimeZone.getDefault();
+        for (String pattern : DATE_PATTERNS) {
+            try {
+                SimpleDateFormat parser = new SimpleDateFormat(pattern, Locale.ENGLISH);
+                parser.setLenient(false);
+                // patterns without a zone token carry no offset — treat them as GMT
+                if (!pattern.endsWith("Z")) parser.setTimeZone(TimeZone.getTimeZone("GMT"));
+                Date parsed = parser.parse(normalized);
+                if (parsed != null) {
+                    SimpleDateFormat out = new SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.ENGLISH);
+                    out.setTimeZone(deviceZone);   // <- the only place local zone applies
+                    return out.format(parsed);
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        return value;
+    }
+}

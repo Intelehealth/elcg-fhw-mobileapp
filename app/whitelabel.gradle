@@ -26,6 +26,12 @@ android {
             ext.endpointKey = "ELCG_NEPAL"
         }
 
+        ezaziBd {
+            dimension client
+            buildConfigField "String", "COUNTRY_NAME", '"Bangladesh"'
+            ext.endpointKey = "EZAZI_BD"
+        }
+
         // This flavor used to handle different type of endpoint
         dev {
             dimension server

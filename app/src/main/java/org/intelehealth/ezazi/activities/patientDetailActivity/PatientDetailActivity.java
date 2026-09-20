@@ -3,6 +3,7 @@ package org.intelehealth.ezazi.activities.patientDetailActivity;
 import static org.intelehealth.ezazi.app.AppConstants.OBSTETRICIAN_GYNECOLOGIST;
 import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
 
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -12,6 +13,7 @@ import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.Html;
@@ -27,6 +29,8 @@ import android.widget.Toast;
 import androidx.appcompat.widget.Toolbar;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.gson.Gson;
@@ -35,6 +39,7 @@ import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.activities.addNewPatient.AddNewPatientActivity;
 import org.intelehealth.ezazi.activities.homeActivity.HomeActivity;
 import org.intelehealth.ezazi.activities.searchPatientActivity.SearchPatientActivity;
+import org.intelehealth.ezazi.activities.visitCreation.VisitCreationActivity;
 import org.intelehealth.ezazi.activities.visitSummaryActivity.TimelineVisitSummaryActivity;
 import org.intelehealth.ezazi.app.AppConstants;
 import org.intelehealth.ezazi.database.dao.EncounterDAO;
@@ -115,6 +120,7 @@ public class PatientDetailActivity extends BaseActionBarActivity {
     SQLiteDatabase db = null;
     ImageView editbtn;
     Button newVisit;
+    private String activeVisitUuid = "";
     IntentFilter filter;
     Myreceiver reMyreceive;
     ImageView photoView;
@@ -262,77 +268,186 @@ public class PatientDetailActivity extends BaseActionBarActivity {
 
         setDisplay(patientUuid);
 
-        newVisit.setOnClickListener(v -> {
-            String thisDate = DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT);
-            String uuid = UUID.randomUUID().toString();
+        if (AppRegion.supportsMultiVisit()) {
+            // eZazi / Bangladesh: obstetric data is captured per-visit via VisitCreationActivity,
+            // so a patient can start another visit each time the previous one is completed.
+            activeVisitUuid = new VisitsDAO().fetchActiveVisitUUIDFromPatientUUID(patientUuid);
+            newVisit.setText((activeVisitUuid == null || activeVisitUuid.isEmpty())
+                    ? R.string.add_visit_details : R.string.current_visit_timeline);
 
-            Intent intent2 = new Intent(PatientDetailActivity.this, TimelineVisitSummaryActivity.class);
-            String fullName = patient.getFirst_name() + " " + patient.getLast_name();
-            String patientfullName;
-            if (patient.getMiddle_name() != null && !patient.getMiddle_name().equalsIgnoreCase("")
-                    && !patient.getMiddle_name().isEmpty()) {
-                patientfullName = patient.getFirst_name() + " " + patient.getMiddle_name() + " " + patient.getLast_name();
-            } else {
-                patientfullName = patient.getFirst_name() + " " + patient.getLast_name();
-            }
+            newVisit.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (activeVisitUuid != null && !activeVisitUuid.isEmpty()) {
+                        openTimelineForExistingVisit();
+                        return;
+                    }
+                    openObstetricIntake();
+                }
+            });
+        } else {
+            // Nepal: obstetric data is already captured at registration (PatientOtherInfoFragment),
+            // so this button only opens a bare visit and jumps straight into its timeline.
+            newVisit.setText(R.string.start_obs);
+            newVisit.setOnClickListener(v -> {
+                String thisDate = DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT);
+                String uuid = UUID.randomUUID().toString();
 
-            VisitDTO visitDTO = new VisitDTO();
-            visitDTO.setUuid(uuid);
-            visitDTO.setPatientuuid(patient.getUuid());
-            visitDTO.setStartdate(thisDate);
-            visitDTO.setVisitTypeUuid(UuidDictionary.VISIT_TELEMEDICINE);
-            visitDTO.setLocationuuid(sessionManager.getLocationUuid());
-            visitDTO.setSyncd(false);
-            visitDTO.setEnddate(null);
-            visitDTO.setCreatoruuid(sessionManager.getCreatorID());
-            VisitsDAO visitsDAO = new VisitsDAO();
+                Intent intent2 = new Intent(PatientDetailActivity.this, TimelineVisitSummaryActivity.class);
+                String fullName = patient.getFirst_name() + " " + patient.getLast_name();
+                String patientfullName;
+                if (patient.getMiddle_name() != null && !patient.getMiddle_name().equalsIgnoreCase("")
+                        && !patient.getMiddle_name().isEmpty()) {
+                    patientfullName = patient.getFirst_name() + " " + patient.getMiddle_name() + " " + patient.getLast_name();
+                } else {
+                    patientfullName = patient.getFirst_name() + " " + patient.getLast_name();
+                }
 
-            try {
-                visitsDAO.insertPatientToDB(visitDTO);
-                VisitAttributeListDAO sa = new VisitAttributeListDAO();
-                sa.insertVisitAttributes(uuid, OBSTETRICIAN_GYNECOLOGIST, VISIT_DR_SPECIALITY);
-                sa.insertVisitAttributes(uuid, sessionManager.getProviderID(), VISIT_HOLDER);
-                sa.insertVisitAttributes(uuid, "$", VISIT_READ_STATUS);
-                sa.insertVisitAttributes(uuid, "false", UuidDictionary.DECISION_PENDING);
-            } catch (DAOException e) {
-                e.printStackTrace();
-                FirebaseCrashlytics.getInstance().recordException(e);
-            }
+                VisitDTO visitDTO = new VisitDTO();
+                visitDTO.setUuid(uuid);
+                visitDTO.setPatientuuid(patient.getUuid());
+                visitDTO.setStartdate(thisDate);
+                visitDTO.setVisitTypeUuid(UuidDictionary.VISIT_TELEMEDICINE);
+                visitDTO.setLocationuuid(sessionManager.getLocationUuid());
+                visitDTO.setSyncd(false);
+                visitDTO.setEnddate(null);
+                visitDTO.setCreatoruuid(sessionManager.getCreatorID());
+                VisitsDAO visitsDAO = new VisitsDAO();
 
-            boolean isInserted = false;
-            EncounterDAO eDAO = new EncounterDAO();
-            EncounterDTO eDTO = new EncounterDTO();
-            stage1Hr1_1_EncounterUuid = UUID.randomUUID().toString();
-            eDTO.setUuid(stage1Hr1_1_EncounterUuid);
-            eDTO.setVisituuid(uuid);
-            eDTO.setEncounterTime(DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
-            eDTO.setProvideruuid(sessionManager.getProviderID());
-            eDTO.setEncounterTypeUuid(eDAO.getEncounterTypeUuid("Stage1_Hour1_1"));
-            eDTO.setSyncd(false);
-            eDTO.setVoided(0);
-            try {
-                isInserted = eDAO.createEncountersToDB(eDTO);
-            } catch (DAOException e) {
-                FirebaseCrashlytics.getInstance().recordException(e);
-            }
+                try {
+                    visitsDAO.insertPatientToDB(visitDTO);
+                    VisitAttributeListDAO sa = new VisitAttributeListDAO();
+                    sa.insertVisitAttributes(uuid, OBSTETRICIAN_GYNECOLOGIST, VISIT_DR_SPECIALITY);
+                    sa.insertVisitAttributes(uuid, sessionManager.getProviderID(), VISIT_HOLDER);
+                    sa.insertVisitAttributes(uuid, "$", VISIT_READ_STATUS);
+                    sa.insertVisitAttributes(uuid, "false", UuidDictionary.DECISION_PENDING);
+                } catch (DAOException e) {
+                    e.printStackTrace();
+                    FirebaseCrashlytics.getInstance().recordException(e);
+                }
 
-            intent2.putExtra("patientUuid", patientUuid);
-            intent2.putExtra("visitUuid", uuid);
-            intent2.putExtra("name", fullName);
-            intent2.putExtra("patientNameTimeline", patientfullName);
-            intent2.putExtra("tag", "new");
-            intent2.putExtra("encounter_time", eDTO.getEncounterTime());
-            intent2.putExtra("Stage1_Hour1_1", "Stage1_Hour1_1");
-            intent2.putExtra("providerID", sessionManager.getProviderID());
-            startActivity(intent2);
-            finish();
-        });
+                boolean isInserted = false;
+                EncounterDAO eDAO = new EncounterDAO();
+                EncounterDTO eDTO = new EncounterDTO();
+                stage1Hr1_1_EncounterUuid = UUID.randomUUID().toString();
+                eDTO.setUuid(stage1Hr1_1_EncounterUuid);
+                eDTO.setVisituuid(uuid);
+                eDTO.setEncounterTime(DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
+                eDTO.setProvideruuid(sessionManager.getProviderID());
+                eDTO.setEncounterTypeUuid(eDAO.getEncounterTypeUuid("Stage1_Hour1_1"));
+                eDTO.setSyncd(false);
+                eDTO.setVoided(0);
+                try {
+                    isInserted = eDAO.createEncountersToDB(eDTO);
+                } catch (DAOException e) {
+                    FirebaseCrashlytics.getInstance().recordException(e);
+                }
+
+                intent2.putExtra("patientUuid", patientUuid);
+                intent2.putExtra("visitUuid", uuid);
+                intent2.putExtra("name", fullName);
+                intent2.putExtra("patientNameTimeline", patientfullName);
+                intent2.putExtra("tag", "new");
+                intent2.putExtra("encounter_time", eDTO.getEncounterTime());
+                intent2.putExtra("Stage1_Hour1_1", "Stage1_Hour1_1");
+                intent2.putExtra("providerID", sessionManager.getProviderID());
+                startActivity(intent2);
+                finish();
+            });
+        }
+
+        loadPastVisits();
 
         Log.e(TAG, "onCreate: patient creator => " + patient.getCreatorUuid());
         if (!patient.getCreatorUuid().equals(sessionManager.getCreatorID())) {
             editbtn.setVisibility(View.GONE);
             newVisit.setEnabled(false);
         }
+    }
+
+    /** Opens the ongoing visit's timeline for a patient who already has an active visit. */
+    /**
+     * Populates the read-only Past Visit Details section with the patient's closed visits.
+     * The section is collapsible: it starts collapsed (chevron down) and the header toggles
+     * the list, rotating the chevron up when expanded.
+     */
+
+    private boolean isRotatedUp = false;
+
+    private void loadPastVisits() {
+        TextView pastVisitsHeader = findViewById(R.id.tv_past_visits_header);
+        RecyclerView rvPastVisits = findViewById(R.id.rv_past_visits);
+        List<PastVisitDetails> pastVisits = PastVisitLoader.loadForPatient(patientUuid);
+
+        if (pastVisits.isEmpty()) {
+            pastVisitsHeader.setVisibility(View.GONE);
+            rvPastVisits.setVisibility(View.GONE);
+            return;
+        }
+
+        pastVisitsHeader.setVisibility(View.VISIBLE);
+        rvPastVisits.setLayoutManager(new LinearLayoutManager(this));
+        rvPastVisits.setAdapter(new PastVisitAdapter(pastVisits));
+        rvPastVisits.setVisibility(View.GONE);
+
+        pastVisitsHeader.setOnClickListener(v -> {
+            handlePastVisitHeaderDrawable(pastVisitsHeader);
+            boolean expand = rvPastVisits.getVisibility() != View.VISIBLE;
+            rvPastVisits.setVisibility(expand ? View.VISIBLE : View.GONE);
+        });
+    }
+
+    private void handlePastVisitHeaderDrawable(TextView pastVisitsHeader) {
+        Drawable[] drawable = pastVisitsHeader.getCompoundDrawablesRelative();
+        Drawable endDrawable = drawable[2];
+
+        if (endDrawable == null) return;
+        endDrawable.mutate();
+
+        float startAngle = isRotatedUp ? 10000f : 0f;
+        float endAngle = isRotatedUp ? 0f : 10000f;
+
+        ValueAnimator animator = ValueAnimator.ofFloat(startAngle, endAngle);
+        animator.setDuration(200);
+        animator.addUpdateListener(animation -> {
+            float currentLevel = (float) animation.getAnimatedValue();
+            endDrawable.setLevel((int) currentLevel);
+            pastVisitsHeader.invalidate();
+        });
+
+        animator.start();
+        isRotatedUp = !isRotatedUp;
+    }
+
+    private void openObstetricIntake() {
+        Intent intent = new Intent(this, VisitCreationActivity.class);
+        intent.putExtra("patientUuid", patientUuid);
+        intent.putExtra("name", patient.getFirst_name() + " " + patient.getLast_name());
+        String timelineName = (patient.getMiddle_name() != null && !patient.getMiddle_name().trim().isEmpty())
+                ? patient.getFirst_name() + " " + patient.getMiddle_name() + " " + patient.getLast_name()
+                : patient.getFirst_name() + " " + patient.getLast_name();
+        intent.putExtra("patientNameTimeline", timelineName);
+        startActivity(intent);
+    }
+
+    private void openTimelineForExistingVisit() {
+        String fullName = patient.getFirst_name() + " " + patient.getLast_name();
+        String patientTimelineName;
+        if (patient.getMiddle_name() != null && !patient.getMiddle_name().equalsIgnoreCase("")
+                && !patient.getMiddle_name().isEmpty()) {
+            patientTimelineName = patient.getFirst_name() + " " + patient.getMiddle_name() + " " + patient.getLast_name();
+        } else {
+            patientTimelineName = patient.getFirst_name() + " " + patient.getLast_name();
+        }
+        Intent intent = new Intent(PatientDetailActivity.this, TimelineVisitSummaryActivity.class);
+        intent.putExtra("patientUuid", patientUuid);
+        intent.putExtra("visitUuid", activeVisitUuid);
+        intent.putExtra("name", fullName);
+        intent.putExtra("patientNameTimeline", patientTimelineName);
+        intent.putExtra("tag", "exisiting");
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        finish();
     }
 
     @Override
