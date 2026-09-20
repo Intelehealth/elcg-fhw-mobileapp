@@ -48,6 +48,14 @@ public class AddNewPatientActivity extends BaseActionBarActivity {
                 .commit();
         changeCurrentButtonState(PAGE_PERSONAL);
 
+        // Other Info step is unused (PatientOtherInfoFragment.hasFieldsToShow() is false in
+        // this build) - hide the tab and its connector line so the stepper doesn't show an
+        // unreachable step, without removing the views or the step's code.
+        if (!PatientOtherInfoFragment.hasFieldsToShow(this)) {
+            findViewById(R.id.tv_other_info).setVisibility(View.GONE);
+            findViewById(R.id.line_2).setVisibility(View.GONE);
+        }
+
 //        pager = findViewById(R.id.viewPager);
 //        pager.setUserInputEnabled(false);
 //        pager.setAdapter(new PatientTabPagerAdapter(getSupportFragmentManager(), getLifecycle()));
