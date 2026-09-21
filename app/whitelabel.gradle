@@ -70,7 +70,84 @@ android {
         variant.outputs.all {
             outputFileName = "${brand}-${variant.versionName}-${date}-${tier}-${variant.buildType.name}.apk"
         }
+
+        registerBrandAssetCheck(variant, flavourFor('client'))
     }
+}
+
+/**
+ * Warns when the client flavour being built does not supply every brand image.
+ *
+ * A missing flavour override does not fail the build -- Android falls back to main, so the Nepal
+ * build would quietly ship India's artwork. This surfaces that instead of leaving it to QA.
+ *
+ * Flavours are never named here -- they come from the client dimension, so adding a brand needs no
+ * edit. The default flavour is exempt: its artwork legitimately lives in main, which is what
+ * isDefault already declares.
+ *
+ * The slot names below are the floor. Deriving them purely from what the flavours override does not
+ * work: with one witness per name, deleting Nepal's copy also deletes the expectation, and the
+ * check goes quiet about the very file that went missing. Anything a flavour overrides beyond this
+ * list is still picked up automatically, so new slots need no edit either -- only a slot that must
+ * never silently disappear belongs here.
+ */
+def brandAssetSlots() {
+    return ['ic_launch_icon', 'ic_splash_logo', 'ic_login_logo',
+            'ic_header_logo', 'ic_notification', 'ic_launcher_foreground']
+}
+
+def registerBrandAssetCheck(variant, clientFlavour) {
+    def clientFlavourNames = android.productFlavors.findAll { it.dimension == 'client' }*.name
+    def requiredSlots = brandAssetSlots()
+    def flavourName = clientFlavour.name
+    def isDefaultBrand = clientFlavour.isDefault.getOrElse(false)
+    def srcRoot = file('src').absolutePath
+
+    def check = tasks.register("check${variant.name.capitalize()}BrandAssets") {
+        // Paths, not project references, so the task body stays configuration-cache safe.
+        inputs.property('flavour', flavourName)
+        inputs.property('clients', clientFlavourNames)
+        inputs.property('slots', requiredSlots)
+        outputs.upToDateWhen { false }
+        doLast {
+            def namesIn = { String fn ->
+                def found = [] as Set
+                def res = new File("${srcRoot}/${fn}/res")
+                if (!res.isDirectory()) return found
+                res.listFiles()?.findAll {
+                    it.isDirectory() && (it.name.startsWith('drawable') || it.name.startsWith('mipmap'))
+                }?.each { bucket ->
+                    bucket.listFiles()?.findAll { it.isFile() }?.each {
+                        found << it.name.replaceFirst(/\.9\.png$/, '').replaceFirst(/\.[^.]+$/, '')
+                    }
+                }
+                return found
+            }
+
+            def brandNames = (requiredSlots + clientFlavourNames.collectMany { namesIn(it) as List }) as Set
+            if (brandNames.isEmpty()) return
+
+            def provided = namesIn(flavourName)
+            def missing = (brandNames - provided).sort()
+
+            if (isDefaultBrand) {
+                logger.lifecycle("Brand assets: '${flavourName}' is the default brand, its artwork comes from main.")
+            } else if (missing.isEmpty()) {
+                logger.lifecycle("Brand assets: '${flavourName}' supplies all ${brandNames.size()} brand images.")
+            } else {
+                logger.warn("")
+                logger.warn("WARNING  Flavour '${flavourName}' is missing ${missing.size()} of ${brandNames.size()} brand images.")
+                logger.warn("         These will fall back to main, so this build ships another brand's artwork:")
+                missing.each { logger.warn("           - ${it}") }
+                logger.warn("         Add them under app/src/${flavourName}/res/ -- drawable/ for artwork,")
+                logger.warn("         mipmap-<density>/ for launcher icons. Leave brand art unqualified:")
+                logger.warn("         a qualified bucket in main outranks a flavour's plain drawable/.")
+                logger.warn("")
+            }
+        }
+    }
+
+    variant.preBuildProvider.configure { dependsOn(check) }
 }
 
 // Generating different type of endpoint base on selected variant or app
