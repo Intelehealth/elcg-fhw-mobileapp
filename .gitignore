@@ -26,3 +26,6 @@ salt.env
 /webrtc/build/
 /app/release/
 *.txt
+
+# Backups of ignored config must not sneak in via a different extension
+*.bak

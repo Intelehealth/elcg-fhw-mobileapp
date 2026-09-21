@@ -1,32 +1,48 @@
-# Brand image assets — what exists, where it appears, what is needed
+# Brand images — what each brand ships, and what is still needed
 
-Current state of every brand-varying image in the app, one section per place it appears, eZazi
-then eLCG Nepal. For icon *history* and how the current icons came to be, see
-[BRAND-ICON-FORENSICS.md](BRAND-ICON-FORENSICS.md) — this document is only about what to supply.
+Current state of every brand-varying image, one section per place it appears, eZazi then eLCG
+Nepal. For icon *history* and how the current icons came to be, see
+[BRAND-ICON-FORENSICS.md](BRAND-ICON-FORENSICS.md) — this document is about what ships today.
 
 The app is one codebase shipped as separate products — eZazi (India), eLCG (Nepal), Bangladesh
-next. Of 340 image resources, only **8 names** differ per brand. They are all below.
+next. Of roughly 340 image resources, only these **six names** differ per brand. Each brand
+supplies its own file under the same name, so no code is brand-aware:
 
-Sizes marked *"drawn at"* are the on-screen size on a tablet, which is what the product is used
-on. Required pixel sizes are that figure at the highest screen density we support.
+| Slot | Resource name | Type |
+|---|---|---|
+| App icon | `ic_launcher_foreground` | mipmap, 5 densities |
+| Launch splash | `ic_launch_icon` | drawable |
+| Splash screen | `ic_splash_logo` | drawable |
+| Login screen | `ic_login_logo` | drawable |
+| Home header | `ic_header_logo` | drawable |
+| Status bar | `ic_notification` | drawable |
+
+**eZazi is complete** — all six are VectorDrawables converted from the designer's SVGs.
+**eLCG Nepal uses partner-supplied rasters**, which are what they are for now.
+
+A Gradle check warns at build time if a flavour is missing any of these, because a missing file
+does not fail the build — Android silently falls back to `main`, which would ship India's artwork
+in another brand's app.
+
+Previews below are rendered from the files that actually ship, and live in
+[images/](images/). eZazi's are vectors, so they cannot be shown inline directly.
 
 ---
 
 ## 1 — App icon
 
-| | file | current |
+| | file | state |
 |---|---|---|
-| eZazi | `splash_icon_art.png` | 432 × 432 |
+| eZazi | `ic_launcher_foreground.png` ×5 densities | 108/162/216/324/432px, from vector |
 | eLCG | `ic_launcher_foreground.png` | 1024 × 1024 |
 
-<img src="../app/src/main/res/drawable/splash_icon_art.png" height="150"> <img src="../app/src/elcgNepal/res/mipmap-xxxhdpi/ic_launcher_foreground.png" height="150">
+<img src="images/ezazi-appicon.png" height="150"> <img src="images/elcg-appicon.png" height="150">
 
-**Needed: 1024 × 1024, square, transparent, artwork inside the central 66%** (about 676 × 676).
+**Spec: 1024 × 1024, square, transparent, artwork inside the central 66%** (about 676 × 676).
 
-The 66% is fixed by Android, not by us — the launcher masks the outer quarter into a circle or
-squircle depending on the phone, so anything near the edge is cropped away. eZazi's artwork
-currently fills only 29% of its canvas, which is why that icon looks undersized on the home
-screen.
+The 66% is fixed by Android — the launcher masks the outer quarter into a circle or squircle, so
+anything near the edge is cropped away. eZazi's artwork measures 65.6%, just inside. The
+background is a colour set in the app, not part of the image: eZazi `#FFFFFF`, Nepal `#40A47C`.
 
 ---
 
@@ -34,14 +50,16 @@ screen.
 
 The brief flash while the app starts, before the app's own splash screen.
 
-| | file | current |
+| | file | state |
 |---|---|---|
-| eZazi | `splash_icon_art.png` | 432 × 432 — **the same file as the app icon** |
-| eLCG | `splash_icon_art.png` | 1024 × 1024, green background baked in |
+| eZazi | `ic_launch_icon.xml` | vector, keeps the app-icon safe-zone padding |
+| eLCG | `ic_launch_icon.png` | 1024 × 1024, green background baked in |
 
-<img src="../app/src/main/res/drawable/splash_icon_art.png" height="150"> <img src="../app/src/elcgNepal/res/drawable/splash_icon_art.png" height="150">
+<img src="images/ezazi-launch.png" height="150"> <img src="images/elcg-launch.png" height="150">
 
-**Needed: 1024 × 1024, square, transparent.** Drawn at 180dp on tablet, 100dp on phone.
+**Spec: 1024 × 1024, square, transparent.** Drawn at 180dp on tablet, 100dp on phone.
+
+Nepal's has its green baked in, which is why that background cannot be themed per brand.
 
 ---
 
@@ -49,122 +67,94 @@ The brief flash while the app starts, before the app's own splash screen.
 
 The app's own splash, after launch.
 
-| | file | current |
+| | file | state |
 |---|---|---|
-| eZazi | `logo_ezazi.png` | 364 × 317 |
-| eLCG | `logo_ezazi.png` | 496 × 420 |
+| eZazi | `ic_splash_logo.xml` | vector, cropped tight |
+| eLCG | `ic_splash_logo.png` | 496 × 420, white background baked in |
 
-<img src="../app/src/main/res/drawable/logo_ezazi.png" height="150"> <img src="../app/src/elcgNepal/res/drawable/logo_ezazi.png" height="150">
+<img src="images/ezazi-splash.png" height="150"> <img src="images/elcg-splash.png" height="150">
 
-**Needed: 1024 × 1024, square, transparent.** Drawn at 280 × 250dp on tablet.
+**Spec: 1024 × 1024, square, transparent.** Drawn at 280 × 250dp on tablet.
 
 ---
 
 ## 4 — Login screen
 
-| | file | current |
+| | file | state |
 |---|---|---|
-| eZazi | `login_screen_icon.png` | **103 × 144** |
-| eLCG | `login_screen_icon.png` | 496 × 420 |
+| eZazi | `ic_login_logo.xml` | vector, cropped tight |
+| eLCG | `ic_login_logo.png` | 496 × 420 — **the same file as the splash screen** |
 
-<img src="../app/src/main/res/drawable/login_screen_icon.png" height="150"> <img src="../app/src/elcgNepal/res/drawable/login_screen_icon.png" height="150">
+<img src="images/ezazi-login.png" height="150"> <img src="images/elcg-login.png" height="150">
 
-**Needed: 1024 × 1024, square, transparent.** Drawn at 280 × 280dp on tablet.
-
-eZazi's 103 × 144 is the lowest-resolution asset in the app — displayed at roughly four times its
-own size, so it is visibly soft.
+**Spec: 1024 × 1024, square, transparent.** Drawn at 280 × 280dp on tablet.
 
 ---
 
 ## 5 — Home screen header
 
-| | file | current | |
-|---|---|---|---|
-| eZazi | `home_logo.xml` | vector | **done** |
-| eLCG | `home_logo.png` | 637 × 213 | outstanding |
+| | file | state |
+|---|---|---|
+| eZazi | `ic_header_logo.xml` | vector, 3.4:1, artwork 65% of height, centred |
+| eLCG | `ic_header_logo.png` | 637 × 213 (3:1), artwork fills 100% |
 
-<img src="../app/src/elcgNepal/res/drawable/home_logo.png" height="90">
+<img src="images/ezazi-header.png" height="90"><br><img src="images/elcg-header.png" height="90">
 
-*(eZazi's is an Android vector drawable and will not preview here.)*
-
-**Needed: aspect 3.4 : 1** — 1360 × 400 as a PNG, or any size as a vector. Artwork fills **65% of
+**Spec: aspect 3.4 : 1** — 1360 × 400 as a PNG, or any size as a vector. Artwork fills **65% of
 the height, centred both ways**. Drawn at 100dp tall.
 
-This is the one slot with a strict shape, and the reason is worth knowing: the app applies **one
-height setting to every brand's header logo**. If one file is cropped tight to the artwork and
-another carries a margin, the same setting makes one brand look bigger than the other. Measured:
-eZazi's artwork is 65% of its canvas height, Nepal's is 100% — cropped hard to the edges — which
-is exactly why Nepal's renders noticeably larger. Following the 3.4 : 1 / 65% / centred convention
-means one setting works for all brands and a new country needs no development work.
+This is the one slot with a strict shape. The app applies **one height setting to every brand's
+header logo**, so how big a logo looks depends entirely on how much of its canvas the artwork
+fills. eZazi's is 65%; Nepal's is 100%, cropped hard to the edges, which is why Nepal's renders
+noticeably larger from the identical setting. Following 3.4 : 1 / 65% / centred means one setting
+works for every brand and a new country needs no code change.
+
+**Known gap:** Nepal's file is off-convention and its flavour sets `home_logo_height` only in the
+unqualified `values/` bucket, so on any tablet `main`'s `values-sw600dp` wins instead. Both are
+open.
 
 ---
 
 ## 6 — Status bar notification
 
-| | file | current |
+| | file | state |
 |---|---|---|
-| eZazi | `ic_notification.png` | 512 × 288 |
+| eZazi | `ic_notification.xml` | vector, flattened to white |
 | eLCG | `ic_notification.png` | 96 × 96 |
 
-<img src="../app/src/main/res/drawable/ic_notification.png" height="70"> <img src="../app/src/elcgNepal/res/drawable/ic_notification.png" height="70">
+<img src="images/ezazi-notif.png" height="110"> <img src="images/elcg-notif.png" height="110">
 
-**Needed: 96 × 96, square, transparent, one solid shape — no text, no colour, no fine lines.**
+**Spec: 96 × 96, square, transparent, one solid shape — no text, no colour, no fine lines.**
 
-Drawn at 24dp, about the size of a full stop, and **Android discards the colours entirely** and
-renders only the silhouette. eZazi's is currently the full wordmark, which is unreadable at that
-size; eLCG's line drawing collapses into a blob. **This is the only slot that needs new artwork
-rather than a re-export.**
+Drawn at 24dp, about the size of a full stop, and **Android discards the colour entirely**,
+rendering only the silhouette. eZazi's is flattened to white in the file so it matches what
+actually renders. Nepal's line drawing collapses into a blob at that size and is the one slot
+that needs genuinely new artwork rather than a re-export.
 
 ---
 
-## Summary
+## How much of the canvas the artwork should fill
 
-| # | section | required |
+Canvas size fixes sharpness only. What decides how **big** a logo looks is the artwork's share of
+its canvas, because each view has a fixed dp box and fits the whole canvas into it. Margin inside
+the file is not neutral — it silently shrinks the logo.
+
+| Slot | Fill rule | Why |
 |---|---|---|
-| 1 | App icon | 1024 × 1024 square |
-| 2 | Launch splash | 1024 × 1024 square |
-| 3 | Splash screen | 1024 × 1024 square |
-| 4 | Login screen | 1024 × 1024 square |
-| 5 | Home header | 3.4 : 1 wide, artwork 65% of height |
-| 6 | Status bar | 96 × 96 mono |
+| App icon | artwork inside the **central 66%** | the launcher masks the outer quarter |
+| Home header | **65% of height, centred** | one shared height setting must suit every brand |
+| Everything else | **cropped tight to the artwork** | the app sizes the box, so tight is predictable |
 
-**Two sizes cover everything**, plus one small symbol:
-
-- **1024 × 1024 square, transparent** — sections 1 to 4
-- **3.4 : 1 wide, transparent** — section 5
-- **96 × 96 mono, transparent** — section 6
-
-SVG is welcome instead of PNG for any of them and is better for us — it works at every size and
-means we need not ask again.
-
-### How much of the square the artwork should fill
-
-The pixel size above only controls sharpness. What controls how **big** a logo looks on screen is
-how much of its canvas the artwork actually fills, because the app gives each logo a fixed-size
-box and fits the whole image into it. An image with wide empty margins therefore shows a smaller
-logo than a tightly cropped one of the same pixel size.
-
-So, alongside the sizes above:
-
-| Where | How much of the canvas the artwork should fill |
-|---|---|
-| App icon (1) | Inside the **middle 66%** — the launcher crops the rest |
-| Opening, splash, login (2, 3, 4) | **Cropped tight to the artwork**, no margin |
-| Home header (5) | **65% of the height, centred** |
-| Status bar (6) | **Cropped tight to the artwork**, no margin |
-
-The app icon is the only one that needs breathing room built in. Anywhere else, empty margin is
-not neutral — it silently shrinks the logo.
+Only the app icon needs padding built in.
 
 ---
 
-## Two open decisions
+## Where brand images come from
 
-**Which mark goes in the square slots.** Sections 1 to 4 are all square, so one file per brand
-could serve all four — but the two brands currently use *different* marks across them. eZazi shows
-its monogram on the icon and login but its wordmark on the splash; eLCG shows the mother-and-baby
-on the icon but the government block on the splash and login. Until that is settled it is two
-square files per brand, not one.
+Partner organisations supply these, and they are often downloaded from the partner's website
+rather than exported from source artwork. That means vector originals frequently do not exist, and
+converting a raster to SVG does not create one — tracing loses detail, and wrapping a PNG in an
+SVG produces a file Android cannot render at all. Where no vector exists, the honest ask is the
+**largest raster available**, at or above the pixel sizes above.
 
-**Whether the status-bar symbols get designed.** They are the only genuinely new artwork on the
-list, and the current ones do not work. Everything else is a re-export of art that already exists.
+A specification guide aimed at partners is still to be written.
