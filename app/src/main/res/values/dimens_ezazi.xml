@@ -327,6 +327,6 @@
     <dimen name="home_screen_toolbar_padding_start_end">10dp</dimen>
     <dimen name="splash_logo_width">220dp</dimen>
     <dimen name="splash_logo_height">220dp</dimen>
-    <dimen name="login_logo_width">240dp</dimen>
-    <dimen name="login_logo_height">240dp</dimen>
+    <dimen name="login_logo_width">140dp</dimen>
+    <dimen name="login_logo_height">140dp</dimen>
 </resources>
