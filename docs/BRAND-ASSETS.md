@@ -152,11 +152,18 @@ the file is not neutral — it silently shrinks the logo.
 
 | Slot | Fill rule | Why |
 |---|---|---|
-| App icon | artwork at about **45% of the canvas**, never past 66% | 66% is where the launcher crops, not where the artwork should reach |
+| App icon | artwork at about **45% of the canvas**, never past 66% | the launcher crops at 66%; artwork drawn to that line fills the visible circle edge to edge |
+| Launch splash | artwork at about **45% of the canvas** | Android draws it across 288dp with only the inner 192dp visible — the same trap, different numbers |
 | Home header | **65% of height, centred** | one shared height setting must suit every brand |
 | Everything else | **cropped tight to the artwork** | the app sizes the box, so tight is predictable |
 
-Only the app icon needs padding built in.
+The app icon and the launch splash are the two slots the system re-sizes and masks, so both need
+padding built into the file. Everywhere else the app controls the box, and padding only shrinks
+the logo.
+
+Note the launch splash size is **not** set by `splash_icon.xml`'s 100dp/180dp layer-list — Android
+scales `windowSplashScreenAnimatedIcon` to its own dimensions and ignores those. The only lever is
+the artwork's share of its own canvas.
 
 ---
 
