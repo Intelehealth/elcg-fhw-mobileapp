@@ -3,5 +3,5 @@
         android:width="180dp"
         android:height="180dp"
         android:gravity="center"
-        android:drawable="@drawable/splash_icon_art" />
+        android:drawable="@drawable/ic_launch_icon" />
 </layer-list>

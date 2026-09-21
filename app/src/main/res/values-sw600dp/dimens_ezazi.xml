@@ -183,8 +183,6 @@
     <dimen name="small_input_text_size">@dimen/std_14sp</dimen>
     <dimen name="obs_input_min_width">0.62</dimen>
     <dimen name="obs_text_min_width">0.38</dimen>
-    <dimen name="splash_logo_width">@dimen/wrap_content</dimen>
-    <dimen name="splash_logo_height">@dimen/wrap_content</dimen>
     <dimen name="search_icon_width">@dimen/std_20dp</dimen>
     <dimen name="search_icon_height">@dimen/std_18dp</dimen>
     <dimen name="send_icon_size">@dimen/std_36dp</dimen>
@@ -305,8 +303,8 @@
     <dimen name="home_screen_logo_width">200dp</dimen>
     <dimen name="home_screen_toolbar_height">120dp</dimen>
     <dimen name="home_screen_toolbar_padding_start_end">16dp</dimen>
-    <dimen name="splash_logo_width_nepal">280dp</dimen>
-    <dimen name="splash_logo_height_nepal">250dp</dimen>
-    <dimen name="login_logo_width_nepal">280dp</dimen>
-    <dimen name="login_logo_height_nepal">280dp</dimen>
+    <dimen name="splash_logo_width">280dp</dimen>
+    <dimen name="splash_logo_height">250dp</dimen>
+    <dimen name="login_logo_width">280dp</dimen>
+    <dimen name="login_logo_height">280dp</dimen>
 </resources>

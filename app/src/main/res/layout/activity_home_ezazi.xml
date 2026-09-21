@@ -37,7 +37,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="@dimen/home_logo_height"
                     android:adjustViewBounds="true"
-                    android:src="@drawable/home_logo"
+                    android:src="@drawable/ic_header_logo"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />

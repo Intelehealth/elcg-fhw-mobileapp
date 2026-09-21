@@ -30,10 +30,10 @@
 
     <ImageView
         android:id="@+id/ivSplashLogo"
-        android:layout_width="@dimen/splash_logo_width_nepal"
-        android:layout_height="@dimen/splash_logo_height_nepal"
+        android:layout_width="@dimen/splash_logo_width"
+        android:layout_height="@dimen/splash_logo_height"
         android:layout_gravity="center"
-        android:src="@drawable/logo_ezazi"
+        android:src="@drawable/ic_splash_logo"
         app:layout_constraintBottom_toTopOf="@+id/ivBottomLightVector"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
