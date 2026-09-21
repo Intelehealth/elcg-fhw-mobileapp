@@ -38,11 +38,22 @@ Previews below are rendered from the files that actually ship, and live in
 
 <img src="images/ezazi-appicon.png" height="150"> <img src="images/elcg-appicon.png" height="150">
 
-**Spec: 1024 × 1024, square, transparent, artwork inside the central 66%** (about 676 × 676).
+**Spec: 1024 × 1024, square, transparent. Artwork about 45% of the canvas** (roughly 460 × 460),
+centred, and **never past the central 66%**.
 
-The 66% is fixed by Android — the launcher masks the outer quarter into a circle or squircle, so
-anything near the edge is cropped away. eZazi's artwork measures 65.6%, just inside. The
-background is a colour set in the app, not part of the image: eZazi `#FFFFFF`, Nepal `#40A47C`.
+Two different numbers, and confusing them is what went wrong the first time round:
+
+- **66% is the crop line**, not a target. The launcher masks everything outside it into a circle or
+  squircle. Artwork drawn *at* 66% fills the visible circle edge to edge and looks cramped next to
+  every other icon on the home screen.
+- **~45% is where the artwork should sit.** In Android's units that is a glyph about 48dp tall in a
+  108dp canvas, landing at roughly two-thirds of the 72dp visible circle — which is where a normal
+  launcher glyph sits, with margin around it.
+
+The first delivery followed "inside the central 66%" literally and measured 65.6%, which rendered
+99% of the visible circle. Regenerated at 48dp.
+
+The background is a colour set in the app, not part of the image: eZazi `#FFFFFF`, Nepal `#40A47C`.
 
 ---
 
@@ -141,7 +152,7 @@ the file is not neutral — it silently shrinks the logo.
 
 | Slot | Fill rule | Why |
 |---|---|---|
-| App icon | artwork inside the **central 66%** | the launcher masks the outer quarter |
+| App icon | artwork at about **45% of the canvas**, never past 66% | 66% is where the launcher crops, not where the artwork should reach |
 | Home header | **65% of height, centred** | one shared height setting must suit every brand |
 | Everything else | **cropped tight to the artwork** | the app sizes the box, so tight is predictable |
 
