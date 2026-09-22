@@ -23,7 +23,7 @@
     <dimen name="welcome_text_size">@dimen/std_21sp</dimen>
     <dimen name="subheading_text_size">@dimen/std_16sp</dimen>
     <dimen name="home_logo_width">@dimen/std_100dp</dimen>
-    <dimen name="home_logo_height">@dimen/std_36dp</dimen>
+    <dimen name="home_logo_height">24dp</dimen>
     <dimen name="action_menu_text_size">@dimen/std_12sp</dimen>
     <dimen name="login_screen_padding">@dimen/std_28dp</dimen>
     <dimen name="small_btn_horizontal_padding">@dimen/std_16dp</dimen>

@@ -34,7 +34,7 @@
         A brand whose file ignores that convention will look the wrong size - re-frame the file
         rather than adding a per-flavour override back.
     -->
-    <dimen name="home_logo_height">80dp</dimen>
+    <dimen name="home_logo_height">52dp</dimen>
     <dimen name="action_menu_text_size">@dimen/std_22sp</dimen>
     <dimen name="small_btn_horizontal_padding">@dimen/std_31dp</dimen>
     <dimen name="small_btn_vertical_padding">@dimen/std_16dp</dimen>
