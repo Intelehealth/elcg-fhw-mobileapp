@@ -130,17 +130,28 @@ open.
 
 | | file | state |
 |---|---|---|
-| eZazi | `ic_notification.xml` | vector, flattened to white |
+| eZazi | `ic_notification.xml` — **in `ezaziDefault/`, not `main/`** | purpose-drawn vector, white |
 | eLCG | `ic_notification.png` | 96 × 96 |
 
 <img src="images/ezazi-notif.png" height="110"> <img src="images/elcg-notif.png" height="110">
 
-**Spec: 96 × 96, square, transparent, one solid shape — no text, no colour, no fine lines.**
+**Spec: 96 × 96, square, transparent, one shape — no text, no colour, no fine lines, and any
+enclosed counter-space carved out rather than filled.**
 
 Drawn at 24dp, about the size of a full stop, and **Android discards the colour entirely**,
-rendering only the silhouette. eZazi's is flattened to white in the file so it matches what
-actually renders. Nepal's line drawing collapses into a blob at that size and is the one slot
-that needs genuinely new artwork rather than a re-export.
+rendering only the silhouette. That last clause matters: a mark whose inner detail is a separate
+*colour* rather than a separate *shape* collapses into a solid blob once the colour is dropped.
+eZazi's symbol was redrawn on 2026-09-22 with the counter-space cut out, so the silhouette
+survives at 24dp.
+
+This is the one slot where eZazi's artwork lives in the flavour folder rather than `main`. Nepal
+must not inherit it, and with nothing in `main` a flavour that omits this file fails the build
+rather than silently rendering another brand's symbol.
+
+Before that redraw this slot was fed by `ezazi_logo.png` — the full eZazi wordmark, renamed to
+`ic_notification` during the white-label work. It is unreadable at 24dp and was never a
+purpose-made symbol, which is what caused the confusion when the same slot was specified to
+design. Nepal's line drawing has the same problem and still needs new artwork.
 
 ---
 
