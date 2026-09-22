@@ -29,3 +29,7 @@ salt.env
 
 # Backups of ignored config must not sneak in via a different extension
 *.bak
+
+# JVM crash artifacts -- machine-specific, never source
+hs_err_pid*.log
+replay_pid*.log
