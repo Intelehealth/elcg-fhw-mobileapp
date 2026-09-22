@@ -20,8 +20,9 @@
 
     <ImageView
         android:id="@+id/ivAppLogo"
-        android:layout_width="@dimen/login_logo_width"
+        android:layout_width="wrap_content"
         android:layout_height="@dimen/login_logo_height"
+        android:adjustViewBounds="true"
         android:src="@drawable/ic_login_logo"
         android:contentDescription="Ezazi logo"
         android:layout_marginTop="@dimen/home_screen_container_margin_top"
