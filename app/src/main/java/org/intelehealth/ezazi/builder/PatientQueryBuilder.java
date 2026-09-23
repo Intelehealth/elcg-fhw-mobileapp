@@ -11,6 +11,7 @@ import org.intelehealth.ezazi.models.dto.PatientAttributesDTO;
 import org.intelehealth.ezazi.models.dto.VisitAttributeDTO;
 import org.intelehealth.ezazi.models.dto.VisitDTO;
 import org.intelehealth.ezazi.ui.visit.model.CompletedVisitStatus;
+import org.intelehealth.ezazi.utilities.AppRegion;
 import org.intelehealth.ezazi.utilities.SessionManager;
 import org.intelehealth.ezazi.utilities.UuidDictionary;
 
@@ -23,7 +24,8 @@ public class PatientQueryBuilder extends QueryBuilder {
     public static final String TAG = "PatientQueryBuilder";
 
     public String searchQuery(String keyword) {
-        String query = selectQuery()
+        QueryBuilder queryBuilder = AppRegion.supportsMultiVisit()? selectQueryMultiVis(): selectQuery();
+        String query = queryBuilder
                 .where(" LOWER(fullName) LIKE LOWER('%" + keyword + "%') "
                         + "OR LOWER(P.openmrs_id) LIKE LOWER('%" + keyword + "%') "
                         + "OR LOWER(birthStatus) LIKE LOWER('%" + keyword + "%') ")
@@ -36,7 +38,8 @@ public class PatientQueryBuilder extends QueryBuilder {
     }
 
     public String pagingQuery(int offset, int limit) {
-        String query = selectQuery()
+        QueryBuilder queryBuilder = AppRegion.supportsMultiVisit()? selectQueryMultiVis(): selectQuery();
+        String query = queryBuilder
                 .groupBy("P.uuid")
                 .orderBy("P.dateCreated")
                 .orderIn("DESC")
@@ -47,7 +50,7 @@ public class PatientQueryBuilder extends QueryBuilder {
         return query;
     }
 
-    private QueryBuilder selectQuery() {
+    private QueryBuilder selectQueryMultiVis() {
         return select("P.uuid, P.openmrs_id, P.first_name, P.last_name, P.middle_name, P.date_of_birth, P.dateCreated," +
                 "CASE WHEN P.middle_name IS NULL THEN P.first_name || ' ' || P.last_name " +
                 "ELSE P.first_name || ' ' || P.middle_name || ' ' || P.last_name " +
@@ -62,7 +65,60 @@ public class PatientQueryBuilder extends QueryBuilder {
                         "WHERE name = '" + PatientAttributesDTO.Columns.BED_NUMBER.value + "'), '14d4f066-15f5-102d-96e4-000c29c2a5d7')");
     }
 
+    private QueryBuilder selectQuery() {
+        return select("P.uuid, P.openmrs_id, P.first_name, P.last_name, P.middle_name, P.date_of_birth, P.dateCreated," +
+                "CASE WHEN P.middle_name IS NULL THEN P.first_name || ' ' || P.last_name " +
+                "ELSE P.first_name || ' ' || P.middle_name || ' ' || P.last_name " +
+                "END fullName, " + getCompletedVisitStatusCase() + getCurrentStageCase() + ", " + caseOfMotherDeceased() +
+                "(select count(uuid) from tbl_encounter where visituuid = V.uuid) as alertCount, " +
+                "CASE PA.person_attribute_type_uuid WHEN '14d4f066-15f5-102d-96e4-000c29c2a5d7' THEN PA.value END phoneNumber, " +
+                "CASE WHEN PA.person_attribute_type_uuid  != '14d4f066-15f5-102d-96e4-000c29c2a5d7' THEN PA.value END bedNo ")
+                .from("tbl_patient P")
+                .join("LEFT OUTER JOIN tbl_visit V ON P.uuid = V.patientuuid " +
+                        "LEFT OUTER JOIN tbl_patient_attribute PA ON PA.patientuuid = P.uuid " +
+                        "AND PA.person_attribute_type_uuid IN ((SELECT uuid FROM tbl_patient_attribute_master " +
+                        "WHERE name = '" + PatientAttributesDTO.Columns.BED_NUMBER.value + "'), '14d4f066-15f5-102d-96e4-000c29c2a5d7')");
+    }
+
     public String activeVisitsQuery(int offset, int limit) {
+        String providerId = new SessionManager(IntelehealthApplication.getAppContext()).getProviderID();
+        String query = select("V.uuid as visitUuid, " +
+                "V.enddate, V. startdate, V.patientuuid," +
+                "P.openmrs_id, V.sync, P.gender," +
+                "P.first_name, " +
+                "P.last_name, " +
+                "P.middle_name, " +
+                "P.date_of_birth, " +
+                "CASE WHEN PA.person_attribute_type_uuid  != '14d4f066-15f5-102d-96e4-000c29c2a5d7' THEN PA.value END bedNo, " +
+                "CASE PA.person_attribute_type_uuid WHEN '14d4f066-15f5-102d-96e4-000c29c2a5d7' THEN PA.value END phoneNumber, " +
+                "(SELECT uuid FROM tbl_encounter where visituuid = V.uuid and voided IN ('0', 'false', 'FALSE') " +
+                "AND encounter_type_uuid != '" + ENCOUNTER_VISIT_COMPLETE + "' ORDER BY encounter_time DESC limit 1) " +
+                "as latestEncounterId,  (SELECT value FROM tbl_visit_attribute where " +
+                "visit_attribute_type_uuid ='" + DECISION_PENDING + "' AND visit_uuid = V.uuid) as outcomePending, " +
+                "(SELECT value FROM tbl_visit_attribute WHERE visit_attribute_type_uuid ='" + VISIT_RISK + "' " +
+                " AND visit_uuid = V.uuid) AS visitRisk, " +
+                getCurrentStageCase())
+                .from("tbl_visit  V")
+                .join("LEFT OUTER JOIN tbl_patient P ON P.uuid = V.patientuuid " +
+                        " LEFT OUTER JOIN tbl_visit_attribute VA ON VA.visit_uuid = V.uuid " +
+                        " LEFT OUTER JOIN tbl_patient_attribute PA ON PA.patientuuid = P.uuid " +
+                        " AND PA.person_attribute_type_uuid = (SELECT uuid FROM tbl_patient_attribute_master " +
+                        " WHERE name = '" + PatientAttributesDTO.Columns.BED_NUMBER.value + "')")
+                .where("V.uuid NOT IN (Select visituuid FROM tbl_encounter WHERE  encounter_type_uuid ='" +
+                        ENCOUNTER_VISIT_COMPLETE + "' ) " +
+                        "AND V.voided IN ('0', 'false', 'FALSE') AND VA.value = '" + providerId + "'" +
+                        " AND outcomePending = 'false'  AND  (V.enddate IS NULL OR  V.enddate = '')")
+                .groupBy("V.uuid")
+                .orderBy("V.startdate")
+                .orderIn("DESC")
+                .limit(limit)
+                .offset(offset)
+                .build();
+        Log.e(TAG, "activePatientQuery => " + query);
+        return query;
+    }
+
+    public String activeVisitsQueryMultiVis(int offset, int limit) {
         String providerId = new SessionManager(IntelehealthApplication.getAppContext()).getProviderID();
         String query = select("V.uuid as visitUuid, " +
                 "V.enddate, V. startdate, V.patientuuid," +
@@ -230,7 +286,7 @@ public class PatientQueryBuilder extends QueryBuilder {
                 .build();
         return query;
     }
-    public String getVisitsForRiskCalculation(int offset, int limit) {
+    public String getVisitsForRiskCalculationMultiVis(int offset, int limit) {
         String providerId = new SessionManager(IntelehealthApplication.getAppContext()).getProviderID();
         String query = select(
                 "V.uuid as visitUuid, " +
@@ -271,5 +327,48 @@ public class PatientQueryBuilder extends QueryBuilder {
         Log.e(TAG, "activePatientQuery => " + query);
         return query;
     }
+
+    public String getVisitsForRiskCalculation(int offset, int limit) {
+        String providerId = new SessionManager(IntelehealthApplication.getAppContext()).getProviderID();
+        String query = select(
+                "V.uuid as visitUuid, " +
+                        "V.enddate, V.startdate, V.patientuuid," +
+                        "P.openmrs_id, V.sync, P.gender," +
+                        "P.first_name, " +
+                        "P.last_name, " +
+                        "P.middle_name, " +
+                        "P.date_of_birth, " +
+                        "CASE WHEN PA.person_attribute_type_uuid != '14d4f066-15f5-102d-96e4-000c29c2a5d7' THEN PA.value END bedNo, " +
+                        "CASE PA.person_attribute_type_uuid WHEN '14d4f066-15f5-102d-96e4-000c29c2a5d7' THEN PA.value END phoneNumber, " +
+                        "(SELECT uuid FROM tbl_encounter WHERE visituuid = V.uuid AND voided IN ('0', 'false', 'FALSE') " +
+                        "AND encounter_type_uuid != '" + ENCOUNTER_VISIT_COMPLETE + "' ORDER BY encounter_time DESC LIMIT 1) " +
+                        "as latestEncounterId,  " +
+                        "(SELECT value FROM tbl_visit_attribute WHERE visit_attribute_type_uuid ='" + VISIT_RISK + "' " +
+                        "AND visit_uuid = V.uuid) AS visitRisk, " +
+                        getCurrentStageCase()
+        )
+                .from("tbl_visit V")
+                .join("LEFT OUTER JOIN tbl_patient P ON P.uuid = V.patientuuid " +
+                        "LEFT OUTER JOIN tbl_visit_attribute VA ON VA.visit_uuid = V.uuid " +
+                        "LEFT OUTER JOIN tbl_patient_attribute PA ON PA.patientuuid = P.uuid " +
+                        "AND PA.person_attribute_type_uuid = (SELECT uuid FROM tbl_patient_attribute_master " +
+                        "WHERE name = '" + PatientAttributesDTO.Columns.BED_NUMBER.value + "')")
+                .where(
+                        "V.uuid NOT IN (SELECT visituuid FROM tbl_encounter WHERE encounter_type_uuid ='" + ENCOUNTER_VISIT_COMPLETE + "') " +
+                                "AND V.voided IN ('0', 'false', 'FALSE') " +
+                                "AND VA.value = '" + providerId + "' " +  // provider filter
+                                "AND (V.enddate IS NULL OR V.enddate = '')"
+                )
+                .groupBy("V.uuid")
+                .orderBy("V.startdate")
+                .orderIn("DESC")
+                .limit(limit)
+                .offset(offset)
+                .build();
+
+        Log.e(TAG, "activePatientQuery => " + query);
+        return query;
+    }
+
 
 }

@@ -7,6 +7,7 @@ import org.intelehealth.ezazi.app.AppConstants;
 import org.intelehealth.ezazi.builder.PatientQueryBuilder;
 import org.intelehealth.ezazi.database.dao.ObsDAO;
 import org.intelehealth.ezazi.models.ActivePatientModel;
+import org.intelehealth.ezazi.utilities.AppRegion;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,10 +44,11 @@ public class VisitQueryResultBinder {
                     double visitRisk = 0.0;
                     try {
                         visitRisk = Double.parseDouble(cursor.getString(index));
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                    }
                     model.setAlertFlagTotal(visitRisk);
 
-                    setVisibilityOrder(visitRisk, model,obsDAO);
+                    setVisibilityOrder(visitRisk, model, obsDAO);
                     activeVisits.add(model);
                 } while (cursor.moveToNext());
             }
@@ -57,11 +59,14 @@ public class VisitQueryResultBinder {
     }
 
     public List<ActivePatientModel> executeActiveVisitsQuery(int offset, int limit) {
-        String query = new PatientQueryBuilder().activeVisitsQuery(offset, limit);
+        PatientQueryBuilder patientQueryBuilder = new PatientQueryBuilder();
+        String query = AppRegion.supportsMultiVisit() ? patientQueryBuilder.activeVisitsQueryMultiVis(offset, limit) :
+                patientQueryBuilder.activeVisitsQuery(offset, limit);
         SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
         final Cursor cursor = db.rawQuery(query, null);
         return fetchActiveVisits(cursor);
     }
+
     private void setVisibilityOrder(double totalScore, ActivePatientModel model, ObsDAO obsDAO) {
 
         int visibilityOrder;
@@ -82,8 +87,10 @@ public class VisitQueryResultBinder {
         }
         model.setVisibilityOrder(visibilityOrder);
     }
+
     public List<ActivePatientModel> executeVisitsQueryForRiskCalculation(int offset, int limit) {
-        String query = new PatientQueryBuilder().getVisitsForRiskCalculation(offset, limit);
+        PatientQueryBuilder patientQueryBuilder = new PatientQueryBuilder();
+        String query = AppRegion.supportsMultiVisit() ? patientQueryBuilder.getVisitsForRiskCalculationMultiVis(offset, limit) : patientQueryBuilder.getVisitsForRiskCalculation(offset, limit);
         SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
         final Cursor cursor = db.rawQuery(query, null);
         return fetchVisitsForRiskFactor(cursor);
@@ -115,10 +122,11 @@ public class VisitQueryResultBinder {
                     double visitRisk = 0.0;
                     try {
                         visitRisk = Double.parseDouble(cursor.getString(index));
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                    }
                     model.setAlertFlagTotal(visitRisk);
 
-                    setVisibilityOrder(visitRisk, model,obsDAO);
+                    setVisibilityOrder(visitRisk, model, obsDAO);
                     activeVisits.add(model);
                 } while (cursor.moveToNext());
             }

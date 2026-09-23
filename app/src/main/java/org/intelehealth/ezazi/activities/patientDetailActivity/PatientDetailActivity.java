@@ -356,7 +356,11 @@ public class PatientDetailActivity extends BaseActionBarActivity {
             });
         }
 
-        loadPastVisits();
+        // Nepal's patient detail screen matches the original whitelabel build (no Past Visit
+        // Details section) since that history view was introduced alongside multi-visit.
+        if (AppRegion.supportsMultiVisit()) {
+            loadPastVisits();
+        }
 
         Log.e(TAG, "onCreate: patient creator => " + patient.getCreatorUuid());
         if (!patient.getCreatorUuid().equals(sessionManager.getCreatorID())) {
