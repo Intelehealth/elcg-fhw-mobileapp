@@ -725,7 +725,9 @@
 
             </LinearLayout>
 
-            <include layout="@layout/view_other_tab_common_component" />
+            <include
+                android:id="@+id/includeOtherCommonComponent"
+                layout="@layout/view_other_tab_common_component" />
         </LinearLayout>
 
     </androidx.core.widget.NestedScrollView>
