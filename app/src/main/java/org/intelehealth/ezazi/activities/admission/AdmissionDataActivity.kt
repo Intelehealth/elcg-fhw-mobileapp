@@ -24,9 +24,11 @@ class AdmissionDataActivity : BaseActionBarActivity() {
     private var patientContextLoaded = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
         binding = ActivityAdmissionDataBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        super.onCreate(savedInstanceState)
+        super.initializeNetworkBannerComponents()
+
         setupActionBar()
         readIntentExtras()
         loadPatientContext()
