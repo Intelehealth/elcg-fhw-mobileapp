@@ -52,6 +52,15 @@ public final class AppRegion {
     }
 
     /**
+     * Nepal collects the obstetric admission values during patient registration and stores them on the
+     * patient. Every other region collects the same values, in the same formats, on the per-visit
+     * Admission screen and stores them as obs under an Admission encounter.
+     */
+    public static boolean collectsAdmissionDataAtRegistration() {
+        return isNepal();
+    }
+
+    /**
      * Video calling to a remote doctor is offered on eZazi only. Nepal ships the same screens with the
      * button hidden, so the feature is absent rather than merely unused.
      *

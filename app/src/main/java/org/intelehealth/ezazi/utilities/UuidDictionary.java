@@ -46,7 +46,6 @@ public class UuidDictionary {
     public static final String ENCOUNTER_ROLE = "73bbb069-9781-4afc-a9d1-54b6b2270e04";
     public static final String ENCOUNTER_DR_ROLE = "73bbb069-9781-4afc-a9d1-54b6b2270e03";
     public static final String ENCOUNTER_DR_PROVIDER = "f2f9948e-50e2-434e-8bf1-00a7426d6cc8";
-    public static final String OBS_DOCTORDETAILS = "7a9cb7bc-9ab9-4ff0-ae82-7a1bd2cca93e";
 
     public static final String EMERGENCY_OBS = "ca5f5dc3-4f0b-4097-9cae-5cf2eb44a09c";
 
@@ -160,4 +159,24 @@ public class UuidDictionary {
     public static final String ONGOING_COMPLICATIONS_NEWBORN = "820ae093-d3ab-402a-9a81-279963cf9dc8";
     public static final String PATIENT_REGISTRATION_START_DATE_TIME = "d2050806-33b5-47ee-b72e-ff9230222ea6";
     public static final String FACILITY = "28451dd4-2fdb-4b96-a5bd-a330f4c68575";
+
+    // Admission encounter
+    public static final String ENCOUNTER_ADMISSION = "";
+
+    // Admission obs
+    public static final String OBS_GRAVIDA = "";
+    public static final String OBS_PARITY = "";
+    public static final String OBS_LMP = "";
+    public static final String OBS_EDD = "";
+    public static final String OBS_ADMISSION_DATE = "";
+    public static final String OBS_ADMISSION_TIME = "";
+    public static final String OBS_PRIMARY_DOCTOR = "";
+    public static final String OBS_SECONDARY_DOCTOR = "";
+    public static final String OBS_HOSPITAL_ID = "";
+    public static final String OBS_BED_NUMBER = "";
+    public static final String OBS_HOSPITAL_MATERNITY = "";
+    public static final String OBS_RISK_FACTORS = "";
+    public static final String OBS_ACTIVE_LABOR_DIAGNOSED = "";
+    public static final String OBS_MEMBRANE_RUPTURED_TIMESTAMP = "";
+    public static final String OBS_LABOR_ONSET = "";
 }
