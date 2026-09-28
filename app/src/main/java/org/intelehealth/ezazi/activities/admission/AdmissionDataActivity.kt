@@ -3,6 +3,7 @@ package org.intelehealth.ezazi.activities.admission
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -27,6 +28,7 @@ class AdmissionDataActivity : BaseActionBarActivity() {
         setupActionBar()
         readIntentExtras()
         loadPatientContext()
+        setupSaveButton()
     }
 
     private fun readIntentExtras() {
@@ -39,10 +41,24 @@ class AdmissionDataActivity : BaseActionBarActivity() {
      */
     private fun loadPatientContext() {
         lifecycleScope.launch {
-            dateOfBirth = withContext(Dispatchers.IO) { PatientsDAO.getDateOfBirth(patientUuid).orEmpty() }
+            dateOfBirth = withContext(Dispatchers.IO) {
+                PatientsDAO.getDateOfBirth(patientUuid).orEmpty()
+            }
             patientContextLoaded = true
             Timber.tag("AdmissionDataActivity").d("dob=$dateOfBirth")
         }
+    }
+
+    private fun setupSaveButton() {
+        binding.admissionForm.includeOtherActionView.btnNextAddress.apply {
+            text = getString(R.string.save_button)
+            icon = null
+            setOnClickListener { onSaveClicked() }
+        }
+    }
+    
+    private fun onSaveClicked() {
+        Toast.makeText(this, "Save clicked", Toast.LENGTH_SHORT).show()
     }
 
     override fun getScreenTitle(): Int = R.string.title_activity_admission_data
