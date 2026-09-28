@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -11,6 +12,7 @@ import kotlinx.coroutines.withContext
 import org.intelehealth.ezazi.R
 import org.intelehealth.ezazi.database.dao.PatientsDAO
 import org.intelehealth.ezazi.databinding.ActivityAdmissionDataBinding
+import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity
 import timber.log.Timber
 
@@ -29,6 +31,8 @@ class AdmissionDataActivity : BaseActionBarActivity() {
         readIntentExtras()
         loadPatientContext()
         setupSaveButton()
+        setupBackButton()
+        setupBackConfirmation()
     }
 
     private fun readIntentExtras() {
@@ -56,9 +60,33 @@ class AdmissionDataActivity : BaseActionBarActivity() {
             setOnClickListener { onSaveClicked() }
         }
     }
-    
+
     private fun onSaveClicked() {
         Toast.makeText(this, "Save clicked", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun setupBackButton() {
+        binding.admissionForm.includeOtherActionView.btnBackAddress.setOnClickListener {
+            onBackPressedDispatcher.onBackPressed()
+        }
+    }
+
+    private fun setupBackConfirmation() {
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                showBackConfirmationDialog()
+            }
+        })
+    }
+
+    private fun showBackConfirmationDialog() {
+        val dialog = ConfirmationDialogFragment.Builder(this)
+            .content(getString(R.string.admission_discard_message))
+            .positiveButtonLabel(R.string.confirm)
+            .negativeButtonLabel(R.string.cancel)
+            .build()
+        dialog.setListener { finish() }
+        dialog.show(supportFragmentManager, dialog.javaClass.canonicalName)
     }
 
     override fun getScreenTitle(): Int = R.string.title_activity_admission_data
