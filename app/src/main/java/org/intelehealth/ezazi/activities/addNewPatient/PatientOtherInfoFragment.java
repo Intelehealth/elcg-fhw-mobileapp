@@ -177,7 +177,7 @@ public class PatientOtherInfoFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        view = inflater.inflate(R.layout.fragment_patient_other_info, container, false);
+        view = inflater.inflate(R.layout.view_obstetric_form, container, false);
         mContext = getActivity();
         sessionManager = new SessionManager(mContext);
         initUI();
