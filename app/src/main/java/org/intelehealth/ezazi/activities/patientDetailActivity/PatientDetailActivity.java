@@ -31,7 +31,9 @@ import androidx.core.content.ContextCompat;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.gson.Gson;
 
+import org.intelehealth.ezazi.BuildConfig;
 import org.intelehealth.ezazi.R;
+import org.intelehealth.ezazi.activities.admission.AdmissionDataActivity;
 import org.intelehealth.ezazi.activities.addNewPatient.AddNewPatientActivity;
 import org.intelehealth.ezazi.activities.homeActivity.HomeActivity;
 import org.intelehealth.ezazi.activities.searchPatientActivity.SearchPatientActivity;
@@ -327,6 +329,13 @@ public class PatientDetailActivity extends BaseActionBarActivity {
             startActivity(intent2);
             finish();
         });
+
+        if (BuildConfig.DEBUG) {
+            newVisit.setOnLongClickListener(v -> {
+                startActivity(AdmissionDataActivity.newIntent(this, patientUuid));
+                return true;
+            });
+        }
 
         Log.e(TAG, "onCreate: patient creator => " + patient.getCreatorUuid());
         if (!patient.getCreatorUuid().equals(sessionManager.getCreatorID())) {

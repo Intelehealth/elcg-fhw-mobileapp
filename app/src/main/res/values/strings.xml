@@ -147,6 +147,7 @@
 
     //Table Exam Screen
     <string name="title_activity_vitals">Vitals</string>
+    <string name="title_activity_admission_data">Admission Data</string>
     <string name="table_hw">Body Measurements</string>
     <string name="table_height">Height (cm)</string>
     <string name="table_weight">Weight (kg)</string>
