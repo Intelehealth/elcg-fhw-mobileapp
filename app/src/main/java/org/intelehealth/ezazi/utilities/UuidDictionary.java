@@ -161,22 +161,22 @@ public class UuidDictionary {
     public static final String FACILITY = "28451dd4-2fdb-4b96-a5bd-a330f4c68575";
 
     // Admission encounter
-    public static final String ENCOUNTER_ADMISSION = "";
+    public static final String ENCOUNTER_ADMISSION = "e22e39fd-7db2-45e7-80f1-60fa0d5a4378";
 
     // Admission obs
-    public static final String OBS_GRAVIDA = "";
-    public static final String OBS_PARITY = "";
-    public static final String OBS_LMP = "";
-    public static final String OBS_EDD = "";
-    public static final String OBS_ADMISSION_DATE = "";
-    public static final String OBS_ADMISSION_TIME = "";
-    public static final String OBS_PRIMARY_DOCTOR = "";
-    public static final String OBS_SECONDARY_DOCTOR = "";
-    public static final String OBS_HOSPITAL_ID = "";
-    public static final String OBS_BED_NUMBER = "";
-    public static final String OBS_HOSPITAL_MATERNITY = "";
-    public static final String OBS_RISK_FACTORS = "";
-    public static final String OBS_ACTIVE_LABOR_DIAGNOSED = "";
-    public static final String OBS_MEMBRANE_RUPTURED_TIMESTAMP = "";
-    public static final String OBS_LABOR_ONSET = "";
+    public static final String OBS_GRAVIDA = "d970452f-eb7a-47c7-b011-ba9af33b3f9d";
+    public static final String OBS_PARITY = "cc09f7b9-fcb4-4b5f-8e71-c7c0e0e4e0f4";
+    public static final String OBS_LMP = "8ef57af0-9ca2-44e9-b4b3-f990fe28c456";
+    public static final String OBS_EDD = "ebe6635d-8bae-4f3c-b40a-f9dddb7ebe49";
+    public static final String OBS_ADMISSION_DATE = "5a30d1f7-75b2-4bac-87c2-7da0aab70a88";
+    public static final String OBS_ADMISSION_TIME = "b05023c9-00d0-465d-b665-d62833689f75";
+    public static final String OBS_PRIMARY_DOCTOR = "f62de70b-15ae-42e7-b653-2c7f23cd2317";
+    public static final String OBS_SECONDARY_DOCTOR = "5ae1ae98-6733-4c0d-b1bc-398ae5fea0ac";
+    public static final String OBS_HOSPITAL_ID = "88a3aff6-93a7-4772-916e-e42d86840770";
+    public static final String OBS_BED_NUMBER = "ca48020c-e459-4523-8a89-72c6e2db713f";
+    public static final String OBS_HOSPITAL_MATERNITY = "0d2aac3a-4358-4987-b653-85536d83d723";
+    public static final String OBS_RISK_FACTORS = "2b09cbf9-dbba-4b4e-a442-411841dc1fd3";
+    public static final String OBS_ACTIVE_LABOR_DIAGNOSED = "43069207-3e32-4e18-920f-2a33e7a83fda";
+    public static final String OBS_MEMBRANE_RUPTURED_TIMESTAMP = "fad90749-ed23-4efb-b6ed-f1b68a60ba2a";
+    public static final String OBS_LABOR_ONSET = "8b54e92e-2213-4b3e-8dd3-a8bc57141e25";
 }
