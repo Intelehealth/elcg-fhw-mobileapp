@@ -15,6 +15,7 @@ import org.intelehealth.ezazi.database.dao.PatientsDAO
 import org.intelehealth.ezazi.databinding.ActivityAdmissionDataBinding
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity
+import org.intelehealth.ezazi.utilities.GregorianDateUtils.eddFromLmp
 import org.intelehealth.ezazi.utilities.GregorianDateUtils.gregToDisplay
 import org.intelehealth.ezazi.utilities.ObstetricDatePicker
 import org.intelehealth.ezazi.utilities.ObstetricTimePicker
@@ -56,6 +57,7 @@ class AdmissionDataActivity : BaseActionBarActivity() {
         setupLabourDiagnosedDateField()
         setupAdmissionTimeField()
         setupLabourDiagnosedTimeField()
+        setupLmpField()
     }
 
     private fun readIntentExtras() {
@@ -166,6 +168,21 @@ class AdmissionDataActivity : BaseActionBarActivity() {
         ObstetricTimePicker.show(this) { time ->
             activeLabourDiagnosedTime = time
             form.etLaborDiagnosedTime.setText(time)
+        }
+    }
+
+    private fun setupLmpField() {
+        disableSoftInput(lmpEdd.etLmp, lmpEdd.etEdd)
+        lmpEdd.etLayoutLmp.setEndIconOnClickListener { pickLmpDate() }
+        lmpEdd.etLmp.setOnClickListener { pickLmpDate() }
+    }
+
+    private fun pickLmpDate() {
+        ObstetricDatePicker.show(this, R.string.select_lmp_date, lmpDate) { greg ->
+            lmpDate = greg
+            lmpEdd.etLmp.setText(gregToDisplay(greg))
+            edd = eddFromLmp(greg)
+            lmpEdd.etEdd.setText(gregToDisplay(edd))
         }
     }
 

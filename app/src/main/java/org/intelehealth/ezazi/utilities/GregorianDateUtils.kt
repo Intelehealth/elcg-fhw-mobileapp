@@ -2,6 +2,7 @@ package org.intelehealth.ezazi.utilities
 
 import org.intelehealth.ezazi.stage3.Utils.NepaliDateUtils
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
 
@@ -31,6 +32,21 @@ object GregorianDateUtils {
         if (!AppRegion.usesBikramSambat()) return greg
         val bs = NepaliDateUtils.gregStringToBs(greg) ?: return greg
         return NepaliDateUtils.formatBsDate(bs[0], bs[1], bs[2])
+    }
+
+    /**
+     * Naegele's Rule as EZ-956 defines it: LMP + 7 days - 3 months + 1 year, applied in that order
+     * because Calendar arithmetic is order-dependent at month ends. Empty string if LMP will not parse.
+     */
+    fun eddFromLmp(lmpGreg: String?): String {
+        val millis = gregStringToMillis(lmpGreg) ?: return ""
+        val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+            timeInMillis = millis
+            add(Calendar.DAY_OF_MONTH, 7)
+            add(Calendar.MONTH, -3)
+            add(Calendar.YEAR, 1)
+        }
+        return utcFormat().format(cal.time)
     }
 
     /**
