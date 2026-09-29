@@ -13,11 +13,10 @@ import kotlinx.coroutines.withContext
 import org.intelehealth.ezazi.R
 import org.intelehealth.ezazi.database.dao.PatientsDAO
 import org.intelehealth.ezazi.databinding.ActivityAdmissionDataBinding
-import org.intelehealth.ezazi.ui.dialog.CalendarDialog
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity
-import org.intelehealth.ezazi.utilities.GregorianDateUtils.GREG_FMT
-import org.intelehealth.ezazi.utilities.GregorianDateUtils.gregStringToMillis
+import org.intelehealth.ezazi.utilities.GregorianDateUtils.gregToDisplay
+import org.intelehealth.ezazi.utilities.ObstetricDatePicker
 
 class AdmissionDataActivity : BaseActionBarActivity() {
 
@@ -112,17 +111,6 @@ class AdmissionDataActivity : BaseActionBarActivity() {
         fields.forEach { it.showSoftInputOnFocus = false }
     }
 
-    private fun showDatePicker(titleRes: Int, currentGreg: String, onPicked: (String) -> Unit) {
-        val dialog = CalendarDialog.Builder(this)
-            .title(getString(titleRes))
-            .positiveButtonLabel(R.string.ok)
-            .build()
-        dialog.setDateFormat(GREG_FMT)
-        gregStringToMillis(currentGreg)?.let { dialog.setDefaultDate(it) }
-        dialog.setListener { _, _, _, value -> onPicked(value) }
-        dialog.show(supportFragmentManager, TAG_DATE_PICKER)
-    }
-
     private fun setupAdmissionDateField() {
         disableSoftInput(form.etAdmissionDate)
         form.etLayoutAdmissionDate.setEndIconOnClickListener { pickAdmissionDate() }
@@ -130,9 +118,9 @@ class AdmissionDataActivity : BaseActionBarActivity() {
     }
 
     private fun pickAdmissionDate() {
-        showDatePicker(R.string.select_admission_date, admissionDate) { greg ->
+        ObstetricDatePicker.show(this, R.string.select_admission_date, admissionDate) { greg ->
             admissionDate = greg
-            form.etAdmissionDate.setText(greg)
+            form.etAdmissionDate.setText(gregToDisplay(greg))
         }
     }
 
@@ -141,7 +129,6 @@ class AdmissionDataActivity : BaseActionBarActivity() {
     companion object {
         private const val EXTRA_PATIENT_UUID = "admission_patient_uuid"
         private const val TAG_BACK_CONFIRMATION = "back_confirmation"
-        private const val TAG_DATE_PICKER = "date_picker"
 
         @JvmStatic
         fun newIntent(context: Context, patientUuid: String): Intent =

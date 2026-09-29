@@ -1,5 +1,6 @@
 package org.intelehealth.ezazi.utilities
 
+import org.intelehealth.ezazi.stage3.Utils.NepaliDateUtils
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
@@ -19,6 +20,17 @@ object GregorianDateUtils {
         } catch (e: Exception) {
             null
         }
+    }
+
+    /**
+     * Renders a stored Gregorian date for display. Nepal renders Bikram Sambat; every other region
+     * shows the stored string unchanged. Falls back to the stored string if it will not convert.
+     */
+    fun gregToDisplay(greg: String?): String {
+        if (greg.isNullOrEmpty()) return ""
+        if (!AppRegion.usesBikramSambat()) return greg
+        val bs = NepaliDateUtils.gregStringToBs(greg) ?: return greg
+        return NepaliDateUtils.formatBsDate(bs[0], bs[1], bs[2])
     }
 
     /**
