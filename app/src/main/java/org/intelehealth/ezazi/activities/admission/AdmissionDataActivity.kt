@@ -50,6 +50,7 @@ class AdmissionDataActivity : BaseActionBarActivity() {
         setupBackButton()
         setupBackConfirmation()
         setupAdmissionDateField()
+        setupLabourDiagnosedDateField()
     }
 
     private fun readIntentExtras() {
@@ -121,6 +122,21 @@ class AdmissionDataActivity : BaseActionBarActivity() {
         ObstetricDatePicker.show(this, R.string.select_admission_date, admissionDate) { greg ->
             admissionDate = greg
             form.etAdmissionDate.setText(gregToDisplay(greg))
+        }
+    }
+
+    private fun setupLabourDiagnosedDateField() {
+        disableSoftInput(form.etLaborDiagnosedDate)
+        form.etLayoutLaborDiagnosedDate.setEndIconOnClickListener { pickActiveLabourDate() }
+        form.etLaborDiagnosedDate.setOnClickListener { pickActiveLabourDate() }
+    }
+
+    private fun pickActiveLabourDate() {
+        ObstetricDatePicker.show(
+            this, R.string.select_labor_diagnosed_date, activeLabourDiagnosedDate
+        ) { greg ->
+            activeLabourDiagnosedDate = greg
+            form.etLaborDiagnosedDate.setText(gregToDisplay(greg))
         }
     }
 
