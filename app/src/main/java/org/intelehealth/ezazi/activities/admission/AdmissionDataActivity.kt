@@ -6,8 +6,10 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -38,6 +40,7 @@ class AdmissionDataActivity : BaseActionBarActivity() {
     private var edd: String = ""
     private var totalBirthCount: String = "0"
     private var totalMiscarriageCount: String = "0"
+    private var labourOnset: String = ""
 
     // get() and not a plain val: binding is lateinit and assigned in onCreate, so an initializer runs too early.
     private val form get() = binding.admissionForm
@@ -63,6 +66,7 @@ class AdmissionDataActivity : BaseActionBarActivity() {
         setupLabourDiagnosedTimeField()
         setupLmpField()
         setupParityFields()
+        setupLabourOnsetToggle()
     }
 
     private fun readIntentExtras() {
@@ -154,6 +158,27 @@ class AdmissionDataActivity : BaseActionBarActivity() {
             override fun onTextChanged(s: CharSequence?, st: Int, b: Int, c: Int) = Unit
             override fun afterTextChanged(s: Editable?) = action(s.toString().trim())
         })
+    }
+
+    private fun setupLabourOnsetToggle() {
+        form.etSpontaneous.setOnClickListener { selectLabourOnset(form.etSpontaneous, form.etInduced) }
+        form.etInduced.setOnClickListener { selectLabourOnset(form.etInduced, form.etSpontaneous) }
+    }
+
+    private fun selectLabourOnset(selected: TextView, unselected: TextView) {
+        setOptionSelected(selected)
+        setOptionUnselected(unselected)
+        labourOnset = selected.text.toString()
+    }
+
+    private fun setOptionSelected(option: TextView) {
+        option.setBackgroundResource(R.drawable.button_primary_rounded)
+        option.setTextColor(ContextCompat.getColor(this, R.color.white))
+    }
+
+    private fun setOptionUnselected(option: TextView) {
+        option.setBackgroundResource(R.drawable.button_bg_rounded_corners)
+        option.setTextColor(ContextCompat.getColor(this, R.color.darkGray))
     }
 
     private fun disableSoftInput(vararg fields: EditText) {
