@@ -329,6 +329,7 @@ public class PatientOtherInfoFragment extends Fragment {
                     mTotalBirthCount = v;
                     updateGravida();
                 } else {
+                    mTotalBirthCount = "0";
                     mGravidaEdittext.setText(null);
                 }
             }
@@ -349,6 +350,7 @@ public class PatientOtherInfoFragment extends Fragment {
                     mTotalMiscarriageCount = v;
                     updateGravida();
                 } else {
+                    mTotalMiscarriageCount = "0";
                     mGravidaEdittext.setText(null);
                 }
             }

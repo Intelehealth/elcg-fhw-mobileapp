@@ -16,10 +16,19 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.intelehealth.ezazi.R
+import org.intelehealth.ezazi.app.AppConstants
 import org.intelehealth.ezazi.database.dao.PatientsDAO
+import org.intelehealth.ezazi.database.dao.ProviderDAO
+import org.intelehealth.ezazi.models.dto.ProviderDTO
 import org.intelehealth.ezazi.databinding.ActivityAdmissionDataBinding
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment
+import org.intelehealth.ezazi.ui.dialog.MultiChoiceDialogFragment
+import org.intelehealth.ezazi.ui.dialog.SingleChoiceDialogFragment
+import org.intelehealth.ezazi.ui.dialog.model.SingChoiceItem
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity
+import org.intelehealth.ezazi.ui.validation.FirstLetterUpperCaseInputFilter
+import org.intelehealth.ezazi.ui.dialog.adapter.RiskFactorMultiChoiceAdapter
+import org.intelehealth.ezazi.utilities.SessionManager
 import org.intelehealth.ezazi.utilities.GregorianDateUtils.eddFromLmp
 import org.intelehealth.ezazi.utilities.GregorianDateUtils.gregToDisplay
 import org.intelehealth.ezazi.utilities.ObstetricDatePicker
@@ -43,6 +52,12 @@ class AdmissionDataActivity : BaseActionBarActivity() {
     private var totalMiscarriageCount: String = "0"
     private var labourOnset: String = ""
     private var hospitalMaternity: String = ""
+    private var selectedRuptureMembrane: String = ""
+    private var membraneRupturedTime: String = ""
+    private var riskFactors: String = ""
+    private var providerDoctorList: List<ProviderDTO> = emptyList()
+    private var primaryDoctorUuid: String = ""
+    private var secondaryDoctorUuid: String = ""
 
     // get() and not a plain val: binding is lateinit and assigned in onCreate, so an initializer runs too early.
     private val form get() = binding.admissionForm
@@ -70,6 +85,13 @@ class AdmissionDataActivity : BaseActionBarActivity() {
         setupParityFields()
         setupLabourOnsetToggle()
         setupHospitalMaternityToggle()
+        setupHospitalOtherInput()
+        setupRuptureMembraneField()
+        setupSacRupturedFields()
+        setupRiskFactorsField()
+        loadDoctorList()
+        setupPrimaryDoctorField()
+        setupSecondaryDoctorField()
     }
 
     private fun readIntentExtras() {
@@ -195,6 +217,175 @@ class AdmissionDataActivity : BaseActionBarActivity() {
         }
     }
 
+    private fun setupRuptureMembraneField() {
+        form.etLayoutSacRupturedOptions.setEndIconOnClickListener { selectRuptureMembrane() }
+        form.autotvSacRupturedOptions.setOnClickListener { selectRuptureMembrane() }
+    }
+
+    private fun selectRuptureMembrane() {
+        val items = ArrayList<SingChoiceItem>()
+        resources.getStringArray(R.array.rupture_membrane_options).forEachIndexed { index, option ->
+            items.add(SingChoiceItem().apply {
+                item = option
+                itemId = index.toString()
+                itemIndex = index
+            })
+        }
+        val dialog = SingleChoiceDialogFragment.Builder(this)
+            .title(R.string.select_rupture_membrane)
+            .positiveButtonLabel(R.string.save_button)
+            .content(items)
+            .build()
+        dialog.isSearchable(false)
+        dialog.setListener { chosen -> applyRuptureMembrane(chosen.item) }
+        dialog.show(supportFragmentManager, TAG_RUPTURE_MEMBRANE)
+    }
+
+    private fun applyRuptureMembrane(choice: String) {
+        selectedRuptureMembrane = choice
+        form.autotvSacRupturedOptions.setText(choice)
+        if (choice.equals("Known", ignoreCase = true)) {
+            form.cardSacRuptured.visibility = View.VISIBLE
+        } else {
+            form.cardSacRuptured.visibility = View.GONE
+            form.etSacRupturedDate.setText("")
+            form.etSacRupturedTime.setText("")
+        }
+    }
+
+    private fun setupSacRupturedFields() {
+        disableSoftInput(form.etSacRupturedDate)
+        form.etLayoutSacRupturedDate.setEndIconOnClickListener { pickSacRupturedDate() }
+        form.etSacRupturedDate.setOnClickListener { pickSacRupturedDate() }
+        form.etLayoutSacRupturedTime.setEndIconOnClickListener { pickSacRupturedTime() }
+        form.etSacRupturedTime.setOnClickListener { pickSacRupturedTime() }
+    }
+
+    private fun pickSacRupturedDate() {
+        ObstetricDatePicker.show(
+            this, R.string.select_sac_ruptured_date, membraneRupturedDate
+        ) { greg ->
+            membraneRupturedDate = greg
+            form.etSacRupturedDate.setText(gregToDisplay(greg))
+        }
+    }
+
+    private fun pickSacRupturedTime() {
+        ObstetricTimePicker.show(this) { time ->
+            membraneRupturedTime = time
+            form.etSacRupturedTime.setText(time)
+        }
+    }
+
+    private fun setupRiskFactorsField() {
+        common.etLayoutRiskFactors.setEndIconOnClickListener { selectRiskFactors() }
+        common.autotvRiskFactors.setOnClickListener { selectRiskFactors() }
+    }
+
+    private fun selectRiskFactors() {
+        val dialog = MultiChoiceDialogFragment.Builder<String>(this)
+            .title(R.string.select_risk_factors)
+            .positiveButtonLabel(R.string.save_button)
+            .build()
+        dialog.isSearchable(true)
+        val options = resources.getStringArray(R.array.risk_factors).toCollection(ArrayList())
+        dialog.setAdapter(RiskFactorMultiChoiceAdapter(this, options))
+        dialog.setListener { selected -> applyRiskFactors(selected) }
+        dialog.show(supportFragmentManager, TAG_RISK_FACTORS)
+    }
+
+    private fun applyRiskFactors(selected: List<String>) {
+        if (selected.isEmpty()) return
+        val other = getString(R.string.other_risk)
+        common.llViewOtherRiskFactor.visibility =
+            if (selected.contains(other)) View.VISIBLE else View.GONE
+        riskFactors = selected.joinToString(", ")
+        common.autotvRiskFactors.setText(riskFactors)
+    }
+
+    private fun loadDoctorList() {
+        val locationUuid = SessionManager(this).locationUuid
+        lifecycleScope.launch {
+            providerDoctorList = withContext(Dispatchers.IO) {
+                try {
+                    ProviderDAO().getDoctorList(locationUuid)
+                } catch (e: Exception) {
+                    emptyList<ProviderDTO>()
+                }
+            }
+        }
+    }
+
+    private fun setupPrimaryDoctorField() {
+        common.etLayoutPrimaryDoctor.setEndIconOnClickListener { selectPrimaryDoctor() }
+        common.autotvPrimaryDoctor.setOnClickListener { selectPrimaryDoctor() }
+    }
+
+    private fun selectPrimaryDoctor() {
+        val items = ArrayList<SingChoiceItem>()
+        providerDoctorList.filter { it.userUuid != secondaryDoctorUuid }
+            .forEachIndexed { index, provider ->
+                items.add(SingChoiceItem().apply {
+                    item = provider.givenName + " " + provider.familyName
+                    itemId = provider.userUuid
+                    itemIndex = index
+                })
+            }
+        val dialog = SingleChoiceDialogFragment.Builder(this)
+            .title(R.string.select_primary_doctor)
+            .positiveButtonLabel(R.string.save_button)
+            .content(items)
+            .build()
+        dialog.isSearchable(true)
+        dialog.setListener { chosen ->
+            primaryDoctorUuid = chosen.itemId
+            common.autotvPrimaryDoctor.setText(chosen.item)
+        }
+        dialog.show(supportFragmentManager, TAG_PRIMARY_DOCTOR)
+    }
+
+    private fun setupSecondaryDoctorField() {
+        common.etLayoutSecondaryDoctor.setEndIconOnClickListener { selectSecondaryDoctor() }
+        common.autotvSecondaryDoctor.setOnClickListener { selectSecondaryDoctor() }
+    }
+
+    private fun selectSecondaryDoctor() {
+        if (primaryDoctorUuid.isEmpty()) {
+            Toast.makeText(this, "Please select the primary doctor", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val items = ArrayList<SingChoiceItem>()
+        items.add(SingChoiceItem().apply {
+            item = AppConstants.NOT_APPLICABLE_FULL_TEXT
+            itemId = AppConstants.NOT_APPLICABLE
+            itemIndex = 0
+        })
+        providerDoctorList.filter { it.userUuid != primaryDoctorUuid }
+            .forEachIndexed { index, provider ->
+                items.add(SingChoiceItem().apply {
+                    item = provider.givenName + " " + provider.familyName
+                    itemId = provider.userUuid
+                    itemIndex = index + 1
+                    isSelected = secondaryDoctorUuid == provider.userUuid
+                })
+            }
+        val dialog = SingleChoiceDialogFragment.Builder(this)
+            .title(R.string.select_secondary_doctor)
+            .positiveButtonLabel(R.string.save_button)
+            .content(items)
+            .build()
+        dialog.isSearchable(true)
+        dialog.setListener { chosen ->
+            secondaryDoctorUuid = chosen.itemId
+            common.autotvSecondaryDoctor.setText(chosen.item)
+        }
+        dialog.show(supportFragmentManager, TAG_SECONDARY_DOCTOR)
+    }
+
+    private fun setupHospitalOtherInput() {
+        common.etHospitalOther.filters = arrayOf(FirstLetterUpperCaseInputFilter())
+    }
+
     private fun setOptionSelected(option: TextView) {
         option.setBackgroundResource(R.drawable.button_primary_rounded)
         option.setTextColor(ContextCompat.getColor(this, R.color.white))
@@ -281,6 +472,10 @@ class AdmissionDataActivity : BaseActionBarActivity() {
     companion object {
         private const val EXTRA_PATIENT_UUID = "admission_patient_uuid"
         private const val TAG_BACK_CONFIRMATION = "back_confirmation"
+        private const val TAG_RUPTURE_MEMBRANE = "rupture_membrane"
+        private const val TAG_RISK_FACTORS = "risk_factors"
+        private const val TAG_PRIMARY_DOCTOR = "primary_doctor"
+        private const val TAG_SECONDARY_DOCTOR = "secondary_doctor"
 
         @JvmStatic
         fun newIntent(context: Context, patientUuid: String): Intent =
