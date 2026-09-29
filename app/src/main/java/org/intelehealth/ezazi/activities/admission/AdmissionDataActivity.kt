@@ -14,7 +14,6 @@ import org.intelehealth.ezazi.database.dao.PatientsDAO
 import org.intelehealth.ezazi.databinding.ActivityAdmissionDataBinding
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity
-import timber.log.Timber
 
 class AdmissionDataActivity : BaseActionBarActivity() {
 
@@ -51,7 +50,6 @@ class AdmissionDataActivity : BaseActionBarActivity() {
                 PatientsDAO.getDateOfBirth(patientUuid).orEmpty()
             }
             patientContextLoaded = true
-            Timber.tag("AdmissionDataActivity").d("dob=$dateOfBirth")
         }
     }
 
@@ -64,7 +62,7 @@ class AdmissionDataActivity : BaseActionBarActivity() {
     }
 
     private fun onSaveClicked() {
-        Toast.makeText(this, "Save clicked", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "Save clicked | dob=$dateOfBirth", Toast.LENGTH_SHORT).show()
     }
 
     private fun setupBackButton() {
