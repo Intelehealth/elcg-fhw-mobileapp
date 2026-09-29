@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.View
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
@@ -41,6 +42,7 @@ class AdmissionDataActivity : BaseActionBarActivity() {
     private var totalBirthCount: String = "0"
     private var totalMiscarriageCount: String = "0"
     private var labourOnset: String = ""
+    private var hospitalMaternity: String = ""
 
     // get() and not a plain val: binding is lateinit and assigned in onCreate, so an initializer runs too early.
     private val form get() = binding.admissionForm
@@ -67,6 +69,7 @@ class AdmissionDataActivity : BaseActionBarActivity() {
         setupLmpField()
         setupParityFields()
         setupLabourOnsetToggle()
+        setupHospitalMaternityToggle()
     }
 
     private fun readIntentExtras() {
@@ -169,6 +172,27 @@ class AdmissionDataActivity : BaseActionBarActivity() {
         setOptionSelected(selected)
         setOptionUnselected(unselected)
         labourOnset = selected.text.toString()
+    }
+
+    private fun setupHospitalMaternityToggle() {
+        common.optionHospital.setOnClickListener { selectHospitalMaternity(common.optionHospital) }
+        common.optionMaternity.setOnClickListener { selectHospitalMaternity(common.optionMaternity) }
+        common.optionOther.setOnClickListener { selectHospitalMaternity(common.optionOther) }
+    }
+
+    private fun selectHospitalMaternity(selected: TextView) {
+        listOf(common.optionHospital, common.optionMaternity, common.optionOther).forEach {
+            if (it === selected) setOptionSelected(it) else setOptionUnselected(it)
+        }
+        hospitalMaternity = selected.text.toString()
+
+        if (selected === common.optionOther) {
+            common.cardHospitalOther.visibility = View.VISIBLE
+            common.etHospitalOther.visibility = View.VISIBLE
+        } else {
+            common.cardHospitalOther.visibility = View.GONE
+            common.etHospitalOther.setText("")
+        }
     }
 
     private fun setOptionSelected(option: TextView) {
