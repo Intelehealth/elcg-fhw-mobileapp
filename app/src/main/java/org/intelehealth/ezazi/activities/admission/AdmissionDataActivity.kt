@@ -17,6 +17,7 @@ import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity
 import org.intelehealth.ezazi.utilities.GregorianDateUtils.gregToDisplay
 import org.intelehealth.ezazi.utilities.ObstetricDatePicker
+import org.intelehealth.ezazi.utilities.ObstetricTimePicker
 
 class AdmissionDataActivity : BaseActionBarActivity() {
 
@@ -27,6 +28,8 @@ class AdmissionDataActivity : BaseActionBarActivity() {
 
     private var admissionDate: String = ""
     private var activeLabourDiagnosedDate: String = ""
+    private var admissionTime: String = ""
+    private var activeLabourDiagnosedTime: String = ""
     private var membraneRupturedDate: String = ""
     private var lmpDate: String = ""
     private var edd: String = ""
@@ -51,6 +54,8 @@ class AdmissionDataActivity : BaseActionBarActivity() {
         setupBackConfirmation()
         setupAdmissionDateField()
         setupLabourDiagnosedDateField()
+        setupAdmissionTimeField()
+        setupLabourDiagnosedTimeField()
     }
 
     private fun readIntentExtras() {
@@ -137,6 +142,30 @@ class AdmissionDataActivity : BaseActionBarActivity() {
         ) { greg ->
             activeLabourDiagnosedDate = greg
             form.etLaborDiagnosedDate.setText(gregToDisplay(greg))
+        }
+    }
+
+    private fun setupAdmissionTimeField() {
+        form.etLayoutAdmissionTime.setEndIconOnClickListener { pickAdmissionTime() }
+        form.etAdmissionTime.setOnClickListener { pickAdmissionTime() }
+    }
+
+    private fun pickAdmissionTime() {
+        ObstetricTimePicker.show(this) { time ->
+            admissionTime = time
+            form.etAdmissionTime.setText(time)
+        }
+    }
+
+    private fun setupLabourDiagnosedTimeField() {
+        form.etLayoutLaborDiagnosedTime.setEndIconOnClickListener { pickActiveLabourTime() }
+        form.etLaborDiagnosedTime.setOnClickListener { pickActiveLabourTime() }
+    }
+
+    private fun pickActiveLabourTime() {
+        ObstetricTimePicker.show(this) { time ->
+            activeLabourDiagnosedTime = time
+            form.etLaborDiagnosedTime.setText(time)
         }
     }
 
