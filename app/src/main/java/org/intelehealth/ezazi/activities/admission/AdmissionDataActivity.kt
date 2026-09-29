@@ -86,19 +86,22 @@ class AdmissionDataActivity : BaseActionBarActivity() {
     }
 
     private fun showBackConfirmationDialog() {
+        if (supportFragmentManager.findFragmentByTag(TAG_BACK_CONFIRMATION) != null) return
+
         val dialog = ConfirmationDialogFragment.Builder(this)
             .content(getString(R.string.admission_discard_message))
             .positiveButtonLabel(R.string.confirm)
             .negativeButtonLabel(R.string.cancel)
             .build()
         dialog.setListener { finish() }
-        dialog.show(supportFragmentManager, dialog.javaClass.canonicalName)
+        dialog.show(supportFragmentManager, TAG_BACK_CONFIRMATION)
     }
 
     override fun getScreenTitle(): Int = R.string.title_activity_admission_data
 
     companion object {
         private const val EXTRA_PATIENT_UUID = "admission_patient_uuid"
+        private const val TAG_BACK_CONFIRMATION = "back_confirmation"
 
         @JvmStatic
         fun newIntent(context: Context, patientUuid: String): Intent =
