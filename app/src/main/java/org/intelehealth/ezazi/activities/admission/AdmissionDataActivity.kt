@@ -19,6 +19,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.intelehealth.ezazi.R
+import org.intelehealth.ezazi.activities.admission.validation.AdmissionField
+import org.intelehealth.ezazi.activities.admission.validation.AdmissionForm
+import org.intelehealth.ezazi.activities.admission.validation.AdmissionValidator
+import org.intelehealth.ezazi.activities.admission.validation.Failure
 import org.intelehealth.ezazi.app.AppConstants
 import org.intelehealth.ezazi.database.dao.PatientsDAO
 import org.intelehealth.ezazi.database.dao.ProviderDAO
@@ -33,15 +37,10 @@ import org.intelehealth.ezazi.ui.validation.FirstLetterUpperCaseInputFilter
 import org.intelehealth.ezazi.ui.dialog.adapter.RiskFactorMultiChoiceAdapter
 import org.intelehealth.ezazi.utilities.SessionManager
 import org.intelehealth.ezazi.utilities.DateAndTimeUtils
-import org.intelehealth.ezazi.utilities.GregorianDateUtils.GREG_FMT
 import org.intelehealth.ezazi.utilities.GregorianDateUtils.eddFromLmp
 import org.intelehealth.ezazi.utilities.GregorianDateUtils.gregToDisplay
 import org.intelehealth.ezazi.utilities.ObstetricDatePicker
 import org.intelehealth.ezazi.utilities.ObstetricTimePicker
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 
 class AdmissionDataActivity : BaseActionBarActivity() {
 
@@ -141,7 +140,9 @@ class AdmissionDataActivity : BaseActionBarActivity() {
         lifecycleScope.launch {
             patientContextJob?.join()
 
-            if (!areValidFields()) {
+            val snapshot = snapshotForm()
+
+            if (!areValidFields(snapshot)) {
                 scrollToFocusedItem()
                 return@launch
             }
@@ -154,7 +155,7 @@ class AdmissionDataActivity : BaseActionBarActivity() {
             if (total > allowed) {
                 isParityWarningDialogShown = true
                 showParityWarningDialog()
-            } else if (validateGravida()) {
+            } else if (validateGravida(snapshot)) {
                 onValidated()
             }
         }
@@ -175,258 +176,108 @@ class AdmissionDataActivity : BaseActionBarActivity() {
         dialog.show(supportFragmentManager, TAG_PARITY_WARNING)
     }
 
-    private fun validateGravida(): Boolean {
-        val value = form.etGravida.text.toString().trim()
-        if (value.isEmpty()) {
-            showError(form.tvGravidaError, null, getString(R.string.error_gravida_required))
-            return false
-        }
-        val gravida = parseSafe(value)
-        if (gravida < 0) {
-            showError(form.tvGravidaError, null, getString(R.string.error_gravida_negative))
-            return false
-        }
-        if (gravida > 20) {
-            showError(form.tvGravidaError, null, getString(R.string.error_gravida_max_limit))
-            return false
-        }
-        form.tvGravidaError.visibility = View.GONE
-        return true
-    }
 
-    private fun areValidFields(): Boolean {
+    private fun snapshotForm(): AdmissionForm = AdmissionForm(
+        admissionDate = admissionDate,
+        admissionTime = admissionTime,
+        selectedRuptureMembrane = selectedRuptureMembrane,
+        membraneRupturedDate = membraneRupturedDate,
+        membraneRupturedTime = membraneRupturedTime,
+        totalBirth = form.etTotalBirth.text.toString().trim(),
+        totalMiscarriage = form.etTotalMiscarriage.text.toString().trim(),
+        labourOnset = labourOnset,
+        activeLabourDiagnosedDate = activeLabourDiagnosedDate,
+        activeLabourDiagnosedTime = activeLabourDiagnosedTime,
+        riskFactorsText = common.autotvRiskFactors.text.toString(),
+        isOtherRiskFactorVisible = common.llViewOtherRiskFactor.visibility == View.VISIBLE,
+        otherRiskFactorText = common.etOtherRiskFactor.text.toString(),
+        hospitalMaternity = hospitalMaternity,
+        hospitalOtherText = common.etHospitalOther.text.toString(),
+        lmpDate = lmpDate,
+        primaryDoctorText = common.autotvPrimaryDoctor.text.toString(),
+        ruptureMembraneText = form.autotvSacRupturedOptions.text.toString(),
+        gravida = form.etGravida.text.toString().trim()
+    )
+
+    private fun areValidFields(snapshot: AdmissionForm): Boolean {
         hideAllErrorFields()
         resetAllCardStrokes()
-        var isValid = true
-
-        if (admissionDate.isEmpty()) {
-            showError(form.tvAdmissionDateError, form.cardDateAdmission, getString(R.string.select_admission_date))
-            isValid = false
-        } else {
-            val admDate = parseGregDate(admissionDate)
-            if (admDate == null || isAfterToday(admissionDate)) {
-                showError(form.tvAdmissionDateError, form.cardDateAdmission, getString(R.string.select_admission_date))
-                isValid = false
-            } else {
-                val minAdm = startOfDay(Calendar.getInstance().apply { add(Calendar.DAY_OF_MONTH, -10) })
-                if (admDate.before(minAdm.time)) {
-                    showError(
-                        form.tvAdmissionDateError, form.cardDateAdmission,
-                        getString(R.string.select_admission_date) + " (max 10 days ago)"
-                    )
-                    isValid = false
-                }
-            }
-        }
-
-        if (admissionTime.isBlank()) {
-            showError(form.tvAdmissionTimeError, form.cardTimeAdmission, getString(R.string.select_admission_time))
-            isValid = false
-        } else if (admissionDate.isNotEmpty()) {
-            val admDt = parseGregDateTime(admissionDate, admissionTime)
-            if (admDt != null && admDt.after(Date())) {
-                showError(form.tvAdmissionTimeError, form.cardTimeAdmission, getString(R.string.select_admission_time))
-                isValid = false
-            }
-        }
-
-        if (selectedRuptureMembrane.equals("Known", ignoreCase = true)) {
-            if (membraneRupturedDate.isEmpty()) {
-                showError(
-                    form.tvSacRupturedDateError, form.cardSacRupturedDate,
-                    getString(R.string.select_sac_ruptured_date)
-                )
-                isValid = false
-            } else if (isAfterToday(membraneRupturedDate)) {
-                showError(
-                    form.tvSacRupturedDateError, form.cardSacRupturedDate,
-                    getString(R.string.sac_ruptured_future_not_allowed)
-                )
-                isValid = false
-            }
-            if (membraneRupturedTime.isBlank()) {
-                showError(
-                    form.tvSacRupturedTimeError, form.cardSacRupturedTime,
-                    getString(R.string.select_sac_ruptured_time)
-                )
-                isValid = false
-            } else {
-                val rupDt = parseGregDateTime(membraneRupturedDate, membraneRupturedTime)
-                if (rupDt != null && rupDt.after(Date())) {
-                    showError(
-                        form.tvSacRupturedTimeError, form.cardSacRupturedTime,
-                        getString(R.string.select_sac_ruptured_time)
-                    )
-                    isValid = false
-                }
-            }
-        }
-
-        val birthStr = form.etTotalBirth.text.toString().trim()
-        if (birthStr.isEmpty()) {
-            showError(form.tvParityDateError, form.cardTotalBirth, getString(R.string.total_birth_count_val_txt))
-            isValid = false
-        } else if (parseSafe(birthStr) > 15) {
-            showError(form.tvParityDateError, form.cardTotalBirth, getString(R.string.total_birth_count_limit))
-            isValid = false
-        }
-
-        val misStr = form.etTotalMiscarriage.text.toString().trim()
-        if (misStr.isEmpty()) {
-            showError(
-                form.tvParityTimeError, form.cardTotalMiscarraige,
-                getString(R.string.total_miscarriage_count_val_txt)
-            )
-            isValid = false
-        } else if (parseSafe(misStr) > 8) {
-            showError(form.tvParityTimeError, form.cardTotalMiscarraige, getString(R.string.miscarriage_count_limit))
-            isValid = false
-        }
-
-        if (labourOnset.isEmpty()) {
-            form.tvErrorLabourOnset.visibility = View.VISIBLE
-            form.tvErrorLabourOnset.text = getString(R.string.labor_onset_val_txt)
-            form.etSpontaneous.setBackgroundResource(R.drawable.error_bg_et)
-            form.etInduced.setBackgroundResource(R.drawable.error_bg_et)
-            isValid = false
-        }
-
-        if (activeLabourDiagnosedDate.isEmpty() || isAfterToday(activeLabourDiagnosedDate)) {
-            showError(
-                form.tvLabourDiagnosedDateError, form.cardDiagnosedDate,
-                getString(R.string.active_labor_diagnosed_date_val_txt)
-            )
-            isValid = false
-        }
-
-        if (activeLabourDiagnosedTime.isBlank()) {
-            showError(
-                form.tvLabourDiagnosedTimeError, form.cardDiagnosedTime,
-                getString(R.string.active_labor_diagnosed_time_val_txt)
-            )
-            isValid = false
-        } else if (activeLabourDiagnosedDate.isNotEmpty()) {
-            val labDt = parseGregDateTime(activeLabourDiagnosedDate, activeLabourDiagnosedTime)
-            if (labDt != null) {
-                val min15h = Calendar.getInstance().apply { add(Calendar.HOUR_OF_DAY, -15) }
-                if (labDt.after(Date()) || labDt.before(min15h.time)) {
-                    showError(
-                        form.tvLabourDiagnosedTimeError, form.cardDiagnosedTime,
-                        getString(R.string.active_labour_diagnosis)
-                    )
-                    isValid = false
-                }
-            }
-        }
-
-        if (common.autotvRiskFactors.text.toString().isEmpty()) {
-            showError(
-                common.tvErrorRiskFactor, common.dropdownRiskFactors,
-                getString(R.string.please_select_risk_factor)
-            )
-            isValid = false
-        } else if (common.llViewOtherRiskFactor.visibility == View.VISIBLE &&
-            common.etOtherRiskFactor.text.toString().isEmpty()
-        ) {
-            showError(common.tvErrorRiskFactorOther, common.cardOtherRiskFactor, getString(R.string.error_other_risk))
-            isValid = false
-        }
-
-        if (hospitalMaternity.isEmpty()) {
-            common.tvErrorHospital.visibility = View.VISIBLE
-            common.tvErrorHospital.text = getString(R.string.hospital_matermnity_val_txt)
-            isValid = false
-        } else if (!hospitalMaternity.equals("hospital", ignoreCase = true) &&
-            !hospitalMaternity.equals("maternity", ignoreCase = true)
-        ) {
-            if (common.etHospitalOther.text.toString().isEmpty()) {
-                showError(
-                    common.tvErrorHospitalOther, common.cardHospitalOther,
-                    getString(R.string.enter_hospital_other_error)
-                )
-                isValid = false
-            }
-        }
-
-        if (lmpDate.isNotEmpty()) {
-            val lmp = parseGregDate(lmpDate)
-            if (lmp != null) {
-                if (isAfterToday(lmpDate)) {
-                    lmpEdd.tvLmpError.text = getString(R.string.lmp_future_not_allowed)
-                    lmpEdd.tvLmpError.visibility = View.VISIBLE
-                    isValid = false
-                } else {
-                    val min44 = Calendar.getInstance().apply { add(Calendar.WEEK_OF_YEAR, -44) }
-                    if (lmp.before(min44.time)) {
-                        lmpEdd.tvLmpError.text = getString(R.string.lmp_range_invalid)
-                        lmpEdd.tvLmpError.visibility = View.VISIBLE
-                        isValid = false
-                    }
-                }
-            }
-        } else {
-            lmpEdd.tvLmpError.text = getString(R.string.select_lmp_date)
-            lmpEdd.tvLmpError.visibility = View.VISIBLE
-            isValid = false
-        }
-
-        if (common.autotvPrimaryDoctor.text.toString().isEmpty()) {
-            showError(
-                common.tvErrorPrimaryDoctor, common.dropdownPrimaryDoctor,
-                getString(R.string.select_primary_doctor)
-            )
-            isValid = false
-        }
-
-        if (form.autotvSacRupturedOptions.text.toString().isEmpty()) {
-            showError(
-                form.tvErrorSacRupturedMembrane, form.dropdownSacRupturedOptions,
-                getString(R.string.select_rupture_membrane)
-            )
-            isValid = false
-        }
-
-        return isValid
+        val failures = AdmissionValidator.validate(snapshot)
+        failures.forEach { paintFailure(it) }
+        return failures.isEmpty()
     }
 
-    private fun startOfDay(cal: Calendar): Calendar = cal.apply {
-        set(Calendar.HOUR_OF_DAY, 0)
-        set(Calendar.MINUTE, 0)
-        set(Calendar.SECOND, 0)
-        set(Calendar.MILLISECOND, 0)
-    }
-
-    /**
-     * Device-local and lenient=false, matching the Java. Deliberately not GregorianDateUtils, which is
-     * UTC-pinned: these comparisons are against a local Calendar and a UTC parse would shift the boundary.
-     */
-    private fun parseGregDate(dateStr: String?): Date? {
-        if (dateStr.isNullOrEmpty()) return null
-        return try {
-            SimpleDateFormat(GREG_FMT, Locale.ENGLISH).apply { isLenient = false }.parse(dateStr)
-        } catch (e: Exception) {
-            null
+    private fun validateGravida(snapshot: AdmissionForm): Boolean {
+        val failure = AdmissionValidator.validateGravida(snapshot)
+        if (failure == null) {
+            form.tvGravidaError.visibility = View.GONE
+            return true
         }
+        paintFailure(failure)
+        return false
     }
 
-    private fun isAfterToday(dateStr: String?): Boolean {
-        val parsed = parseGregDate(dateStr) ?: return false
-        val today = startOfDay(Calendar.getInstance())
-        val sel = startOfDay(Calendar.getInstance().apply { time = parsed })
-        return sel.after(today)
-    }
+    private fun paintFailure(failure: Failure) {
+        val message = getString(failure.message) + failure.suffix
+        when (failure.field) {
+            AdmissionField.ADMISSION_DATE ->
+                showError(form.tvAdmissionDateError, form.cardDateAdmission, message)
 
-    private fun parseGregDateTime(dateStr: String?, timeStr: String?): Date? {
-        if (dateStr.isNullOrEmpty() || timeStr.isNullOrEmpty()) return null
-        val combined = dateStr.trim() + " " + timeStr.trim()
-        for (fmt in arrayOf("dd/MM/yyyy hh:mm a", "dd/MM/yyyy HH:mm", "dd/MM/yyyy hh:mm")) {
-            try {
-                SimpleDateFormat(fmt, Locale.ENGLISH).apply { isLenient = false }.parse(combined)
-                    ?.let { return it }
-            } catch (ignored: Exception) {
+            AdmissionField.ADMISSION_TIME ->
+                showError(form.tvAdmissionTimeError, form.cardTimeAdmission, message)
+
+            AdmissionField.SAC_RUPTURED_DATE ->
+                showError(form.tvSacRupturedDateError, form.cardSacRupturedDate, message)
+
+            AdmissionField.SAC_RUPTURED_TIME ->
+                showError(form.tvSacRupturedTimeError, form.cardSacRupturedTime, message)
+
+            AdmissionField.TOTAL_BIRTH ->
+                showError(form.tvParityDateError, form.cardTotalBirth, message)
+
+            AdmissionField.TOTAL_MISCARRIAGE ->
+                showError(form.tvParityTimeError, form.cardTotalMiscarraige, message)
+
+            AdmissionField.LABOUR_DIAGNOSED_DATE ->
+                showError(form.tvLabourDiagnosedDateError, form.cardDiagnosedDate, message)
+
+            AdmissionField.LABOUR_DIAGNOSED_TIME ->
+                showError(form.tvLabourDiagnosedTimeError, form.cardDiagnosedTime, message)
+
+            AdmissionField.RISK_FACTORS ->
+                showError(common.tvErrorRiskFactor, common.dropdownRiskFactors, message)
+
+            AdmissionField.OTHER_RISK_FACTOR ->
+                showError(common.tvErrorRiskFactorOther, common.cardOtherRiskFactor, message)
+
+            AdmissionField.HOSPITAL_OTHER ->
+                showError(common.tvErrorHospitalOther, common.cardHospitalOther, message)
+
+            AdmissionField.PRIMARY_DOCTOR ->
+                showError(common.tvErrorPrimaryDoctor, common.dropdownPrimaryDoctor, message)
+
+            AdmissionField.RUPTURE_MEMBRANE ->
+                showError(form.tvErrorSacRupturedMembrane, form.dropdownSacRupturedOptions, message)
+
+            AdmissionField.GRAVIDA -> showError(form.tvGravidaError, null, message)
+
+            AdmissionField.LABOUR_ONSET -> {
+                form.tvErrorLabourOnset.visibility = View.VISIBLE
+                form.tvErrorLabourOnset.text = message
+                form.etSpontaneous.setBackgroundResource(R.drawable.error_bg_et)
+                form.etInduced.setBackgroundResource(R.drawable.error_bg_et)
+            }
+
+            AdmissionField.HOSPITAL_MATERNITY -> {
+                common.tvErrorHospital.visibility = View.VISIBLE
+                common.tvErrorHospital.text = message
+            }
+
+            AdmissionField.LMP -> {
+                lmpEdd.tvLmpError.text = message
+                lmpEdd.tvLmpError.visibility = View.VISIBLE
             }
         }
-        return null
     }
 
     private fun scrollToFocusedItem() {
@@ -558,7 +409,8 @@ class AdmissionDataActivity : BaseActionBarActivity() {
     private fun selectLabourOnset(selected: TextView, unselected: TextView) {
         setOptionSelected(selected)
         setOptionUnselected(unselected)
-        labourOnset = selected.text.toString()
+        labourOnset = if (selected === form.etSpontaneous) ONSET_SPONTANEOUS else ONSET_INDUCED
+        form.tvErrorLabourOnset.visibility = View.GONE
     }
 
     private fun setupHospitalMaternityToggle() {
@@ -571,7 +423,13 @@ class AdmissionDataActivity : BaseActionBarActivity() {
         listOf(common.optionHospital, common.optionMaternity, common.optionOther).forEach {
             if (it === selected) setOptionSelected(it) else setOptionUnselected(it)
         }
-        hospitalMaternity = selected.text.toString()
+        hospitalMaternity = when {
+            selected === common.optionHospital -> HOSPITAL
+            selected === common.optionMaternity -> MATERNITY
+            else -> OTHER
+        }
+        common.tvErrorHospital.visibility = View.GONE
+        common.tvErrorHospitalOther.visibility = View.GONE
 
         if (selected === common.optionOther) {
             common.cardHospitalOther.visibility = View.VISIBLE
@@ -889,6 +747,12 @@ class AdmissionDataActivity : BaseActionBarActivity() {
         private const val TAG_PRIMARY_DOCTOR = "primary_doctor"
         private const val TAG_SECONDARY_DOCTOR = "secondary_doctor"
         private const val TAG_PARITY_WARNING = "parity_warning"
+
+        private const val HOSPITAL = "Hospital"
+        private const val MATERNITY = "Maternity"
+        private const val OTHER = "Other"
+        private const val ONSET_SPONTANEOUS = "Spontaneous"
+        private const val ONSET_INDUCED = "Induced"
 
         @JvmStatic
         fun newIntent(context: Context, patientUuid: String): Intent =
