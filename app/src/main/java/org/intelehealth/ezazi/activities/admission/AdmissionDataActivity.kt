@@ -3,6 +3,7 @@ package org.intelehealth.ezazi.activities.admission
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.lifecycle.lifecycleScope
@@ -12,8 +13,11 @@ import kotlinx.coroutines.withContext
 import org.intelehealth.ezazi.R
 import org.intelehealth.ezazi.database.dao.PatientsDAO
 import org.intelehealth.ezazi.databinding.ActivityAdmissionDataBinding
+import org.intelehealth.ezazi.ui.dialog.CalendarDialog
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity
+import org.intelehealth.ezazi.utilities.GregorianDateUtils.GREG_FMT
+import org.intelehealth.ezazi.utilities.GregorianDateUtils.gregStringToMillis
 
 class AdmissionDataActivity : BaseActionBarActivity() {
 
@@ -21,6 +25,12 @@ class AdmissionDataActivity : BaseActionBarActivity() {
     private var patientUuid: String = ""
     private var dateOfBirth: String = ""
     private var patientContextLoaded = false
+
+    private var admissionDate: String = ""
+    private var activeLabourDiagnosedDate: String = ""
+    private var membraneRupturedDate: String = ""
+    private var lmpDate: String = ""
+    private var edd: String = ""
 
     // get() and not a plain val: binding is lateinit and assigned in onCreate, so an initializer runs too early.
     private val form get() = binding.admissionForm
@@ -40,6 +50,7 @@ class AdmissionDataActivity : BaseActionBarActivity() {
         setupSaveButton()
         setupBackButton()
         setupBackConfirmation()
+        setupAdmissionDateField()
     }
 
     private fun readIntentExtras() {
@@ -97,11 +108,40 @@ class AdmissionDataActivity : BaseActionBarActivity() {
         dialog.show(supportFragmentManager, TAG_BACK_CONFIRMATION)
     }
 
+    private fun disableSoftInput(vararg fields: EditText) {
+        fields.forEach { it.showSoftInputOnFocus = false }
+    }
+
+    private fun showDatePicker(titleRes: Int, currentGreg: String, onPicked: (String) -> Unit) {
+        val dialog = CalendarDialog.Builder(this)
+            .title(getString(titleRes))
+            .positiveButtonLabel(R.string.ok)
+            .build()
+        dialog.setDateFormat(GREG_FMT)
+        gregStringToMillis(currentGreg)?.let { dialog.setDefaultDate(it) }
+        dialog.setListener { _, _, _, value -> onPicked(value) }
+        dialog.show(supportFragmentManager, TAG_DATE_PICKER)
+    }
+
+    private fun setupAdmissionDateField() {
+        disableSoftInput(form.etAdmissionDate)
+        form.etLayoutAdmissionDate.setEndIconOnClickListener { pickAdmissionDate() }
+        form.etAdmissionDate.setOnClickListener { pickAdmissionDate() }
+    }
+
+    private fun pickAdmissionDate() {
+        showDatePicker(R.string.select_admission_date, admissionDate) { greg ->
+            admissionDate = greg
+            form.etAdmissionDate.setText(greg)
+        }
+    }
+
     override fun getScreenTitle(): Int = R.string.title_activity_admission_data
 
     companion object {
         private const val EXTRA_PATIENT_UUID = "admission_patient_uuid"
         private const val TAG_BACK_CONFIRMATION = "back_confirmation"
+        private const val TAG_DATE_PICKER = "date_picker"
 
         @JvmStatic
         fun newIntent(context: Context, patientUuid: String): Intent =
