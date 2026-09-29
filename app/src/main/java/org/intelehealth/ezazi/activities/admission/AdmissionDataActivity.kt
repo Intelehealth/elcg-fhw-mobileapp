@@ -22,6 +22,12 @@ class AdmissionDataActivity : BaseActionBarActivity() {
     private var dateOfBirth: String = ""
     private var patientContextLoaded = false
 
+    // get() and not a plain val: binding is lateinit and assigned in onCreate, so an initializer runs too early.
+    private val form get() = binding.admissionForm
+    private val lmpEdd get() = form.viewLmpEddLayout
+    private val common get() = form.includeOtherCommonComponent
+    private val actions get() = form.includeOtherActionView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAdmissionDataBinding.inflate(layoutInflater)
@@ -54,7 +60,7 @@ class AdmissionDataActivity : BaseActionBarActivity() {
     }
 
     private fun setupSaveButton() {
-        binding.admissionForm.includeOtherActionView.btnNextAddress.apply {
+        actions.btnNextAddress.apply {
             text = getString(R.string.save_button)
             icon = null
             setOnClickListener { onSaveClicked() }
@@ -66,7 +72,7 @@ class AdmissionDataActivity : BaseActionBarActivity() {
     }
 
     private fun setupBackButton() {
-        binding.admissionForm.includeOtherActionView.btnBackAddress.setOnClickListener {
+        actions.btnBackAddress.setOnClickListener {
             onBackPressedDispatcher.onBackPressed()
         }
     }
