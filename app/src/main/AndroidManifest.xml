@@ -155,6 +155,7 @@
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".activities.admission.AdmissionDataActivity"
+            android:configChanges="uiMode"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"
