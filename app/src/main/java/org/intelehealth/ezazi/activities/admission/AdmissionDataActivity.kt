@@ -3,6 +3,8 @@ package org.intelehealth.ezazi.activities.admission
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -34,6 +36,8 @@ class AdmissionDataActivity : BaseActionBarActivity() {
     private var membraneRupturedDate: String = ""
     private var lmpDate: String = ""
     private var edd: String = ""
+    private var totalBirthCount: String = "0"
+    private var totalMiscarriageCount: String = "0"
 
     // get() and not a plain val: binding is lateinit and assigned in onCreate, so an initializer runs too early.
     private val form get() = binding.admissionForm
@@ -58,6 +62,7 @@ class AdmissionDataActivity : BaseActionBarActivity() {
         setupAdmissionTimeField()
         setupLabourDiagnosedTimeField()
         setupLmpField()
+        setupParityFields()
     }
 
     private fun readIntentExtras() {
@@ -113,6 +118,42 @@ class AdmissionDataActivity : BaseActionBarActivity() {
             .build()
         dialog.setListener { finish() }
         dialog.show(supportFragmentManager, TAG_BACK_CONFIRMATION)
+    }
+
+    private fun setupParityFields() {
+        form.etTotalBirth.afterTextChanged { value ->
+            if (value.isEmpty()) {
+                totalBirthCount = "0"
+                form.etGravida.text = null
+            } else {
+                totalBirthCount = value
+                updateGravida()
+            }
+        }
+        form.etTotalMiscarriage.afterTextChanged { value ->
+            if (value.isEmpty()) {
+                totalMiscarriageCount = "0"
+                form.etGravida.text = null
+            } else {
+                totalMiscarriageCount = value
+                updateGravida()
+            }
+        }
+    }
+
+    private fun updateGravida() {
+        val gravida = parseSafe(totalBirthCount) + parseSafe(totalMiscarriageCount) + 1
+        form.etGravida.setText(gravida.toString())
+    }
+
+    private fun parseSafe(value: String): Int = value.toIntOrNull() ?: 0
+
+    private fun EditText.afterTextChanged(action: (String) -> Unit) {
+        addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, st: Int, c: Int, a: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, st: Int, b: Int, c: Int) = Unit
+            override fun afterTextChanged(s: Editable?) = action(s.toString().trim())
+        })
     }
 
     private fun disableSoftInput(vararg fields: EditText) {
