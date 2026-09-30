@@ -18,5 +18,6 @@ class PatientRegistrationDraft : Serializable {
     var secondaryDoctorUuid: String? = null
     var fromSummary: Boolean = false
     var editingPatientUuid: String? = null
+    var newPatientUuid: String? = null
     var privacyValue: String? = null
 }

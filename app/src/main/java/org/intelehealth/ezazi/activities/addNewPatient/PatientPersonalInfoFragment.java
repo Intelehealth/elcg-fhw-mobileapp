@@ -73,7 +73,6 @@ import org.intelehealth.ezazi.utilities.DateAndTimeUtils;
 import org.intelehealth.ezazi.utilities.FileUtils;
 import org.intelehealth.ezazi.utilities.NepaliDateConverter;
 import org.intelehealth.ezazi.utilities.SessionManager;
-import org.intelehealth.ezazi.utilities.UuidGenerator;
 import org.intelehealth.ezazi.utilities.exception.DAOException;
 import org.intelehealth.klivekit.utils.DateTimeUtils;
 import org.json.JSONException;
@@ -90,7 +89,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.TimeZone;
-import java.util.UUID;
 
 public class PatientPersonalInfoFragment extends Fragment {
 
@@ -125,16 +123,12 @@ public class PatientPersonalInfoFragment extends Fragment {
     String patientID_edit;
     boolean fromSummary;
     Patient patient1 = new Patient();
-    private String patientUuid = "";
-    UuidGenerator uuidGenerator = new UuidGenerator();
     private int mAgeYears = 0;
     Calendar today = Calendar.getInstance();
     MaterialButton btnSaveUpdate;
     PatientDTO patientDTO = new PatientDTO();
     private String mCurrentPhotoPath;
     ImagesDAO imagesDAO = new ImagesDAO();
-    Intent i_privacy;
-    String privacy_value;
     private String mAlternateNumberString = "";
     PatientsDAO patientsDAO = new PatientsDAO();
     boolean fromSecondScreen = false;
@@ -236,8 +230,6 @@ public class PatientPersonalInfoFragment extends Fragment {
         btnSaveUpdate    = view.findViewById(R.id.btn_save_update_first);
         scrollviewPersonalInfo = view.findViewById(R.id.scroll_personal_info);
 
-        i_privacy     = getActivity().getIntent();
-        privacy_value = i_privacy.getStringExtra("privacy");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             mDOB.setShowSoftInputOnFocus(false);
@@ -617,13 +609,17 @@ public class PatientPersonalInfoFragment extends Fragment {
     //  Patient data load / bind
     // ═════════════════════════════════════════════════════════════════════════
 
+    private PatientRegistrationDraft draft() {
+        return ((AddNewPatientActivity) requireActivity()).draft();
+    }
+
     private void updatePatientDetailsFromSecondScreen() {
         fragment_secondScreen = new PatientAddressInfoFragment();
         if (getArguments() != null) {
-            patientDTO               = (PatientDTO) getArguments().getSerializable("patientDTO");
+            patientDTO               = draft().getPatient();
             patient_detail           = getArguments().getBoolean("patient_detail");
             fromSecondScreen         = getArguments().getBoolean("fromSecondScreen");
-            mAlternateNumberString   = getArguments().getString("mAlternateNumberString");
+            mAlternateNumberString   = draft().getAlternateNumber();
             editDetails              = getArguments().getBoolean("editDetails");
             patientAttributesModel   = (PatientAttributesModel) getArguments().getSerializable("patientAttributes");
             patientDTO.setAlternateNo(mAlternateNumberString);
@@ -677,16 +673,13 @@ public class PatientPersonalInfoFragment extends Fragment {
     }
 
     private void updatePatientDetailsFromSummary() {
-        Intent intent = requireActivity().getIntent();
-        if (intent != null && intent.hasExtra("fromSummary")) {
+        fromSummary = draft().getFromSummary();
+        if (fromSummary) {
             mIsEditMode    = true;
-            patientID_edit = intent.getStringExtra("patientUuid");
-            fromSummary    = intent.getBooleanExtra("fromSummary", false);
-            if (fromSummary) {
-                patient1.setUuid(patientID_edit);
-                bindDataWithUI(patientID_edit);
-                updateUI(patient1);
-            }
+            patientID_edit = draft().getEditingPatientUuid();
+            patient1.setUuid(patientID_edit);
+            bindDataWithUI(patientID_edit);
+            updateUI(patient1);
         }
     }
 
@@ -819,9 +812,6 @@ public class PatientPersonalInfoFragment extends Fragment {
             setScrollToFocusedItem();
             return;
         }
-        patientUuid = UUID.randomUUID().toString();
-        if (!patient_detail) patientDTO.setUuid(patientUuid);
-
         if (patientDTO != null) {
             patientDTO.setPatientPhoto(mCurrentPhotoPath != null ? mCurrentPhotoPath : patientDTO.getPatientPhoto());
             patientDTO.setFirstname(mFirstName.getText().toString());
@@ -831,14 +821,12 @@ public class PatientPersonalInfoFragment extends Fragment {
             patientDTO.setDateofbirth(dobToDb);
             patientDTO.setGender(((EditText) view.findViewById(R.id.etGender)).getText().toString());
 
+            draft().setPatient(patientDTO);
             Bundle bundle = new Bundle();
-            bundle.putSerializable("patientDTO", (Serializable) patientDTO);
             bundle.putBoolean("fromFirstScreen", true);
             bundle.putBoolean("patient_detail", patient_detail);
-            bundle.putString("patientUuidUpdate", patientID_edit);
-            bundle.putString("mAlternateNumberString", mAlternateNumber.getText().toString());
+            draft().setAlternateNumber(mAlternateNumber.getText().toString());
             bundle.putBoolean("editDetails", true);
-            bundle.putBoolean("fromSummary", fromSummary);
             bundle.putSerializable("patientAttributes", (Serializable) patientAttributesModel);
 
             fragment_secondScreen.setArguments(bundle);
@@ -946,7 +934,7 @@ public class PatientPersonalInfoFragment extends Fragment {
     }
 
     private void takePicture() {
-        String patientTemp = patientUuid.isEmpty() ? patientDTO.getUuid() : patientUuid;
+        String patientTemp = patientDTO.getUuid();
         File filePath = new File(AppConstants.IMAGE_PATH + patientTemp);
         if (!filePath.exists()) filePath.mkdir();
         Intent cam = new Intent(getActivity(), CameraActivity.class);
@@ -1068,10 +1056,6 @@ public class PatientPersonalInfoFragment extends Fragment {
     // ═════════════════════════════════════════════════════════════════════════
     //  UUID / Scroll helpers
     // ═════════════════════════════════════════════════════════════════════════
-
-    public void generateUuid() {
-        patientUuid = uuidGenerator.UuidGenerator();
-    }
 
     private void setScrollToFocusedItem() {
         if (requireView().findFocus() != null) {

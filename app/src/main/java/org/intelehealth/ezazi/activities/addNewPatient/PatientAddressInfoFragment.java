@@ -50,7 +50,6 @@ import org.intelehealth.ezazi.utilities.Logger;
 import org.intelehealth.ezazi.utilities.NetworkConnection;
 import org.intelehealth.ezazi.utilities.SessionManager;
 import org.intelehealth.ezazi.utilities.StringUtils;
-import org.intelehealth.ezazi.utilities.UuidGenerator;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -88,7 +87,6 @@ public class PatientAddressInfoFragment extends Fragment {
     String city_village;
     String uuid = "";
     PatientDTO patientDTO = new PatientDTO();
-    UuidGenerator uuidGenerator = new UuidGenerator();
     Calendar today = Calendar.getInstance();
     Calendar dob = Calendar.getInstance();
     //    ImageView ivPersonal, ivAddress, ivOther;
@@ -175,14 +173,14 @@ public class PatientAddressInfoFragment extends Fragment {
         firstScreen = new PatientPersonalInfoFragment();
         fragment_thirdScreen = new PatientOtherInfoFragment();
         if (getArguments() != null) {
-            patientDTO = (PatientDTO) getArguments().getSerializable("patientDTO");
+            patientDTO = draft().getPatient();
             fromThirdScreen = getArguments().getBoolean("fromThirdScreen");
             fromFirstScreen = getArguments().getBoolean("fromFirstScreen");
             patient_detail = getArguments().getBoolean("patient_detail");
-            mAlternateNumberString = getArguments().getString("mAlternateNumberString");
+            mAlternateNumberString = draft().getAlternateNumber();
             editDetails = getArguments().getBoolean("editDetails");
-            fromSummary = getArguments().getBoolean("fromSummary");
-            patientUuidUpdate = getArguments().getString("patientUuidUpdate");
+            fromSummary = draft().getFromSummary();
+            patientUuidUpdate = draft().getEditingPatientUuid();
             patientAttributesModel = (PatientAttributesModel) getArguments().getSerializable("patientAttributes");
 
 
@@ -394,18 +392,20 @@ public class PatientAddressInfoFragment extends Fragment {
         patientDTO.setCityvillage(cityVillageValue(autotvState.getText().toString(),
                 autotvDistrict.getText().toString(), mCityVillageName));
 
+        draft().setPatient(patientDTO);
         Bundle bundle = new Bundle();
-        bundle.putSerializable("patientDTO", (Serializable) patientDTO);
         bundle.putBoolean("fromSecondScreen", true);
         bundle.putBoolean("patient_detail", patient_detail);
-        bundle.putString("mAlternateNumberString", mAlternateNumberString);
-        bundle.putBoolean("fromSummary", fromSummary);
-        bundle.putString("patientUuidUpdate", patientUuidUpdate);
+        draft().setAlternateNumber(mAlternateNumberString);
         bundle.putSerializable("patientAttributes", (Serializable) patientAttributesModel);
 
         firstScreen.setArguments(bundle); // passing data to Fragment
         requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.frame_add_patient, firstScreen).commit();
         ((AddNewPatientActivity) requireActivity()).changeCurrentPage(AddNewPatientActivity.PAGE_PERSONAL);
+    }
+
+    private PatientRegistrationDraft draft() {
+        return ((AddNewPatientActivity) requireActivity()).draft();
     }
 
     public void onPatientCreateClicked() {
@@ -430,8 +430,7 @@ public class PatientAddressInfoFragment extends Fragment {
         PatientsDAO patientsDAO = new PatientsDAO();
         PatientAttributesDTO patientAttributesDTO = new PatientAttributesDTO();
         List<PatientAttributesDTO> patientAttributesDTOList = new ArrayList<>();
-        uuid = UUID.randomUUID().toString();
-
+        uuid = ((AddNewPatientActivity) requireActivity()).resolveUuid();
         patientDTO.setUuid(uuid);
         Gson gson = new Gson();
 
@@ -485,13 +484,11 @@ public class PatientAddressInfoFragment extends Fragment {
 
         }
         // Bundle data
+        draft().setPatient(patientDTO);
         Bundle bundle = new Bundle();
-        bundle.putSerializable("patientDTO", (Serializable) patientDTO);
         bundle.putBoolean("fromSecondScreen", true);
         bundle.putBoolean("editDetails", true);
-        bundle.putString("mAlternateNumberString", mAlternateNumberString);
-        bundle.putBoolean("fromSummary", fromSummary);
-        bundle.putString("patientUuidUpdate", patientUuidUpdate);
+        draft().setAlternateNumber(mAlternateNumberString);
         bundle.putBoolean("patient_detail", patient_detail);
         bundle.putSerializable("patientAttributes", (Serializable) patientAttributesModel);
 

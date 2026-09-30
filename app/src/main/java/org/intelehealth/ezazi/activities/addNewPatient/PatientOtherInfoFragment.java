@@ -40,13 +40,9 @@ import com.google.gson.Gson;
 import org.intelehealth.ezazi.ui.dialog.CalendarDialog;
 import org.intelehealth.ezazi.utilities.AppRegion;
 import org.intelehealth.ezazi.R;
-import org.intelehealth.ezazi.activities.patientDetailActivity.PatientDetailActivity;
 import org.intelehealth.ezazi.app.AppConstants;
-import org.intelehealth.ezazi.database.dao.ImagesDAO;
-import org.intelehealth.ezazi.database.dao.ImagesPushDAO;
 import org.intelehealth.ezazi.database.dao.PatientsDAO;
 import org.intelehealth.ezazi.database.dao.ProviderDAO;
-import org.intelehealth.ezazi.database.dao.SyncDAO;
 import org.intelehealth.ezazi.models.Patient;
 import org.intelehealth.ezazi.models.dto.PatientAttributesDTO;
 import org.intelehealth.ezazi.models.dto.PatientAttributesModel;
@@ -62,12 +58,10 @@ import org.intelehealth.ezazi.ui.validation.FirstLetterUpperCaseInputFilter;
 import org.intelehealth.ezazi.utilities.DateAndTimeUtils;
 import org.intelehealth.ezazi.utilities.FileUtils;
 import org.intelehealth.ezazi.utilities.NepaliDateConverter;
-import org.intelehealth.ezazi.utilities.NetworkConnection;
 import org.intelehealth.ezazi.utilities.SessionManager;
+import org.intelehealth.ezazi.utilities.ObstetricValueFormats;
 import org.intelehealth.ezazi.utilities.StringUtils;
-import org.intelehealth.ezazi.utilities.UuidGenerator;
 import org.intelehealth.ezazi.utilities.exception.DAOException;
-import org.intelehealth.klivekit.utils.DateTimeUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -110,7 +104,6 @@ public class PatientOtherInfoFragment extends Fragment {
             etBedNumber, etHospitalOther, mGravidaEdittext, mHospitalId;
     MaterialButton btnBack, btnNext;
     TextView optionHospital, optionMaternity, optionOther;
-    Intent i_privacy;
 
     // ── State ──────────────────────────────────────────────────────────────
     private String mAdmissionDateString = "", mAdmissionTimeString = "";
@@ -128,11 +121,9 @@ public class PatientOtherInfoFragment extends Fragment {
     Patient patient1 = new Patient();
     private boolean hasLicense = false;
     SessionManager sessionManager = null;
-    UuidGenerator uuidGenerator = new UuidGenerator();
     String uuid = "";
     PatientDTO patientDTO = new PatientDTO();
     CheckBox mUnknownMembraneRupturedCheckBox;
-    ImagesDAO imagesDAO = new ImagesDAO();
     boolean patient_detail = false;
     String patientUuidUpdate = "";
     boolean fromSummary = false;
@@ -167,7 +158,6 @@ public class PatientOtherInfoFragment extends Fragment {
     boolean isGravidaEdited = false;
     private String mLmpDate = "", mEDD = "";
     private TextInputEditText mLmpDateTextView, mEDDTextView;
-    private String patientUuid = "";
     private String mSelectedRuptureMembrane = "";
     // ═════════════════════════════════════════════════════════════════════
     //  Lifecycle
@@ -257,10 +247,9 @@ public class PatientOtherInfoFragment extends Fragment {
 
         handleAllClickListeners();
 
-        Intent intent = getActivity().getIntent();
-        if (intent != null && intent.hasExtra("patientUuid")) {
+        if (draft().getEditingPatientUuid() != null) {
             mIsEditMode    = true;
-            patientID_edit = intent.getStringExtra("patientUuid");
+            patientID_edit = draft().getEditingPatientUuid();
             patient1.setUuid(patientID_edit);
             setscreen(patientID_edit);
             updateUI(patient1);
@@ -268,12 +257,12 @@ public class PatientOtherInfoFragment extends Fragment {
 
         secondScreen = new PatientAddressInfoFragment();
         if (getArguments() != null) {
-            patientDTO             = (PatientDTO) getArguments().getSerializable("patientDTO");
+            patientDTO             = draft().getPatient();
             fromSecondScreen       = getArguments().getBoolean("fromSecondScreen");
             patient_detail         = getArguments().getBoolean("patient_detail");
-            mAlternateNumberString = getArguments().getString("mAlternateNumberString");
-            fromSummary            = getArguments().getBoolean("fromSummary");
-            patientUuidUpdate      = getArguments().getString("patientUuidUpdate");
+            mAlternateNumberString = draft().getAlternateNumber();
+            fromSummary            = draft().getFromSummary();
+            patientUuidUpdate      = draft().getEditingPatientUuid();
             patientAttributesModel = (PatientAttributesModel) getArguments().getSerializable("patientAttributes");
             if (fromSecondScreen && patientAttributesModel != null) updateUIForUserFromAddressTab();
         }
@@ -557,11 +546,6 @@ public class PatientOtherInfoFragment extends Fragment {
      * old code threw: a null, empty, or single-character value. The registration number format is
      * therefore unchanged for all existing and future records; this only removes a crash on Save.
      */
-    private String regNumberPart(String value) {
-        if (value == null || value.isEmpty()) return "";
-        return value.length() >= 2 ? value.substring(0, 2) : value;
-    }
-
     private String gregToDisplay(String gregDdMmYyyy) {
         if (gregDdMmYyyy == null || gregDdMmYyyy.isEmpty()) return "";
         if (!AppRegion.usesBikramSambat()) return gregDdMmYyyy;
@@ -1230,8 +1214,7 @@ public class PatientOtherInfoFragment extends Fragment {
             }
         });
 
-        i_privacy = getActivity().getIntent();
-        privacy_value = i_privacy.getStringExtra("privacy");
+        privacy_value = draft().getPrivacyValue();
 
         if (!sessionManager.getLicenseKey().isEmpty()) hasLicense = true;
         try {
@@ -1739,14 +1722,12 @@ public class PatientOtherInfoFragment extends Fragment {
 
     private void onBackInsertIntopatientDTO() {
         PatientAttributesModel attrs = getPatientAttributes();
+        draft().setPatient(patientDTO);
         Bundle bundle = new Bundle();
-        bundle.putSerializable("patientDTO", (Serializable) patientDTO);
         bundle.putBoolean("fromThirdScreen", true);
         bundle.putBoolean("patient_detail", patient_detail);
         bundle.putBoolean("editDetails", true);
-        bundle.putString("mAlternateNumberString", mAlternateNumberString);
-        bundle.putBoolean("fromSummary", fromSummary);
-        bundle.putString("patientUuidUpdate", patientUuidUpdate);
+        draft().setAlternateNumber(mAlternateNumberString);
         bundle.putSerializable("patientAttributes", (Serializable) attrs);
         secondScreen.setArguments(bundle);
         requireActivity().getSupportFragmentManager().beginTransaction()
@@ -1810,12 +1791,17 @@ public class PatientOtherInfoFragment extends Fragment {
             etHospitalOther.setVisibility(View.VISIBLE);
         }
 
+        String otherRiskText = etHighRisk.getText().toString();
+        String primaryDoctorName = mPrimaryDoctorTextView.getText().toString();
+        String secondaryDoctorName = mSecondaryDoctorTextView.getText().toString();
+        String bedNumber = etBedNumber.getText().toString();
+        String gravida = mGravidaEdittext.getText().toString();
+        String hospitalId = mHospitalId.getText().toString();
+
         PatientsDAO patientsDAO = new PatientsDAO();
         List<PatientAttributesDTO> attrList = new ArrayList<>();
 
-        if (fromSummary && patientUuidUpdate != null && !patientUuidUpdate.isEmpty())
-            uuid = patientUuidUpdate;
-        else uuid = UUID.randomUUID().toString();
+        uuid = ((AddNewPatientActivity) requireActivity()).resolveUuid();
 
         patientDTO.setUuid(uuid);
         patientDTO.setCreatorUuid(sessionManager.getCreatorID());
@@ -1831,22 +1817,13 @@ public class PatientOtherInfoFragment extends Fragment {
 
         attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.ADMISSION_DATE.value, StringUtils.getValue(mAdmissionDateString)));
         attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.ADMISSION_TIME.value, StringUtils.getValue(mAdmissionTimeString)));
-        attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.PARITY.value, StringUtils.getValue(mTotalBirthCount + "," + mTotalMiscarriageCount)));
+        attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.PARITY.value, StringUtils.getValue(ObstetricValueFormats.INSTANCE.parity(mTotalBirthCount, mTotalMiscarriageCount))));
         attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.LABOR_ONSET.value, StringUtils.getValue(mLaborOnsetString)));
-        attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.ACTIVE_LABOR_DIAGNOSED.value, StringUtils.getValue(mActiveLaborDiagnosedDate + " " + mActiveLaborDiagnosedTime)));
+        attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.ACTIVE_LABOR_DIAGNOSED.value, StringUtils.getValue(ObstetricValueFormats.INSTANCE.timestamp(mActiveLaborDiagnosedDate, mActiveLaborDiagnosedTime))));
        /* attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.MEMBRANE_RUPTURED_TIMESTAMP.value,
                 mUnknownMembraneRupturedCheckBox.isChecked() ? "U" : StringUtils.getValue(mMembraneRupturedDate + " " + mMembraneRupturedTime)));*/
-        String membraneValue;
-        if ("Unknown".equals(mSelectedRuptureMembrane)) {
-            membraneValue = "U";
-        } else if ("Intact".equals(mSelectedRuptureMembrane)) {
-            membraneValue = "I";
-        } else {
-            // Known
-            membraneValue = StringUtils.getValue(
-                    mMembraneRupturedDate + " " + mMembraneRupturedTime
-            );
-        }
+        String membraneValue = ObstetricValueFormats.INSTANCE.membraneRuptured(
+                mSelectedRuptureMembrane, mMembraneRupturedDate, mMembraneRupturedTime);
 
         attrList.add(
                 mkAttr.apply(
@@ -1854,82 +1831,28 @@ public class PatientOtherInfoFragment extends Fragment {
                         membraneValue
                 )
         );
-        if (mRiskFactorsString.contains(getString(R.string.other_risk)))
-            mRiskFactorsString = mRiskFactorsString.replace(getString(R.string.other_risk), etHighRisk.getText().toString());
+        mRiskFactorsString = ObstetricValueFormats.INSTANCE.riskFactors(
+                mRiskFactorsString, getString(R.string.other_risk), otherRiskText);
         attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.RISK_FACTORS.value, StringUtils.getValue(mRiskFactorsString)));
         attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.HOSPITAL_MATERNITY.value, StringUtils.getValue(mHospitalMaternityString)));
-        attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.PRIMARY_DOCTOR.value, StringUtils.getValue(mPrimaryDoctorUUIDString) + "@#@" + mPrimaryDoctorTextView.getText()));
-        if (mSecondaryDoctorTextView.getText().length() > 0)
-            attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.SECONDARY_DOCTOR.value, StringUtils.getValue(mSecondaryDoctorUUIDString) + "@#@" + mSecondaryDoctorTextView.getText()));
-        int num = (int) (Math.random() * (99999999 - 100 + 1) + 100);
-        attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.REGISTRATION_NUMBER.value,
-                regNumberPart(patientDTO.getCountry()) + "/" + regNumberPart(patientDTO.getStateprovince()) + "/" + regNumberPart(patientDTO.getCityvillage()) + "/" + num));
+        attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.PRIMARY_DOCTOR.value, ObstetricValueFormats.INSTANCE.doctor(StringUtils.getValue(mPrimaryDoctorUUIDString), primaryDoctorName)));
+        if (secondaryDoctorName.length() > 0)
+            attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.SECONDARY_DOCTOR.value, ObstetricValueFormats.INSTANCE.doctor(StringUtils.getValue(mSecondaryDoctorUUIDString), secondaryDoctorName)));
         attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.BED_NUMBER.value,
-                !TextUtils.isEmpty(etBedNumber.getText().toString()) ? StringUtils.getValue(etBedNumber.getText().toString()) : StringUtils.getValue(AppConstants.NOT_APPLICABLE)));
-        attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.ALTERNATE_NO.value, StringUtils.getValue(mAlternateNumberString)));
-        attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.PROFILE_IMG_TIMESTAMP.value, AppConstants.dateAndTimeUtils.currentDateTime()));
-        attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.GRAVIDA.value, mGravidaEdittext.getText().toString()));
+                ObstetricValueFormats.INSTANCE.bedNumber(StringUtils.getValue(bedNumber))));
+        attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.GRAVIDA.value, gravida));
         attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.lmp.value, mLmpDate));
         attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.EDD.value, mEDD));
-        attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.HOSPITAL_ID.value, mHospitalId.getText().toString()));
-        if (!fromSummary) {
-            attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.PATIENT_REGISTRATION_START_DATE_TIME.value, sessionManager.getPatientRegistrationDateTime()));
-        }
+        attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.HOSPITAL_ID.value, hospitalId));
         patientDTO.setPatientAttributesDTOList(attrList);
         patientDTO.setSyncd(false);
 
-        try {
-            if (fromSummary) {
-                boolean upd = patientsDAO.updatePatientToDBNew(patientDTO, uuid, attrList);
-                boolean img = imagesDAO.updatePatientProfileImages(patientDTO.getPatientPhoto(), uuid);
-                if (NetworkConnection.isOnline(getActivity().getApplication())) {
-                    new SyncDAO().pushDataApi();
-                    new ImagesPushDAO().patientProfileImagesPush();
-                }
-                if (upd && img) {
-                    Intent i = new Intent(getActivity().getApplication(), PatientDetailActivity.class);
-                    i.putExtra("patientUuid", uuid);
-                    i.putExtra("patientName", patientDTO.getFirstname() + " " + patientDTO.getLastname());
-                    i.putExtra("tag", "newPatient");
-                    i.putExtra("hasPrescription", "false");
-                    getActivity().startActivity(i);
-                    getActivity().finish();
-                }
-            } else {
-                patientDTO.setCreatedAt(DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT));
-                boolean ins = patientsDAO.insertPatientToDB(patientDTO, uuid);
-                imagesDAO.insertPatientProfileImages(patientDTO.getPatientPhoto(), uuid);
-                if (NetworkConnection.isOnline(mContext)) {
-                    new SyncDAO().pushDataApi();
-                    new ImagesPushDAO().patientProfileImagesPush();
-                }
-                if (ins) {
-                    Intent i = new Intent(mContext, PatientDetailActivity.class);
-                    i.putExtra("patientUuid", uuid);
-                    i.putExtra("patientName", patientDTO.getFirstname() + " " + patientDTO.getLastname());
-                    i.putExtra("tag", "newPatient");
-                    i.putExtra("privacy", privacy_value);
-                    i.putExtra("hasPrescription", "false");
-                    setSelectedDob(requireContext(), "");
-                    sessionManager.savePatientRegistrationDateTime("");
-                    mContext.startActivity(i);
-                    getActivity().finish();
-                } else {
-                    Toast.makeText(mContext, "Error adding data", Toast.LENGTH_SHORT).show();
-                }
-            }
-        } catch (DAOException e) {
-            FirebaseCrashlytics.getInstance().recordException(e);
-        }
+        ((AddNewPatientActivity) requireActivity()).completeRegistration(attrList);
     }
 
     public void setSelectedDob(Context context, String dob) {
         context.getApplicationContext().getSharedPreferences("dobPatient", 0)
                 .edit().putString("dobPatient", dob).apply();
-    }
-
-    public void generateUuid() {
-        patientUuid = uuidGenerator.UuidGenerator();
     }
 
     private void setScrollToFocusedItem() {

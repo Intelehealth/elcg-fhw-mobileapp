@@ -1,6 +1,6 @@
 package org.intelehealth.ezazi.activities.admission.persistence
 
-import org.intelehealth.ezazi.app.AppConstants
+import org.intelehealth.ezazi.utilities.ObstetricValueFormats
 import org.intelehealth.ezazi.utilities.UuidDictionary
 
 /**
@@ -9,13 +9,6 @@ import org.intelehealth.ezazi.utilities.UuidDictionary
  * changes; a format change here would corrupt data already collected from the other region.
  */
 object AdmissionValues {
-
-    private const val DOCTOR_SEPARATOR = "@#@"
-    private const val MEMBRANE_UNKNOWN = "U"
-    private const val MEMBRANE_INTACT = "I"
-    private const val OPTION_UNKNOWN = "Unknown"
-    private const val OPTION_INTACT = "Intact"
-    private const val OPTION_OTHER = "other"
 
     /**
      * Returns concept uuid to stored value. Secondary doctor is omitted when no name was picked,
@@ -45,44 +38,28 @@ object AdmissionValues {
         return values
     }
 
-    /** Comma, no space. PatientOtherInfoFragment.java:1825. */
     private fun parity(record: AdmissionRecord): String =
-        record.totalBirthCount + "," + record.totalMiscarriageCount
+        ObstetricValueFormats.parity(record.totalBirthCount, record.totalMiscarriageCount)
 
-    /** One separator space; the time already carries its own trailing space. :1827. */
     private fun activeLabourDiagnosed(record: AdmissionRecord): String =
-        record.activeLabourDiagnosedDate + " " + record.activeLabourDiagnosedTime
+        ObstetricValueFormats.timestamp(record.activeLabourDiagnosedDate, record.activeLabourDiagnosedTime)
 
-    /** Case-sensitive, and Known is the else branch. :1830-1841. */
-    private fun membraneRuptured(record: AdmissionRecord): String = when (record.selectedRuptureMembrane) {
-        OPTION_UNKNOWN -> MEMBRANE_UNKNOWN
-        OPTION_INTACT -> MEMBRANE_INTACT
-        else -> record.membraneRupturedDate + " " + record.membraneRupturedTime
-    }
+    private fun membraneRuptured(record: AdmissionRecord): String = ObstetricValueFormats.membraneRuptured(
+        record.selectedRuptureMembrane, record.membraneRupturedDate, record.membraneRupturedTime
+    )
 
-    /** The Other-High-Risk label is substituted with the typed reason. :1848-1850. */
     private fun riskFactors(record: AdmissionRecord, otherRiskLabel: String): String =
-        if (record.riskFactors.contains(otherRiskLabel)) {
-            record.riskFactors.replace(otherRiskLabel, record.otherRiskFactorText)
-        } else {
-            record.riskFactors
-        }
+        ObstetricValueFormats.riskFactors(record.riskFactors, otherRiskLabel, record.otherRiskFactorText)
 
-    /** The literal "other" is never stored; the typed facility replaces it. :1798-1802. */
     private fun hospitalMaternity(record: AdmissionRecord): String =
-        if (record.hospitalMaternity.trim().equals(OPTION_OTHER, ignoreCase = true)) {
-            record.hospitalOtherText
-        } else {
-            record.hospitalMaternity
-        }
+        ObstetricValueFormats.hospitalMaternity(record.hospitalMaternity, record.hospitalOtherText)
 
     private fun primaryDoctor(record: AdmissionRecord): String =
-        record.primaryDoctorUuid + DOCTOR_SEPARATOR + record.primaryDoctorName
+        ObstetricValueFormats.doctor(record.primaryDoctorUuid, record.primaryDoctorName)
 
     private fun secondaryDoctor(record: AdmissionRecord): String =
-        record.secondaryDoctorUuid + DOCTOR_SEPARATOR + record.secondaryDoctorName
+        ObstetricValueFormats.doctor(record.secondaryDoctorUuid, record.secondaryDoctorName)
 
-    /** Blank becomes "NA", not the empty string. :1858-1859. */
     private fun bedNumber(record: AdmissionRecord): String =
-        record.bedNumber.ifEmpty { AppConstants.NOT_APPLICABLE }
+        ObstetricValueFormats.bedNumber(record.bedNumber)
 }
