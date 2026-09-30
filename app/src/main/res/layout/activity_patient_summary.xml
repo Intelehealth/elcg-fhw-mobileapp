@@ -294,6 +294,7 @@
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_bed_no"
                 style="@style/Theme.EZazi.Material.CardView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

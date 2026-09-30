@@ -142,6 +142,7 @@ public class PatientDetailActivity extends BaseActionBarActivity {
     List<String> encounterTypeUUIDListFor12Encounters = new ArrayList<>();
     String stage1Hr1_1_EncounterUuid, stage1Hr1_2_EncounterUuid;
     TextView tvBedNumber;
+    View cardBedNo;
 
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -521,6 +522,7 @@ public class PatientDetailActivity extends BaseActionBarActivity {
         TextView ageView         = findViewById(R.id.textView_age);
         TextView addrFinalView   = findViewById(R.id.textView_address_final);
         tvBedNumber              = findViewById(R.id.textView_bed_no);
+        cardBedNo                = findViewById(R.id.card_bed_no);
         phoneView                = findViewById(R.id.textView_phone);
         ImageView whatsapp_no    = findViewById(R.id.whatsapp_no);
         ImageView calling        = findViewById(R.id.calling);
@@ -544,12 +546,16 @@ public class PatientDetailActivity extends BaseActionBarActivity {
         }
 
         // ── 5. Bed number ─────────────────────────────────────────────────────
-        try {
-            String checkUUId = patient.getUuid();
-            if (checkUUId != null && !checkUUId.isEmpty())
-                tvBedNumber.setText(getBedNumber(checkUUId));
-        } catch (DAOException e) {
-            e.printStackTrace();
+        if (AppRegion.collectsAdmissionDataAtRegistration()) {
+            try {
+                String checkUUId = patient.getUuid();
+                if (checkUUId != null && !checkUUId.isEmpty())
+                    tvBedNumber.setText(getBedNumber(checkUUId));
+            } catch (DAOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            cardBedNo.setVisibility(View.GONE);
         }
 
         // ── 6. Patient name ───────────────────────────────────────────────────

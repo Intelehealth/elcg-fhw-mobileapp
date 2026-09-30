@@ -306,4 +306,5 @@
     <dimen name="splash_logo_width">280dp</dimen>
     <dimen name="login_logo_height">160dp</dimen>
     <dimen name="item_past_visit_padding">16dp</dimen>
+    <dimen name="pv_value_text_size">19sp</dimen>
 </resources>

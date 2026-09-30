@@ -37,6 +37,7 @@ class PastVisitAdapter(
 
         fun bind(details: PastVisitDetails) {
             binding.tvPvAdmissionDate.text = orDash(details.admissionDate)
+            binding.tvPvBed.text = orDash(details.bedNumber)
             binding.tvPvActiveLabour.text = orDash(details.activeLabourDiagnosed)
             binding.tvPvDelivery.text = orDash(details.deliveryDate)
             binding.tvPvRisk.text = orDash(details.riskFactors)
@@ -71,7 +72,7 @@ class PastVisitAdapter(
         }
 
         private fun applyExpansion(expanded: Boolean) {
-            binding.llPvBody.visibility = if (expanded) View.VISIBLE else View.GONE
+            binding.tlPvBody.visibility = if (expanded) View.VISIBLE else View.GONE
             binding.ivPvChevron.setImageResource(
                 if (expanded) R.drawable.ic_past_visit_chevron_up else R.drawable.ic_past_visit_chevron
             )

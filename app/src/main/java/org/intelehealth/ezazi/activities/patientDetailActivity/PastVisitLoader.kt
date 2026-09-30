@@ -18,6 +18,7 @@ object PastVisitLoader {
 
     private val ADMISSION_COLUMNS = listOf(
         Columns.ADMISSION_DATE,
+        Columns.BED_NUMBER,
         Columns.ACTIVE_LABOR_DIAGNOSED,
         Columns.RISK_FACTORS,
         Columns.PARITY
@@ -64,6 +65,7 @@ object PastVisitLoader {
         return PastVisitDetails(
             visitUuid = visitUuid,
             admissionDate = admission[Columns.ADMISSION_DATE].orEmpty(),
+            bedNumber = admission[Columns.BED_NUMBER].orEmpty(),
             activeLabourDiagnosed = admission[Columns.ACTIVE_LABOR_DIAGNOSED].orEmpty(),
             deliveryDate = obsValue(db, stage3, DeliveryDetailsConcept.DATE_OF_DELIVERY.uuid),
             riskFactors = admission[Columns.RISK_FACTORS].orEmpty(),

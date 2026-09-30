@@ -7,6 +7,7 @@ package org.intelehealth.ezazi.activities.patientDetailActivity
 data class PastVisitDetails(
     val visitUuid: String,
     val admissionDate: String,
+    val bedNumber: String,
     val activeLabourDiagnosed: String,
     val deliveryDate: String,
     val riskFactors: String,

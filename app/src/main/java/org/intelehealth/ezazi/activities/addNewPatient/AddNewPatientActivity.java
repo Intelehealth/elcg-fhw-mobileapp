@@ -38,8 +38,7 @@ import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
 import org.jetbrains.annotations.NotNull;
 
-public class AddNewPatientActivity extends BaseActionBarActivity
-        implements AddNewPatientActivity.RegistrationStepHost {
+public class AddNewPatientActivity extends BaseActionBarActivity implements RegistrationStepHost {
     private static final String TAG = "AddNewPatientActivity";
     public static final int NO_STEP = -1;
     public static final int PAGE_PERSONAL = 0;
@@ -52,16 +51,6 @@ public class AddNewPatientActivity extends BaseActionBarActivity
     private int previousStepIndex = NO_STEP;
 
     /** What a step fragment is allowed to ask of the Activity. Nothing calls it until S3. */
-    public interface RegistrationStepHost {
-        PatientRegistrationDraft draft();
-
-        String resolveUuid();
-
-        void onStepCompleted();
-
-        void onStepBack();
-    }
-
     @Override
     public PatientRegistrationDraft draft() {
         return draft;
