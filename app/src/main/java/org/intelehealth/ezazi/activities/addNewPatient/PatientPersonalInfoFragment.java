@@ -1,7 +1,6 @@
 package org.intelehealth.ezazi.activities.addNewPatient;
 
 import static android.app.Activity.RESULT_OK;
-import static android.content.Context.MODE_PRIVATE;
 
 import android.Manifest;
 import android.content.Context;
@@ -424,7 +423,7 @@ public class PatientPersonalInfoFragment extends Fragment {
         try {
             mDOB.setText(dobForDisplay(dobToDb));
             tvDobForDb.setText(dobForDisplay(dobToDb));
-            setSelectedDob(mContext, dobToDb);
+            draft().setDobToDb(dobToDb);
 
             mAgeYears = ymd.years;
             mAge.setText(String.valueOf(mAgeYears));
@@ -476,7 +475,7 @@ public class PatientPersonalInfoFragment extends Fragment {
         try {
             mDOB.setText(dobForDisplay(dobToDb));
             tvDobForDb.setText(dobForDisplay(dobToDb));
-            setSelectedDob(mContext, dobToDb);
+            draft().setDobToDb(dobToDb);
         } finally {
             isSyncing = false;
         }
@@ -627,7 +626,7 @@ public class PatientPersonalInfoFragment extends Fragment {
                 mMobileNumber.setText(patientDTO.getPhonenumber());
                 mAlternateNumber.setText(mAlternateNumberString);
 
-                String savedDob = getSelectedDob(mContext);
+                String savedDob = draft().getDobToDb();
                 if (savedDob != null && !savedDob.isEmpty()) {
                     mDOB.setText(dobForDisplay(savedDob));
                     tvDobForDb.setText(dobForDisplay(savedDob));
@@ -1008,11 +1007,6 @@ public class PatientPersonalInfoFragment extends Fragment {
     //  SharedPrefs
     // ═════════════════════════════════════════════════════════════════════════
 
-    public String getSelectedDob(Context context) {
-        return context.getSharedPreferences("dobPatient", MODE_PRIVATE)
-                .getString("dobPatient", "");
-    }
-
     /**
      * Formats a Gregorian {@code yyyy-MM-dd} date of birth for display.
      *
@@ -1023,19 +1017,6 @@ public class PatientPersonalInfoFragment extends Fragment {
     private String dobForDisplay(String gregorianDbDate) {
         if (gregorianDbDate == null || gregorianDbDate.isEmpty()) return "";
         return NepaliDateConverter.gregStringToBsDisplay(gregorianDbDate);
-    }
-
-    /**
-     * Persists the date of birth in the Gregorian storage format, never in Bikram Sambat.
-     *
-     * <p>This preference file is app-private and both brands ship one applicationId, so a build of
-     * either brand installed over the other reads whatever the previous one wrote. Storing Gregorian
-     * keeps that value meaningful to both.
-     */
-    public void setSelectedDob(Context context, String dob) {
-        context.getApplicationContext()
-                .getSharedPreferences("dobPatient", 0)
-                .edit().putString("dobPatient", dob).apply();
     }
 
     // ═════════════════════════════════════════════════════════════════════════

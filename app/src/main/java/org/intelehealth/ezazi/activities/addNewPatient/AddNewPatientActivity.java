@@ -42,6 +42,7 @@ public class AddNewPatientActivity extends BaseActionBarActivity
         implements AddNewPatientActivity.RegistrationStepHost {
     private static final String TAG = "AddNewPatientActivity";
     private static final String KEY_STEP_INDEX = "stepIndex";
+    private static final String KEY_DRAFT = "draft";
     public static final int NO_STEP = -1;
     public static final int PAGE_PERSONAL = 0;
     public static final int PAGE_ADDRESS = 1;
@@ -173,8 +174,7 @@ public class AddNewPatientActivity extends BaseActionBarActivity
         i.putExtra("tag", "newPatient");
         if (!draft.getFromSummary()) {
             i.putExtra("privacy", draft.getPrivacyValue());
-            getApplicationContext().getSharedPreferences("dobPatient", 0)
-                    .edit().putString("dobPatient", "").apply();
+            draft.setDobToDb(null);
             new SessionManager(this).savePatientRegistrationDateTime("");
         }
         i.putExtra("hasPrescription", "false");
@@ -207,11 +207,9 @@ public class AddNewPatientActivity extends BaseActionBarActivity
     protected void onCreate(Bundle savedInstanceState) {
         setContentView(R.layout.activity_add_new_patient);
         super.onCreate(savedInstanceState);
+        restoreDraft(savedInstanceState);
         readEntryExtras();
         buildSteps();
-        if (savedInstanceState != null) {
-            currentStepIndex = savedInstanceState.getInt(KEY_STEP_INDEX, PAGE_PERSONAL);
-        }
         initUI(savedInstanceState == null);
         setupActionBar();
         enableProperPadding(AddNewPatientActivity.this);
@@ -220,6 +218,14 @@ public class AddNewPatientActivity extends BaseActionBarActivity
     @Override
     protected int getScreenTitle() {
         return R.string.add_patient;
+    }
+
+    /** Restored before readEntryExtras, so the entry values are always the Intent's. */
+    private void restoreDraft(Bundle savedInstanceState) {
+        if (savedInstanceState == null) return;
+        Object saved = savedInstanceState.getSerializable(KEY_DRAFT);
+        if (saved instanceof PatientRegistrationDraft) draft = (PatientRegistrationDraft) saved;
+        currentStepIndex = savedInstanceState.getInt(KEY_STEP_INDEX, PAGE_PERSONAL);
     }
 
     /** privacy is null on the edit path and editDetails is a hardcoded true everywhere, so neither is carried. */
@@ -331,14 +337,6 @@ public class AddNewPatientActivity extends BaseActionBarActivity
         return previousStepIndex == step;
     }
 
-    private void setScreen(Fragment fragment) {
-
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.frame_add_patient, fragment)
-                .commit();
-    }
-
     /*
         private void setscreen(Fragment fragment) {
             // Bundle data
@@ -404,6 +402,7 @@ public class AddNewPatientActivity extends BaseActionBarActivity
     protected void onSaveInstanceState(@NotNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt(KEY_STEP_INDEX, currentStepIndex);
+        outState.putSerializable(KEY_DRAFT, draft);
     }
 
     @Override

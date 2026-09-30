@@ -47,7 +47,6 @@ import org.intelehealth.ezazi.utilities.AppRegion;
 import org.intelehealth.ezazi.utilities.FileUtils;
 import org.intelehealth.ezazi.utilities.FlavorKeys;
 import org.intelehealth.ezazi.utilities.Logger;
-import org.intelehealth.ezazi.utilities.NetworkConnection;
 import org.intelehealth.ezazi.utilities.SessionManager;
 import org.intelehealth.ezazi.utilities.StringUtils;
 import org.json.JSONException;
@@ -406,9 +405,6 @@ public class PatientAddressInfoFragment extends Fragment {
             setScrollToFocusedItem();
             return;
         }
-        PatientsDAO patientsDAO = new PatientsDAO();
-        PatientAttributesDTO patientAttributesDTO = new PatientAttributesDTO();
-        List<PatientAttributesDTO> patientAttributesDTOList = new ArrayList<>();
         uuid = ((AddNewPatientActivity) requireActivity()).resolveUuid();
         patientDTO.setUuid(uuid);
         Gson gson = new Gson();
@@ -438,13 +434,6 @@ public class PatientAddressInfoFragment extends Fragment {
             patientAttributesDTO.setValue(StringUtils.getProvided(mCaste));
             patientAttributesDTOList.add(patientAttributesDTO);*/
 
-            patientAttributesDTO = new PatientAttributesDTO();
-            patientAttributesDTO.setUuid(UUID.randomUUID().toString());
-            patientAttributesDTO.setPatientuuid(uuid);
-            patientAttributesDTO.setPersonAttributeTypeUuid(patientsDAO.getUuidForAttribute("Telephone Number"));
-            // patientAttributesDTO.setValue(StringUtils.getValue(mPhoneNum.getText().toString()));
-            patientAttributesDTOList.add(patientAttributesDTO);
-
         /*    //Ezazi Registration Number
             int number = (int) (Math.random() * (99999999 - 100 + 1) + 100);
             patientAttributesDTO = new PatientAttributesDTO();
@@ -454,12 +443,7 @@ public class PatientAddressInfoFragment extends Fragment {
             patientAttributesDTO.setValue(patientDTO.getCountry().substring(0, 2) + "/" + patientDTO.getStateprovince().substring(0, 2) + "/" + patientDTO.getCityvillage().substring(0, 2) + "/" + String.valueOf(number));
             patientAttributesDTOList.add(patientAttributesDTO);*/
 
-            // temp  patientAttributesDTOList.add(patientAttributesDTO);
-            Logger.logD(TAG, "PatientAttribute list size" + patientAttributesDTOList.size());
-            patientDTO.setPatientAttributesDTOList(patientAttributesDTOList);
-            patientDTO.setSyncd(false);
             Logger.logD("patient json : ", "Json : " + gson.toJson(patientDTO, PatientDTO.class));
-
 
         }
         // Bundle data
@@ -467,34 +451,6 @@ public class PatientAddressInfoFragment extends Fragment {
         draft().setAlternateNumber(mAlternateNumberString);
         draft().setObstetric(patientAttributesModel);
         host().onStepCompleted();
-
-        if (NetworkConnection.isOnline(mContext)) {
-//                patientApiCall();
-//                frameJson();
-
-//                AppConstants.notificationUtils.showNotifications(getString(R.string.patient_data_upload),
-//                        getString(R.string.uploading) + patientDTO.getFirstname() + "" + patientDTO.getLastname() +
-//                                "'s data", 2, getApplication());
-
-
-//                if (push)
-//                    AppConstants.notificationUtils.DownloadDone(getString(R.string.patient_data_upload), "" + patientDTO.getFirstname() + "" + patientDTO.getLastname() + "'s data upload complete.", 2, getApplication());
-//                else
-//                    AppConstants.notificationUtils.DownloadDone(getString(R.string.patient_data_upload), "" + patientDTO.getFirstname() + "" + patientDTO.getLastname() + "'s data not uploaded.", 2, getApplication());
-
-//                if (pushImage)
-//                    AppConstants.notificationUtils.DownloadDone(getString(R.string.patient_data_upload), "" + patientDTO.getFirstname() + "" + patientDTO.getLastname() + "'s Image upload complete.", 4, getApplication());
-//                else
-//                    AppConstants.notificationUtils.DownloadDone(getString(R.string.patient_data_upload), "" + patientDTO.getFirstname() + "" + patientDTO.getLastname() + "'s Image not complete.", 4, getApplication());
-
-
-//
-
-//            else {
-//                AppConstants.notificationUtils.showNotifications(getString(R.string.patient_data_failed), getString(R.string.check_your_connectivity), 2, IdentificationActivity.this);
-//            }
-
-        }
     }
 
     private boolean areValidFields() {

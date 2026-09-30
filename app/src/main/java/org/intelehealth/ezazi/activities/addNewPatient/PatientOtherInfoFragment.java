@@ -1842,11 +1842,6 @@ public class PatientOtherInfoFragment extends Fragment {
         ((AddNewPatientActivity) requireActivity()).completeRegistration(attrList);
     }
 
-    public void setSelectedDob(Context context, String dob) {
-        context.getApplicationContext().getSharedPreferences("dobPatient", 0)
-                .edit().putString("dobPatient", dob).apply();
-    }
-
     private void setScrollToFocusedItem() {
         if (requireView().findFocus() != null) {
             Point scroll = getLocationOnScreen(scrollviewOtherInfo);
