@@ -160,6 +160,11 @@ public class UuidDictionary {
     public static final String PATIENT_REGISTRATION_START_DATE_TIME = "d2050806-33b5-47ee-b72e-ff9230222ea6";
     public static final String FACILITY = "28451dd4-2fdb-4b96-a5bd-a330f4c68575";
 
+    // Visit attribute types
+    public static final String VISIT_DR_SPECIALITY = "3f296939-c6d3-4d2e-b8ca-d7f4bfd42c2d";
+    public static final String VISIT_HOLDER = "a0378be4-d9c6-4cb2-bbf5-777e27a32efc";
+    public static final String VISIT_READ_STATUS = "2e4b62a5-aa71-43e2-abc9-f4a777697b19";
+
     // Admission encounter
     public static final String ENCOUNTER_ADMISSION = "e22e39fd-7db2-45e7-80f1-60fa0d5a4378";
 

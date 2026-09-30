@@ -8,6 +8,7 @@ import android.graphics.Point
 import android.text.TextWatcher
 import android.view.View
 import android.widget.EditText
+import android.util.Log
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -19,6 +20,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.intelehealth.ezazi.R
+import org.intelehealth.ezazi.activities.admission.persistence.AdmissionRecord
+import org.intelehealth.ezazi.activities.admission.persistence.AdmissionValues
 import org.intelehealth.ezazi.activities.admission.validation.AdmissionField
 import org.intelehealth.ezazi.activities.admission.validation.AdmissionForm
 import org.intelehealth.ezazi.activities.admission.validation.AdmissionValidator
@@ -162,7 +165,43 @@ class AdmissionDataActivity : BaseActionBarActivity() {
     }
 
     private fun onValidated() {
-        Toast.makeText(this, "would save | dob=$dateOfBirth", Toast.LENGTH_SHORT).show()
+        val record = buildRecord()
+        val values = AdmissionValues.pack(record, getString(R.string.other_risk))
+        Log.d(TAG_ADMISSION, "record = $record")
+        values.forEach { (conceptUuid, value) -> Log.d(TAG_ADMISSION, "$conceptUuid = [$value]") }
+    }
+
+    private fun buildRecord(): AdmissionRecord {
+        val session = SessionManager(this)
+        return AdmissionRecord(
+            patientUuid = patientUuid,
+            providerUuid = session.providerID,
+            creatorUuid = session.creatorID,
+            locationUuid = session.locationUuid,
+            admissionDate = admissionDate,
+            admissionTime = admissionTime,
+            totalBirthCount = totalBirthCount,
+            totalMiscarriageCount = totalMiscarriageCount,
+            gravida = form.etGravida.text.toString(),
+            labourOnset = labourOnset,
+            activeLabourDiagnosedDate = activeLabourDiagnosedDate,
+            activeLabourDiagnosedTime = activeLabourDiagnosedTime,
+            selectedRuptureMembrane = selectedRuptureMembrane,
+            membraneRupturedDate = membraneRupturedDate,
+            membraneRupturedTime = membraneRupturedTime,
+            riskFactors = riskFactors,
+            otherRiskFactorText = common.etOtherRiskFactor.text.toString(),
+            hospitalMaternity = hospitalMaternity,
+            hospitalOtherText = common.etHospitalOther.text.toString(),
+            hospitalId = common.etHospitalId.text.toString(),
+            bedNumber = common.etBedNumber.text.toString(),
+            primaryDoctorUuid = primaryDoctorUuid,
+            primaryDoctorName = common.autotvPrimaryDoctor.text.toString(),
+            secondaryDoctorUuid = secondaryDoctorUuid,
+            secondaryDoctorName = common.autotvSecondaryDoctor.text.toString(),
+            lmpDate = lmpDate,
+            edd = edd
+        )
     }
 
     private fun showParityWarningDialog() {
@@ -747,6 +786,7 @@ class AdmissionDataActivity : BaseActionBarActivity() {
         private const val TAG_PRIMARY_DOCTOR = "primary_doctor"
         private const val TAG_SECONDARY_DOCTOR = "secondary_doctor"
         private const val TAG_PARITY_WARNING = "parity_warning"
+        private const val TAG_ADMISSION = "AdmissionData"
 
         private const val HOSPITAL = "Hospital"
         private const val MATERNITY = "Maternity"

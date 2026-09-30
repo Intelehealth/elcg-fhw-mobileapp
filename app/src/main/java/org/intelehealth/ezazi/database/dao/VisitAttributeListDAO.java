@@ -1,8 +1,8 @@
 package org.intelehealth.ezazi.database.dao;
 
-import static org.intelehealth.ezazi.activities.patientDetailActivity.PatientDetailActivity.VISIT_DR_SPECIALITY;
-import static org.intelehealth.ezazi.activities.patientDetailActivity.PatientDetailActivity.VISIT_HOLDER;
-import static org.intelehealth.ezazi.activities.patientDetailActivity.PatientDetailActivity.VISIT_READ_STATUS;
+import static org.intelehealth.ezazi.utilities.UuidDictionary.VISIT_DR_SPECIALITY;
+import static org.intelehealth.ezazi.utilities.UuidDictionary.VISIT_HOLDER;
+import static org.intelehealth.ezazi.utilities.UuidDictionary.VISIT_READ_STATUS;
 
 import android.content.ContentValues;
 import android.database.Cursor;

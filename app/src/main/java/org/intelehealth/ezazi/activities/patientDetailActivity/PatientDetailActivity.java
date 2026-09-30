@@ -131,9 +131,6 @@ public class PatientDetailActivity extends BaseActionBarActivity {
     String stage1Hr1_1_EncounterUuid, stage1Hr1_2_EncounterUuid;
     TextView tvBedNumber;
 
-    public static final String VISIT_DR_SPECIALITY  = "3f296939-c6d3-4d2e-b8ca-d7f4bfd42c2d";
-    public static final String VISIT_HOLDER         = "a0378be4-d9c6-4cb2-bbf5-777e27a32efc";
-    public static final String VISIT_READ_STATUS    = "2e4b62a5-aa71-43e2-abc9-f4a777697b19";
 
     // ═════════════════════════════════════════════════════════════════════════
     //  Nepali DOB / Age helpers
@@ -292,9 +289,9 @@ public class PatientDetailActivity extends BaseActionBarActivity {
             try {
                 visitsDAO.insertPatientToDB(visitDTO);
                 VisitAttributeListDAO sa = new VisitAttributeListDAO();
-                sa.insertVisitAttributes(uuid, OBSTETRICIAN_GYNECOLOGIST, VISIT_DR_SPECIALITY);
-                sa.insertVisitAttributes(uuid, sessionManager.getProviderID(), VISIT_HOLDER);
-                sa.insertVisitAttributes(uuid, "$", VISIT_READ_STATUS);
+                sa.insertVisitAttributes(uuid, OBSTETRICIAN_GYNECOLOGIST, UuidDictionary.VISIT_DR_SPECIALITY);
+                sa.insertVisitAttributes(uuid, sessionManager.getProviderID(), UuidDictionary.VISIT_HOLDER);
+                sa.insertVisitAttributes(uuid, "$", UuidDictionary.VISIT_READ_STATUS);
                 sa.insertVisitAttributes(uuid, "false", UuidDictionary.DECISION_PENDING);
             } catch (DAOException e) {
                 e.printStackTrace();
