@@ -79,7 +79,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -131,10 +130,6 @@ public class PatientPersonalInfoFragment extends Fragment {
     ImagesDAO imagesDAO = new ImagesDAO();
     private String mAlternateNumberString = "";
     PatientsDAO patientsDAO = new PatientsDAO();
-    boolean fromSecondScreen = false;
-    private PatientAddressInfoFragment fragment_secondScreen;
-    boolean patient_detail = false;
-    boolean editDetails = false;
     private static final int GROUP_PERMISSION_REQUEST = 1000;
     FloatingActionButton fab;
     ImageView ivProfilePhoto;
@@ -610,22 +605,22 @@ public class PatientPersonalInfoFragment extends Fragment {
     // ═════════════════════════════════════════════════════════════════════════
 
     private PatientRegistrationDraft draft() {
-        return ((AddNewPatientActivity) requireActivity()).draft();
+        return host().draft();
+    }
+
+    private AddNewPatientActivity host() {
+        return (AddNewPatientActivity) requireActivity();
     }
 
     private void updatePatientDetailsFromSecondScreen() {
-        fragment_secondScreen = new PatientAddressInfoFragment();
-        if (getArguments() != null) {
+        if (host().arrivedFromAStep()) {
             patientDTO               = draft().getPatient();
-            patient_detail           = getArguments().getBoolean("patient_detail");
-            fromSecondScreen         = getArguments().getBoolean("fromSecondScreen");
             mAlternateNumberString   = draft().getAlternateNumber();
-            editDetails              = getArguments().getBoolean("editDetails");
-            patientAttributesModel   = (PatientAttributesModel) getArguments().getSerializable("patientAttributes");
+            patientAttributesModel   = draft().getObstetric();
             patientDTO.setAlternateNo(mAlternateNumberString);
             updateUI(patient1);
 
-            if (fromSecondScreen) {
+            if (host().cameFrom(AddNewPatientActivity.PAGE_ADDRESS)) {
                 mFirstName.setText(patientDTO.getFirstname());
                 mMiddleName.setText(patientDTO.getMiddlename());
                 mLastName.setText(patientDTO.getLastname());
@@ -822,19 +817,9 @@ public class PatientPersonalInfoFragment extends Fragment {
             patientDTO.setGender(((EditText) view.findViewById(R.id.etGender)).getText().toString());
 
             draft().setPatient(patientDTO);
-            Bundle bundle = new Bundle();
-            bundle.putBoolean("fromFirstScreen", true);
-            bundle.putBoolean("patient_detail", patient_detail);
             draft().setAlternateNumber(mAlternateNumber.getText().toString());
-            bundle.putBoolean("editDetails", true);
-            bundle.putSerializable("patientAttributes", (Serializable) patientAttributesModel);
-
-            fragment_secondScreen.setArguments(bundle);
-            requireActivity().getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.frame_add_patient, fragment_secondScreen)
-                    .commit();
-            ((AddNewPatientActivity) requireActivity()).changeCurrentPage(AddNewPatientActivity.PAGE_ADDRESS);
+            draft().setObstetric(patientAttributesModel);
+            host().onStepCompleted();
         }
     }
 

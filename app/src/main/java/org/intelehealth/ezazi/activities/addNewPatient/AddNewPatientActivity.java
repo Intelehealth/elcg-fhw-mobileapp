@@ -4,8 +4,10 @@ import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.ViewGroup;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import android.view.View;
@@ -25,6 +27,7 @@ import org.intelehealth.ezazi.utilities.exception.DAOException;
 import org.intelehealth.ezazi.models.dto.PatientAttributesDTO;
 import org.intelehealth.ezazi.models.dto.PatientDTO;
 import org.intelehealth.ezazi.utilities.NetworkConnection;
+import org.intelehealth.ezazi.utilities.AppRegion;
 import org.intelehealth.ezazi.utilities.SessionManager;
 import org.intelehealth.ezazi.utilities.StringUtils;
 import org.intelehealth.klivekit.utils.DateTimeUtils;
@@ -38,11 +41,16 @@ import org.jetbrains.annotations.NotNull;
 public class AddNewPatientActivity extends BaseActionBarActivity
         implements AddNewPatientActivity.RegistrationStepHost {
     private static final String TAG = "AddNewPatientActivity";
+    private static final String KEY_STEP_INDEX = "stepIndex";
+    public static final int NO_STEP = -1;
     public static final int PAGE_PERSONAL = 0;
     public static final int PAGE_ADDRESS = 1;
     public static final int PAGE_OTHER = 2;
 
     private PatientRegistrationDraft draft = new PatientRegistrationDraft();
+    private int stepCount = 3;
+    private int currentStepIndex = PAGE_PERSONAL;
+    private int previousStepIndex = NO_STEP;
 
     /** What a step fragment is allowed to ask of the Activity. Nothing calls it until S3. */
     public interface RegistrationStepHost {
@@ -114,8 +122,11 @@ public class AddNewPatientActivity extends BaseActionBarActivity
     }
 
     /** Save, then push, then leave. The order is the shipped one and the push is best-effort. */
-    public void completeRegistration(List<PatientAttributesDTO> attrList) {
+    public void completeRegistration(List<PatientAttributesDTO> stepAttributes) {
+        List<PatientAttributesDTO> attrList = new ArrayList<>(stepAttributes);
         addOwnedAttributes(attrList);
+        draft.getPatient().setPatientAttributesDTOList(attrList);
+        draft.getPatient().setSyncd(false);
         if (!savePatient(attrList)) {
             if (!draft.getFromSummary()) {
                 Toast.makeText(this, "Error adding data", Toast.LENGTH_SHORT).show();
@@ -171,12 +182,24 @@ public class AddNewPatientActivity extends BaseActionBarActivity
         finish();
     }
 
+    /** The last step saves instead of advancing; which step is last is buildSteps()' answer, not a constant. */
     @Override
     public void onStepCompleted() {
+        if (isLastStep()) {
+            completeRegistration(new ArrayList<>());
+        } else {
+            showStep(currentStepIndex + 1);
+        }
     }
 
     @Override
     public void onStepBack() {
+        if (currentStepIndex > PAGE_PERSONAL) showStep(currentStepIndex - 1);
+    }
+
+    /** A step was navigated to rather than freshly started - what the fragments used to ask getArguments(). */
+    public boolean arrivedFromAStep() {
+        return previousStepIndex != NO_STEP;
     }
 //    private ViewPager2 pager;
 
@@ -185,7 +208,11 @@ public class AddNewPatientActivity extends BaseActionBarActivity
         setContentView(R.layout.activity_add_new_patient);
         super.onCreate(savedInstanceState);
         readEntryExtras();
-        initUI();
+        buildSteps();
+        if (savedInstanceState != null) {
+            currentStepIndex = savedInstanceState.getInt(KEY_STEP_INDEX, PAGE_PERSONAL);
+        }
+        initUI(savedInstanceState == null);
         setupActionBar();
         enableProperPadding(AddNewPatientActivity.this);
     }
@@ -203,7 +230,7 @@ public class AddNewPatientActivity extends BaseActionBarActivity
         draft.setPrivacyValue(in.getStringExtra("privacy"));
     }
 
-    private void initUI() {
+    private void initUI(boolean isFreshStart) {
         View viewToolbar = findViewById(R.id.toolbar_common);
         Toolbar toolbar = viewToolbar.findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -211,11 +238,13 @@ public class AddNewPatientActivity extends BaseActionBarActivity
                 onBackPressed()
         );
 
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.frame_add_patient, new PatientPersonalInfoFragment())
-                .commit();
-        changeCurrentButtonState(PAGE_PERSONAL);
+        inflateStepStrip();
+
+        if (isFreshStart) {
+            showStep(PAGE_PERSONAL);
+        } else {
+            updateStepIndicator(currentStepIndex);
+        }
 
 //        pager = findViewById(R.id.viewPager);
 //        pager.setUserInputEnabled(false);
@@ -231,25 +260,75 @@ public class AddNewPatientActivity extends BaseActionBarActivity
 //        pager.setCurrentItem(0);
     }
 
-    private void changeCurrentButtonState(int position) {
+    /**
+     * Nepal collects the obstetric values on a third step; every other region collects them on the
+     * per-visit Admission screen, so registration there is two steps.
+     */
+    private void buildSteps() {
+        stepCount = AppRegion.collectsAdmissionDataAtRegistration() ? 3 : 2;
+    }
+
+    private void inflateStepStrip() {
+        ViewGroup tabs = findViewById(R.id.tabs);
+        tabs.removeAllViews();
+        getLayoutInflater().inflate(
+                stepCount >= 3 ? R.layout.add_patient_tabs : R.layout.add_patient_tabs_two_step, tabs);
+    }
+
+    private Fragment createStep(int index) {
+        if (index == PAGE_ADDRESS) return new PatientAddressInfoFragment();
+        if (index == PAGE_OTHER) return new PatientOtherInfoFragment();
+        return new PatientPersonalInfoFragment();
+    }
+
+    public void showStep(int index) {
+        previousStepIndex = currentStepIndex == index ? NO_STEP : currentStepIndex;
+        currentStepIndex = index;
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.frame_add_patient, createStep(index))
+                .commit();
+        updateStepIndicator(index);
+    }
+
+    public boolean isLastStep() {
+        return currentStepIndex == stepCount - 1;
+    }
+
+    /**
+     * Resets every pill first: navigating backwards used to leave the pill you came from lit. The
+     * third pill is optional because the two-step strip does not have one.
+     */
+    private void updateStepIndicator(int position) {
         TextView tvPersonal = findViewById(R.id.tv_personal_info);
         TextView tvAddress = findViewById(R.id.tv_address_info);
         TextView tvOther = findViewById(R.id.tv_other_info);
+
+        reset(tvPersonal);
+        reset(tvAddress);
+        reset(tvOther);
 
         if (position == PAGE_PERSONAL) {
             tvPersonal.setSelected(true);
         } else if (position == PAGE_ADDRESS) {
             tvPersonal.setActivated(true);
             tvAddress.setSelected(true);
-        } else if (position == PAGE_OTHER) {
-            tvOther.setSelected(true);
+        } else if (position == PAGE_OTHER && tvOther != null) {
+            tvPersonal.setActivated(true);
             tvAddress.setActivated(true);
+            tvOther.setSelected(true);
         }
     }
 
-    public void changeCurrentPage(int position) {
-//        pager.setCurrentItem(position);
-        changeCurrentButtonState(position);
+    private void reset(TextView pill) {
+        if (pill == null) return;
+        pill.setSelected(false);
+        pill.setActivated(false);
+    }
+
+    /** Which step the user arrived from, replacing the three fromXScreen bundle flags. */
+    public boolean cameFrom(int step) {
+        return previousStepIndex == step;
     }
 
     private void setScreen(Fragment fragment) {
@@ -319,6 +398,12 @@ public class AddNewPatientActivity extends BaseActionBarActivity
 //        negativeButton.setTextColor(getResources().getColor(R.color.colorPrimary));
 //        //negativeButton.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
 //        IntelehealthApplication.setAlertDialogCustomTheme(this, alertDialog);
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NotNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(KEY_STEP_INDEX, currentStepIndex);
     }
 
     @Override

@@ -65,7 +65,6 @@ import org.intelehealth.ezazi.utilities.exception.DAOException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -124,11 +123,8 @@ public class PatientOtherInfoFragment extends Fragment {
     String uuid = "";
     PatientDTO patientDTO = new PatientDTO();
     CheckBox mUnknownMembraneRupturedCheckBox;
-    boolean patient_detail = false;
     String patientUuidUpdate = "";
     boolean fromSummary = false;
-    private PatientAddressInfoFragment secondScreen;
-    boolean fromSecondScreen = false;
     TextView tvSpontaneous, tvInduced;
     PatientsDAO patientsDAO = new PatientsDAO();
 
@@ -209,6 +205,7 @@ public class PatientOtherInfoFragment extends Fragment {
         etBedNumber = view.findViewById(R.id.et_bed_number);
         btnBack = view.findViewById(R.id.btn_back_address);
         btnNext = view.findViewById(R.id.btn_next_address);
+        btnNext.setText(host().isLastStep() ? R.string.save_button : R.string.next);
         mUnknownMembraneRupturedCheckBox = view.findViewById(R.id.mUnknownMembraneRupturedCheckBox);
         mRiskFactorsTextView = view.findViewById(R.id.autotv_risk_factors);
         dropdownRiskFactors = view.findViewById(R.id.dropdown_risk_factors);
@@ -255,16 +252,14 @@ public class PatientOtherInfoFragment extends Fragment {
             updateUI(patient1);
         }
 
-        secondScreen = new PatientAddressInfoFragment();
-        if (getArguments() != null) {
+        if (host().arrivedFromAStep()) {
             patientDTO             = draft().getPatient();
-            fromSecondScreen       = getArguments().getBoolean("fromSecondScreen");
-            patient_detail         = getArguments().getBoolean("patient_detail");
             mAlternateNumberString = draft().getAlternateNumber();
             fromSummary            = draft().getFromSummary();
             patientUuidUpdate      = draft().getEditingPatientUuid();
-            patientAttributesModel = (PatientAttributesModel) getArguments().getSerializable("patientAttributes");
-            if (fromSecondScreen && patientAttributesModel != null) updateUIForUserFromAddressTab();
+            patientAttributesModel = draft().getObstetric();
+            if (host().cameFrom(AddNewPatientActivity.PAGE_ADDRESS) && patientAttributesModel != null)
+                updateUIForUserFromAddressTab();
         }
 
     }
@@ -1723,20 +1718,17 @@ public class PatientOtherInfoFragment extends Fragment {
     private void onBackInsertIntopatientDTO() {
         PatientAttributesModel attrs = getPatientAttributes();
         draft().setPatient(patientDTO);
-        Bundle bundle = new Bundle();
-        bundle.putBoolean("fromThirdScreen", true);
-        bundle.putBoolean("patient_detail", patient_detail);
-        bundle.putBoolean("editDetails", true);
         draft().setAlternateNumber(mAlternateNumberString);
-        bundle.putSerializable("patientAttributes", (Serializable) attrs);
-        secondScreen.setArguments(bundle);
-        requireActivity().getSupportFragmentManager().beginTransaction()
-                .replace(R.id.frame_add_patient, secondScreen).commit();
-        ((AddNewPatientActivity) requireActivity()).changeCurrentPage(AddNewPatientActivity.PAGE_ADDRESS);
+        draft().setObstetric(attrs);
+        host().onStepBack();
     }
 
     private PatientRegistrationDraft draft() {
-        return ((AddNewPatientActivity) requireActivity()).draft();
+        return host().draft();
+    }
+
+    private AddNewPatientActivity host() {
+        return (AddNewPatientActivity) requireActivity();
     }
 
     private PatientAttributesModel getPatientAttributes() {

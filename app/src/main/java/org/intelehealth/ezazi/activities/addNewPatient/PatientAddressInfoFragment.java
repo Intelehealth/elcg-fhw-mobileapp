@@ -53,7 +53,6 @@ import org.intelehealth.ezazi.utilities.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -73,11 +72,6 @@ public class PatientAddressInfoFragment extends Fragment {
     AutoCompleteTextView autotvCountry, autotvState, autotvCity, autotvDistrict;
     Context mContext;
     TextInputEditText etAddress1, etAddress2, etPostalCode, etDistrict, etCityVillage;
-    private PatientOtherInfoFragment fragment_thirdScreen;
-    private PatientPersonalInfoFragment firstScreen;
-    boolean fromThirdScreen = false, fromFirstScreen = false;
-    boolean patient_detail = false;
-    boolean editDetails = false;
     boolean fromSummary = false;
     String patientUuidUpdate = "";
     SessionManager sessionManager = null;
@@ -138,6 +132,7 @@ public class PatientAddressInfoFragment extends Fragment {
         etPostalCode = view.findViewById(R.id.et_postal_code);
         btnBack = view.findViewById(R.id.btn_back_address);
         btnNext = view.findViewById(R.id.btn_next_address);
+        btnNext.setText(host().isLastStep() ? R.string.save_button : R.string.next);
         tvErrorCountry = view.findViewById(R.id.tv_error_country);
         tvErrorState = view.findViewById(R.id.tv_error_state);
         tvErrorCityVillage = view.findViewById(R.id.tv_error_city_village);
@@ -170,31 +165,12 @@ public class PatientAddressInfoFragment extends Fragment {
 
         layoutState = view.findViewById(R.id.etLayout_state);
 
-        firstScreen = new PatientPersonalInfoFragment();
-        fragment_thirdScreen = new PatientOtherInfoFragment();
-        if (getArguments() != null) {
+        if (host().arrivedFromAStep()) {
             patientDTO = draft().getPatient();
-            fromThirdScreen = getArguments().getBoolean("fromThirdScreen");
-            fromFirstScreen = getArguments().getBoolean("fromFirstScreen");
-            patient_detail = getArguments().getBoolean("patient_detail");
             mAlternateNumberString = draft().getAlternateNumber();
-            editDetails = getArguments().getBoolean("editDetails");
             fromSummary = draft().getFromSummary();
             patientUuidUpdate = draft().getEditingPatientUuid();
-            patientAttributesModel = (PatientAttributesModel) getArguments().getSerializable("patientAttributes");
-
-
-           /* if (patientID_edit != null) {
-                patientDTO.setUuid(patientID_edit);
-            } else {
-                // do nothing...
-            }
-*/
-            if (patient_detail) {
-                //   patientDTO.setUuid(patientID_edit);
-            } else {
-                // do nothing...
-            }
+            patientAttributesModel = draft().getObstetric();
         }
 
         etCityVillage.setOnFocusChangeListener((v, hasFocus) -> {
@@ -253,7 +229,7 @@ public class PatientAddressInfoFragment extends Fragment {
         }
 
         // Setting up the screen when user came from SEcond screen.
-        if (fromThirdScreen || fromFirstScreen) {
+        if (arrivedFromAnotherStep()) {
             if (patientDTO.getPostalcode() != null && !patientDTO.getPostalcode().isEmpty())
                 etPostalCode.setText(patientDTO.getPostalcode());
             if (patientDTO.getAddress1() != null && !patientDTO.getAddress1().isEmpty())
@@ -366,7 +342,7 @@ public class PatientAddressInfoFragment extends Fragment {
                     Log.d(TAG, "onItemSelected:language :  " + sessionManager.getAppLanguage());
 
                     applyDistrictAvailability(mStateName);
-                    if (hasDistricts(mStateName) && (fromThirdScreen || fromFirstScreen)
+                    if (hasDistricts(mStateName) && arrivedFromAnotherStep()
                             && district != null && !district.isEmpty()) {
                         autotvDistrict.setText(district, false);
                     }
@@ -393,19 +369,22 @@ public class PatientAddressInfoFragment extends Fragment {
                 autotvDistrict.getText().toString(), mCityVillageName));
 
         draft().setPatient(patientDTO);
-        Bundle bundle = new Bundle();
-        bundle.putBoolean("fromSecondScreen", true);
-        bundle.putBoolean("patient_detail", patient_detail);
         draft().setAlternateNumber(mAlternateNumberString);
-        bundle.putSerializable("patientAttributes", (Serializable) patientAttributesModel);
-
-        firstScreen.setArguments(bundle); // passing data to Fragment
-        requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.frame_add_patient, firstScreen).commit();
-        ((AddNewPatientActivity) requireActivity()).changeCurrentPage(AddNewPatientActivity.PAGE_PERSONAL);
+        draft().setObstetric(patientAttributesModel);
+        host().onStepBack();
     }
 
     private PatientRegistrationDraft draft() {
-        return ((AddNewPatientActivity) requireActivity()).draft();
+        return host().draft();
+    }
+
+    private AddNewPatientActivity host() {
+        return (AddNewPatientActivity) requireActivity();
+    }
+
+    private boolean arrivedFromAnotherStep() {
+        return host().cameFrom(AddNewPatientActivity.PAGE_PERSONAL)
+                || host().cameFrom(AddNewPatientActivity.PAGE_OTHER);
     }
 
     public void onPatientCreateClicked() {
@@ -485,17 +464,9 @@ public class PatientAddressInfoFragment extends Fragment {
         }
         // Bundle data
         draft().setPatient(patientDTO);
-        Bundle bundle = new Bundle();
-        bundle.putBoolean("fromSecondScreen", true);
-        bundle.putBoolean("editDetails", true);
         draft().setAlternateNumber(mAlternateNumberString);
-        bundle.putBoolean("patient_detail", patient_detail);
-        bundle.putSerializable("patientAttributes", (Serializable) patientAttributesModel);
-
-        fragment_thirdScreen.setArguments(bundle); // passing data to Fragment
-//
-        requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.frame_add_patient, fragment_thirdScreen).commit();
-        ((AddNewPatientActivity) requireActivity()).changeCurrentPage(AddNewPatientActivity.PAGE_OTHER);
+        draft().setObstetric(patientAttributesModel);
+        host().onStepCompleted();
 
         if (NetworkConnection.isOnline(mContext)) {
 //                patientApiCall();
