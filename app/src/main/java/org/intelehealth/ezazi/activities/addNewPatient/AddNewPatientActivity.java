@@ -41,8 +41,6 @@ import org.jetbrains.annotations.NotNull;
 public class AddNewPatientActivity extends BaseActionBarActivity
         implements AddNewPatientActivity.RegistrationStepHost {
     private static final String TAG = "AddNewPatientActivity";
-    private static final String KEY_STEP_INDEX = "stepIndex";
-    private static final String KEY_DRAFT = "draft";
     public static final int NO_STEP = -1;
     public static final int PAGE_PERSONAL = 0;
     public static final int PAGE_ADDRESS = 1;
@@ -142,6 +140,7 @@ public class AddNewPatientActivity extends BaseActionBarActivity
     private boolean savePatient(List<PatientAttributesDTO> attrList) {
         PatientDTO patient = draft.getPatient();
         String uuid = resolveUuid();
+        patient.setCreatorUuid(new SessionManager(this).getCreatorID());
         try {
             if (draft.getFromSummary()) {
                 boolean upd = new PatientsDAO().updatePatientToDBNew(patient, uuid, attrList);
@@ -207,10 +206,9 @@ public class AddNewPatientActivity extends BaseActionBarActivity
     protected void onCreate(Bundle savedInstanceState) {
         setContentView(R.layout.activity_add_new_patient);
         super.onCreate(savedInstanceState);
-        restoreDraft(savedInstanceState);
         readEntryExtras();
         buildSteps();
-        initUI(savedInstanceState == null);
+        initUI();
         setupActionBar();
         enableProperPadding(AddNewPatientActivity.this);
     }
@@ -218,14 +216,6 @@ public class AddNewPatientActivity extends BaseActionBarActivity
     @Override
     protected int getScreenTitle() {
         return R.string.add_patient;
-    }
-
-    /** Restored before readEntryExtras, so the entry values are always the Intent's. */
-    private void restoreDraft(Bundle savedInstanceState) {
-        if (savedInstanceState == null) return;
-        Object saved = savedInstanceState.getSerializable(KEY_DRAFT);
-        if (saved instanceof PatientRegistrationDraft) draft = (PatientRegistrationDraft) saved;
-        currentStepIndex = savedInstanceState.getInt(KEY_STEP_INDEX, PAGE_PERSONAL);
     }
 
     /** privacy is null on the edit path and editDetails is a hardcoded true everywhere, so neither is carried. */
@@ -236,7 +226,7 @@ public class AddNewPatientActivity extends BaseActionBarActivity
         draft.setPrivacyValue(in.getStringExtra("privacy"));
     }
 
-    private void initUI(boolean isFreshStart) {
+    private void initUI() {
         View viewToolbar = findViewById(R.id.toolbar_common);
         Toolbar toolbar = viewToolbar.findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -246,11 +236,7 @@ public class AddNewPatientActivity extends BaseActionBarActivity
 
         inflateStepStrip();
 
-        if (isFreshStart) {
-            showStep(PAGE_PERSONAL);
-        } else {
-            updateStepIndicator(currentStepIndex);
-        }
+        showStep(PAGE_PERSONAL);
 
 //        pager = findViewById(R.id.viewPager);
 //        pager.setUserInputEnabled(false);
@@ -396,13 +382,6 @@ public class AddNewPatientActivity extends BaseActionBarActivity
 //        negativeButton.setTextColor(getResources().getColor(R.color.colorPrimary));
 //        //negativeButton.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
 //        IntelehealthApplication.setAlertDialogCustomTheme(this, alertDialog);
-    }
-
-    @Override
-    protected void onSaveInstanceState(@NotNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putInt(KEY_STEP_INDEX, currentStepIndex);
-        outState.putSerializable(KEY_DRAFT, draft);
     }
 
     @Override

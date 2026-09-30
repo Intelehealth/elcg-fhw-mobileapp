@@ -918,7 +918,7 @@ public class PatientPersonalInfoFragment extends Fragment {
     }
 
     private void takePicture() {
-        String patientTemp = patientDTO.getUuid();
+        String patientTemp = host().resolveUuid();
         File filePath = new File(AppConstants.IMAGE_PATH + patientTemp);
         if (!filePath.exists()) filePath.mkdir();
         Intent cam = new Intent(getActivity(), CameraActivity.class);

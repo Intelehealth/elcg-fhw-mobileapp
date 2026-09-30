@@ -1796,7 +1796,6 @@ public class PatientOtherInfoFragment extends Fragment {
         uuid = ((AddNewPatientActivity) requireActivity()).resolveUuid();
 
         patientDTO.setUuid(uuid);
-        patientDTO.setCreatorUuid(sessionManager.getCreatorID());
 
         java.util.function.BiFunction<String, String, PatientAttributesDTO> mkAttr = (colKey, value) -> {
             PatientAttributesDTO a = new PatientAttributesDTO();
