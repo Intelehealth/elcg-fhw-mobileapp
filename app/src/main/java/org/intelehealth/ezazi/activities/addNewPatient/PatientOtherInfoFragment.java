@@ -1338,6 +1338,10 @@ public class PatientOtherInfoFragment extends Fragment {
         mRiskFactorsTextView.setText(mRiskFactorsString);
         mPrimaryDoctorTextView.setText(patientAttributesModel.getPrimaryDoctor());
         mSecondaryDoctorTextView.setText(patientAttributesModel.getSecondaryDoctor());
+        if (draft().getPrimaryDoctorUuid() != null)
+            mPrimaryDoctorUUIDString = draft().getPrimaryDoctorUuid();
+        if (draft().getSecondaryDoctorUuid() != null)
+            mSecondaryDoctorUUIDString = draft().getSecondaryDoctorUuid();
         etBedNumber.setText(patientAttributesModel.getBedNumber());
         mLaborOnsetString = patientAttributesModel.getLabourOnset();
         mHospitalMaternityString = patientAttributesModel.getHospitalMaternity();
@@ -1514,6 +1518,7 @@ public class PatientOtherInfoFragment extends Fragment {
         dialog.isSearchable(true);
         dialog.setListener(item -> {
             mPrimaryDoctorUUIDString = item.getItemId();
+            draft().setPrimaryDoctorUuid(mPrimaryDoctorUUIDString);
             mPrimaryDoctorTextView.setText(item.getItem());
             clearError(tvErrorPrimaryDoctor, cardPrimaryDoctor);
         });
@@ -1547,6 +1552,7 @@ public class PatientOtherInfoFragment extends Fragment {
         dialog.isSearchable(true);
         dialog.setListener(item -> {
             mSecondaryDoctorUUIDString = item.getItemId();
+            draft().setSecondaryDoctorUuid(mSecondaryDoctorUUIDString);
             mSecondaryDoctorTextView.setText(item.getItem());
             clearError(tvErrorSecondaryDoctor, cardSecondaryDoctor);
         });
@@ -1746,6 +1752,10 @@ public class PatientOtherInfoFragment extends Fragment {
         requireActivity().getSupportFragmentManager().beginTransaction()
                 .replace(R.id.frame_add_patient, secondScreen).commit();
         ((AddNewPatientActivity) requireActivity()).changeCurrentPage(AddNewPatientActivity.PAGE_ADDRESS);
+    }
+
+    private PatientRegistrationDraft draft() {
+        return ((AddNewPatientActivity) requireActivity()).draft();
     }
 
     private PatientAttributesModel getPatientAttributes() {

@@ -2,6 +2,7 @@ package org.intelehealth.ezazi.activities.addNewPatient;
 
 import static org.intelehealth.ezazi.utilities.SupportUtils.enableProperPadding;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
@@ -15,17 +16,43 @@ import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
 import org.jetbrains.annotations.NotNull;
 
-public class AddNewPatientActivity extends BaseActionBarActivity {
+public class AddNewPatientActivity extends BaseActionBarActivity
+        implements AddNewPatientActivity.RegistrationStepHost {
     private static final String TAG = "AddNewPatientActivity";
     public static final int PAGE_PERSONAL = 0;
     public static final int PAGE_ADDRESS = 1;
     public static final int PAGE_OTHER = 2;
+
+    private PatientRegistrationDraft draft = new PatientRegistrationDraft();
+
+    /** What a step fragment is allowed to ask of the Activity. Nothing calls it until S3. */
+    public interface RegistrationStepHost {
+        PatientRegistrationDraft draft();
+
+        void onStepCompleted();
+
+        void onStepBack();
+    }
+
+    @Override
+    public PatientRegistrationDraft draft() {
+        return draft;
+    }
+
+    @Override
+    public void onStepCompleted() {
+    }
+
+    @Override
+    public void onStepBack() {
+    }
 //    private ViewPager2 pager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         setContentView(R.layout.activity_add_new_patient);
         super.onCreate(savedInstanceState);
+        readEntryExtras();
         initUI();
         setupActionBar();
         enableProperPadding(AddNewPatientActivity.this);
@@ -34,6 +61,14 @@ public class AddNewPatientActivity extends BaseActionBarActivity {
     @Override
     protected int getScreenTitle() {
         return R.string.add_patient;
+    }
+
+    /** privacy is null on the edit path and editDetails is a hardcoded true everywhere, so neither is carried. */
+    private void readEntryExtras() {
+        Intent in = getIntent();
+        draft.setEditingPatientUuid(in.getStringExtra("patientUuid"));
+        draft.setFromSummary(in.getBooleanExtra("fromSummary", false));
+        draft.setPrivacyValue(in.getStringExtra("privacy"));
     }
 
     private void initUI() {
