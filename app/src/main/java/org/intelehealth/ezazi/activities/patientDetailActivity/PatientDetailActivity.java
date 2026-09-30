@@ -43,6 +43,7 @@ import org.intelehealth.ezazi.database.dao.ImagesDAO;
 import org.intelehealth.ezazi.database.dao.PatientsDAO;
 import org.intelehealth.ezazi.database.dao.VisitAttributeListDAO;
 import org.intelehealth.ezazi.database.dao.VisitsDAO;
+import org.intelehealth.ezazi.database.dao.ObsDAO;
 import org.intelehealth.ezazi.models.Patient;
 import org.intelehealth.ezazi.models.dto.EncounterDTO;
 import org.intelehealth.ezazi.models.dto.VisitDTO;
@@ -800,6 +801,11 @@ public class PatientDetailActivity extends BaseActionBarActivity {
 
 
     private String getBedNumber(String patientuuid) throws DAOException {
+        if (!AppRegion.collectsAdmissionDataAtRegistration()) {
+            String visitUuid = new VisitsDAO().fetchActiveVisitUuid(patientuuid);
+            String fromObs = new ObsDAO().getAdmissionValues(visitUuid).get(UuidDictionary.OBS_BED_NUMBER);
+            if (fromObs != null && !fromObs.isEmpty()) return fromObs;
+        }
         String bedNumber = null;
         Cursor idCursor = db.rawQuery(
                 "SELECT value FROM tbl_patient_attribute where patientuuid = ? AND person_attribute_type_uuid='d0786817-68d9-4226-b311-3de68d534b9e'",

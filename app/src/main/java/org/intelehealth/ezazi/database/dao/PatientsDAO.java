@@ -21,6 +21,8 @@ import org.intelehealth.ezazi.services.MyIntentService;
 import org.intelehealth.ezazi.utilities.DateAndTimeUtils;
 import org.intelehealth.ezazi.utilities.Logger;
 import org.intelehealth.ezazi.app.AppConstants;
+import org.intelehealth.ezazi.utilities.AppRegion;
+import org.intelehealth.ezazi.utilities.UuidDictionary;
 import org.intelehealth.ezazi.app.IntelehealthApplication;
 import org.intelehealth.ezazi.models.Patient;
 import org.intelehealth.ezazi.models.dto.PatientAttributeTypeMasterDTO;
@@ -393,6 +395,12 @@ public class PatientsDAO {
             throw new DAOException(s);
         } finally {
             db.endTransaction();
+        }
+
+        if (!AppRegion.collectsAdmissionDataAtRegistration()) {
+            String visitUuid = new VisitsDAO().fetchActiveVisitUuid(patientuuid);
+            String fromObs = new ObsDAO().getAdmissionValues(visitUuid).get(UuidDictionary.OBS_BED_NUMBER);
+            if (fromObs != null && !fromObs.isEmpty()) familyMemberRes.setBedNo(fromObs);
         }
         return familyMemberRes;
     }

@@ -264,10 +264,20 @@ public class ObsDAO {
                 values.put("voided", "0");
                 values.put("sync", "false");    //Earlier was set to FALSE which caused the issue.
                 insertedCount = db.insert("tbl_obs", null, values);
+                if (insertedCount == -1) {
+                    // no exception is thrown for this, so without the check a partial batch
+                    // reports success and the caller's guard can never fire
+                    isUpdated = false;
+                    break;
+                }
             }
-            db.setTransactionSuccessful();
-            Logger.logD("updated", "updatedrecords count" + insertedCount);
-            Log.e(TAG, "insertObsToDb: FROM " + TAG + ": total record" + insertedCount);
+            if (isUpdated) {
+                db.setTransactionSuccessful();
+                Logger.logD("updated", "updatedrecords count" + insertedCount);
+                Log.e(TAG, "insertObsToDb: FROM " + TAG + ": total record" + insertedCount);
+            } else {
+                Log.e(TAG, "insertObsToDb: FROM " + TAG + ": row insert failed, batch rolled back");
+            }
         } catch (SQLException e) {
             isUpdated = false;
             FirebaseCrashlytics.getInstance().recordException(e);

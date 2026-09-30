@@ -1,6 +1,8 @@
 package org.intelehealth.ezazi.builder;
 
 import static org.intelehealth.ezazi.utilities.UuidDictionary.DECISION_PENDING;
+import static org.intelehealth.ezazi.utilities.UuidDictionary.ENCOUNTER_ADMISSION;
+import static org.intelehealth.ezazi.utilities.UuidDictionary.OBS_BED_NUMBER;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.ENCOUNTER_VISIT_COMPLETE;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.VISIT_RISK;
 
@@ -10,6 +12,7 @@ import org.intelehealth.ezazi.app.IntelehealthApplication;
 import org.intelehealth.ezazi.models.dto.PatientAttributesDTO;
 import org.intelehealth.ezazi.models.dto.VisitDTO;
 import org.intelehealth.ezazi.ui.visit.model.CompletedVisitStatus;
+import org.intelehealth.ezazi.utilities.AppRegion;
 import org.intelehealth.ezazi.utilities.SessionManager;
 import org.intelehealth.ezazi.utilities.UuidDictionary;
 
@@ -19,6 +22,28 @@ import org.intelehealth.ezazi.utilities.UuidDictionary;
  * Mob   : +919727206702
  **/
 public class PatientQueryBuilder extends QueryBuilder {
+
+    private static final String PHONE_ATTRIBUTE_UUID = "14d4f066-15f5-102d-96e4-000c29c2a5d7";
+
+    private static final String BED_FROM_ATTRIBUTE =
+            "CASE WHEN PA.person_attribute_type_uuid != '" + PHONE_ATTRIBUTE_UUID + "' THEN PA.value END";
+
+    /**
+     * Nepal keeps the bed on the patient; every other region keeps it on the visit. The attribute is
+     * the fallback either way, so a visit opened before the Admission screen still shows its bed.
+     */
+    private static String bedNoProjection() {
+        if (AppRegion.collectsAdmissionDataAtRegistration()) {
+            return BED_FROM_ATTRIBUTE + " bedNo";
+        }
+        return "COALESCE((SELECT o.value FROM tbl_obs o " +
+                "INNER JOIN tbl_encounter e ON o.encounteruuid = e.uuid " +
+                "WHERE e.visituuid = V.uuid " +
+                "AND e.encounter_type_uuid = '" + ENCOUNTER_ADMISSION + "' " +
+                "AND o.conceptuuid = '" + OBS_BED_NUMBER + "' " +
+                "AND o.voided = '0' AND e.voided IN ('0','false','FALSE') LIMIT 1), " +
+                BED_FROM_ATTRIBUTE + ") bedNo";
+    }
     public static final String TAG = "PatientQueryBuilder";
 
     public String searchQuery(String keyword) {
@@ -53,7 +78,7 @@ public class PatientQueryBuilder extends QueryBuilder {
                 "END fullName, " + getCompletedVisitStatusCase() + getCurrentStageCase() + ", " + caseOfMotherDeceased() +
                 "(select count(uuid) from tbl_encounter where visituuid = V.uuid) as alertCount, " +
                 "CASE PA.person_attribute_type_uuid WHEN '14d4f066-15f5-102d-96e4-000c29c2a5d7' THEN PA.value END phoneNumber, " +
-                "CASE WHEN PA.person_attribute_type_uuid  != '14d4f066-15f5-102d-96e4-000c29c2a5d7' THEN PA.value END bedNo ")
+                bedNoProjection() + " ")
                 .from("tbl_patient P")
                 .join("LEFT OUTER JOIN tbl_visit V ON P.uuid = V.patientuuid " +
                         "LEFT OUTER JOIN tbl_patient_attribute PA ON PA.patientuuid = P.uuid " +
@@ -70,10 +95,11 @@ public class PatientQueryBuilder extends QueryBuilder {
                 "P.last_name, " +
                 "P.middle_name, " +
                 "P.date_of_birth, " +
-                "CASE WHEN PA.person_attribute_type_uuid  != '14d4f066-15f5-102d-96e4-000c29c2a5d7' THEN PA.value END bedNo, " +
+                bedNoProjection() + ", " +
                 "CASE PA.person_attribute_type_uuid WHEN '14d4f066-15f5-102d-96e4-000c29c2a5d7' THEN PA.value END phoneNumber, " +
                 "(SELECT uuid FROM tbl_encounter where visituuid = V.uuid and voided IN ('0', 'false', 'FALSE') " +
-                "AND encounter_type_uuid != '" + ENCOUNTER_VISIT_COMPLETE + "' ORDER BY encounter_time DESC limit 1) " +
+                "AND encounter_type_uuid NOT IN ('" + ENCOUNTER_VISIT_COMPLETE + "','" + ENCOUNTER_ADMISSION + "') " +
+                "ORDER BY encounter_time DESC limit 1) " +
                 "as latestEncounterId,  (SELECT value FROM tbl_visit_attribute where " +
                 "visit_attribute_type_uuid ='" + DECISION_PENDING + "' AND visit_uuid = V.uuid) as outcomePending, " +
                 "(SELECT value FROM tbl_visit_attribute WHERE visit_attribute_type_uuid ='" + VISIT_RISK + "' " +
@@ -239,10 +265,11 @@ public class PatientQueryBuilder extends QueryBuilder {
                         "P.last_name, " +
                         "P.middle_name, " +
                         "P.date_of_birth, " +
-                        "CASE WHEN PA.person_attribute_type_uuid != '14d4f066-15f5-102d-96e4-000c29c2a5d7' THEN PA.value END bedNo, " +
+                        bedNoProjection() + ", " +
                         "CASE PA.person_attribute_type_uuid WHEN '14d4f066-15f5-102d-96e4-000c29c2a5d7' THEN PA.value END phoneNumber, " +
                         "(SELECT uuid FROM tbl_encounter WHERE visituuid = V.uuid AND voided IN ('0', 'false', 'FALSE') " +
-                        "AND encounter_type_uuid != '" + ENCOUNTER_VISIT_COMPLETE + "' ORDER BY encounter_time DESC LIMIT 1) " +
+                        "AND encounter_type_uuid NOT IN ('" + ENCOUNTER_VISIT_COMPLETE + "','" + ENCOUNTER_ADMISSION + "') " +
+                        "ORDER BY encounter_time DESC LIMIT 1) " +
                         "as latestEncounterId,  " +
                         "(SELECT value FROM tbl_visit_attribute WHERE visit_attribute_type_uuid ='" + VISIT_RISK + "' " +
                         "AND visit_uuid = V.uuid) AS visitRisk, " +

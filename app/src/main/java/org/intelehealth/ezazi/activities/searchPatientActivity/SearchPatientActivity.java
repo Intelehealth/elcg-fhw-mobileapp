@@ -44,11 +44,12 @@ import org.intelehealth.ezazi.activities.privacyNoticeActivity.PrivacyNoticeActi
 import org.intelehealth.ezazi.app.AppConstants;
 import org.intelehealth.ezazi.app.IntelehealthApplication;
 import org.intelehealth.ezazi.builder.PatientQueryBuilder;
-import org.intelehealth.ezazi.database.dao.PatientsDAO;
 import org.intelehealth.ezazi.database.dao.ProviderDAO;
 import org.intelehealth.ezazi.executor.TaskCompleteListener;
 import org.intelehealth.ezazi.executor.TaskExecutor;
 import org.intelehealth.ezazi.models.dto.PatientAttributesDTO;
+import org.intelehealth.ezazi.database.dao.VisitsDAO;
+import org.intelehealth.ezazi.utilities.ObstetricValueReader;
 import org.intelehealth.ezazi.models.dto.PatientDTO;
 import org.intelehealth.ezazi.optimized_sync.network.NetworkStatus;
 import org.intelehealth.ezazi.partogram.PartogramDataCaptureActivity;
@@ -784,8 +785,10 @@ public class SearchPatientActivity extends BaseActionBarActivity implements Sear
 //        return modelList;
 //    }
     private String getPatientBedNot(String patientUuid) {
-        PatientsDAO patientsDAO = new PatientsDAO();
-        return patientsDAO.getPatientAttributeValue(patientUuid, PatientAttributesDTO.Columns.BED_NUMBER);
+        return ObstetricValueReader.value(
+                patientUuid,
+                new VisitsDAO().fetchActiveVisitUuid(patientUuid),
+                PatientAttributesDTO.Columns.BED_NUMBER);
     }
 
     //    private void doQueryWithProviders(String querytext, List<String> providersuuids) {
