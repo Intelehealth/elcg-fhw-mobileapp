@@ -544,6 +544,8 @@
     <string name="location_setup">Setup Location - </string>
     <string name="today_visits">Today\'s Visits</string>
     <string name="active_visits">Active Visits</string>
+    <string name="add_visit_details">Add Visit Details</string>
+    <string name="current_visit_timeline">Current Visit Timeline</string>
     <string name="day">day</string>
     <string name="hour">hour</string>
     <string name="minute">minute</string>

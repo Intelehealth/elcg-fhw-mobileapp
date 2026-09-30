@@ -595,7 +595,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             putExtra("patientUuid", patientUuid)
             putExtra("visitUuid", visitUuid)
             putExtra("providerID", providerID)
-            putExtra("tag", "timline")
+            putExtra("tag", "timeline")
 
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or
                     Intent.FLAG_ACTIVITY_SINGLE_TOP or

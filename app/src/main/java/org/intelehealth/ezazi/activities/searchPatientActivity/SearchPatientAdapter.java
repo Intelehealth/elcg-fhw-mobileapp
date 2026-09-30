@@ -26,6 +26,7 @@ import org.intelehealth.ezazi.app.AppConstants;
 import org.intelehealth.ezazi.database.dao.VisitAttributeListDAO;
 import org.intelehealth.ezazi.database.dao.VisitsDAO;
 import org.intelehealth.ezazi.models.dto.PatientDTO;
+import org.intelehealth.ezazi.utilities.AppRegion;
 import org.intelehealth.ezazi.utilities.DateAndTimeUtils;
 
 import org.intelehealth.ezazi.activities.patientDetailActivity.PatientDetailActivity;
@@ -141,7 +142,10 @@ public class SearchPatientAdapter extends RecyclerView.Adapter<SearchPatientAdap
         }
 
         private void startNextActivity(PatientDTO patient, String visitUUID, String patientName) {
-            if (visitUUID != null && visitUUID.equalsIgnoreCase("")) { // visit is not yet created for this user.
+            // Only Nepal routes on the visit. Everywhere else every tap lands on Patient Detail,
+            // which is what lets a woman be admitted again after an earlier visit has closed.
+            boolean noVisitYet = visitUUID != null && visitUUID.equalsIgnoreCase("");
+            if (!AppRegion.collectsAdmissionDataAtRegistration() || noVisitYet) {
                 Log.d("search adapter", "patientuuid" + patient.getUuid());
                 String patientStatus = "returning";
                 Intent intent = new Intent(context, PatientDetailActivity.class);
@@ -157,7 +161,7 @@ public class SearchPatientAdapter extends RecyclerView.Adapter<SearchPatientAdap
                 intent.putExtra("visitUuid", visitUUID);
                 intent.putExtra("name", patient.getFirstname() + " " + patient.getLastname());
                 intent.putExtra("patientNameTimeline", patientName);
-                intent.putExtra("tag", "exisiting");
+                intent.putExtra("tag", "existing");
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(intent);
 

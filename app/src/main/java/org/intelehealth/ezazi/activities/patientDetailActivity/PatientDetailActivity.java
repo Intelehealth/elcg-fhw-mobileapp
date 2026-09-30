@@ -31,7 +31,6 @@ import androidx.core.content.ContextCompat;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.gson.Gson;
 
-import org.intelehealth.ezazi.BuildConfig;
 import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.activities.admission.AdmissionDataActivity;
 import org.intelehealth.ezazi.activities.addNewPatient.AddNewPatientActivity;
@@ -98,6 +97,7 @@ public class PatientDetailActivity extends BaseActionBarActivity {
     String visitUuid = null;
     List<String> visitUuidList;
     String patientUuid;
+    String activeVisitUuid = "";
     String intentTag = "";
     String profileImage = "";
     String profileImage1 = "";
@@ -260,8 +260,13 @@ public class PatientDetailActivity extends BaseActionBarActivity {
         });
 
         setDisplay(patientUuid);
+        refreshVisitState();
 
         newVisit.setOnClickListener(v -> {
+            if (!AppRegion.collectsAdmissionDataAtRegistration()) {
+                openAdmissionOrTimeline();
+                return;
+            }
             String thisDate = DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT);
             String uuid = UUID.randomUUID().toString();
 
@@ -327,18 +332,51 @@ public class PatientDetailActivity extends BaseActionBarActivity {
             finish();
         });
 
-        if (BuildConfig.DEBUG) {
-            newVisit.setOnLongClickListener(v -> {
-                startActivity(AdmissionDataActivity.newIntent(this, patientUuid));
-                return true;
-            });
-        }
-
         Log.e(TAG, "onCreate: patient creator => " + patient.getCreatorUuid());
         if (!patient.getCreatorUuid().equals(sessionManager.getCreatorID())) {
             editbtn.setVisibility(View.GONE);
             newVisit.setEnabled(false);
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        refreshVisitState();
+    }
+
+    /** Nepal's label and flow are unchanged, so this does nothing there. */
+    private void refreshVisitState() {
+        if (AppRegion.collectsAdmissionDataAtRegistration()) return;
+        if (newVisit == null || patientUuid == null) return;
+        activeVisitUuid = new VisitsDAO().fetchActiveVisitUuid(patientUuid);
+        newVisit.setText(activeVisitUuid.isEmpty()
+                ? R.string.add_visit_details : R.string.current_visit_timeline);
+    }
+
+    /** Middle name only when there is one, matching the name the click path builds. */
+    private String fullNameWithMiddle() {
+        String middle = patient.getMiddle_name();
+        boolean hasMiddle = middle != null && !middle.trim().isEmpty();
+        return patient.getFirst_name()
+                + (hasMiddle ? " " + middle : "")
+                + " " + patient.getLast_name();
+    }
+
+    /** No open visit means admit her; an open one means show it. */
+    private void openAdmissionOrTimeline() {
+        activeVisitUuid = new VisitsDAO().fetchActiveVisitUuid(patientUuid);
+        if (activeVisitUuid.isEmpty()) {
+            startActivity(AdmissionDataActivity.newIntent(this, patientUuid));
+            return;
+        }
+        Intent timeline = new Intent(this, TimelineVisitSummaryActivity.class);
+        timeline.putExtra("patientUuid", patientUuid);
+        timeline.putExtra("visitUuid", activeVisitUuid);
+        timeline.putExtra("patientNameTimeline", fullNameWithMiddle());
+        timeline.putExtra("providerID", sessionManager.getProviderID());
+        timeline.putExtra("tag", "existing");
+        startActivity(timeline);
     }
 
     @Override

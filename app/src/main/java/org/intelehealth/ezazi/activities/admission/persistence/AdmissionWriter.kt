@@ -25,9 +25,15 @@ object AdmissionWriter {
 
     class WriteFailedException(message: String) : Exception(message)
 
-    /** Returns the new visit uuid. Blocking; call from Dispatchers.IO. */
+    /**
+     * Returns the visit uuid. Blocking; call from Dispatchers.IO. A patient already admitted gets
+     * her open visit back rather than a second one, so a stale screen cannot double-admit her.
+     */
     fun write(record: AdmissionRecord, values: List<Pair<String, String>>): String {
         val db = AppConstants.inteleHealthDatabaseHelper.getWriteDb()
+        val openVisit = VisitsDAO().fetchActiveVisitUuid(record.patientUuid)
+        if (openVisit.isNotEmpty()) return openVisit
+
         val visitUuid = UUID.randomUUID().toString()
         val startDate = DateTimeUtils.getCurrentDateInUTC(AppConstants.UTC_FORMAT)
 

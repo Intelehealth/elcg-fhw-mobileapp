@@ -414,6 +414,23 @@ public class VisitsDAO {
 //        return isUpdated;
 //    }
 
+    /** The one open visit, or "" - closed, voided and completed visits do not count. */
+    public String fetchActiveVisitUuid(String patientUuid) {
+        String visitUuid = "";
+        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
+        Cursor cursor = db.rawQuery(
+                "SELECT V.uuid FROM tbl_visit V WHERE V.patientuuid = ? " +
+                        "AND (V.enddate IS NULL OR V.enddate = '') " +
+                        "AND V.voided IN ('0','false','FALSE') " +
+                        "AND NOT EXISTS (SELECT 1 FROM tbl_encounter E WHERE E.visituuid = V.uuid " +
+                        "AND E.encounter_type_uuid = ? AND E.voided = '0') " +
+                        "ORDER BY V.startdate DESC LIMIT 1",
+                new String[]{patientUuid, ENCOUNTER_VISIT_COMPLETE});
+        if (cursor.moveToFirst()) visitUuid = cursor.getString(0);
+        cursor.close();
+        return visitUuid;
+    }
+
     public String fetchVisitUUIDFromPatientUUID(String patientUUID) {
         String visitUUID = "";
         SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();

@@ -748,7 +748,7 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
         activity.putExtra("patientUuid", patientUuid);
         activity.putExtra("visitUuid", visitUuid);
         activity.putExtra("providerID", providerID);
-        activity.putExtra("tag", "timline");
+        activity.putExtra("tag", "timeline");
         startActivity(activity);
     }
 
