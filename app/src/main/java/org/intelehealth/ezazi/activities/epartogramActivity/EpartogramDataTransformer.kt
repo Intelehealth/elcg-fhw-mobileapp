@@ -6,6 +6,8 @@ import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.intelehealth.ezazi.app.AppConstants
+import org.intelehealth.ezazi.database.dao.ObsDAO
+import org.intelehealth.ezazi.utilities.AppRegion
 import org.intelehealth.ezazi.utilities.NepaliDateConverter
 import org.intelehealth.ezazi.utilities.UuidDictionary
 import org.json.JSONArray
@@ -103,6 +105,19 @@ object EpartogramDataTransformer {
         "Hospital ID"                       to "HospitalID"
     )
 
+    // The same nine values, for the region that stores them as obs on the visit
+    private val CONCEPT_TO_PINFO_KEY = mapOf(
+        UuidDictionary.OBS_PARITY                       to "Parity",
+        UuidDictionary.OBS_LABOR_ONSET                  to "LaborOnset",
+        UuidDictionary.OBS_ACTIVE_LABOR_DIAGNOSED       to "ActiveLaborDiagnosed",
+        UuidDictionary.OBS_MEMBRANE_RUPTURED_TIMESTAMP  to "MembraneRupturedTimestamp",
+        UuidDictionary.OBS_RISK_FACTORS                 to "Riskfactors",
+        UuidDictionary.OBS_GRAVIDA                      to "Gravida",
+        UuidDictionary.OBS_LMP                          to "LMP",
+        UuidDictionary.OBS_EDD                          to "EDD",
+        UuidDictionary.OBS_HOSPITAL_ID                  to "HospitalID"
+    )
+
     private val STAGE_HOUR_PATTERN     = Pattern.compile("Stage(\\d+)_Hour(\\d+)(?:_(\\d+))?")
     private val SOS_STAGE_HOUR_PATTERN = Pattern.compile("Stage(\\d+)_Hour(\\d+)_SOS(\\d+)")
 
@@ -156,7 +171,7 @@ object EpartogramDataTransformer {
             val root = JSONObject()
 
             val patientUuid = queryPatientUuid(db, visitUuid) ?: ""
-            root.put("pInfo", buildPinfo(db, patientUuid))
+            root.put("pInfo", buildPinfo(db, patientUuid, visitUuid))
             buildStageData(db, visitUuid, root)
             buildVisitCompleteData(db, visitUuid, root)
 
@@ -178,7 +193,7 @@ object EpartogramDataTransformer {
     }
 
     @SuppressLint("Range")
-    private fun buildPinfo(db: SQLiteDatabase, patientUuid: String): JSONObject {
+    private fun buildPinfo(db: SQLiteDatabase, patientUuid: String, visitUuid: String): JSONObject {
         val pInfo = JSONObject()
 
         db.rawQuery(
@@ -212,6 +227,16 @@ object EpartogramDataTransformer {
                     // so the HTML fmtDate() can parse them correctly via new Date().
                     val finalVal = if (key in DATE_PINFO_KEYS) convertPatientDate(attrVal) else attrVal
                     pInfo.put(key, finalVal)
+                }
+            }
+        }
+
+        if (!AppRegion.collectsAdmissionDataAtRegistration() && visitUuid.isNotEmpty()) {
+            val obs = ObsDAO().getAdmissionValues(visitUuid)
+            CONCEPT_TO_PINFO_KEY.forEach { (concept, key) ->
+                val raw = obs[concept].orEmpty()
+                if (raw.isNotEmpty()) {
+                    pInfo.put(key, if (key in DATE_PINFO_KEYS) convertPatientDate(raw) else raw)
                 }
             }
         }
