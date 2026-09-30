@@ -632,6 +632,33 @@ public class PatientsDAO {
         return gender;
     }
 
+    /**
+     * First + middle + last, middle only when present — the exact construction
+     * PatientDetailActivity.java:272-278 uses for the Timeline header. getPatientName() drops the
+     * middle name, so it is not a substitute.
+     */
+    public static String getFullNameWithMiddle(String patientUuid) {
+        String name = "";
+
+        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
+        Cursor cursor = db.query("tbl_patient", new String[]{"first_name", "middle_name", "last_name"},
+                "uuid=?", new String[]{patientUuid}, null, null, null);
+
+        if (cursor.moveToFirst()) {
+            String first = cursor.getString(cursor.getColumnIndexOrThrow("first_name"));
+            String middle = cursor.getString(cursor.getColumnIndexOrThrow("middle_name"));
+            String last = cursor.getString(cursor.getColumnIndexOrThrow("last_name"));
+            if (middle != null && !middle.isEmpty()) {
+                name = first + " " + middle + " " + last;
+            } else {
+                name = first + " " + last;
+            }
+        }
+        cursor.close();
+
+        return name;
+    }
+
     public static String getDateOfBirth(String patientUuid) {
         String gender = "";
 

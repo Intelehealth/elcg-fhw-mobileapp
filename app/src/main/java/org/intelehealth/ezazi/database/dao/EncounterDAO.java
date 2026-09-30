@@ -1,6 +1,7 @@
 package org.intelehealth.ezazi.database.dao;
 
 import static org.intelehealth.ezazi.utilities.UuidDictionary.DELIVERY_OUTCOME_STAGE3;
+import static org.intelehealth.ezazi.utilities.UuidDictionary.ENCOUNTER_ADMISSION;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.ENCOUNTER_VISIT_COMPLETE;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.ENCOUNTER_VISIT_NOTE;
 import static org.intelehealth.ezazi.utilities.UuidDictionary.LCG_SOS;
@@ -354,9 +355,9 @@ public class EncounterDAO {
         // db.beginTransaction(); aa81db5e-2f59-456f-aa81-0028f11257f4
 
         Cursor idCursor = db.rawQuery("SELECT * FROM tbl_encounter where visituuid = ? and voided = '0' " +
-                        "AND encounter_type_uuid != ? AND encounter_type_uuid != ? AND encounter_type_uuid IS NOT NULL AND encounter_type_uuid != '' " +
+                        "AND encounter_type_uuid != ? AND encounter_type_uuid != ? AND encounter_type_uuid != ? AND encounter_type_uuid IS NOT NULL AND encounter_type_uuid != '' " +
                         "ORDER BY encounter_time DESC limit 1",
-                new String[]{visitUUID, ENCOUNTER_VISIT_COMPLETE, LCG_SOS});
+                new String[]{visitUUID, ENCOUNTER_VISIT_COMPLETE, LCG_SOS, ENCOUNTER_ADMISSION});
 
         EncounterDTO encounterDTO = null;
         if (idCursor.getCount() != 0) {
@@ -649,9 +650,9 @@ public class EncounterDAO {
 
         SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWritableDatabase();
         //    db.beginTransaction();
-        Cursor idCursor = db.rawQuery("SELECT encounter_type_uuid FROM tbl_encounter where visituuid = ? AND encounter_type_uuid != ? ORDER BY encounter_time DESC LIMIT 1",
+        Cursor idCursor = db.rawQuery("SELECT encounter_type_uuid FROM tbl_encounter where visituuid = ? AND encounter_type_uuid != ? AND encounter_type_uuid != ? ORDER BY encounter_time DESC LIMIT 1",
                 //  Cursor idCursor = db.rawQuery("SELECT encounter_type_uuid FROM tbl_encounter where visituuid = ?", // temp testing
-                new String[]{visitUuid, ENCOUNTER_VISIT_COMPLETE});
+                new String[]{visitUuid, ENCOUNTER_VISIT_COMPLETE, ENCOUNTER_ADMISSION});
         if (idCursor.getCount() != 0) {
             while (idCursor.moveToNext()) {
                 latestEncounterTypeUuid = idCursor.getString(idCursor.getColumnIndexOrThrow("encounter_type_uuid"));

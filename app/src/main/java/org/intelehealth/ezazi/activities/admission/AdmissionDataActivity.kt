@@ -22,6 +22,8 @@ import kotlinx.coroutines.withContext
 import org.intelehealth.ezazi.R
 import org.intelehealth.ezazi.activities.admission.persistence.AdmissionRecord
 import org.intelehealth.ezazi.activities.admission.persistence.AdmissionValues
+import org.intelehealth.ezazi.activities.admission.persistence.AdmissionWriter
+import org.intelehealth.ezazi.activities.visitSummaryActivity.TimelineVisitSummaryActivity
 import org.intelehealth.ezazi.activities.admission.validation.AdmissionField
 import org.intelehealth.ezazi.activities.admission.validation.AdmissionForm
 import org.intelehealth.ezazi.activities.admission.validation.AdmissionValidator
@@ -38,6 +40,7 @@ import org.intelehealth.ezazi.ui.dialog.model.SingChoiceItem
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity
 import org.intelehealth.ezazi.ui.validation.FirstLetterUpperCaseInputFilter
 import org.intelehealth.ezazi.ui.dialog.adapter.RiskFactorMultiChoiceAdapter
+import org.intelehealth.ezazi.optimized_sync.OptimizedSyncWorker
 import org.intelehealth.ezazi.utilities.SessionManager
 import org.intelehealth.ezazi.utilities.DateAndTimeUtils
 import org.intelehealth.ezazi.utilities.GregorianDateUtils.eddFromLmp
@@ -53,6 +56,8 @@ class AdmissionDataActivity : BaseActionBarActivity() {
     private var patientContextLoaded = false
     private var patientContextJob: Job? = null
     private var isParityWarningDialogShown = false
+    private var isWriting = false
+    private var patientName: String = ""
 
     private var admissionDate: String = ""
     private var activeLabourDiagnosedDate: String = ""
@@ -118,11 +123,12 @@ class AdmissionDataActivity : BaseActionBarActivity() {
      */
     private fun loadPatientContext() {
         patientContextJob = lifecycleScope.launch {
-            dateOfBirth = withContext(Dispatchers.IO) {
+            withContext(Dispatchers.IO) {
                 try {
-                    PatientsDAO.getDateOfBirth(patientUuid).orEmpty()
+                    dateOfBirth = PatientsDAO.getDateOfBirth(patientUuid).orEmpty()
+                    patientName = PatientsDAO.getFullNameWithMiddle(patientUuid).orEmpty()
                 } catch (e: Exception) {
-                    ""
+                    Log.e(TAG_ADMISSION, "patient context load failed", e)
                 }
             }
             patientContextLoaded = true
@@ -165,10 +171,42 @@ class AdmissionDataActivity : BaseActionBarActivity() {
     }
 
     private fun onValidated() {
+        if (isWriting) return
+        isWriting = true
+        actions.btnNextAddress.isEnabled = false
+
         val record = buildRecord()
         val values = AdmissionValues.pack(record, getString(R.string.other_risk))
-        Log.d(TAG_ADMISSION, "record = $record")
-        values.forEach { (conceptUuid, value) -> Log.d(TAG_ADMISSION, "$conceptUuid = [$value]") }
+
+        lifecycleScope.launch {
+            val visitUuid = withContext(Dispatchers.IO) {
+                try {
+                    AdmissionWriter.write(record, values)
+                } catch (e: Exception) {
+                    Log.e(TAG_ADMISSION, "admission write failed", e)
+                    null
+                }
+            }
+            if (visitUuid == null) {
+                isWriting = false
+                actions.btnNextAddress.isEnabled = true
+            } else {
+                OptimizedSyncWorker.tempOneTimeWorkRequest(this@AdmissionDataActivity)
+                openTimeline(visitUuid)
+            }
+        }
+    }
+
+    private fun openTimeline(visitUuid: String) {
+        val intent = Intent(this, TimelineVisitSummaryActivity::class.java).apply {
+            putExtra("patientUuid", patientUuid)
+            putExtra("visitUuid", visitUuid)
+            putExtra("patientNameTimeline", patientName)
+            putExtra("providerID", SessionManager(this@AdmissionDataActivity).providerID)
+            putExtra("tag", "new")
+        }
+        startActivity(intent)
+        finish()
     }
 
     private fun buildRecord(): AdmissionRecord {
@@ -387,6 +425,7 @@ class AdmissionDataActivity : BaseActionBarActivity() {
     private fun setupBackConfirmation() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
+                if (isWriting) return
                 showBackConfirmationDialog()
             }
         })
