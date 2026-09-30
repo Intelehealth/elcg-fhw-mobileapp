@@ -149,7 +149,7 @@ object AdmissionValidator {
         return failures
     }
 
-    /** Runs only after [validate] passes, and only when the parity-against-age warning did not fire. */
+    /** Runs after [validate] passes, on both the direct save and the confirmed parity-warning route. */
     fun validateGravida(form: AdmissionForm): Failure? {
         if (form.gravida.isEmpty()) {
             return Failure(AdmissionField.GRAVIDA, R.string.error_gravida_required)

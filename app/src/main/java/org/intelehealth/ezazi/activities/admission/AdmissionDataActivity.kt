@@ -55,7 +55,6 @@ class AdmissionDataActivity : BaseActionBarActivity() {
     private var dateOfBirth: String = ""
     private var patientContextLoaded = false
     private var patientContextJob: Job? = null
-    private var isParityWarningDialogShown = false
     private var isWriting = false
     private var patientName: String = ""
 
@@ -151,8 +150,9 @@ class AdmissionDataActivity : BaseActionBarActivity() {
 
             val snapshot = snapshotForm()
 
-            if (!areValidFields(snapshot)) {
-                scrollToFocusedItem()
+            val failures = validateForm(snapshot)
+            if (failures.isNotEmpty()) {
+                scrollToFailures(failures)
                 return@launch
             }
 
@@ -162,8 +162,7 @@ class AdmissionDataActivity : BaseActionBarActivity() {
             val allowed = DateAndTimeUtils.getAgeInYearsOnly(dateOfBirth) - 12
 
             if (total > allowed) {
-                isParityWarningDialogShown = true
-                showParityWarningDialog()
+                showParityWarningDialog(snapshot)
             } else if (validateGravida(snapshot)) {
                 onValidated()
             }
@@ -242,14 +241,15 @@ class AdmissionDataActivity : BaseActionBarActivity() {
         )
     }
 
-    private fun showParityWarningDialog() {
+    /** Confirm is a second route into the save, so it runs the same Gravida check the normal route runs. */
+    private fun showParityWarningDialog(snapshot: AdmissionForm) {
         val dialog = ConfirmationDialogFragment.Builder(this)
             .title(R.string.parity_dialog_warning)
             .content(getString(R.string.parity_dialog_message))
             .positiveButtonLabel(R.string.confirm_and_submit)
             .negativeButtonLabel(R.string.review_details)
             .build()
-        dialog.setListener { onValidated() }
+        dialog.setListener { if (validateGravida(snapshot)) onValidated() }
         dialog.show(supportFragmentManager, TAG_PARITY_WARNING)
     }
 
@@ -276,12 +276,13 @@ class AdmissionDataActivity : BaseActionBarActivity() {
         gravida = form.etGravida.text.toString().trim()
     )
 
-    private fun areValidFields(snapshot: AdmissionForm): Boolean {
+    /** Paints every failure and returns them, so the caller can scroll to one. Empty means valid. */
+    private fun validateForm(snapshot: AdmissionForm): List<Failure> {
         hideAllErrorFields()
         resetAllCardStrokes()
         val failures = AdmissionValidator.validate(snapshot)
         failures.forEach { paintFailure(it) }
-        return failures.isEmpty()
+        return failures
     }
 
     private fun validateGravida(snapshot: AdmissionForm): Boolean {
@@ -291,6 +292,7 @@ class AdmissionDataActivity : BaseActionBarActivity() {
             return true
         }
         paintFailure(failure)
+        scrollToFailures(listOf(failure))
         return false
     }
 
@@ -357,14 +359,37 @@ class AdmissionDataActivity : BaseActionBarActivity() {
         }
     }
 
-    private fun scrollToFocusedItem() {
-        val focused = binding.root.findFocus() ?: return
-        val scroll = locationOnScreen(form.scrollOtherInfo)
-        val point = locationOnScreen(focused)
-        var coord = point.y - scroll.y
-        if (coord <= 0) form.scrollOtherInfo.smoothScrollTo(0, 0)
-        else if (scroll.y > coord) coord = point.y
-        form.scrollOtherInfo.smoothScrollTo(0, coord)
+    /** Scrolls to the failing field highest on the form. Rule order is not screen order, so position decides. */
+    private fun scrollToFailures(failures: List<Failure>) {
+        if (failures.isEmpty()) return
+        form.scrollOtherInfo.post {
+            val anchor = failures.map { anchorFor(it.field) }
+                .minByOrNull { locationOnScreen(it).y } ?: return@post
+            val margin = (SCROLL_MARGIN_DP * resources.displayMetrics.density).toInt()
+            val top = locationOnScreen(form.scrollOtherInfo).y + form.scrollOtherInfo.paddingTop
+            form.scrollOtherInfo.smoothScrollBy(0, locationOnScreen(anchor).y - top - margin)
+        }
+    }
+
+    /** The card, never the error text: anchoring on the message scrolls the field itself off the top. */
+    private fun anchorFor(field: AdmissionField): View = when (field) {
+        AdmissionField.ADMISSION_DATE -> form.cardDateAdmission
+        AdmissionField.ADMISSION_TIME -> form.cardTimeAdmission
+        AdmissionField.TOTAL_BIRTH -> form.cardTotalBirth
+        AdmissionField.TOTAL_MISCARRIAGE -> form.cardTotalMiscarraige
+        AdmissionField.GRAVIDA -> form.cardGravida
+        AdmissionField.LMP -> lmpEdd.root
+        AdmissionField.LABOUR_ONSET -> form.cardLabourOnset
+        AdmissionField.LABOUR_DIAGNOSED_DATE -> form.cardDiagnosedDate
+        AdmissionField.LABOUR_DIAGNOSED_TIME -> form.cardDiagnosedTime
+        AdmissionField.RUPTURE_MEMBRANE -> form.textView8
+        AdmissionField.SAC_RUPTURED_DATE -> form.cardSacRupturedDate
+        AdmissionField.SAC_RUPTURED_TIME -> form.cardSacRupturedTime
+        AdmissionField.RISK_FACTORS -> common.dropdownRiskFactors
+        AdmissionField.OTHER_RISK_FACTOR -> common.cardOtherRiskFactor
+        AdmissionField.HOSPITAL_MATERNITY -> common.cardOptions
+        AdmissionField.HOSPITAL_OTHER -> common.cardHospitalOther
+        AdmissionField.PRIMARY_DOCTOR -> common.dropdownPrimaryDoctor
     }
 
     private fun locationOnScreen(view: View): Point {
@@ -830,6 +855,7 @@ class AdmissionDataActivity : BaseActionBarActivity() {
         private const val HOSPITAL = "Hospital"
         private const val MATERNITY = "Maternity"
         private const val OTHER = "Other"
+        private const val SCROLL_MARGIN_DP = 16
         private const val ONSET_SPONTANEOUS = "Spontaneous"
         private const val ONSET_INDUCED = "Induced"
 

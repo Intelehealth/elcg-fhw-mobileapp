@@ -162,8 +162,8 @@ public class PatientOtherInfoFragment extends Fragment {
     private boolean isUnknownChecked;
     private PatientAttributesModel patientAttributesModel;
     private NestedScrollView scrollviewOtherInfo;
+    private View cardDetailsGravida;
     private EditText etHighRisk;
-    private boolean isParityWarningDialogShown = false;
     boolean isGravidaEdited = false;
     private String mLmpDate = "", mEDD = "";
     private TextInputEditText mLmpDateTextView, mEDDTextView;
@@ -228,6 +228,7 @@ public class PatientOtherInfoFragment extends Fragment {
         etHospitalOther = view.findViewById(R.id.et_hospital_other);
         scrollviewOtherInfo = view.findViewById(R.id.scroll_other_info);
         mGravidaEdittext = view.findViewById(R.id.et_gravida);
+        cardDetailsGravida = view.findViewById(R.id.card_details_gravida);
         mHospitalId = view.findViewById(R.id.et_hospital_id);
         tvErrorHospitalId = view.findViewById(R.id.tv_hospital_id_error);
         layoutSacRuptured = view.findViewById(R.id.card_sac_ruptured);
@@ -1161,7 +1162,6 @@ public class PatientOtherInfoFragment extends Fragment {
         int allowed = age - 12;
 
         if (total > allowed) {
-            isParityWarningDialogShown = true;
             showParityWarningDialog();
         } else if (validateGravida()) {
             savePatientsDataInDb();
@@ -1604,24 +1604,23 @@ public class PatientOtherInfoFragment extends Fragment {
 
     private boolean validateGravida() {
         String val = mGravidaEdittext.getText().toString().trim();
-        if (val.isEmpty()) {
-            tvErrorGravida.setText(getString(R.string.error_gravida_required));
-            tvErrorGravida.setVisibility(View.VISIBLE);
-            return false;
-        }
-        int g = Integer.parseInt(val);
-        if (g < 0) {
-            tvErrorGravida.setText(getString(R.string.error_gravida_negative));
-            tvErrorGravida.setVisibility(View.VISIBLE);
-            return false;
-        }
-        if (g > 20) {
-            tvErrorGravida.setText(getString(R.string.error_gravida_max_limit));
-            tvErrorGravida.setVisibility(View.VISIBLE);
-            return false;
-        }
+        if (val.isEmpty()) return failGravida(R.string.error_gravida_required);
+        int g = parseSafe(val);
+        if (g < 0) return failGravida(R.string.error_gravida_negative);
+        if (g > 20) return failGravida(R.string.error_gravida_max_limit);
         tvErrorGravida.setVisibility(View.GONE);
         return true;
+    }
+
+    /** Always false, so callers return it directly. Scrolls because the submit button never moves. */
+    private boolean failGravida(int messageRes) {
+        tvErrorGravida.setText(getString(messageRes));
+        tvErrorGravida.setVisibility(View.VISIBLE);
+        if (cardDetailsGravida != null) {
+            scrollviewOtherInfo.post(
+                    () -> scrollviewOtherInfo.smoothScrollTo(0, cardDetailsGravida.getTop()));
+        }
+        return false;
     }
 
     private String getBedNumber(String patientuuid) throws DAOException {
@@ -1720,7 +1719,7 @@ public class PatientOtherInfoFragment extends Fragment {
         dialog.setListener(new ConfirmationDialogFragment.OnConfirmationActionListener() {
             @Override
             public void onAccept() {
-                savePatientsDataInDb();
+                if (validateGravida()) savePatientsDataInDb();
                 dialog.dismiss();
             }
 
