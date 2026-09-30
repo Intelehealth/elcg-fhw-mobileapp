@@ -1,30 +1,28 @@
 package org.intelehealth.ezazi.ui.rtc.call;
 
-import android.util.Log;
 import android.widget.Toast;
 
 import org.intelehealth.ezazi.BuildConfig;
 import org.intelehealth.ezazi.app.AppConstants;
 import org.intelehealth.ezazi.core.data.BaseDataSource;
-import org.intelehealth.ezazi.database.dao.PatientsDAO;
 import org.intelehealth.ezazi.models.dto.EncounterDTO;
 import org.intelehealth.ezazi.models.dto.PatientAttributesDTO;
-import org.intelehealth.ezazi.models.pushRequestApiCall.Attribute;
 import org.intelehealth.ezazi.networkApiCalls.ApiClient;
 import org.intelehealth.ezazi.networkApiCalls.ApiInterface;
 import org.intelehealth.ezazi.ui.dialog.model.SingChoiceItem;
+import org.intelehealth.ezazi.utilities.ObstetricValueReader;
 import org.intelehealth.ezazi.ui.password.listener.OnAPISuccessListener;
 import org.intelehealth.ezazi.ui.rtc.data.RtcTokenDataSource;
 import org.intelehealth.ezazi.ui.rtc.model.UserToken;
-import org.intelehealth.ezazi.utilities.exception.DAOException;
 import org.intelehealth.klivekit.model.RtcArgs;
 import org.intelehealth.klivekit.utils.RemoteActionType;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
-import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Vaghela Mithun R. on 06-07-2023 - 14:19.
@@ -54,39 +52,31 @@ public class CallInitializer {
         }, args);
     }
 
-    public static LinkedList<SingChoiceItem> getDoctorsDetails(String patientUuid) {
-        PatientsDAO patientsDAO = new PatientsDAO();
-        LinkedList<SingChoiceItem> doctors;
-        try {
-            List<Attribute> patientAttributes = patientsDAO.getPatientAttributes(patientUuid);
-            Log.e("CallInitializer", "getDoctorsDetails: " + patientAttributes.size());
-            LinkedHashMap<String, SingChoiceItem> tempMap = new LinkedHashMap<>();
-            for (int i = 0; i < patientAttributes.size(); i++) {
-                String name = patientsDAO.getAttributesName(patientAttributes.get(i).getAttributeType());
-                if (name.equalsIgnoreCase(PatientAttributesDTO.Columns.PRIMARY_DOCTOR.value)) {
-                    String[] primary = splitString(patientAttributes.get(i));
-                    if (isUsableDoctor(primary)) {
-                        tempMap.put(primary[0], buildItem(primary[0], primary[1], AppConstants.PRIMARY));
-                    }
-                }
-                if (name.equalsIgnoreCase(PatientAttributesDTO.Columns.SECONDARY_DOCTOR.value)) {
-                    String[] secondary = splitString(patientAttributes.get(i));
-                    if (isUsableDoctor(secondary) && !secondary[0].equalsIgnoreCase(AppConstants.NOT_APPLICABLE)) {
-                        tempMap.put(secondary[0], buildItem(secondary[0], secondary[1], AppConstants.SECONDARY));
-                    }
-                }
-            }
-            doctors = new LinkedList<>(tempMap.values());
-        } catch (DAOException e) {
-            throw new RuntimeException(e);
+    public static LinkedList<SingChoiceItem> getDoctorsDetails(String patientUuid, String visitUuid) {
+        Map<PatientAttributesDTO.Columns, String> values = ObstetricValueReader.values(
+                patientUuid, visitUuid,
+                Arrays.asList(
+                        PatientAttributesDTO.Columns.PRIMARY_DOCTOR,
+                        PatientAttributesDTO.Columns.SECONDARY_DOCTOR
+                ));
+
+        LinkedHashMap<String, SingChoiceItem> tempMap = new LinkedHashMap<>();
+
+        String[] primary = splitString(values.get(PatientAttributesDTO.Columns.PRIMARY_DOCTOR));
+        if (isUsableDoctor(primary)) {
+            tempMap.put(primary[0], buildItem(primary[0], primary[1], AppConstants.PRIMARY));
         }
 
+        String[] secondary = splitString(values.get(PatientAttributesDTO.Columns.SECONDARY_DOCTOR));
+        if (isUsableDoctor(secondary) && !secondary[0].equalsIgnoreCase(AppConstants.NOT_APPLICABLE)) {
+            tempMap.put(secondary[0], buildItem(secondary[0], secondary[1], AppConstants.SECONDARY));
+        }
 
-        return doctors;
+        return new LinkedList<>(tempMap.values());
     }
 
-    private static String[] splitString(Attribute attribute) {
-        return attribute.getValue().split("@#@");
+    private static String[] splitString(String value) {
+        return value == null ? new String[0] : value.split("@#@");
     }
 
     /** split() drops trailing empties, so a stored "uuid@#@" arrives as one element and [1] throws. */
