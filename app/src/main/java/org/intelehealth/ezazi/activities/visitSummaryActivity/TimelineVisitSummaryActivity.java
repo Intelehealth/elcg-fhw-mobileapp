@@ -99,6 +99,7 @@ import org.intelehealth.ezazi.utilities.Logger;
 import org.intelehealth.ezazi.utilities.NetworkConnection;
 import org.intelehealth.ezazi.utilities.NotificationReceiver;
 import org.intelehealth.ezazi.utilities.NotificationUtils;
+import org.intelehealth.ezazi.utilities.ObstetricValueReader;
 import org.intelehealth.ezazi.utilities.SessionManager;
 import org.intelehealth.ezazi.utilities.UuidDictionary;
 import org.intelehealth.ezazi.utilities.exception.DAOException;
@@ -1204,8 +1205,9 @@ public class TimelineVisitSummaryActivity extends BaseActionBarActivity {
             ArrayList<EncounterDTO> encounterListDTO =
                     encounterDAO.getEncountersByVisitUUID(visitUuid);
 
-            String parity = patientsDAO.getPatientAttributeValue(
+            String parity = ObstetricValueReader.value(
                     patientUuid,
+                    visitUuid,
                     PatientAttributesDTO.Columns.PARITY
             );
 

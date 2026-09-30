@@ -36,25 +36,24 @@ object ObstetricValueReader {
 
     /** Returns "" when absent, matching what getPatientAttributeValue has always returned. */
     @JvmStatic
-    fun value(patientUuid: String?, visitUuid: String?, column: Columns): String {
-        val concept = CONCEPT_BY_COLUMN[column]
-        if (concept == null || AppRegion.collectsAdmissionDataAtRegistration()) {
-            return attributeValue(patientUuid, column)
-        }
-        if (visitUuid.isNullOrEmpty()) return ""
-        return ObsDAO().getAdmissionValues(visitUuid)[concept].orEmpty()
-    }
+    fun value(patientUuid: String?, visitUuid: String?, column: Columns): String =
+        values(patientUuid, visitUuid, listOf(column))[column].orEmpty()
 
-    /** One query for several values of the same visit, so a row does not run fifteen of them. */
+    /**
+     * One query for several values of the same visit. A visit with no Admission encounter - opened
+     * before this feature, or pulled from another device - falls back to the patient attribute,
+     * because otherwise a pre-Admission value is indistinguishable from a blank field.
+     */
     @JvmStatic
     fun values(patientUuid: String?, visitUuid: String?, columns: List<Columns>): Map<Columns, String> {
-        if (AppRegion.collectsAdmissionDataAtRegistration() || visitUuid.isNullOrEmpty()) {
+        if (AppRegion.collectsAdmissionDataAtRegistration()) {
             return columns.associateWith { attributeValue(patientUuid, it) }
         }
-        val obs = ObsDAO().getAdmissionValues(visitUuid)
+        val obs = if (visitUuid.isNullOrEmpty()) emptyMap() else ObsDAO().getAdmissionValues(visitUuid)
         return columns.associateWith { column ->
             val concept = CONCEPT_BY_COLUMN[column]
-            if (concept == null) attributeValue(patientUuid, column) else obs[concept].orEmpty()
+            val fromObs = if (concept == null) null else obs[concept]
+            if (fromObs.isNullOrEmpty()) attributeValue(patientUuid, column) else fromObs
         }
     }
 

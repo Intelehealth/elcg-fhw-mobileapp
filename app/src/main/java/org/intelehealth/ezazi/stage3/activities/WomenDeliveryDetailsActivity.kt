@@ -17,7 +17,7 @@ import org.intelehealth.ezazi.activities.visitSummaryActivity.TimelineVisitSumma
 import org.intelehealth.ezazi.app.AppConstants
 import org.intelehealth.ezazi.database.dao.EncounterDAO
 import org.intelehealth.ezazi.database.dao.ObsDAO
-import org.intelehealth.ezazi.database.dao.PatientsDAO
+import org.intelehealth.ezazi.utilities.ObstetricValueReader
 import org.intelehealth.ezazi.database.dao.VisitAttributeListDAO
 import org.intelehealth.ezazi.database.dao.VisitsDAO
 import org.intelehealth.ezazi.databinding.ActivityWomenDeliveryDetailsBinding
@@ -173,8 +173,9 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
         }
 
         // Past date time check
-        val activeLaborDateTimeValue: String = PatientsDAO().getPatientAttributeValue(
+        val activeLaborDateTimeValue: String = ObstetricValueReader.value(
             patientUuid,
+            visitUuid,
             PatientAttributesDTO.Columns.ACTIVE_LABOR_DIAGNOSED
         )
 
