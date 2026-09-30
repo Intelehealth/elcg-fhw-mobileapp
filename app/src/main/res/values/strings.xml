@@ -1153,4 +1153,16 @@
     <string name="pdf_saved_body">%1$s has been saved to Downloads/eZazi.</string>
     <string name="storage_permission_needed">Storage permission is required to save the PDF to Downloads.</string>
     <string name="no_pdf_viewer_found">No app found on this device to open PDF files.</string>
+
+    <string name="past_visits">Past Visits</string>
+    <string name="pv_active_labour">Date of Active Labour Diagnosed</string>
+    <string name="pv_delivery">Date of Delivery</string>
+    <string name="pv_risk_factors">Risk Factors</string>
+    <string name="pv_parity">Parity</string>
+    <string name="pv_mode_of_delivery">Mode of Delivery</string>
+    <string name="pv_baby_status">Baby Status</string>
+    <string name="pv_mother_status">Mother Status</string>
+    <string name="pv_final_outcome_report">Final Outcome Report</string>
+    <string name="pv_mother_deceased">Deceased</string>
+    <string name="pv_view_report">View Report</string>
 </resources>

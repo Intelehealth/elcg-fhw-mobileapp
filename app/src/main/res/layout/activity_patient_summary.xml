@@ -547,6 +547,34 @@
 
             </LinearLayout>
 
+            <TextView
+                android:id="@+id/tv_past_visits_header"
+                style="@style/Theme.EZazi.Text.SubHeading"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/padding_card"
+                android:text="@string/past_visits"
+                android:textColor="@color/colorPrimary"
+                android:textSize="@dimen/tv_summary_title_text_size"
+                android:visibility="gone" />
+
+            <ProgressBar
+                android:id="@+id/pb_past_visits"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="@dimen/padding_card"
+                android:indeterminateTint="@color/colorPrimary"
+                android:visibility="gone" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_past_visits"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:visibility="gone"
+                tools:listitem="@layout/item_past_visit" />
+
         </LinearLayout>
 
     </androidx.core.widget.NestedScrollView>

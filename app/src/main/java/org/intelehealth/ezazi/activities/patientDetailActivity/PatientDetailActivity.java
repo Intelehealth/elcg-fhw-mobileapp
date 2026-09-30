@@ -21,12 +21,15 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.widget.Toolbar;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.gson.Gson;
@@ -44,10 +47,14 @@ import org.intelehealth.ezazi.database.dao.PatientsDAO;
 import org.intelehealth.ezazi.database.dao.VisitAttributeListDAO;
 import org.intelehealth.ezazi.database.dao.VisitsDAO;
 import org.intelehealth.ezazi.database.dao.ObsDAO;
+import org.intelehealth.ezazi.executor.TaskCompleteListener;
+import org.intelehealth.ezazi.executor.TaskExecutor;
 import org.intelehealth.ezazi.models.Patient;
 import org.intelehealth.ezazi.models.dto.EncounterDTO;
 import org.intelehealth.ezazi.models.dto.VisitDTO;
 import org.intelehealth.ezazi.optimized_sync.network.NetworkStatus;
+import org.intelehealth.ezazi.stage3.postpartum.OfflineStage3ViewActivity;
+import org.intelehealth.ezazi.stage3.postpartum.ViewPostPartumReportActivity;
 import org.intelehealth.ezazi.ui.shared.BaseActionBarActivity;
 import org.intelehealth.ezazi.utilities.AppRegion;
 import org.intelehealth.ezazi.utilities.DateAndTimeUtils;
@@ -112,6 +119,10 @@ public class PatientDetailActivity extends BaseActionBarActivity {
     String phistory = "";
     String fhistory = "";
     LinearLayout previousVisitsList;
+    TextView pastVisitsHeader;
+    ProgressBar pastVisitsProgress;
+    RecyclerView pastVisitsList;
+    private boolean loadingPastVisits = false;
     String visitValue;
     private String encounterVitals = "";
     private String encounterAdultIntials = "";
@@ -260,8 +271,14 @@ public class PatientDetailActivity extends BaseActionBarActivity {
             startActivity(intent2);
         });
 
+        pastVisitsHeader = findViewById(R.id.tv_past_visits_header);
+        pastVisitsProgress = findViewById(R.id.pb_past_visits);
+        pastVisitsList = findViewById(R.id.rv_past_visits);
+        pastVisitsList.setLayoutManager(new LinearLayoutManager(this));
+
         setDisplay(patientUuid);
         refreshVisitState();
+        loadPastVisits();
 
         newVisit.setOnClickListener(v -> {
             if (!AppRegion.collectsAdmissionDataAtRegistration()) {
@@ -344,6 +361,56 @@ public class PatientDetailActivity extends BaseActionBarActivity {
     protected void onResume() {
         super.onResume();
         refreshVisitState();
+        loadPastVisits();
+    }
+
+    /** Off the main thread - the loader runs several queries per closed visit. */
+    private void loadPastVisits() {
+        if (pastVisitsList == null || patientUuid == null || loadingPastVisits) return;
+        loadingPastVisits = true;
+        pastVisitsProgress.setVisibility(View.VISIBLE);
+        pastVisitsHeader.setVisibility(View.GONE);
+        pastVisitsList.setVisibility(View.GONE);
+
+        String deceasedLabel = getString(R.string.pv_mother_deceased);
+        new TaskExecutor<List<PastVisitDetails>>().executeTask(new TaskCompleteListener<List<PastVisitDetails>>() {
+            @Override
+            public List<PastVisitDetails> call() {
+                try {
+                    return PastVisitLoader.loadForPatient(patientUuid, deceasedLabel);
+                } catch (Exception e) {
+                    FirebaseCrashlytics.getInstance().recordException(e);
+                    return new ArrayList<>();
+                }
+            }
+
+            @Override
+            public void onComplete(List<PastVisitDetails> result) {
+                runOnUiThread(() -> showPastVisits(result));
+            }
+        });
+    }
+
+    /** Online opens the server report, offline the stored one. The extras keep the lowercase keys. */
+    private void openOutcomeReport(PastVisitDetails details) {
+        Intent intent = currentNetworkStatus().getHasInternet()
+                ? new Intent(this, ViewPostPartumReportActivity.class)
+                : new Intent(this, OfflineStage3ViewActivity.class);
+        intent.putExtra("patientName", fullNameWithMiddle());
+        intent.putExtra("patientuuid", patientUuid);
+        intent.putExtra("visituuid", details.getVisitUuid());
+        startActivity(intent);
+    }
+
+    /** Main thread only. With no closed visits nothing is shown, not even the title. */
+    private void showPastVisits(List<PastVisitDetails> visits) {
+        loadingPastVisits = false;
+        if (isFinishing() || isDestroyed() || pastVisitsList == null) return;
+        pastVisitsProgress.setVisibility(View.GONE);
+        if (visits == null || visits.isEmpty()) return;
+        pastVisitsList.setAdapter(new PastVisitAdapter(visits, this::openOutcomeReport));
+        pastVisitsHeader.setVisibility(View.VISIBLE);
+        pastVisitsList.setVisibility(View.VISIBLE);
     }
 
     /** Nepal's label and flow are unchanged, so this does nothing there. */
