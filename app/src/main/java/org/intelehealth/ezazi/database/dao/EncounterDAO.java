@@ -325,8 +325,9 @@ public class EncounterDAO {
         SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
         // db.beginTransaction();
         Cursor idCursor = db.rawQuery("SELECT DISTINCT uuid, visituuid, encounter_type_uuid, provider_uuid, encounter_time " +
-                        "FROM tbl_encounter where visituuid = ? and voided = '0' AND encounter_type_uuid != ? ORDER BY encounter_time",
-                new String[]{visitUUID, ENCOUNTER_VISIT_COMPLETE});
+                        "FROM tbl_encounter where visituuid = ? and voided = '0' " +
+                        "AND encounter_type_uuid != ? AND encounter_type_uuid != ? ORDER BY encounter_time",
+                new String[]{visitUUID, ENCOUNTER_VISIT_COMPLETE, ENCOUNTER_ADMISSION});
         EncounterDTO encounterDTO = new EncounterDTO();
         ArrayList<EncounterDTO> encounterDTOList = new ArrayList<>();
 

@@ -38,6 +38,12 @@ import java.util.List;
  */
 
 public class ActivePatientAdapter extends RecyclerView.Adapter<ActivePatientAdapter.ActivePatientViewHolder> {
+    /** A missing bed reads NA, matching what the write side stores for a blank one. */
+    private static String bedOrNA(String bedNo) {
+        return (bedNo == null || bedNo.trim().isEmpty())
+                ? org.intelehealth.ezazi.app.AppConstants.NOT_APPLICABLE : bedNo;
+    }
+
 
     public interface OnActionListener {
         void onEndVisitClicked(ActivePatientModel activePatientModel, boolean hasPrescription);
@@ -121,7 +127,7 @@ public class ActivePatientAdapter extends RecyclerView.Adapter<ActivePatientAdap
         holder.getBodyTextView().setText(activePatientModel.getOpenmrs_id());
         holder.tvAgeGender.setText(ageInYear);
         holder.tvStageNameTextView.setText(activePatientModel.getStageName());
-        holder.tvBedNo.setText("Bed No: " + activePatientModel.getBedNo());
+        holder.tvBedNo.setText("Bed No: " + bedOrNA(activePatientModel.getBedNo()));
         if (activePatientModel.getEnddate() == null) {
             holder.getIndicatorTextView().setText(R.string.active);
             holder.getIndicatorTextView().setBackgroundColor(Color.GREEN);

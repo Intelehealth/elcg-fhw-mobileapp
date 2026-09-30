@@ -1198,6 +1198,37 @@ public class ObsDAO {
         return new ArrayList<>(resultMap.values());
     }
 
+    /**
+     * Every Admission obs of a visit, concept uuid to value. Writes no comment, so this deliberately
+     * does not reuse the cursor loops in this file - all of them skip rows with an empty comment.
+     */
+    public java.util.Map<String, String> getAdmissionValues(String visitUuid) {
+        java.util.Map<String, String> values = new java.util.HashMap<>();
+        if (visitUuid == null || visitUuid.isEmpty()) return values;
+
+        db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
+        Cursor cursor = db.rawQuery(
+                "SELECT o.conceptuuid, o.value FROM tbl_obs o " +
+                        "INNER JOIN tbl_encounter e ON o.encounteruuid = e.uuid " +
+                        "WHERE e.visituuid = ? " +
+                        "AND e.encounter_type_uuid = ? " +
+                        "AND o.voided = '0' " +
+                        "AND e.voided IN ('0','false','FALSE') " +
+                        "ORDER BY o.created_date DESC",
+                new String[]{visitUuid, UuidDictionary.ENCOUNTER_ADMISSION});
+        try {
+            while (cursor.moveToNext()) {
+                String concept = cursor.getString(cursor.getColumnIndexOrThrow("conceptuuid"));
+                if (concept == null || values.containsKey(concept)) continue;
+                String value = cursor.getString(cursor.getColumnIndexOrThrow("value"));
+                values.put(concept, value == null ? "" : value);
+            }
+        } finally {
+            cursor.close();
+        }
+        return values;
+    }
+
     public List<ObsDTO> getCervixObsByVisit(
             String visitUuid,
             String cervixConceptUuid

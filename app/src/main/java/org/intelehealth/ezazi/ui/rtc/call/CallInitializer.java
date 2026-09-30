@@ -65,11 +65,13 @@ public class CallInitializer {
                 String name = patientsDAO.getAttributesName(patientAttributes.get(i).getAttributeType());
                 if (name.equalsIgnoreCase(PatientAttributesDTO.Columns.PRIMARY_DOCTOR.value)) {
                     String[] primary = splitString(patientAttributes.get(i));
-                    tempMap.put(primary[0], buildItem(primary[0], primary[1], AppConstants.PRIMARY));
+                    if (isUsableDoctor(primary)) {
+                        tempMap.put(primary[0], buildItem(primary[0], primary[1], AppConstants.PRIMARY));
+                    }
                 }
                 if (name.equalsIgnoreCase(PatientAttributesDTO.Columns.SECONDARY_DOCTOR.value)) {
                     String[] secondary = splitString(patientAttributes.get(i));
-                    if (!secondary[0].equalsIgnoreCase(AppConstants.NOT_APPLICABLE)) {
+                    if (isUsableDoctor(secondary) && !secondary[0].equalsIgnoreCase(AppConstants.NOT_APPLICABLE)) {
                         tempMap.put(secondary[0], buildItem(secondary[0], secondary[1], AppConstants.SECONDARY));
                     }
                 }
@@ -85,6 +87,11 @@ public class CallInitializer {
 
     private static String[] splitString(Attribute attribute) {
         return attribute.getValue().split("@#@");
+    }
+
+    /** split() drops trailing empties, so a stored "uuid@#@" arrives as one element and [1] throws. */
+    private static boolean isUsableDoctor(String[] parts) {
+        return parts.length > 1 && !parts[0].trim().isEmpty() && !parts[1].trim().isEmpty();
     }
 
     private static SingChoiceItem buildItem(String uuid, String name, String type) {

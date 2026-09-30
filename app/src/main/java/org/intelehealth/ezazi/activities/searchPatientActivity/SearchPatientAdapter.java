@@ -34,6 +34,12 @@ import org.intelehealth.ezazi.utilities.NepaliDateConverter;
 import org.intelehealth.klivekit.utils.DateTimeUtils;
 
 public class SearchPatientAdapter extends RecyclerView.Adapter<SearchPatientAdapter.Myholder> {
+    /** A missing bed reads NA, matching what the write side stores for a blank one. */
+    private static String bedOrNA(String bedNo) {
+        return (bedNo == null || bedNo.trim().isEmpty())
+                ? org.intelehealth.ezazi.app.AppConstants.NOT_APPLICABLE : bedNo;
+    }
+
     List<PatientDTO> patients;
     private Context context;
     boolean isDecisionPending = false;
@@ -105,7 +111,7 @@ public class SearchPatientAdapter extends RecyclerView.Adapter<SearchPatientAdap
             tvPatientAge.setText(body);
             tvPatientName.setText(patientName);
             tvPatientId.setVisibility(View.VISIBLE);
-            tvPatientBedNo.setText("Bed No: " + patient.getBedNo());
+            tvPatientBedNo.setText("Bed No: " + bedOrNA(patient.getBedNo()));
             tvPatientStage.setText(patient.getStage());
             tvPatientNoOfAlert.setText("No of Alert: " + patient.getAlternateNo());
             tvPatientRegOn.setText(NepaliDateConverter.gregStringToBsDisplay(patient.regDate()));

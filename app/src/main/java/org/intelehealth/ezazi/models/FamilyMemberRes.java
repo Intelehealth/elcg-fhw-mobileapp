@@ -52,7 +52,9 @@ public class FamilyMemberRes implements MultiChoiceItem, Serializable {
         this.bedNo = bedNo;
     }
 
+    /** Never null: a missing bed reads NA, which is what the write side stores for a blank one. */
     public String getBedNo() {
-        return bedNo;
+        return (bedNo == null || bedNo.trim().isEmpty())
+                ? org.intelehealth.ezazi.app.AppConstants.NOT_APPLICABLE : bedNo;
     }
 }
