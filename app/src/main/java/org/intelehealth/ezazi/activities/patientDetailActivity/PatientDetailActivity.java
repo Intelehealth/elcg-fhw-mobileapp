@@ -352,10 +352,18 @@ public class PatientDetailActivity extends BaseActionBarActivity {
         });
 
         Log.e(TAG, "onCreate: patient creator => " + patient.getCreatorUuid());
-        if (!patient.getCreatorUuid().equals(sessionManager.getCreatorID())) {
-            editbtn.setVisibility(View.GONE);
-            newVisit.setEnabled(false);
-        }
+        lockIfRegisteredByAnother(patient.getCreatorUuid());
+    }
+
+    /**
+     * Locks editing only when the patient demonstrably belongs to another provider. A patient pulled
+     * from the server carries no creator, and an unknown creator must not make her unadmittable.
+     */
+    private void lockIfRegisteredByAnother(String creatorUuid) {
+        if (creatorUuid == null || creatorUuid.isEmpty()) return;
+        if (creatorUuid.equals(sessionManager.getCreatorID())) return;
+        editbtn.setVisibility(View.GONE);
+        newVisit.setEnabled(false);
     }
 
     @Override
