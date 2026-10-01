@@ -74,7 +74,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.TimeZone;
-import java.util.UUID;
 
 public class PatientOtherInfoFragment extends Fragment {
 
@@ -1623,7 +1622,7 @@ public class PatientOtherInfoFragment extends Fragment {
     private void setscreen(String patientUID) {
         SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
         String[] cols = {"uuid", "first_name", "middle_name", "last_name", "date_of_birth", "address1", "address2",
-                "city_village", "state_province", "postal_code", "country", "phone_number", "gender", "sdw",
+                "city_village", "state_province", "postal_code", "country", "gender", "sdw",
                 "occupation", "patient_photo", "economic_status", "education_status", "caste"};
         Cursor c = db.query("tbl_patient", cols, "uuid=?", new String[]{patientUID}, null, null, null);
         if (c.moveToFirst()) {
@@ -1797,14 +1796,8 @@ public class PatientOtherInfoFragment extends Fragment {
 
         patientDTO.setUuid(uuid);
 
-        java.util.function.BiFunction<String, String, PatientAttributesDTO> mkAttr = (colKey, value) -> {
-            PatientAttributesDTO a = new PatientAttributesDTO();
-            a.setUuid(UUID.randomUUID().toString());
-            a.setPatientuuid(uuid);
-            a.setPersonAttributeTypeUuid(patientsDAO.getUuidForAttribute(colKey));
-            a.setValue(value);
-            return a;
-        };
+        java.util.function.BiFunction<String, String, PatientAttributesDTO> mkAttr = (colKey, value) ->
+                patientsDAO.attributeRow(uuid, patientsDAO.getUuidForAttribute(colKey), value);
 
         attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.ADMISSION_DATE.value, StringUtils.getValue(mAdmissionDateString)));
         attrList.add(mkAttr.apply(PatientAttributesDTO.Columns.ADMISSION_TIME.value, StringUtils.getValue(mAdmissionTimeString)));

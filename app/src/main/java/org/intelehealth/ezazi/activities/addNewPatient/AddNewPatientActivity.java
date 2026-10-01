@@ -30,6 +30,7 @@ import org.intelehealth.ezazi.utilities.NetworkConnection;
 import org.intelehealth.ezazi.utilities.AppRegion;
 import org.intelehealth.ezazi.utilities.SessionManager;
 import org.intelehealth.ezazi.utilities.StringUtils;
+import org.intelehealth.ezazi.utilities.UuidDictionary;
 import org.intelehealth.klivekit.utils.DateTimeUtils;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
@@ -91,17 +92,14 @@ public class AddNewPatientActivity extends BaseActionBarActivity implements Regi
 
         attrList.add(attr(dao, uuid, PatientAttributesDTO.Columns.ALTERNATE_NO.value,
                 StringUtils.getValue(draft.getAlternateNumber())));
+        attrList.add(dao.attributeRow(uuid, UuidDictionary.ATTRIBUTE_PHONE_NUMBER,
+                StringUtils.getValue(patient.getPhonenumber())));
         attrList.add(attr(dao, uuid, PatientAttributesDTO.Columns.PROFILE_IMG_TIMESTAMP.value,
                 AppConstants.dateAndTimeUtils.currentDateTime()));
     }
 
     private PatientAttributesDTO attr(PatientsDAO dao, String patientUuid, String colKey, String value) {
-        PatientAttributesDTO a = new PatientAttributesDTO();
-        a.setUuid(UUID.randomUUID().toString());
-        a.setPatientuuid(patientUuid);
-        a.setPersonAttributeTypeUuid(dao.getUuidForAttribute(colKey));
-        a.setValue(value);
-        return a;
+        return dao.attributeRow(patientUuid, dao.getUuidForAttribute(colKey), value);
     }
 
     private String regNumberPart(String value) {

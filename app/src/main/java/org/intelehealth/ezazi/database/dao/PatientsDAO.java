@@ -27,6 +27,7 @@ import org.intelehealth.ezazi.app.IntelehealthApplication;
 import org.intelehealth.ezazi.models.Patient;
 import org.intelehealth.ezazi.models.dto.PatientAttributeTypeMasterDTO;
 import org.intelehealth.ezazi.models.dto.PatientAttributesDTO;
+import java.util.UUID;
 import org.intelehealth.ezazi.models.dto.PatientDTO;
 import org.intelehealth.ezazi.models.pushRequestApiCall.Attribute;
 import org.intelehealth.ezazi.utilities.exception.DAOException;
@@ -107,7 +108,6 @@ public class PatientsDAO {
             values.put("first_name", patientDTO.getFirstname());
             values.put("middle_name", patientDTO.getMiddlename());
             values.put("last_name", patientDTO.getLastname());
-            values.put("phone_number", patientDTO.getPhonenumber());
             values.put("address1", patientDTO.getAddress1());
             values.put("address2", patientDTO.getAddress2());
             values.put("country", patientDTO.getCountry());
@@ -157,7 +157,6 @@ public class PatientsDAO {
             values.put("first_name", patientDTO.getFirstname());
             values.put("middle_name", patientDTO.getMiddlename());
             values.put("last_name", patientDTO.getLastname());
-            values.put("phone_number", patientDTO.getPhonenumber());
             values.put("address1", patientDTO.getAddress1());
             values.put("address2", patientDTO.getAddress2());
             values.put("country", patientDTO.getCountry());
@@ -204,7 +203,6 @@ public class PatientsDAO {
             values.put("first_name", patientDTO.getFirst_name());
             values.put("middle_name", patientDTO.getMiddle_name());
             values.put("last_name", patientDTO.getLast_name());
-            values.put("phone_number", patientDTO.getPhone_number());
             values.put("address1", patientDTO.getAddress1());
             values.put("address2", patientDTO.getAddress2());
             values.put("country", patientDTO.getCountry());
@@ -485,6 +483,32 @@ public class PatientsDAO {
         return isInserted;
     }
 
+    /**
+     * An attribute row for this patient and type, reusing the existing row's uuid when there is one.
+     * insertPatientAttributes upserts on that uuid, so without this every edit inserts a duplicate.
+     */
+    public PatientAttributesDTO attributeRow(String patientUuid, String attributeTypeUuid, String value) {
+        String existing = getPatientAttributeRowUuid(patientUuid, attributeTypeUuid);
+        PatientAttributesDTO a = new PatientAttributesDTO();
+        a.setUuid(existing.isEmpty() ? UUID.randomUUID().toString() : existing);
+        a.setPatientuuid(patientUuid);
+        a.setPersonAttributeTypeUuid(attributeTypeUuid);
+        a.setValue(value);
+        return a;
+    }
+
+    /** The existing attribute row for this patient and type, or "" - so an edit replaces it. */
+    public String getPatientAttributeRowUuid(String patientUuid, String attributeTypeUuid) {
+        String rowUuid = "";
+        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
+        Cursor cursor = db.rawQuery(
+                "SELECT uuid FROM tbl_patient_attribute WHERE patientuuid = ? AND person_attribute_type_uuid = ?",
+                new String[]{patientUuid, attributeTypeUuid});
+        if (cursor.moveToFirst()) rowUuid = cursor.getString(0);
+        cursor.close();
+        return rowUuid == null ? "" : rowUuid;
+    }
+
     public String getUuidForAttribute(String attr) {
         String attributeUuid = "";
         SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
@@ -545,7 +569,6 @@ public class PatientsDAO {
                     patientDTO.setMiddlename(idCursor.getString(idCursor.getColumnIndexOrThrow("middle_name")));
                     patientDTO.setGender(idCursor.getString(idCursor.getColumnIndexOrThrow("gender")));
                     patientDTO.setDateofbirth(idCursor.getString(idCursor.getColumnIndexOrThrow("date_of_birth")));
-                    patientDTO.setPhonenumber(idCursor.getString(idCursor.getColumnIndexOrThrow("phone_number")));
                     patientDTO.setCountry(idCursor.getString(idCursor.getColumnIndexOrThrow("country")));
                     patientDTO.setStateprovince(idCursor.getString(idCursor.getColumnIndexOrThrow("state_province")));
                     patientDTO.setCityvillage(idCursor.getString(idCursor.getColumnIndexOrThrow("city_village")));

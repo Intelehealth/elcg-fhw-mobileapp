@@ -689,7 +689,7 @@ public class PatientPersonalInfoFragment extends Fragment {
 
         String[] patientColumns = {"uuid","first_name","middle_name","last_name","date_of_birth",
                 "address1","address2","city_village","state_province","postal_code","country",
-                "phone_number","gender","sdw","occupation","patient_photo",
+                "gender","sdw","occupation","patient_photo",
                 "economic_status","education_status","caste"};
         Cursor c = db.query("tbl_patient", patientColumns, "uuid=?", new String[]{patientUID},
                 null, null, null);
@@ -705,7 +705,6 @@ public class PatientPersonalInfoFragment extends Fragment {
             patient1.setState_province(c.getString(c.getColumnIndexOrThrow("state_province")));
             patient1.setPostal_code(c.getString(c.getColumnIndexOrThrow("postal_code")));
             patient1.setCountry(c.getString(c.getColumnIndexOrThrow("country")));
-            patient1.setPhone_number(c.getString(c.getColumnIndexOrThrow("phone_number")));
             patient1.setGender(c.getString(c.getColumnIndexOrThrow("gender")));
             patient1.setSdw(c.getString(c.getColumnIndexOrThrow("sdw")));
             patient1.setOccupation(c.getString(c.getColumnIndexOrThrow("occupation")));

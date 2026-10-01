@@ -461,7 +461,7 @@ public class PatientDetailActivity extends BaseActionBarActivity {
         // ── 1. Load patient from tbl_patient ─────────────────────────────────
         String[] patientColumns = {"uuid","openmrs_id","first_name","middle_name","last_name",
                 "gender","date_of_birth","address1","address2","city_village",
-                "state_province","postal_code","country","phone_number",
+                "state_province","postal_code","country",
                 "patient_photo","creatoruuid"};
         Cursor idCursor = db.query("tbl_patient", patientColumns, "uuid = ?",
                 new String[]{dataString}, null, null, null);
@@ -480,7 +480,6 @@ public class PatientDetailActivity extends BaseActionBarActivity {
                 patient.setState_province(idCursor.getString(idCursor.getColumnIndexOrThrow("state_province")));
                 patient.setPostal_code(idCursor.getString(idCursor.getColumnIndexOrThrow("postal_code")));
                 patient.setCountry(idCursor.getString(idCursor.getColumnIndexOrThrow("country")));
-                patient.setPhone_number(idCursor.getString(idCursor.getColumnIndexOrThrow("phone_number")));
                 patient.setPatient_photo(idCursor.getString(idCursor.getColumnIndexOrThrow("patient_photo")));
                 patient.setCreatorUuid(idCursor.getString(idCursor.getColumnIndexOrThrow("creatoruuid")));
             } while (idCursor.moveToNext());
