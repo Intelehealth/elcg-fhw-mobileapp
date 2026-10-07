@@ -89,14 +89,17 @@ object AdmissionWriter {
     /**
      * The encounter type comes from the constant, never from getEncounterTypeUuid("Admission"): that
      * reads tbl_uuid_dictionary, which an upgraded device never re-seeds, and a miss returns "" and
-     * silently writes nothing.
+     * silently writes nothing. The uuid is reused when the visit already carries an Admission
+     * encounter, because createEncountersToDB updates by uuid and a fresh one matches no row.
      */
     private fun insertAdmissionEncounter(
         record: AdmissionRecord,
         visitUuid: String,
         values: List<Pair<String, String>>
     ) {
-        val encounterUuid = UUID.randomUUID().toString()
+        val dao = EncounterDAO()
+        val existing = dao.getEncounterUuid(visitUuid, UuidDictionary.ENCOUNTER_ADMISSION)
+        val encounterUuid = existing.ifEmpty { UUID.randomUUID().toString() }
         val encounter = EncounterDTO().apply {
             uuid = encounterUuid
             visituuid = visitUuid
@@ -106,7 +109,7 @@ object AdmissionWriter {
             syncd = false
             voided = 0
         }
-        if (!EncounterDAO().createEncountersToDB(encounter)) {
+        if (!dao.createEncountersToDB(encounter)) {
             throw WriteFailedException("Admission encounter insert returned false")
         }
 

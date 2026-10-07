@@ -123,6 +123,20 @@ public class EncounterDAO {
         return flag;
     }
 
+    /** The existing encounter of this type on this visit, or "" - so a caller reuses it, never re-keys it. */
+    public String getEncounterUuid(String visitUuid, String encounterTypeUuid) {
+        String uuid = "";
+        if (visitUuid == null || encounterTypeUuid == null) return uuid;
+        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
+        Cursor cursor = db.rawQuery(
+                "SELECT uuid FROM tbl_encounter WHERE visituuid = ? AND encounter_type_uuid = ? " +
+                        "AND voided IN ('0','false','FALSE') COLLATE NOCASE LIMIT 1",
+                new String[]{visitUuid, encounterTypeUuid});
+        if (cursor.moveToFirst()) uuid = cursor.getString(0);
+        cursor.close();
+        return uuid == null ? "" : uuid;
+    }
+
     public boolean createEncountersToDB(EncounterDTO encounter) throws DAOException {
         boolean isCreated = false;
         Log.d(TAG, "createEncountersToDB:length: " + encounter.getEncounterTypeUuid().length());
@@ -263,7 +277,13 @@ public class EncounterDAO {
                 "a.uuid = b.encounteruuid AND b.sync='false' AND b.voided='0' ", new String[]{"false", "0"});
 */
 
-        Cursor idCursor = db.rawQuery("SELECT * from tbl_encounter where sync = ? OR sync = ?", new String[]{"0", "false"});
+        // Defence in depth for the truncation fixed in PatientsFrameJson.fetchEncounterObs: an
+        // encounter with no type cannot be pushed - that method rejects it and the server has nothing
+        // to file it under - so it has no business occupying a slot in the push queue.
+        Cursor idCursor = db.rawQuery(
+                "SELECT * from tbl_encounter WHERE (sync = ? OR sync = ?) " +
+                        "AND encounter_type_uuid IS NOT NULL AND encounter_type_uuid <> ''",
+                new String[]{"0", "false"});
 
         EncounterDTO encounterDTO = new EncounterDTO();
         Log.d("RAINBOW: ", "RAINBOW: " + idCursor.getCount());

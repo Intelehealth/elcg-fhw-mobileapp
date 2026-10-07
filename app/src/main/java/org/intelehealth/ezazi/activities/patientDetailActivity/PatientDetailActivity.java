@@ -369,6 +369,7 @@ public class PatientDetailActivity extends BaseActionBarActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (newVisit != null) newVisit.setEnabled(true);
         refreshVisitState();
         loadPastVisits();
     }
@@ -440,8 +441,10 @@ public class PatientDetailActivity extends BaseActionBarActivity {
                 + " " + patient.getLast_name();
     }
 
-    /** No open visit means admit her; an open one means show it. */
+    /** No open visit means admit her; an open one means show it. Disabled first: a second tap
+     * would stack a second Admission screen, and saving both writes the admission twice. */
     private void openAdmissionOrTimeline() {
+        newVisit.setEnabled(false);
         activeVisitUuid = new VisitsDAO().fetchActiveVisitUuid(patientUuid);
         if (activeVisitUuid.isEmpty()) {
             startActivity(AdmissionDataActivity.newIntent(this, patientUuid));

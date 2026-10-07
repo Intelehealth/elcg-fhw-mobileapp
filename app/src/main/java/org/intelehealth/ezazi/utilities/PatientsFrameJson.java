@@ -264,10 +264,13 @@ public class PatientsFrameJson {
             //if (speciality_row_exist_check(encounter.getVisit())){
             encounterList.add(encounter);
             //}
-            if (currentIndex != encounters.size() - 1) {
-                currentIndex = currentIndex + 1;
-                fetchEncounterObs(encounters, currentIndex, encounterList);
-            }
+        }
+        // Advancing must not depend on this encounter being pushable. A row with a null or empty
+        // encounter_type_uuid has to be SKIPPED, never allowed to end the walk: inside the guard it
+        // truncated the payload at that row, dropping every encounter behind it from this push and,
+        // because those stay unsynced and the query order is stable, from every push after it too.
+        if (currentIndex != encounters.size() - 1) {
+            fetchEncounterObs(encounters, currentIndex + 1, encounterList);
         }
     }
 

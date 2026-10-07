@@ -1114,7 +1114,7 @@ public class ObsDAO {
     public boolean isOxytocinByHWExistInDb(String encounteruuid, String value) {
         boolean isExist = false;
         db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
-        Cursor idCursor = db.rawQuery("SELECT * FROM tbl_obs where encounteruuid = ?  AND value =? AND conceptuuid = ?",
+        Cursor idCursor = db.rawQuery("SELECT * FROM tbl_obs where encounteruuid = ?  AND value =? AND conceptuuid = ? AND voided='0'",
                 new String[]{encounteruuid, value, UuidDictionary.OXYTOCIN_UL_DROPS_MIN});
 
         if (idCursor.getCount() > 0) {
@@ -1127,7 +1127,7 @@ public class ObsDAO {
     public boolean isIvFluidByHWExistInDb(String encounteruuid, String value) {
         boolean isExist = false;
         db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
-        Cursor idCursor = db.rawQuery("SELECT * FROM tbl_obs where encounteruuid = ?  AND value =? AND conceptuuid = ?",
+        Cursor idCursor = db.rawQuery("SELECT * FROM tbl_obs where encounteruuid = ?  AND value =? AND conceptuuid = ? AND voided='0'",
                 new String[]{encounteruuid, value, UuidDictionary.IV_FLUIDS});
 
         if (idCursor.getCount() != 0) {

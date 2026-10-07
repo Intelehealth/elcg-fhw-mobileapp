@@ -79,9 +79,11 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import kotlin.Unit;
@@ -743,8 +745,9 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                                 obsDAO.insertObs(obsDTO);
                             }
                         }
-                        if (voidedMedicines.size() > 0) {
-                            obsDAO.markedAsVoidedObsToDb(voidedMedicines);
+                        List<String> voidableUuids = withoutWrittenRows(voidedMedicines, obsDTOList);
+                        if (voidableUuids.size() > 0) {
+                            obsDAO.markedAsVoidedObsToDb(voidableUuids);
                         }
                     }
                 } else {
@@ -824,6 +827,34 @@ public class PartogramDataCaptureActivity extends BaseActionBarActivity {
                 e.printStackTrace();
             }
         }
+    }
+
+    /**
+     * Drops every uuid that this same save also writes to, so a row can never be updated and then
+     * voided in one pass.
+     *
+     * IV fluids and oxytocin store the explicit "No" answer on the same concept uuid as the real
+     * payload, so getObsuuid() resolves the payload write onto the very row findExistingNoObsUuid()
+     * stages for voiding. Voiding runs after the update loop, so without this filter the row ends up
+     * holding the correct reading with voided='1' and disappears from the screen and from the server.
+     * Medicine is unaffected: its medicines are separate rows, so the stale "No" uuid is never a write
+     * target and is still voided.
+     */
+    private List<String> withoutWrittenRows(List<String> voidedUuids, List<ObsDTO> writtenObs) {
+        Set<String> writtenUuids = new HashSet<>();
+        for (ObsDTO obs : writtenObs) {
+            if (obs.getUuid() != null && !obs.getUuid().isEmpty()) {
+                writtenUuids.add(obs.getUuid());
+            }
+        }
+
+        List<String> voidable = new ArrayList<>();
+        for (String uuid : voidedUuids) {
+            if (uuid != null && !uuid.isEmpty() && !writtenUuids.contains(uuid)) {
+                voidable.add(uuid);
+            }
+        }
+        return voidable;
     }
 
     /**
