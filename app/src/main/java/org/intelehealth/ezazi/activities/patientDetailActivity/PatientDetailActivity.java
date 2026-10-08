@@ -355,21 +355,25 @@ public class PatientDetailActivity extends BaseActionBarActivity {
         lockIfRegisteredByAnother(patient.getCreatorUuid());
     }
 
+    private boolean lockedByOtherProvider;
+
     /**
      * Locks editing only when the patient demonstrably belongs to another provider. A patient pulled
      * from the server carries no creator, and an unknown creator must not make her unadmittable.
+     * The flag is what keeps onResume from handing the button back.
      */
     private void lockIfRegisteredByAnother(String creatorUuid) {
         if (creatorUuid == null || creatorUuid.isEmpty()) return;
         if (creatorUuid.equals(sessionManager.getCreatorID())) return;
         editbtn.setVisibility(View.GONE);
         newVisit.setEnabled(false);
+        lockedByOtherProvider = true;
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (newVisit != null) newVisit.setEnabled(true);
+        if (newVisit != null && !lockedByOtherProvider) newVisit.setEnabled(true);
         refreshVisitState();
         loadPastVisits();
     }

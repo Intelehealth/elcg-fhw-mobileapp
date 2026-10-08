@@ -509,6 +509,7 @@
     <string name="are_you_want_go_back">Are you sure you want to go back ?</string>
     <string name="confirm">Confirm</string>
     <string name="admission_discard_message">Nothing you have entered on this screen has been saved yet. If you go back now, all of it will be lost.</string>
+    <string name="admission_saving_in_progress">Saving admission details. Please wait.</string>
     <string name="error">Error</string>
     <string name="patient_data_upload">Patient Data Upload</string>
     <string name="patient_image_download_notifi">Patient Image Download</string>

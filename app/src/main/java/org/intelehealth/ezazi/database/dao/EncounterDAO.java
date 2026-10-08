@@ -123,17 +123,28 @@ public class EncounterDAO {
         return flag;
     }
 
-    /** The existing encounter of this type on this visit, or "" - so a caller reuses it, never re-keys it. */
+    /**
+     * The existing encounter of this type on this visit, or "" - so a caller reuses it, never re-keys it.
+     *
+     * getWriteDb(), never getReadableDatabase(): AdmissionWriter calls this from INSIDE its open write
+     * transaction, and a second handle to the same file cannot be granted a connection while that
+     * transaction holds it - the read waits on a write that only ends after the read returns, so it
+     * dies on SQLITE_BUSY and starves every later query behind it. The cursor is closed in a finally
+     * for the same reason: a leaked cursor keeps holding the connection.
+     */
     public String getEncounterUuid(String visitUuid, String encounterTypeUuid) {
         String uuid = "";
         if (visitUuid == null || encounterTypeUuid == null) return uuid;
-        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getReadableDatabase();
+        SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
         Cursor cursor = db.rawQuery(
                 "SELECT uuid FROM tbl_encounter WHERE visituuid = ? AND encounter_type_uuid = ? " +
                         "AND voided IN ('0','false','FALSE') COLLATE NOCASE LIMIT 1",
                 new String[]{visitUuid, encounterTypeUuid});
-        if (cursor.moveToFirst()) uuid = cursor.getString(0);
-        cursor.close();
+        try {
+            if (cursor.moveToFirst()) uuid = cursor.getString(0);
+        } finally {
+            cursor.close();
+        }
         return uuid == null ? "" : uuid;
     }
 

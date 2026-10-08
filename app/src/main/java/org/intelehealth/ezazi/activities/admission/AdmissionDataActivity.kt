@@ -19,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import org.intelehealth.ezazi.R
 import org.intelehealth.ezazi.activities.admission.persistence.AdmissionRecord
 import org.intelehealth.ezazi.activities.admission.persistence.AdmissionValues
@@ -174,24 +175,38 @@ class AdmissionDataActivity : BaseActionBarActivity() {
         isWriting = true
         actions.btnNextAddress.isEnabled = false
 
-        val record = buildRecord()
-        val values = AdmissionValues.pack(record, getString(R.string.other_risk))
-
         lifecycleScope.launch {
-            val visitUuid = withContext(Dispatchers.IO) {
-                try {
-                    AdmissionWriter.write(record, values)
-                } catch (e: Exception) {
-                    Log.e(TAG_ADMISSION, "admission write failed", e)
-                    null
-                }
+            var visitUuid: String? = null
+            try {
+                val record = buildRecord()
+                val values = AdmissionValues.pack(record, getString(R.string.other_risk))
+                visitUuid = withContext(Dispatchers.IO) { AdmissionWriter.write(record, values) }
+            } catch (e: Throwable) {
+                // Throwable, not Exception: an Error here used to kill the coroutine with the button
+                // still disabled and back still swallowed, leaving the screen permanently inert.
+                Log.e(TAG_ADMISSION, "admission write failed", e)
+                FirebaseCrashlytics.getInstance().recordException(e)
             }
-            if (visitUuid == null) {
+
+            val savedVisitUuid = visitUuid
+            if (savedVisitUuid == null) {
                 isWriting = false
                 actions.btnNextAddress.isEnabled = true
+                Toast.makeText(
+                    this@AdmissionDataActivity,
+                    getString(R.string.something_went_wrong),
+                    Toast.LENGTH_LONG
+                ).show()
             } else {
-                OptimizedSyncWorker.tempOneTimeWorkRequest(this@AdmissionDataActivity)
-                openTimeline(visitUuid)
+                try {
+                    OptimizedSyncWorker.tempOneTimeWorkRequest(this@AdmissionDataActivity)
+                } catch (e: Throwable) {
+                    // The admission is already committed; a sync that cannot be queued must not
+                    // strand the user on a dead screen.
+                    Log.e(TAG_ADMISSION, "sync enqueue failed", e)
+                    FirebaseCrashlytics.getInstance().recordException(e)
+                }
+                openTimeline(savedVisitUuid)
             }
         }
     }
@@ -450,7 +465,14 @@ class AdmissionDataActivity : BaseActionBarActivity() {
     private fun setupBackConfirmation() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (isWriting) return
+                if (isWriting) {
+                    Toast.makeText(
+                        this@AdmissionDataActivity,
+                        getString(R.string.admission_saving_in_progress),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return
+                }
                 showBackConfirmationDialog()
             }
         })
