@@ -11,8 +11,9 @@ import org.intelehealth.ezazi.utilities.UuidDictionary
 object AdmissionValues {
 
     /**
-     * Returns concept uuid to stored value. Secondary doctor is omitted when no name was picked,
-     * mirroring the guard at PatientOtherInfoFragment.java:1853, so this is fourteen or fifteen pairs.
+     * Returns concept uuid to stored value. Secondary doctor is omitted when no name was picked, and
+     * so is any value left blank - OpenMRS rejects a valueless obs and one rejection fails the whole
+     * encounter. Emptiness is judged on a trimmed copy; the value itself is never trimmed.
      */
     fun pack(record: AdmissionRecord, otherRiskLabel: String): List<Pair<String, String>> {
         val values = mutableListOf<Pair<String, String>>()
@@ -35,7 +36,7 @@ object AdmissionValues {
         values += UuidDictionary.OBS_EDD to record.edd
         values += UuidDictionary.OBS_HOSPITAL_ID to record.hospitalId
 
-        return values
+        return values.filter { it.second.isNotBlank() }
     }
 
     private fun parity(record: AdmissionRecord): String =
