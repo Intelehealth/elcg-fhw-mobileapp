@@ -32,21 +32,20 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import com.google.gson.Gson;
 
 import org.intelehealth.ezazi.R;
-import org.intelehealth.ezazi.activities.admission.AdmissionDataActivity;
 import org.intelehealth.ezazi.activities.addNewPatient.AddNewPatientActivity;
+import org.intelehealth.ezazi.activities.admission.AdmissionDataActivity;
 import org.intelehealth.ezazi.activities.homeActivity.HomeActivity;
 import org.intelehealth.ezazi.activities.searchPatientActivity.SearchPatientActivity;
 import org.intelehealth.ezazi.activities.visitSummaryActivity.TimelineVisitSummaryActivity;
 import org.intelehealth.ezazi.app.AppConstants;
 import org.intelehealth.ezazi.database.dao.EncounterDAO;
 import org.intelehealth.ezazi.database.dao.ImagesDAO;
+import org.intelehealth.ezazi.database.dao.ObsDAO;
 import org.intelehealth.ezazi.database.dao.PatientsDAO;
 import org.intelehealth.ezazi.database.dao.VisitAttributeListDAO;
 import org.intelehealth.ezazi.database.dao.VisitsDAO;
-import org.intelehealth.ezazi.database.dao.ObsDAO;
 import org.intelehealth.ezazi.executor.TaskCompleteListener;
 import org.intelehealth.ezazi.executor.TaskExecutor;
 import org.intelehealth.ezazi.models.Patient;
@@ -152,7 +151,7 @@ public class PatientDetailActivity extends BaseActionBarActivity {
     /**
      * Converts a Gregorian DOB string (yyyy-MM-dd) to a BS display string.
      * Display format: "DD MonthName YYYY"  e.g. "15 Baisakh 2055"
-     *
+     * <p>
      * Uses UTC parsing to stay consistent with how NepaliDateConverter stores
      * dates (also UTC-based after the Bug #1 fix).
      */
@@ -163,7 +162,7 @@ public class PatientDetailActivity extends BaseActionBarActivity {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
             sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
             Date date = sdf.parse(gregYyyyMmDd);
-            int[] bs  = NepaliDateConverter.gregorianToBs(date);
+            int[] bs = NepaliDateConverter.gregorianToBs(date);
             return String.format(Locale.ENGLISH, "%02d %s %d",
                     bs[2], BS_MONTH_NAMES[bs[1] - 1], bs[0]);
         } catch (Exception e) {
@@ -175,15 +174,15 @@ public class PatientDetailActivity extends BaseActionBarActivity {
     /**
      * Calculates age in completed years from a Gregorian yyyy-MM-dd DOB string.
      * Returns -1 if parsing fails.
-     *
+     * <p>
      * ── FIX (Bug #3 – leap-year off-by-one) ─────────────────────────────────
      * The original code used DAY_OF_YEAR for the "has birthday passed?" check,
      * which gives the wrong answer across leap/non-leap year boundaries:
-     *
-     *   DOB  = 2000-03-01  → DAY_OF_YEAR = 61  (2000 is a leap year)
-     *   Today = 2001-03-01  → DAY_OF_YEAR = 60  (2001 is not)
-     *   Raw diff = 1 year.  60 < 61 → age-- → 0  ← WRONG (should be 1)
-     *
+     * <p>
+     * DOB  = 2000-03-01  → DAY_OF_YEAR = 61  (2000 is a leap year)
+     * Today = 2001-03-01  → DAY_OF_YEAR = 60  (2001 is not)
+     * Raw diff = 1 year.  60 < 61 → age-- → 0  ← WRONG (should be 1)
+     * <p>
      * Fix: compare MONTH + DAY_OF_MONTH instead of DAY_OF_YEAR.
      * ────────────────────────────────────────────────────────────────────────
      */
@@ -193,7 +192,7 @@ public class PatientDetailActivity extends BaseActionBarActivity {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
             sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
             Date birth = sdf.parse(gregYyyyMmDd);
-            Calendar b   = Calendar.getInstance();
+            Calendar b = Calendar.getInstance();
             b.setTime(birth);
             Calendar now = Calendar.getInstance();
 
@@ -249,14 +248,14 @@ public class PatientDetailActivity extends BaseActionBarActivity {
 
         Intent intent = this.getIntent();
         if (intent != null) {
-            patientUuid           = intent.getStringExtra("patientUuid");
-            patientName           = intent.getStringExtra("patientName");
-            hasPrescription       = intent.getStringExtra("hasPrescription");
+            patientUuid = intent.getStringExtra("patientUuid");
+            patientName = intent.getStringExtra("patientName");
+            hasPrescription = intent.getStringExtra("hasPrescription");
             privacy_value_selected = intent.getStringExtra("privacy");
-            intentTag             = intent.getStringExtra("tag");
-            Logger.logD(TAG, "Patient ID: "     + patientUuid);
-            Logger.logD(TAG, "Patient Name: "   + patientName);
-            Logger.logD(TAG, "Intent Tag: "     + intentTag);
+            intentTag = intent.getStringExtra("tag");
+            Logger.logD(TAG, "Patient ID: " + patientUuid);
+            Logger.logD(TAG, "Patient Name: " + patientName);
+            Logger.logD(TAG, "Intent Tag: " + intentTag);
         }
 
         if (hasPrescription != null && hasPrescription.equalsIgnoreCase("true")) {
@@ -355,30 +354,37 @@ public class PatientDetailActivity extends BaseActionBarActivity {
         lockIfRegisteredByAnother(patient.getCreatorUuid());
     }
 
-    private boolean lockedByOtherProvider;
-
-    /**
-     * Locks editing only when the patient demonstrably belongs to another provider. A patient pulled
-     * from the server carries no creator, and an unknown creator must not make her unadmittable.
-     * The flag is what keeps onResume from handing the button back.
-     */
+    /** Called once from onCreate; nothing else changes the button's state. */
     private void lockIfRegisteredByAnother(String creatorUuid) {
-        if (creatorUuid == null || creatorUuid.isEmpty()) return;
-        if (creatorUuid.equals(sessionManager.getCreatorID())) return;
+        if (creatorUuid == null || creatorUuid.isEmpty()) {
+            disableOptionsForOtherNurse();
+            return;
+        }
+
+        if (!creatorUuid.equalsIgnoreCase(sessionManager.getCreatorID())) {
+            disableOptionsForOtherNurse();
+            return;
+        }
+
+        editbtn.setVisibility(View.VISIBLE);
+        newVisit.setEnabled(true);
+    }
+
+    private void disableOptionsForOtherNurse() {
         editbtn.setVisibility(View.GONE);
         newVisit.setEnabled(false);
-        lockedByOtherProvider = true;
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (newVisit != null && !lockedByOtherProvider) newVisit.setEnabled(true);
         refreshVisitState();
         loadPastVisits();
     }
 
-    /** Off the main thread - the loader runs several queries per closed visit. */
+    /**
+     * Off the main thread - the loader runs several queries per closed visit.
+     */
     private void loadPastVisits() {
         if (pastVisitsList == null || patientUuid == null || loadingPastVisits) return;
         loadingPastVisits = true;
@@ -405,7 +411,9 @@ public class PatientDetailActivity extends BaseActionBarActivity {
         });
     }
 
-    /** Online opens the server report, offline the stored one. The extras keep the lowercase keys. */
+    /**
+     * Online opens the server report, offline the stored one. The extras keep the lowercase keys.
+     */
     private void openOutcomeReport(PastVisitDetails details) {
         Intent intent = currentNetworkStatus().getHasInternet()
                 ? new Intent(this, ViewPostPartumReportActivity.class)
@@ -416,7 +424,9 @@ public class PatientDetailActivity extends BaseActionBarActivity {
         startActivity(intent);
     }
 
-    /** Main thread only. With no closed visits nothing is shown, not even the title. */
+    /**
+     * Main thread only. With no closed visits nothing is shown, not even the title.
+     */
     private void showPastVisits(List<PastVisitDetails> visits) {
         loadingPastVisits = false;
         if (isFinishing() || isDestroyed() || pastVisitsList == null) return;
@@ -427,7 +437,9 @@ public class PatientDetailActivity extends BaseActionBarActivity {
         pastVisitsList.setVisibility(View.VISIBLE);
     }
 
-    /** Nepal's label and flow are unchanged, so this does nothing there. */
+    /**
+     * Nepal's label and flow are unchanged, so this does nothing there.
+     */
     private void refreshVisitState() {
         if (AppRegion.collectsAdmissionDataAtRegistration()) return;
         if (newVisit == null || patientUuid == null) return;
@@ -436,7 +448,9 @@ public class PatientDetailActivity extends BaseActionBarActivity {
                 ? R.string.add_visit_details : R.string.current_visit_timeline);
     }
 
-    /** Middle name only when there is one, matching the name the click path builds. */
+    /**
+     * Middle name only when there is one, matching the name the click path builds.
+     */
     private String fullNameWithMiddle() {
         String middle = patient.getMiddle_name();
         boolean hasMiddle = middle != null && !middle.trim().isEmpty();
@@ -445,10 +459,10 @@ public class PatientDetailActivity extends BaseActionBarActivity {
                 + " " + patient.getLast_name();
     }
 
-    /** No open visit means admit her; an open one means show it. Disabled first: a second tap
-     * would stack a second Admission screen, and saving both writes the admission twice. */
+    /**
+     * No open visit means admit her; an open one means show it.
+     */
     private void openAdmissionOrTimeline() {
-        newVisit.setEnabled(false);
         activeVisitUuid = new VisitsDAO().fetchActiveVisitUuid(patientUuid);
         if (activeVisitUuid.isEmpty()) {
             startActivity(AdmissionDataActivity.newIntent(this, patientUuid));
@@ -464,7 +478,9 @@ public class PatientDetailActivity extends BaseActionBarActivity {
     }
 
     @Override
-    protected int getScreenTitle() { return R.string.patient_info; }
+    protected int getScreenTitle() {
+        return R.string.patient_info;
+    }
 
     // ═════════════════════════════════════════════════════════════════════════
     //  setDisplay — loads patient data and populates the UI
@@ -474,10 +490,10 @@ public class PatientDetailActivity extends BaseActionBarActivity {
     public void setDisplay(String dataString) {
 
         // ── 1. Load patient from tbl_patient ─────────────────────────────────
-        String[] patientColumns = {"uuid","openmrs_id","first_name","middle_name","last_name",
-                "gender","date_of_birth","address1","address2","city_village",
-                "state_province","postal_code","country",
-                "patient_photo","creatoruuid"};
+        String[] patientColumns = {"uuid", "openmrs_id", "first_name", "middle_name", "last_name",
+                "gender", "date_of_birth", "address1", "address2", "city_village",
+                "state_province", "postal_code", "country",
+                "patient_photo", "creatoruuid"};
         Cursor idCursor = db.query("tbl_patient", patientColumns, "uuid = ?",
                 new String[]{dataString}, null, null, null);
         if (idCursor.moveToFirst()) {
@@ -503,7 +519,7 @@ public class PatientDetailActivity extends BaseActionBarActivity {
 
         // ── 2. Load patient attributes ────────────────────────────────────────
         Cursor idCursor1 = db.query("tbl_patient_attribute",
-                new String[]{"value","person_attribute_type_uuid"},
+                new String[]{"value", "person_attribute_type_uuid"},
                 "patientuuid = ?", new String[]{dataString}, null, null, null);
         String name = "";
         if (idCursor1.moveToFirst()) {
@@ -516,32 +532,48 @@ public class PatientDetailActivity extends BaseActionBarActivity {
                 }
                 String val = idCursor1.getString(idCursor1.getColumnIndexOrThrow("value"));
                 switch (name.toLowerCase()) {
-                    case "caste":                  patient.setCaste(val); break;
-                    case "telephone number":       patient.setPhone_number(val); break;
-                    case "education level":        patient.setEducation_level(val); break;
-                    case "economic status":        patient.setEconomic_status(val); break;
-                    case "occupation":             patient.setOccupation(val); break;
-                    case "son/wife/daughter":      patient.setSdw(val); break;
-                    case "profileimagetimestamp":  profileImage1 = val; break;
-                    case "ezazi registration number": patient.seteZaziRegNumber(val); break;
+                    case "caste":
+                        patient.setCaste(val);
+                        break;
+                    case "telephone number":
+                        patient.setPhone_number(val);
+                        break;
+                    case "education level":
+                        patient.setEducation_level(val);
+                        break;
+                    case "economic status":
+                        patient.setEconomic_status(val);
+                        break;
+                    case "occupation":
+                        patient.setOccupation(val);
+                        break;
+                    case "son/wife/daughter":
+                        patient.setSdw(val);
+                        break;
+                    case "profileimagetimestamp":
+                        profileImage1 = val;
+                        break;
+                    case "ezazi registration number":
+                        patient.seteZaziRegNumber(val);
+                        break;
                 }
             } while (idCursor1.moveToNext());
         }
         idCursor1.close();
 
         // ── 3. Bind UI references ─────────────────────────────────────────────
-        idView          = findViewById(R.id.textView_ID);
-        TextView patinetName     = findViewById(R.id.textView_name);
-        TextView dobView         = findViewById(R.id.textView_DOB);
-        TextView ageView         = findViewById(R.id.textView_age);
-        TextView addrFinalView   = findViewById(R.id.textView_address_final);
-        tvBedNumber              = findViewById(R.id.textView_bed_no);
-        cardBedNo                = findViewById(R.id.card_bed_no);
-        phoneView                = findViewById(R.id.textView_phone);
-        ImageView whatsapp_no    = findViewById(R.id.whatsapp_no);
-        ImageView calling        = findViewById(R.id.calling);
-        TextView medHistView     = findViewById(R.id.textView_patHist);
-        TextView famHistView     = findViewById(R.id.textView_famHist);
+        idView = findViewById(R.id.textView_ID);
+        TextView patinetName = findViewById(R.id.textView_name);
+        TextView dobView = findViewById(R.id.textView_DOB);
+        TextView ageView = findViewById(R.id.textView_age);
+        TextView addrFinalView = findViewById(R.id.textView_address_final);
+        tvBedNumber = findViewById(R.id.textView_bed_no);
+        cardBedNo = findViewById(R.id.card_bed_no);
+        phoneView = findViewById(R.id.textView_phone);
+        ImageView whatsapp_no = findViewById(R.id.whatsapp_no);
+        ImageView calling = findViewById(R.id.calling);
+        TextView medHistView = findViewById(R.id.textView_patHist);
+        TextView famHistView = findViewById(R.id.textView_famHist);
         TextView textView_UER_No = findViewById(R.id.textView_UER_No);
 
         textView_UER_No.setText(patient.geteZaziRegNumber());
@@ -729,17 +761,20 @@ public class PatientDetailActivity extends BaseActionBarActivity {
         eDTO.setEncounterTypeUuid(eDAO.getEncounterTypeUuid(encounterTypeUUIDValue));
         eDTO.setSyncd(true);
         eDTO.setVoided(0);
-        try { eDAO.createEncountersToDB(eDTO); }
-        catch (DAOException e) { FirebaseCrashlytics.getInstance().recordException(e); }
+        try {
+            eDAO.createEncountersToDB(eDTO);
+        } catch (DAOException e) {
+            FirebaseCrashlytics.getInstance().recordException(e);
+        }
     }
 
     private void addIntoEncounterList23UUIDs() {
-        String[] stages = {"Stage1_Hour1_2","Stage1_Hour2_1","Stage1_Hour2_2","Stage1_Hour3_1",
-                "Stage1_Hour3_2","Stage1_Hour4_1","Stage1_Hour4_2","Stage1_Hour5_1",
-                "Stage1_Hour5_2","Stage1_Hour6_1","Stage1_Hour6_2","Stage1_Hour7_1",
-                "Stage1_Hour7_2","Stage1_Hour8_1","Stage1_Hour8_2","Stage1_Hour9_1",
-                "Stage1_Hour9_2","Stage1_Hour10_1","Stage1_Hour10_2","Stage1_Hour11_1",
-                "Stage1_Hour11_2","Stage1_Hour12_1","Stage1_Hour12_2"};
+        String[] stages = {"Stage1_Hour1_2", "Stage1_Hour2_1", "Stage1_Hour2_2", "Stage1_Hour3_1",
+                "Stage1_Hour3_2", "Stage1_Hour4_1", "Stage1_Hour4_2", "Stage1_Hour5_1",
+                "Stage1_Hour5_2", "Stage1_Hour6_1", "Stage1_Hour6_2", "Stage1_Hour7_1",
+                "Stage1_Hour7_2", "Stage1_Hour8_1", "Stage1_Hour8_2", "Stage1_Hour9_1",
+                "Stage1_Hour9_2", "Stage1_Hour10_1", "Stage1_Hour10_2", "Stage1_Hour11_1",
+                "Stage1_Hour11_2", "Stage1_Hour12_1", "Stage1_Hour12_2"};
         for (String s : stages) encounterTypeUUIDListFor12Encounters.add(s);
     }
 
@@ -750,16 +785,29 @@ public class PatientDetailActivity extends BaseActionBarActivity {
                 url, "Basic " + sessionManager.getEncoded());
         dl.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new DisposableObserver<ResponseBody>() {
-                    @Override public void onNext(ResponseBody file) {
+                    @Override
+                    public void onNext(ResponseBody file) {
                         new DownloadFilesUtils().saveToDisk(file, patientUuid);
                     }
-                    @Override public void onError(Throwable e) { Logger.logD(TAG, e.getMessage()); }
-                    @Override public void onComplete() {
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Logger.logD(TAG, e.getMessage());
+                    }
+
+                    @Override
+                    public void onComplete() {
                         PatientsDAO pd = new PatientsDAO();
-                        try { pd.updatePatientPhoto(patientUuid, AppConstants.IMAGE_PATH + patientUuid + ".jpg"); }
-                        catch (DAOException e) { FirebaseCrashlytics.getInstance().recordException(e); }
-                        try { imagesDAO.insertPatientProfileImages(AppConstants.IMAGE_PATH + patientUuid + ".jpg", patientUuid); }
-                        catch (DAOException e) { FirebaseCrashlytics.getInstance().recordException(e); }
+                        try {
+                            pd.updatePatientPhoto(patientUuid, AppConstants.IMAGE_PATH + patientUuid + ".jpg");
+                        } catch (DAOException e) {
+                            FirebaseCrashlytics.getInstance().recordException(e);
+                        }
+                        try {
+                            imagesDAO.insertPatientProfileImages(AppConstants.IMAGE_PATH + patientUuid + ".jpg", patientUuid);
+                        } catch (DAOException e) {
+                            FirebaseCrashlytics.getInstance().recordException(e);
+                        }
                     }
                 });
     }
@@ -779,7 +827,7 @@ public class PatientDetailActivity extends BaseActionBarActivity {
 
     public void familyHistory(TextView famHistView, String patientuuid,
                               String EncounterAdultInitials_LatestVisit) {
-        Cursor visitCursor = db.query("tbl_visit", new String[]{"uuid, startdate","enddate"},
+        Cursor visitCursor = db.query("tbl_visit", new String[]{"uuid, startdate", "enddate"},
                 "patientuuid = ?", new String[]{patientuuid}, null, null, "startdate");
         previousVisitsList = findViewById(R.id.linearLayout_previous_visits);
         if (visitCursor.getCount() >= 1 && visitCursor.moveToLast()) {
@@ -791,13 +839,17 @@ public class PatientDetailActivity extends BaseActionBarActivity {
 
                 String famHistSelection = "encounteruuid = ? AND conceptuuid = ? And voided!='1'";
                 String[] famHistArgs = {EncounterAdultInitials_LatestVisit, UuidDictionary.RHK_FAMILY_HISTORY_BLURB};
-                Cursor famHistCursor = db.query("tbl_obs", new String[]{"value"," conceptuuid"},
+                Cursor famHistCursor = db.query("tbl_obs", new String[]{"value", " conceptuuid"},
                         famHistSelection, famHistArgs, null, null, null);
                 famHistCursor.moveToLast();
                 String famHistValue;
-                try { famHistValue = famHistCursor.getString(famHistCursor.getColumnIndexOrThrow("value")); }
-                catch (Exception e) { famHistValue = ""; }
-                finally { famHistCursor.close(); }
+                try {
+                    famHistValue = famHistCursor.getString(famHistCursor.getColumnIndexOrThrow("value"));
+                } catch (Exception e) {
+                    famHistValue = "";
+                } finally {
+                    famHistCursor.close();
+                }
 
                 famHistView.setText(famHistValue != null && !famHistValue.isEmpty()
                         ? Html.fromHtml(famHistValue) : getString(R.string.string_no_hist));
@@ -808,7 +860,7 @@ public class PatientDetailActivity extends BaseActionBarActivity {
 
     public void pastMedicalHistory(TextView medHistView, String patientuuid,
                                    String EncounterAdultInitials_LatestVisit) {
-        Cursor visitCursor = db.query("tbl_visit", new String[]{"uuid, startdate","enddate"},
+        Cursor visitCursor = db.query("tbl_visit", new String[]{"uuid, startdate", "enddate"},
                 "patientuuid = ?", new String[]{patientuuid}, null, null, "startdate");
         previousVisitsList = findViewById(R.id.linearLayout_previous_visits);
         if (visitCursor.getCount() >= 1 && visitCursor.moveToLast()) {
@@ -820,13 +872,17 @@ public class PatientDetailActivity extends BaseActionBarActivity {
 
                 String medHistSelection = "encounteruuid = ? AND conceptuuid = ? And voided!='1'";
                 String[] medHistArgs = {EncounterAdultInitials_LatestVisit, UuidDictionary.RHK_MEDICAL_HISTORY_BLURB};
-                Cursor medHistCursor = db.query("tbl_obs", new String[]{"value"," conceptuuid"},
+                Cursor medHistCursor = db.query("tbl_obs", new String[]{"value", " conceptuuid"},
                         medHistSelection, medHistArgs, null, null, null);
                 medHistCursor.moveToLast();
                 String medHistValue;
-                try { medHistValue = medHistCursor.getString(medHistCursor.getColumnIndexOrThrow("value")); }
-                catch (Exception e) { medHistValue = ""; }
-                finally { medHistCursor.close(); }
+                try {
+                    medHistValue = medHistCursor.getString(medHistCursor.getColumnIndexOrThrow("value"));
+                } catch (Exception e) {
+                    medHistValue = "";
+                } finally {
+                    medHistCursor.close();
+                }
 
                 medHistView.setText(medHistValue != null && !medHistValue.isEmpty()
                         ? Html.fromHtml(medHistValue) : getString(R.string.string_no_hist));
@@ -836,16 +892,21 @@ public class PatientDetailActivity extends BaseActionBarActivity {
     }
 
     @Override
-    protected void onStop() { super.onStop(); }
+    protected void onStop() {
+        super.onStop();
+    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case android.R.id.home: finish(); return true;
+            case android.R.id.home:
+                finish();
+                return true;
             case R.id.detail_home:
                 startActivity(new Intent(PatientDetailActivity.this, HomeActivity.class));
                 return true;
-            default: return super.onOptionsItemSelected(item);
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 
@@ -858,11 +919,11 @@ public class PatientDetailActivity extends BaseActionBarActivity {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
             sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
             Date birth = sdf.parse(gregYyyyMmDd);
-            Calendar b   = Calendar.getInstance();
+            Calendar b = Calendar.getInstance();
             b.setTime(birth);
             Calendar now = Calendar.getInstance();
 
-            int years  = knownYears;
+            int years = knownYears;
             // Advance birth by years to find remaining months
             b.add(Calendar.YEAR, years);
 
@@ -874,12 +935,12 @@ public class PatientDetailActivity extends BaseActionBarActivity {
             b.add(Calendar.MONTH, -1); // step back one overshoot
             months = Math.max(0, months - 1);
 
-            long remainMs   = now.getTimeInMillis() - b.getTimeInMillis();
-            int  days       = (int) (remainMs / (1000L * 60 * 60 * 24));
+            long remainMs = now.getTimeInMillis() - b.getTimeInMillis();
+            int days = (int) (remainMs / (1000L * 60 * 60 * 24));
 
-            return years  + " " + getString(R.string.years)  + " - "
+            return years + " " + getString(R.string.years) + " - "
                     + months + " " + getString(R.string.months) + " - "
-                    + days   + " " + getString(R.string.days);
+                    + days + " " + getString(R.string.days);
         } catch (Exception e) {
             // Ultra-safe fallback
             return knownYears + " " + getString(R.string.years);
