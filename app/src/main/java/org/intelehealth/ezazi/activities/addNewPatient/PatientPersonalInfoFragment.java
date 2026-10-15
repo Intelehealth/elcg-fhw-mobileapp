@@ -4,9 +4,7 @@ import static android.app.Activity.RESULT_OK;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.database.Cursor;
@@ -16,19 +14,8 @@ import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
-
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
-import androidx.core.content.ContextCompat;
-import androidx.core.widget.NestedScrollView;
-import androidx.fragment.app.Fragment;
-
 import android.text.Editable;
 import android.text.InputFilter;
-import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -41,6 +28,15 @@ import android.widget.NumberPicker;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
+import androidx.core.widget.NestedScrollView;
+import androidx.fragment.app.Fragment;
+
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.RequestBuilder;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
@@ -52,7 +48,6 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 
-import org.intelehealth.ezazi.ui.dialog.CalendarDialog;
 import org.intelehealth.ezazi.R;
 import org.intelehealth.ezazi.activities.cameraActivity.CameraActivity;
 import org.intelehealth.ezazi.activities.setupActivity.SetupActivity;
@@ -65,15 +60,14 @@ import org.intelehealth.ezazi.models.Patient;
 import org.intelehealth.ezazi.models.dto.PatientAttributesModel;
 import org.intelehealth.ezazi.models.dto.PatientDTO;
 import org.intelehealth.ezazi.models.dto.ProviderDTO;
+import org.intelehealth.ezazi.ui.dialog.CalendarDialog;
 import org.intelehealth.ezazi.ui.dialog.ConfirmationDialogFragment;
 import org.intelehealth.ezazi.ui.validation.UpperCaseAlphabetsInputFilter;
 import org.intelehealth.ezazi.utilities.AppRegion;
-import org.intelehealth.ezazi.utilities.DateAndTimeUtils;
 import org.intelehealth.ezazi.utilities.FileUtils;
 import org.intelehealth.ezazi.utilities.NepaliDateConverter;
 import org.intelehealth.ezazi.utilities.SessionManager;
 import org.intelehealth.ezazi.utilities.exception.DAOException;
-import org.intelehealth.klivekit.utils.DateTimeUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -106,9 +100,9 @@ public class PatientPersonalInfoFragment extends Fragment {
      * and we do not get infinite ping-pong or stale overwrites.
      */
     private boolean isSyncing = false;
-    private int selectedBsYear  = 0;
+    private int selectedBsYear = 0;
     private int selectedBsMonth = 0;
-    private int selectedBsDay   = 0;
+    private int selectedBsDay = 0;
     private String dobToDb = "";
 
     // ── UI fields ─────────────────────────────────────────────────────────────
@@ -186,23 +180,23 @@ public class PatientPersonalInfoFragment extends Fragment {
     }
 
     private void initUI() {
-        etLayoutAge  = view.findViewById(R.id.etLayout_age);
-        etLayoutDob  = view.findViewById(R.id.etLayout_dob);
-        tvDobForDb   = view.findViewById(R.id.tv_selected_date_dob);
-        tvAgeDob     = view.findViewById(R.id.tv_age_dob);
+        etLayoutAge = view.findViewById(R.id.etLayout_age);
+        etLayoutDob = view.findViewById(R.id.etLayout_dob);
+        tvDobForDb = view.findViewById(R.id.tv_selected_date_dob);
+        tvAgeDob = view.findViewById(R.id.tv_age_dob);
 
-        cardFirstName             = view.findViewById(R.id.card_first_name);
-        cardLastName              = view.findViewById(R.id.card_last_name);
-        cardDob                   = view.findViewById(R.id.card_dob);
-        cardAge                   = view.findViewById(R.id.card_age);
-        cardMobileNumber          = view.findViewById(R.id.card_mobile_no);
+        cardFirstName = view.findViewById(R.id.card_first_name);
+        cardLastName = view.findViewById(R.id.card_last_name);
+        cardDob = view.findViewById(R.id.card_dob);
+        cardAge = view.findViewById(R.id.card_age);
+        cardMobileNumber = view.findViewById(R.id.card_mobile_no);
         cardAlternateMobileNumber = view.findViewById(R.id.card_alternate_mobile_no);
 
-        tvErrorFirstName       = view.findViewById(R.id.firstname_error);
-        tvErrorLastName        = view.findViewById(R.id.lastname_error);
-        tvErrorDob             = view.findViewById(R.id.dob_error);
-        tvErrorAge             = view.findViewById(R.id.age_error);
-        tvErrorMobileNo        = view.findViewById(R.id.mobile_no_error);
+        tvErrorFirstName = view.findViewById(R.id.firstname_error);
+        tvErrorLastName = view.findViewById(R.id.lastname_error);
+        tvErrorDob = view.findViewById(R.id.dob_error);
+        tvErrorAge = view.findViewById(R.id.age_error);
+        tvErrorMobileNo = view.findViewById(R.id.mobile_no_error);
         tvErrAlternateMobileNo = view.findViewById(R.id.alternate_no_error);
 
         ProviderDAO providerDAO = new ProviderDAO();
@@ -212,16 +206,16 @@ public class PatientPersonalInfoFragment extends Fragment {
             e.printStackTrace();
         }
 
-        fab              = view.findViewById(R.id.fab_update_photo);
-        ivProfilePhoto   = view.findViewById(R.id.iv_profile_photo);
-        mFirstName       = view.findViewById(R.id.et_first_name);
-        mMiddleName      = view.findViewById(R.id.et_middle_name);
-        mLastName        = view.findViewById(R.id.et_last_name);
-        mDOB             = view.findViewById(R.id.et_dob);
-        mAge             = view.findViewById(R.id.et_age);
-        mMobileNumber    = view.findViewById(R.id.et_mobile_no);
+        fab = view.findViewById(R.id.fab_update_photo);
+        ivProfilePhoto = view.findViewById(R.id.iv_profile_photo);
+        mFirstName = view.findViewById(R.id.et_first_name);
+        mMiddleName = view.findViewById(R.id.et_middle_name);
+        mLastName = view.findViewById(R.id.et_last_name);
+        mDOB = view.findViewById(R.id.et_dob);
+        mAge = view.findViewById(R.id.et_age);
+        mMobileNumber = view.findViewById(R.id.et_mobile_no);
         mAlternateNumber = view.findViewById(R.id.et_alternate_mobile);
-        btnSaveUpdate    = view.findViewById(R.id.btn_save_update_first);
+        btnSaveUpdate = view.findViewById(R.id.btn_save_update_first);
         scrollviewPersonalInfo = view.findViewById(R.id.scroll_personal_info);
 
 
@@ -264,25 +258,25 @@ public class PatientPersonalInfoFragment extends Fragment {
     private void showNepaliDatePicker() {
         Calendar maxGreg = Calendar.getInstance();
         maxGreg.add(Calendar.YEAR, -13);
-        int[] maxBs    = NepaliDateConverter.gregorianToBs(maxGreg.getTime());
-        int maxBsYear  = maxBs[0];
+        int[] maxBs = NepaliDateConverter.gregorianToBs(maxGreg.getTime());
+        int maxBsYear = maxBs[0];
         int maxBsMonth = maxBs[1];
-        int maxBsDay   = maxBs[2];
+        int maxBsDay = maxBs[2];
 
         int initYear, initMonth, initDay;
         if (selectedBsYear > 0) {
-            initYear  = selectedBsYear;
+            initYear = selectedBsYear;
             initMonth = selectedBsMonth;
-            initDay   = selectedBsDay;
+            initDay = selectedBsDay;
         } else {
-            initYear  = maxBsYear;
+            initYear = maxBsYear;
             initMonth = maxBsMonth;
-            initDay   = maxBsDay;
+            initDay = maxBsDay;
         }
 
-        NumberPicker yearPicker  = new NumberPicker(mContext);
+        NumberPicker yearPicker = new NumberPicker(mContext);
         NumberPicker monthPicker = new NumberPicker(mContext);
-        NumberPicker dayPicker   = new NumberPicker(mContext);
+        NumberPicker dayPicker = new NumberPicker(mContext);
 
         yearPicker.setMinValue(NepaliDateConverter.getMinSupportedBsYear());
         yearPicker.setMaxValue(maxBsYear);
@@ -398,9 +392,9 @@ public class PatientPersonalInfoFragment extends Fragment {
     private void onBsDateSelected(int bsYear, int bsMonth, int bsDay) {
         Date gregDate = NepaliDateConverter.bsToGregorian(bsYear, bsMonth, bsDay);
         if (gregDate == null || !onDobSelected(gregDate)) return;
-        selectedBsYear  = bsYear;
+        selectedBsYear = bsYear;
         selectedBsMonth = bsMonth;
-        selectedBsDay   = bsDay;
+        selectedBsDay = bsDay;
     }
 
     /**
@@ -447,7 +441,7 @@ public class PatientPersonalInfoFragment extends Fragment {
      * and breakdown fields. Because mAge accepts only a whole-year integer,
      * the best we can do is assume exactly {@code ageInYears} years on today's
      * date, giving a breakdown of "{ageInYears} years, 0 months, 0 days".
-     *
+     * <p>
      * Strategy: subtract exactly {@code ageInYears} from today's date.
      * This gives a DOB whose calcAgeYmd() will return exactly
      * {@code (ageInYears, 0, 0)}, because Calendar.add(YEAR, -n) produces the
@@ -461,9 +455,9 @@ public class PatientPersonalInfoFragment extends Fragment {
         if (AppRegion.usesBikramSambat()) {
             int[] bs = NepaliDateConverter.gregorianToBs(birthDate);
             if (bs != null) {
-                selectedBsYear  = bs[0];
+                selectedBsYear = bs[0];
                 selectedBsMonth = bs[1];
-                selectedBsDay   = bs[2];
+                selectedBsDay = bs[2];
             }
         }
 
@@ -490,7 +484,9 @@ public class PatientPersonalInfoFragment extends Fragment {
     //  Helper utilities
     // ═════════════════════════════════════════════════════════════════════════
 
-    /** Returns "YYYY-MonthName-DD" e.g. "2055-Baisakh-15". */
+    /**
+     * Returns "YYYY-MonthName-DD" e.g. "2055-Baisakh-15".
+     */
     private String formatBsDate(int y, int m, int d) {
         return String.format(Locale.ENGLISH, "%d-%s-%02d", y, BS_MONTH_NAMES[m - 1], d);
     }
@@ -502,15 +498,18 @@ public class PatientPersonalInfoFragment extends Fragment {
         final int years;
         final int months;
         final int days;
+
         AgeYmd(int years, int months, int days) {
-            this.years = years; this.months = months; this.days = days;
+            this.years = years;
+            this.months = months;
+            this.days = days;
         }
     }
 
     /**
      * Computes the full "X years Y months Z days" breakdown of age from
      * a Gregorian birth date to today.
-     *
+     * <p>
      * Month/day rollover is handled correctly: if the current day-of-month is
      * before the birth day-of-month, we borrow from months (and days are
      * computed as "days ago, plus days-in-previous-month"). If the current
@@ -521,9 +520,9 @@ public class PatientPersonalInfoFragment extends Fragment {
         birth.setTime(birthDate);
         Calendar now = Calendar.getInstance();
 
-        int years  = now.get(Calendar.YEAR)         - birth.get(Calendar.YEAR);
-        int months = now.get(Calendar.MONTH)        - birth.get(Calendar.MONTH);
-        int days   = now.get(Calendar.DAY_OF_MONTH) - birth.get(Calendar.DAY_OF_MONTH);
+        int years = now.get(Calendar.YEAR) - birth.get(Calendar.YEAR);
+        int months = now.get(Calendar.MONTH) - birth.get(Calendar.MONTH);
+        int days = now.get(Calendar.DAY_OF_MONTH) - birth.get(Calendar.DAY_OF_MONTH);
 
         if (days < 0) {
             // Borrow days from the previous month
@@ -534,7 +533,7 @@ public class PatientPersonalInfoFragment extends Fragment {
         }
         if (months < 0) {
             // Borrow months from the year
-            years  -= 1;
+            years -= 1;
             months += 12;
         }
         if (years < 0) {
@@ -544,7 +543,9 @@ public class PatientPersonalInfoFragment extends Fragment {
         return new AgeYmd(years, months, days);
     }
 
-    /** Formats an AgeYmd as "X years Y months Z days". */
+    /**
+     * Formats an AgeYmd as "X years Y months Z days".
+     */
     private String formatAgeBreakdown(AgeYmd ymd) {
         return String.format(Locale.ENGLISH, "%d years %d months %d days",
                 ymd.years, ymd.months, ymd.days);
@@ -552,7 +553,9 @@ public class PatientPersonalInfoFragment extends Fragment {
 
     private static final String DB_DATE_FORMAT = "yyyy-MM-dd";
 
-    /** Formats a Date as yyyy-MM-dd (Gregorian) for DB storage. */
+    /**
+     * Formats a Date as yyyy-MM-dd (Gregorian) for DB storage.
+     */
     private String toGregorianDbFormat(Date date) {
         SimpleDateFormat sdf = new SimpleDateFormat(DB_DATE_FORMAT, Locale.ENGLISH);
         sdf.setTimeZone(TimeZone.getTimeZone("UTC")); // consistent with NepaliDateConverter
@@ -572,9 +575,9 @@ public class PatientPersonalInfoFragment extends Fragment {
             if (date == null) return "";
             int[] bs = NepaliDateConverter.gregorianToBs(date);
             if (bs == null) return dobForDisplay(yyyyMMdd);
-            selectedBsYear  = bs[0];
+            selectedBsYear = bs[0];
             selectedBsMonth = bs[1];
-            selectedBsDay   = bs[2];
+            selectedBsDay = bs[2];
             return formatBsDate(bs[0], bs[1], bs[2]);
         } catch (Exception e) {
             Log.e(TAG, "gregDbDateToBsDisplay failed: " + e.getMessage());
@@ -613,9 +616,9 @@ public class PatientPersonalInfoFragment extends Fragment {
 
     private void updatePatientDetailsFromSecondScreen() {
         if (host().arrivedFromAStep()) {
-            patientDTO               = draft().getPatient();
-            mAlternateNumberString   = draft().getAlternateNumber();
-            patientAttributesModel   = draft().getObstetric();
+            patientDTO = draft().getPatient();
+            mAlternateNumberString = draft().getAlternateNumber();
+            patientAttributesModel = draft().getObstetric();
             patientDTO.setAlternateNo(mAlternateNumberString);
             updateUI(patient1);
 
@@ -643,7 +646,8 @@ public class PatientPersonalInfoFragment extends Fragment {
                             ymd = calcAgeYmd(d);
                             mAgeYears = ymd.years;
                         }
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                    }
                     isSyncing = true;
                     try {
                         mAge.setText(String.valueOf(mAgeYears));
@@ -669,7 +673,7 @@ public class PatientPersonalInfoFragment extends Fragment {
     private void updatePatientDetailsFromSummary() {
         fromSummary = draft().getFromSummary();
         if (fromSummary) {
-            mIsEditMode    = true;
+            mIsEditMode = true;
             patientID_edit = draft().getEditingPatientUuid();
             patient1.setUuid(patientID_edit);
             bindDataWithUI(patientID_edit);
@@ -687,10 +691,10 @@ public class PatientPersonalInfoFragment extends Fragment {
     private void bindDataWithUI(String patientUID) {
         SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
 
-        String[] patientColumns = {"uuid","first_name","middle_name","last_name","date_of_birth",
-                "address1","address2","city_village","state_province","postal_code","country",
-                "gender","sdw","occupation","patient_photo",
-                "economic_status","education_status","caste"};
+        String[] patientColumns = {"uuid", "first_name", "middle_name", "last_name", "date_of_birth",
+                "address1", "address2", "city_village", "state_province", "postal_code", "country",
+                "gender", "sdw", "occupation", "patient_photo",
+                "economic_status", "education_status", "caste"};
         Cursor c = db.query("tbl_patient", patientColumns, "uuid=?", new String[]{patientUID},
                 null, null, null);
         if (c.moveToFirst()) {
@@ -713,7 +717,7 @@ public class PatientPersonalInfoFragment extends Fragment {
         c.close();
 
         Cursor ca = db.query("tbl_patient_attribute",
-                new String[]{"value","person_attribute_type_uuid"},
+                new String[]{"value", "person_attribute_type_uuid"},
                 "patientuuid = ?", new String[]{patientUID}, null, null, null);
         if (ca.moveToFirst()) {
             do {
@@ -726,24 +730,60 @@ public class PatientPersonalInfoFragment extends Fragment {
                 }
                 String val = ca.getString(ca.getColumnIndexOrThrow("value"));
                 switch (attrName.toLowerCase()) {
-                    case "alternateno":             patient1.setAlternateNo(val); break;
-                    case "telephone number":        patient1.setPhone_number(val); break;
-                    case "education level":         patient1.setEducation_level(val); break;
-                    case "economic status":         patient1.setEconomic_status(val); break;
-                    case "occupation":              patient1.setOccupation(val); break;
-                    case "son/wife/daughter":       patient1.setSdw(val); break;
-                    case "wife_daughter_of":        patient1.setWifeDaughterOf(val); break;
-                    case "admission_date":          patient1.setAdmissionDate(val); break;
-                    case "admission_time":          patient1.setAdmissionTime(val); break;
-                    case "parity":                  patient1.setParity(val); break;
-                    case "labor onset":             patient1.setLaborOnset(val); break;
-                    case "active labor diagnosed":  patient1.setActiveLaborDiagnosed(val); break;
-                    case "membrane ruptured timestamp": patient1.setMembraneRupturedTimestamp(val); break;
-                    case "risk factors":            patient1.setRiskFactors(val); break;
-                    case "hospital_maternity":      patient1.setHospitalMaternity(val); break;
-                    case "primarydoctor":           patient1.setPrimaryDoctor(val); break;
-                    case "secondarydoctor":         patient1.setSecondaryDoctor(val); break;
-                    case "ezazi registration number": patient1.seteZaziRegNumber(val); break;
+                    case "alternateno":
+                        patient1.setAlternateNo(val);
+                        break;
+                    case "telephone number":
+                        patient1.setPhone_number(val);
+                        break;
+                    case "education level":
+                        patient1.setEducation_level(val);
+                        break;
+                    case "economic status":
+                        patient1.setEconomic_status(val);
+                        break;
+                    case "occupation":
+                        patient1.setOccupation(val);
+                        break;
+                    case "son/wife/daughter":
+                        patient1.setSdw(val);
+                        break;
+                    case "wife_daughter_of":
+                        patient1.setWifeDaughterOf(val);
+                        break;
+                    case "admission_date":
+                        patient1.setAdmissionDate(val);
+                        break;
+                    case "admission_time":
+                        patient1.setAdmissionTime(val);
+                        break;
+                    case "parity":
+                        patient1.setParity(val);
+                        break;
+                    case "labor onset":
+                        patient1.setLaborOnset(val);
+                        break;
+                    case "active labor diagnosed":
+                        patient1.setActiveLaborDiagnosed(val);
+                        break;
+                    case "membrane ruptured timestamp":
+                        patient1.setMembraneRupturedTimestamp(val);
+                        break;
+                    case "risk factors":
+                        patient1.setRiskFactors(val);
+                        break;
+                    case "hospital_maternity":
+                        patient1.setHospitalMaternity(val);
+                        break;
+                    case "primarydoctor":
+                        patient1.setPrimaryDoctor(val);
+                        break;
+                    case "secondarydoctor":
+                        patient1.setSecondaryDoctor(val);
+                        break;
+                    case "ezazi registration number":
+                        patient1.seteZaziRegNumber(val);
+                        break;
                 }
             } while (ca.moveToNext());
         }
@@ -770,7 +810,8 @@ public class PatientPersonalInfoFragment extends Fragment {
                     ymd = calcAgeYmd(d);
                     mAgeYears = ymd.years;
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
             isSyncing = true;
             try {
                 mDOB.setText(bsDisplay);
@@ -901,10 +942,10 @@ public class PatientPersonalInfoFragment extends Fragment {
     }
 
     private boolean checkAndRequestPermissions() {
-        int cam  = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.CAMERA);
+        int cam = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.CAMERA);
         int wext = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
         List<String> needed = new ArrayList<>();
-        if (cam  != PackageManager.PERMISSION_GRANTED) needed.add(Manifest.permission.CAMERA);
+        if (cam != PackageManager.PERMISSION_GRANTED) needed.add(Manifest.permission.CAMERA);
         if (wext != PackageManager.PERMISSION_GRANTED) {
             needed.add(Manifest.permission.READ_EXTERNAL_STORAGE);
             needed.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
@@ -947,7 +988,11 @@ public class PatientPersonalInfoFragment extends Fragment {
         super.onRequestPermissionsResult(requestCode, perms, grants);
         if (requestCode == GROUP_PERMISSION_REQUEST) {
             boolean all = grants.length != 0;
-            for (int g : grants) if (g != PackageManager.PERMISSION_GRANTED) { all = false; break; }
+            for (int g : grants)
+                if (g != PackageManager.PERMISSION_GRANTED) {
+                    all = false;
+                    break;
+                }
             if (all) takePicture();
             else showPermissionDeniedAlert(perms);
         }
@@ -976,12 +1021,12 @@ public class PatientPersonalInfoFragment extends Fragment {
                     String.valueOf(FileUtils.encodeJSON(mContext, AppConstants.CONFIG_FILE_NAME))))
                     : new JSONObject(String.valueOf(FileUtils.encodeJSON(mContext, AppConstants.CONFIG_FILE_NAME)));
 
-            mFirstName.setVisibility(obj.getBoolean("mFirstName")  ? View.VISIBLE : View.GONE);
+            mFirstName.setVisibility(obj.getBoolean("mFirstName") ? View.VISIBLE : View.GONE);
             mMiddleName.setVisibility(obj.getBoolean("mMiddleName") ? View.VISIBLE : View.GONE);
-            mLastName.setVisibility(obj.getBoolean("mLastName")     ? View.VISIBLE : View.GONE);
-            mDOB.setVisibility(obj.getBoolean("mDOB")               ? View.VISIBLE : View.GONE);
+            mLastName.setVisibility(obj.getBoolean("mLastName") ? View.VISIBLE : View.GONE);
+            mDOB.setVisibility(obj.getBoolean("mDOB") ? View.VISIBLE : View.GONE);
             mMobileNumber.setVisibility(obj.getBoolean("mPhoneNum") ? View.VISIBLE : View.GONE);
-            mAge.setVisibility(obj.getBoolean("mAge")               ? View.VISIBLE : View.GONE);
+            mAge.setVisibility(obj.getBoolean("mAge") ? View.VISIBLE : View.GONE);
         } catch (JSONException e) {
             FirebaseCrashlytics.getInstance().recordException(e);
             Toast.makeText(mContext, "JsonException " + e, Toast.LENGTH_LONG).show();
@@ -1045,10 +1090,18 @@ public class PatientPersonalInfoFragment extends Fragment {
 
     class MyTextWatcher implements TextWatcher {
         final EditText editText;
-        MyTextWatcher(EditText et) { this.editText = et; }
 
-        @Override public void beforeTextChanged(CharSequence s, int st, int c, int a) {}
-        @Override public void onTextChanged(CharSequence s, int st, int b, int c) {}
+        MyTextWatcher(EditText et) {
+            this.editText = et;
+        }
+
+        @Override
+        public void beforeTextChanged(CharSequence s, int st, int c, int a) {
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int st, int b, int c) {
+        }
 
         @Override
         public void afterTextChanged(Editable editable) {
