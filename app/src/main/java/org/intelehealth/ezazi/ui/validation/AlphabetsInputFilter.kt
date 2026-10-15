@@ -4,7 +4,7 @@ import android.text.InputFilter
 import android.text.Spanned
 
 class AlphabetsInputFilter : InputFilter{
-    private val regex = Regex("^[a-zA-Z0-9\\p{Punct} ]*$")
+    private val regex = Regex("^[\\x20-\\x7E]*$")
 
     override fun filter(
             source: CharSequence,
