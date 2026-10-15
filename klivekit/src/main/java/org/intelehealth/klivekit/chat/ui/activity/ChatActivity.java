@@ -18,7 +18,6 @@ import android.provider.MediaStore;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -526,7 +525,7 @@ public class ChatActivity extends AppCompatActivity {
             }, new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError error) {
-                    Log.v(TAG, "postMessages - onErrorResponse - " + error.getMessage());
+                    Log.v(TAG, "postMessages - onErrorResponse - " + error.networkResponse.statusCode + " : " + new String(error.networkResponse.data));
                     mLoadingLinearLayout.setVisibility(View.GONE);
                 }
             }) {
@@ -640,6 +639,9 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     public void vCallNow(View view) {
+        if (!isVideoCallEnabled()) {
+            return;
+        }
         startActivity(new Intent(this, VideoCallActivity.class)
                 .putExtra("roomId", mPatientUUid)
                 .putExtra("nurseId", mFromUUId)
@@ -762,16 +764,28 @@ public class ChatActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Whether this build exposes video calling from the chat screen.
+     *
+     * Backed by a bool resource so a brand opts out with a flavour overlay rather than a code
+     * change. The library default is true; a client flavour that does not use video calling
+     * overrides it to false in its own res/values. elcgNepal is the only brand that does so today.
+     */
+    protected boolean isVideoCallEnabled() {
+        return getResources().getBoolean(R.bool.feature_video_call_enabled);
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Commented this code for Nepal only. as they dnt require video call
-       /* MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.chat_menu, menu);
-        menu.findItem(R.id.video_call_menu).getActionView().setOnClickListener(view -> {
-            onOptionsItemSelected(menu.findItem(R.id.video_call_menu));
-        });
-        return super.onCreateOptionsMenu(menu);*/
-        return true;
+        if (!isVideoCallEnabled()) {
+            return true;
+        }
+        getMenuInflater().inflate(R.menu.chat_menu, menu);
+        MenuItem videoCallItem = menu.findItem(R.id.video_call_menu);
+        if (videoCallItem != null && videoCallItem.getActionView() != null) {
+            videoCallItem.getActionView().setOnClickListener(view -> onOptionsItemSelected(videoCallItem));
+        }
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
@@ -781,7 +795,9 @@ public class ChatActivity extends AppCompatActivity {
             finish();
             return true;
         } else if (itemId == R.id.video_call_menu) {
-            onVideoMenuClicked(buildRtcArg());
+            if (isVideoCallEnabled()) {
+                onVideoMenuClicked(buildRtcArg());
+            }
             return true;
         }
         return super.onOptionsItemSelected(item);
