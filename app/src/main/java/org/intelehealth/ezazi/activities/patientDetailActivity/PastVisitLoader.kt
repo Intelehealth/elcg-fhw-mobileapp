@@ -71,10 +71,17 @@ object PastVisitLoader {
             riskFactors = admission[Columns.RISK_FACTORS].orEmpty(),
             parity = admission[Columns.PARITY].orEmpty(),
             modeOfDelivery = obsValue(db, stage3, DeliveryDetailsConcept.MODE_OF_DELIVERY.uuid),
-            babyStatus = outcome?.babyOutcome.orEmpty(),
+            babyStatus = babyStatus(db, stage3, outcome),
             motherStatus = motherStatus(db, visitComplete, outcome, deceasedLabel),
             hasReport = stage3.isNotEmpty()
         )
+    }
+
+    /** Stage 3's birth type is the most specific; VisitOutcome's newborn discharge then neonatal death follow. */
+    private fun babyStatus(db: SQLiteDatabase, stage3: String, outcome: VisitOutcome?): String {
+        val birthType = obsValue(db, stage3, DeliveryDetailsConcept.BIRTH_TYPE.uuid)
+        if (birthType.isNotEmpty()) return birthType
+        return outcome?.babyOutcome.orEmpty()
     }
 
     /**
