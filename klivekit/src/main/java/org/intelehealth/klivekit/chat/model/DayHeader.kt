@@ -1,7 +1,7 @@
 package org.intelehealth.klivekit.chat.model
 
+import org.intelehealth.klivekit.chat.utils.ChatDateTimeUtils
 import org.intelehealth.klivekit.utils.DateTimeUtils
-import org.intelehealth.klivekit.utils.extensions.toLocalDateFormat
 
 /**
  * Created by Vaghela Mithun R. on 03-08-2023 - 19:28.
@@ -14,7 +14,7 @@ class DayHeader(val date: String) : ItemHeader {
         return date
     }
 
-    fun displayFormat() = date.toLocalDateFormat(DateTimeUtils.MESSAGE_DAY_FORMAT)
+    fun displayFormat() = ChatDateTimeUtils.displayDay(date, DateTimeUtils.MESSAGE_DAY_FORMAT)
 
     companion object {
         @JvmStatic

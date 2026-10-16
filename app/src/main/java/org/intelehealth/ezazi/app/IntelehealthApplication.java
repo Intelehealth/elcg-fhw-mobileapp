@@ -28,6 +28,7 @@ import org.intelehealth.ezazi.database.InteleHealthDatabaseHelper;
 import org.intelehealth.ezazi.firebase.RealTimeDataChangedObserver;
 import org.intelehealth.ezazi.utilities.SessionManager;
 import org.intelehealth.klivekit.socket.SocketManager;
+import org.intelehealth.klivekit.utils.Manager;
 
 import io.reactivex.plugins.RxJavaPlugins;
 import okhttp3.Dispatcher;
@@ -79,6 +80,7 @@ public class IntelehealthApplication extends MultiDexApplication implements Appl
         mContext = getApplicationContext();
         sessionManager = new SessionManager(this);
         // keeping the base url in one singleton object for using in apprtc module
+        Manager.getInstance().setBaseUrl(sessionManager.getServerUrl());
 
         configureCrashReporting();
 
@@ -102,7 +104,7 @@ public class IntelehealthApplication extends MultiDexApplication implements Appl
             Parse.initialize(new Parse.Configuration.Builder(this)
                     .clientBuilder(builder)
                     .applicationId(AppConstants.IMAGE_APP_ID)
-                    .server("https://" + url + ":1337/parse/")
+                    .server(url + ":1337/parse/")
                     .build()
             );
             Log.i(TAG, "onCreate: Parse init");

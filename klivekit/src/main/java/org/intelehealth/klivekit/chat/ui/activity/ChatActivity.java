@@ -59,6 +59,7 @@ import com.codeglo.coyamore.data.PreferenceHelper;
 import com.github.ajalt.timberkt.Timber;
 import com.google.gson.Gson;
 
+import org.intelehealth.klivekit.BuildConfig;
 import org.intelehealth.klivekit.R;
 import org.intelehealth.klivekit.chat.model.DayHeader;
 import org.intelehealth.klivekit.chat.model.ItemHeader;
@@ -374,7 +375,7 @@ public class ChatActivity extends AppCompatActivity {
             return;
         }
         mEmptyTextView.setText(getString(R.string.loading));
-        String url = Constants.GET_ALL_MESSAGE_URL + mFromUUId + "/" + mToUUId + "/" + mPatientUUid;
+        String url = Constants.getAllMessageUrl() + mFromUUId + "/" + mToUUId + "/" + mPatientUUid;
         Log.v(TAG, "getAllMessages - " + url);
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(url, null, new Response.Listener<JSONObject>() {
             @Override
@@ -394,7 +395,7 @@ public class ChatActivity extends AppCompatActivity {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 Map<String, String> params = new HashMap<>();
-                Log.e("JWT_TRACE", "SEND getAllMessages | Bearer " + authToken);
+                if (BuildConfig.DEBUG) Log.e("JWT_TRACE", "SEND getAllMessages | Bearer " + authToken);
                 params.put("Authorization", "Bearer " + authToken);
                 return params;
             }
@@ -507,37 +508,59 @@ public class ChatActivity extends AppCompatActivity {
         addNewMessage(chatMessage);
 //        mChatListingAdapter.refresh(response.getData());
         Log.v(TAG, "postMessages - inputJsonObject - " + chatMessage.toJson());
+        final ChatMessage pendingRow = chatMessage;
         try {
             JsonObjectRequest objectRequest = new JsonObjectRequest(
                     Request.Method.POST,
-                    Constants.SEND_MESSAGE_URL,
+                    Constants.getSendMessageUrl(),
                     new JSONObject(chatMessage.toJson()), new Response.Listener<JSONObject>() {
                 @Override
                 public void onResponse(JSONObject response) {
                     Log.v(TAG, "postMessages - response - " + response.toString());
                     try {
-                        ChatMessage msg = new Gson().fromJson(response.getJSONObject("data").toString(), ChatMessage.class);
-                        mMessageEditText.setText("");
+                        if (!response.optBoolean("success")) {
+                            Log.e(TAG, "postMessages - server rejected the message - " + response);
+                            mChatListingAdapter.markMessageAsFailed(pendingRow);
+                            return;
+                        }
+
+                        JSONObject data = response.optJSONObject("data");
+                        ChatMessage msg = data == null
+                                ? null : new Gson().fromJson(data.toString(), ChatMessage.class);
+                        if (msg == null || msg.getMessage() == null) {
+                            Log.e(TAG, "postMessages - no message in a successful response - " + response);
+                            mChatListingAdapter.markMessageAsFailed(pendingRow);
+                            return;
+                        }
+
 //                        getAllMessages(false);
                         msg.setMessageStatus(MessageStatus.SENT.getValue());
-                        mChatListingAdapter.updatedMessage(msg);
+                        mChatListingAdapter.updatedMessage(pendingRow, msg);
+                    } catch (Exception e) {
+                        Log.e(TAG, "postMessages - could not read the response - " + response, e);
+                        mChatListingAdapter.markMessageAsFailed(pendingRow);
+                    } finally {
+                        mMessageEditText.setText("");
                         mLoadingLinearLayout.setVisibility(View.GONE);
-                    } catch (JSONException e) {
-                        throw new RuntimeException(e);
                     }
 
                 }
             }, new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError error) {
-                    Log.v(TAG, "postMessages - onErrorResponse - " + error.networkResponse.statusCode + " : " + new String(error.networkResponse.data));
+                    if (error.networkResponse == null) {
+                        Log.v(TAG, "postMessages - onErrorResponse - no network response", error);
+                    } else {
+                        Log.v(TAG, "postMessages - onErrorResponse - " + error.networkResponse.statusCode + " : " + new String(error.networkResponse.data));
+                    }
+                    mChatListingAdapter.markMessageAsFailed(pendingRow);
                     mLoadingLinearLayout.setVisibility(View.GONE);
                 }
             }) {
                 @Override
                 public Map<String, String> getHeaders() throws AuthFailureError {
                     Map<String, String> params = new HashMap<>();
-                    Log.e("JWT_TRACE", "SEND postMessages | Bearer " + authToken);
+                    if (BuildConfig.DEBUG) Log.e("JWT_TRACE", "SEND postMessages | Bearer " + authToken);
                     params.put("Authorization", "Bearer " + authToken);
                     return params;
                 }
@@ -550,7 +573,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     public void setReadStatus(int messageId) {
-        String url = Constants.SET_READ_STATUS_OF_MESSAGE_URL + messageId;
+        String url = Constants.getReadStatusOfMessageUrl() + messageId;
         Log.v(TAG, "setReadStatus - url - " + url);
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.PUT, url, null, response -> {
             Log.v(TAG, "setReadStatus - response - " + response.toString());
@@ -569,7 +592,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void connectTOSocket() {
-        String url = Constants.BASE_URL + "?userId=" + mFromUUId + "&name=" + mFromUUId;
+        String url = Constants.getBaseUrl() + "?userId=" + mFromUUId + "&name=" + mFromUUId;
         if (!SocketManager.getInstance().isConnected()) {
             SocketManager.getInstance().connect(url);
             Log.e(TAG, "connectTOSocket: reconnecting");
@@ -964,9 +987,11 @@ public class ChatActivity extends AppCompatActivity {
     private void getAuthenticationToken() {
         PreferenceHelper helper = new PreferenceHelper(getApplicationContext());
         authToken = helper.get(PreferenceHelper.AUTH_TOKEN);
-        Log.e("JWT_TRACE", "READ ChatActivity.onCreate | null=" + (authToken == null)
-                + " | blank=" + (authToken == null || authToken.trim().isEmpty())
-                + " | len=" + (authToken == null ? -1 : authToken.length())
-                + " | value=" + authToken);
+        if (BuildConfig.DEBUG) {
+            Log.e("JWT_TRACE", "READ ChatActivity.onCreate | null=" + (authToken == null)
+                    + " | blank=" + (authToken == null || authToken.trim().isEmpty())
+                    + " | len=" + (authToken == null ? -1 : authToken.length())
+                    + " | value=" + authToken);
+        }
     }
 }

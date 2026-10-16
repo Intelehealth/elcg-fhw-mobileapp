@@ -13,7 +13,7 @@ import org.intelehealth.klivekit.utils.Constants
  **/
 class VolleyService {
     fun getAllMessages(fromUuid: String, toUuid: String, patientUuid: String) {
-        val url = Constants.GET_ALL_MESSAGE_URL + fromUuid + "/" + toUuid + "/" + patientUuid
+        val url = Constants.getAllMessageUrl() + fromUuid + "/" + toUuid + "/" + patientUuid
         val jsonObjectRequest = JsonObjectRequest(Method.GET, url, null,
             { response ->
 

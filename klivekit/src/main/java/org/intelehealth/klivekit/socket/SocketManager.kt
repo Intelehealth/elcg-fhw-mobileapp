@@ -28,19 +28,6 @@ open class SocketManager {
     var notificationListener: NotificationListener? = null
     private var isCallTimeUp = false
 
-    /**
-     * Diagnostic only, safe to delete.
-     *
-     * The module declares two non-overlapping socket vocabularies. This class listens on the older
-     * one (updateMessage / isread / msg_delivered); the newer one below is referenced only by
-     * ChatSocket.kt, which nothing constructs. Since updateMessage now arrives as an empty object,
-     * these probes establish whether the server has moved the real payload onto the newer events.
-     */
-    private val protocolProbeEvents = listOf(
-        EVENT_MESSAGE_RECEIVED, EVENT_MESSAGE_SENT, EVENT_MESSAGE_SENT_ACK,
-        EVENT_MESSAGE_DELIVER, EVENT_MESSAGE_READ, EVENT_CHAT_READ
-    )
-
     interface NotificationListener {
         fun showNotification(chatMessage: ChatMessage)
     }
@@ -69,11 +56,6 @@ open class SocketManager {
             socket?.on(EVENT_CALL_CANCEL_BY_DR, emitter(EVENT_CALL_CANCEL_BY_DR))
             socket?.on(EVENT_MSG_DELIVERED, emitter(EVENT_MSG_DELIVERED))
             socket?.on(EVENT_CALL_TIME_UP, emitter(EVENT_CALL_TIME_UP))
-            protocolProbeEvents.forEach { event ->
-                socket?.on(event) { args ->
-                    Timber.e { "$TAG => PROBE => $event => ${args?.contentToString()}" }
-                }
-            }
             socket?.connect() ?: Timber.e { "Socket is null" }
         } ?: Timber.e { "Socket url must not be empty" }
     }
@@ -187,7 +169,6 @@ open class SocketManager {
         socket?.off(EVENT_CALL_CANCEL_BY_DR)
         socket?.off(EVENT_MSG_DELIVERED)
         socket?.off(EVENT_CALL_TIME_UP)
-        protocolProbeEvents.forEach { socket?.off(it) }
         socket?.disconnect()
     }
 

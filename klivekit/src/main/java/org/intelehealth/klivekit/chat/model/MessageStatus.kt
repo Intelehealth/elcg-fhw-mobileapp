@@ -13,7 +13,8 @@ enum class MessageStatus(val value: Int) {
     READ(1),
     CMD_RECEIVED(4),
     SENT(0),
-    SENDING(-1);
+    SENDING(-1),
+    FAILED(-2);
 
     fun isReceived() = this == RECEIVED
 
@@ -27,6 +28,8 @@ enum class MessageStatus(val value: Int) {
 
     fun isSending() = SENDING
 
+    fun isFailed() = this == FAILED
+
     companion object {
         @JvmStatic
         fun getStatus(value: Int) = when (value) {
@@ -34,6 +37,7 @@ enum class MessageStatus(val value: Int) {
             SENDING.value -> SENDING
             SENT.value -> SENT
             DELIVERED.value -> DELIVERED
+            FAILED.value -> FAILED
             else -> SENT
         }
     }

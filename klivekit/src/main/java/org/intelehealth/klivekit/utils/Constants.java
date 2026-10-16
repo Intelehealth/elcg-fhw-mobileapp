@@ -5,8 +5,36 @@ import android.content.Context;
 public class Constants {
     //TODO: this base url will be same as user input server url, but port no is fixed here.
     // if server will change this port we have change this port no
-    public static final String BASE_URL = Manager.getInstance().getBaseUrl() + ":3004";
+    private static final String PORT = ":3004";
     //public static final String BASE_URL = "https://testing.intelehealth.org:3004";
+
+    /**
+     * Reads the host from Manager on every call.
+     *
+     * <p>These used to be {@code static final} fields, so they were evaluated once at class load.
+     * Manager is a mutable singleton that only the login and FCM paths populate, so a process that
+     * started into any other screen froze every URL at {@code :3004} with no host and no scheme,
+     * and chat history could not load for the life of that process.</p>
+     */
+    public static String getBaseUrl() {
+        return Manager.getInstance().getBaseUrl() + PORT;
+    }
+
+    public static String getSendMessageUrl() {
+        return getBaseUrl() + "/api/messages/sendMessage";
+    }
+
+    public static String getAllMessageUrl() {
+        return getBaseUrl() + "/api/messages/";
+    }
+
+    public static String getReadStatusOfMessageUrl() {
+        return getBaseUrl() + "/api/messages/read/";
+    }
+
+    public static String getSaveFcmTokenUrl() {
+        return getBaseUrl() + "/api/mindmap/user_settings";
+    }
 
     public static final String ICE_SERVER_1_URL = "stun:stun.l.google.com:19302";
     public static final String ICE_SERVER_2_URL = "stun:stun1.l.google.com:19302";
@@ -76,11 +104,8 @@ public class Constants {
     public static final String ICE_SERVER_8_PASSWORD = "5e5a5a28-d2d5-11ed-b3dc-0242ac140004";*/
 
 
-    public static final String SEND_MESSAGE_URL = BASE_URL + "/api/messages/sendMessage";
     //@GET('https://testing.intelehealth.org:3004/messages/${fromUser}/${toUser}/${patientId}')
-    public static final String GET_ALL_MESSAGE_URL = BASE_URL + "/api/messages/";
-    public static final String SET_READ_STATUS_OF_MESSAGE_URL = BASE_URL + "/api/messages/read/"; //  https://uiux.intelehealth.org:3004/api/messages/read/881
-    public static final String SAVE_FCM_TOKEN_URL = BASE_URL + "/api/mindmap/user_settings";
+    //  https://uiux.intelehealth.org:3004/api/messages/read/881
 
     public static final int LEFT_ITEM_DOCT = 1;
     public static final int RIGHT_ITEM_HW = 2;

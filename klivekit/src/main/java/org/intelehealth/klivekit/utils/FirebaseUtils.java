@@ -38,7 +38,7 @@ public class FirebaseUtils {
             inputJsonObject.put("data", new JSONObject().put("device_reg_token", fcmToken));
             inputJsonObject.put("locale", lang);
 
-            String url = Constants.SAVE_FCM_TOKEN_URL;
+            String url = Constants.getSaveFcmTokenUrl();
             Log.d(TAG, "kksaveToken: url :: " + url);
 
             Log.v(TAG, url);

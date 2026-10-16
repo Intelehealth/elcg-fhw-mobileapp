@@ -566,7 +566,7 @@ public class SetupActivity extends AppCompatActivity {
 
                                     IntelehealthApplication.getInstance().startRealTimeObserverAndSocket();
 
-                                    Parse.initialize(new Parse.Configuration.Builder(getApplicationContext()).applicationId(AppConstants.IMAGE_APP_ID).server("https://" + CLEAN_URL + ":1337/parse/").build());
+                                    Parse.initialize(new Parse.Configuration.Builder(getApplicationContext()).applicationId(AppConstants.IMAGE_APP_ID).server(CLEAN_URL + ":1337/parse/").build());
 
                                     SQLiteDatabase sqLiteDatabase = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
 
@@ -867,7 +867,7 @@ public class SetupActivity extends AppCompatActivity {
 //    }
     private void saveToken() {
         ProviderDAO providerDAO = new ProviderDAO();
-        Manager.getInstance().setBaseUrl("https://" + sessionManager.getServerUrl());
+        Manager.getInstance().setBaseUrl(sessionManager.getServerUrl());
         // save fcm reg. token for chat (Video)
         try {
             FirebaseUtils.saveToken(this, providerDAO.getUserUuid(sessionManager.getProviderID()),
@@ -908,17 +908,21 @@ public class SetupActivity extends AppCompatActivity {
                         }
 
                         String jwt = authJWTResponse.getToken();
-                        Log.e("JWT_TRACE", "MINT SetupActivity | status=" + authJWTResponse.getStatus()
-                                + " | null=" + (jwt == null)
-                                + " | blank=" + (jwt == null || jwt.trim().isEmpty())
-                                + " | len=" + (jwt == null ? -1 : jwt.length())
-                                + " | value=" + jwt);
+                        if (BuildConfig.DEBUG) {
+                            Log.e("JWT_TRACE", "MINT SetupActivity | status=" + authJWTResponse.getStatus()
+                                    + " | null=" + (jwt == null)
+                                    + " | blank=" + (jwt == null || jwt.trim().isEmpty())
+                                    + " | len=" + (jwt == null ? -1 : jwt.length())
+                                    + " | value=" + jwt);
+                        }
                         sessionManager.setJwtAuthToken(authJWTResponse.getToken());
                         PreferenceHelper helper = new PreferenceHelper(getApplicationContext());
                         helper.save(PreferenceHelper.AUTH_TOKEN, authJWTResponse.getToken());
-                        Log.e("JWT_TRACE", "STORED SetupActivity | readback AUTH_TOKEN="
-                                + helper.getString(PreferenceHelper.AUTH_TOKEN)
-                                + " | readback JWT_AUTH_TOKEN=" + sessionManager.getJwtAuthToken());
+                        if (BuildConfig.DEBUG) {
+                            Log.e("JWT_TRACE", "STORED SetupActivity | readback AUTH_TOKEN="
+                                    + helper.getString(PreferenceHelper.AUTH_TOKEN)
+                                    + " | readback JWT_AUTH_TOKEN=" + sessionManager.getJwtAuthToken());
+                        }
                         TestSetup(urlString, username, password, location, progress);
                     }
 

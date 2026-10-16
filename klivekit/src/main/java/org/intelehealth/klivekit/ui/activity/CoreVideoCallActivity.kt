@@ -55,7 +55,7 @@ abstract class CoreVideoCallActivity : AppCompatActivity() {
     private val socketViewModel: SocketViewModel by viewModelByFactory {
         args = IntentCompat.getParcelableExtra(intent, RTC_ARGS, RtcArgs::class.java)
             ?: throw NullPointerException("args is null!")
-//        val url: String = Constants.BASE_URL + "?userId=" + args.nurseId + "&name=" + args.nurseId
+//        val url: String = Constants.getBaseUrl() + "?userId=" + args.nurseId + "&name=" + args.nurseId
         SocketViewModel(args)
     }
 

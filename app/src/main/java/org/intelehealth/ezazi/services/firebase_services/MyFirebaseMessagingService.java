@@ -265,7 +265,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     private void saveToken(String token) {
         ProviderDAO providerDAO = new ProviderDAO();
         SessionManager sessionManager = new SessionManager(this);
-        Manager.getInstance().setBaseUrl("https://" + sessionManager.getServerUrl());
+        Manager.getInstance().setBaseUrl(sessionManager.getServerUrl());
         IntelehealthApplication.getInstance().refreshedFCMTokenID = token;
         // save fcm reg. token for chat (Video)
         try {

@@ -1,11 +1,16 @@
 package org.intelehealth.ezazi.ui.dialog.model;
 
+import java.io.Serializable;
+
 /**
  * Created by Vaghela Mithun R. on 22-07-2023 - 00:05.
  * Email : mithun@intelehealth.org
  * Mob   : +919727206702
+ *
+ * Serializable because these items travel inside DialogArg, which is itself Serializable and is
+ * written to fragment state when the activity stops. Without it the save fails and the process dies.
  **/
-public class SingChoiceItem {
+public class SingChoiceItem implements Serializable {
     private int itemIndex;
     private String item;
     private String itemId;

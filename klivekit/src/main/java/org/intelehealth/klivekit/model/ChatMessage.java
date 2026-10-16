@@ -7,9 +7,9 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
 import org.intelehealth.klivekit.chat.model.ItemHeader;
+import org.intelehealth.klivekit.chat.utils.ChatDateTimeUtils;
 import org.intelehealth.klivekit.utils.DateTimeUtils;
 
-import java.util.Date;
 
 public class ChatMessage implements ItemHeader {
 
@@ -61,13 +61,11 @@ public class ChatMessage implements ItemHeader {
     }
 
     public String getMessageTime() {
-        Date date = DateTimeUtils.parseUTCDate(createdDate(), DateTimeUtils.DB_FORMAT);
-        return DateTimeUtils.formatToLocalDate(date, DateTimeUtils.MESSAGE_TIME_FORMAT);
+        return ChatDateTimeUtils.formatMessageDate(createdDate(), DateTimeUtils.MESSAGE_TIME_FORMAT);
     }
 
     public String getMessageDay() {
-        Date date = DateTimeUtils.parseUTCDate(createdDate(), DateTimeUtils.DB_FORMAT);
-        return DateTimeUtils.formatToLocalDate(date, DateTimeUtils.MESSAGE_DAY_FORMAT);
+        return ChatDateTimeUtils.formatMessageDate(createdDate(), DateTimeUtils.MESSAGE_DAY_FORMAT);
     }
 
     public void setCreatedAt(String createdAt) {

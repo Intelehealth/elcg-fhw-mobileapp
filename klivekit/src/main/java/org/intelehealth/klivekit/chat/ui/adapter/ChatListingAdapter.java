@@ -180,10 +180,13 @@ public class ChatListingAdapter extends DateHeaderAdapter {
             }
 
             MessageStatus status = MessageStatus.getStatus(message.getMessageStatus());
-            if (getAdapterPosition() == 0) {
+            if (getAdapterPosition() == 0 || status.isFailed()) {
                 Log.e("ChatAdapter", "bind: status" + status.getValue());
                 statusTextView.setVisibility(View.VISIBLE);
-                if (status.isRead()) {
+                if (status.isFailed()) {
+                    statusTextView.setText(mContext.getString(R.string.message_not_sent));
+                    statusTextView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+                } else if (status.isRead()) {
                     statusTextView.setText(mContext.getString(R.string.read));
                     statusTextView.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_status_msg_read, 0, 0, 0);
                 } else if (status.isDelivered()) {
@@ -229,18 +232,60 @@ public class ChatListingAdapter extends DateHeaderAdapter {
         }
     }
 
+    /**
+     * Applies the server's answer to the row that {@code pendingRow} refers to.
+     *
+     * <p>The row is located by object identity, because matching on message text updates the wrong
+     * row whenever the same text is sent twice. Text matching survives only as a fallback for
+     * callers that have no reference to the pending row, and both the message and its text are
+     * treated as nullable: a 200 carrying {@code success:false} delivers an error object here, not
+     * a message.</p>
+     */
+    public void updatedMessage(ChatMessage pendingRow, ChatMessage message) {
+        if (message == null) return;
+        int index = indexOfRow(pendingRow);
+        if (index < 0) index = indexOfMessageText(message.getMessage());
+        if (index < 0) return;
+
+        ChatMessage row = (ChatMessage) mItemList.get(index);
+        row.setId(message.getId());
+        row.setMessageStatus(message.getMessageStatus());
+        notifyItemChanged(index);
+    }
+
     public void updatedMessage(ChatMessage message) {
+        updatedMessage(null, message);
+    }
+
+    /**
+     * Moves a row to FAILED so a send that never came back stops reading as SENDING forever.
+     */
+    public void markMessageAsFailed(ChatMessage pendingRow) {
+        int index = indexOfRow(pendingRow);
+        if (index < 0) return;
+
+        ChatMessage row = (ChatMessage) mItemList.get(index);
+        row.setMessageStatus(MessageStatus.FAILED.getValue());
+        notifyItemChanged(index);
+    }
+
+    private int indexOfRow(ChatMessage row) {
+        if (row == null) return -1;
+        for (int i = 0; i < mItemList.size(); i++) {
+            if (mItemList.get(i) == row) return i;
+        }
+        return -1;
+    }
+
+    private int indexOfMessageText(String text) {
+        if (text == null) return -1;
         for (int i = 0; i < mItemList.size(); i++) {
             if (mItemList.get(i) instanceof ChatMessage) {
                 ChatMessage chatMessage = (ChatMessage) mItemList.get(i);
-                if (message.getMessage().equals(chatMessage.getMessage())) {
-                    chatMessage.setId(message.getId());
-                    chatMessage.setMessageStatus(message.getMessageStatus());
-                    notifyItemChanged(i);
-                    break;
-                }
+                if (text.equals(chatMessage.getMessage())) return i;
             }
         }
+        return -1;
     }
 }
 
