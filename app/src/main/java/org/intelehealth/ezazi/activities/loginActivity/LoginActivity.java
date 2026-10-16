@@ -558,9 +558,18 @@ cpd.show();
                             return;
                         }
 
+                        String jwt = authJWTResponse.getToken();
+                        Log.e("JWT_TRACE", "MINT LoginActivity | status=" + authJWTResponse.getStatus()
+                                + " | null=" + (jwt == null)
+                                + " | blank=" + (jwt == null || jwt.trim().isEmpty())
+                                + " | len=" + (jwt == null ? -1 : jwt.length())
+                                + " | value=" + jwt);
                         sessionManager.setJwtAuthToken(authJWTResponse.getToken());
                         PreferenceHelper helper = new PreferenceHelper(getApplicationContext());
                         helper.save(PreferenceHelper.AUTH_TOKEN, authJWTResponse.getToken());
+                        Log.e("JWT_TRACE", "STORED LoginActivity | readback AUTH_TOKEN="
+                                + helper.getString(PreferenceHelper.AUTH_TOKEN)
+                                + " | readback JWT_AUTH_TOKEN=" + sessionManager.getJwtAuthToken());
                         UserLoginTask(username, password);
                     }
 

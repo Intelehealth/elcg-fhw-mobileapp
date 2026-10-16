@@ -28,6 +28,19 @@ open class SocketManager {
     var notificationListener: NotificationListener? = null
     private var isCallTimeUp = false
 
+    /**
+     * Diagnostic only, safe to delete.
+     *
+     * The module declares two non-overlapping socket vocabularies. This class listens on the older
+     * one (updateMessage / isread / msg_delivered); the newer one below is referenced only by
+     * ChatSocket.kt, which nothing constructs. Since updateMessage now arrives as an empty object,
+     * these probes establish whether the server has moved the real payload onto the newer events.
+     */
+    private val protocolProbeEvents = listOf(
+        EVENT_MESSAGE_RECEIVED, EVENT_MESSAGE_SENT, EVENT_MESSAGE_SENT_ACK,
+        EVENT_MESSAGE_DELIVER, EVENT_MESSAGE_READ, EVENT_CHAT_READ
+    )
+
     interface NotificationListener {
         fun showNotification(chatMessage: ChatMessage)
     }
@@ -56,6 +69,11 @@ open class SocketManager {
             socket?.on(EVENT_CALL_CANCEL_BY_DR, emitter(EVENT_CALL_CANCEL_BY_DR))
             socket?.on(EVENT_MSG_DELIVERED, emitter(EVENT_MSG_DELIVERED))
             socket?.on(EVENT_CALL_TIME_UP, emitter(EVENT_CALL_TIME_UP))
+            protocolProbeEvents.forEach { event ->
+                socket?.on(event) { args ->
+                    Timber.e { "$TAG => PROBE => $event => ${args?.contentToString()}" }
+                }
+            }
             socket?.connect() ?: Timber.e { "Socket is null" }
         } ?: Timber.e { "Socket url must not be empty" }
     }
@@ -63,16 +81,21 @@ open class SocketManager {
     private fun emitter(event: String) = Emitter.Listener {
         val json: String? = Gson().toJson(it)
         Timber.e { "$TAG => $event => $json" }
+        Timber.e { "$TAG => $event => raw => ${it?.contentToString()}" }
         Timber.e { "$TAG => $event => ${Calendar.getInstance().time}" }
         if (event == EVENT_CALL_TIME_UP) {
             isCallTimeUp = true
         }
 
-        if (event == EVENT_ALL_USER) {
-            json?.let { array -> parseAndSaveToLocal(JSONArray(array)); }
-        } else if (event == EVENT_UPDATE_MESSAGE) {
-            json?.let { array -> ackMsgReceived(JSONArray(array)) }
-            json?.let { array -> notifyIfNotActiveRoom(JSONArray(array)); }
+        try {
+            if (event == EVENT_ALL_USER) {
+                json?.let { array -> parseAndSaveToLocal(JSONArray(array)); }
+            } else if (event == EVENT_UPDATE_MESSAGE) {
+                json?.let { array -> ackMsgReceived(JSONArray(array)) }
+                json?.let { array -> notifyIfNotActiveRoom(JSONArray(array)); }
+            }
+        } catch (e: Exception) {
+            Timber.e(e) { "$TAG => $event => payload handling failed => $json" }
         }
 
         if (isCallTimeUp && event == EVENT_CALL_CANCEL_BY_DR) return@Listener
@@ -86,7 +109,12 @@ open class SocketManager {
             val json = jsonArray.getJSONObject(0).getJSONObject("nameValuePairs").toString()
             Gson().fromJson(json, ChatMessage::class.java)?.let {
                 Timber.e { "activeRoomId => $activeRoomId" }
-                if (it.patientId.equals(activeRoomId).not()) showChatNotification(it)
+                val roomId: String? = it.patientId
+                if (roomId == null) {
+                    Timber.e { "$TAG => $EVENT_UPDATE_MESSAGE carried no patientId, dropping => $json" }
+                    return@let
+                }
+                if (roomId != activeRoomId) showChatNotification(it)
             }
         }
     }
@@ -95,6 +123,10 @@ open class SocketManager {
         if (jsonArray.length() > 0 && jsonArray.getJSONObject(0).has("nameValuePairs")) {
             val json = jsonArray.getJSONObject(0).getJSONObject("nameValuePairs").toString()
             Gson().fromJson(json, ChatMessage::class.java)?.let {
+                if (it.id == 0) {
+                    Timber.e { "$TAG => $EVENT_UPDATE_MESSAGE carried no message id, not acking => $json" }
+                    return@let
+                }
                 HashMap<String, Int>().apply {
                     put("messageId", it.id)
                 }.also {
@@ -155,6 +187,7 @@ open class SocketManager {
         socket?.off(EVENT_CALL_CANCEL_BY_DR)
         socket?.off(EVENT_MSG_DELIVERED)
         socket?.off(EVENT_CALL_TIME_UP)
+        protocolProbeEvents.forEach { socket?.off(it) }
         socket?.disconnect()
     }
 

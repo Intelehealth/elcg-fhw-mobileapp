@@ -199,6 +199,10 @@ public class ChatActivity extends AppCompatActivity {
 
             runOnUiThread(() -> {
                 ChatMessage message = new Gson().fromJson(jsonObject.toString(), ChatMessage.class);
+                if (message == null || message.getPatientId() == null) {
+                    Log.e(TAG, "onUpdateMessageEvent: dropping payload with no patientId => " + jsonObject);
+                    return;
+                }
                 Log.e(TAG, "onUpdateMessageEvent: socket => " + message.getPatientId());
                 Log.e(TAG, "onUpdateMessageEvent: screen => " + mPatientUUid);
                 if (message.getPatientId().equalsIgnoreCase(mPatientUUid)) {
@@ -390,6 +394,7 @@ public class ChatActivity extends AppCompatActivity {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 Map<String, String> params = new HashMap<>();
+                Log.e("JWT_TRACE", "SEND getAllMessages | Bearer " + authToken);
                 params.put("Authorization", "Bearer " + authToken);
                 return params;
             }
@@ -532,6 +537,7 @@ public class ChatActivity extends AppCompatActivity {
                 @Override
                 public Map<String, String> getHeaders() throws AuthFailureError {
                     Map<String, String> params = new HashMap<>();
+                    Log.e("JWT_TRACE", "SEND postMessages | Bearer " + authToken);
                     params.put("Authorization", "Bearer " + authToken);
                     return params;
                 }
@@ -958,5 +964,9 @@ public class ChatActivity extends AppCompatActivity {
     private void getAuthenticationToken() {
         PreferenceHelper helper = new PreferenceHelper(getApplicationContext());
         authToken = helper.get(PreferenceHelper.AUTH_TOKEN);
+        Log.e("JWT_TRACE", "READ ChatActivity.onCreate | null=" + (authToken == null)
+                + " | blank=" + (authToken == null || authToken.trim().isEmpty())
+                + " | len=" + (authToken == null ? -1 : authToken.length())
+                + " | value=" + authToken);
     }
 }
