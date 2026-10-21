@@ -39,6 +39,7 @@ class DeliveryDetailsUIController(
     private lateinit var deliveryDetails: DeliveryDetails;
     private  val GREG_FMT = "dd/MM/yyyy"
     private var dateOfDelivery: String? = ""
+    private var dateOfPlacentaDelivery: String? = ""
     fun initialize() {
          deliveryDetails = DeliveryDetails()
 
@@ -219,6 +220,8 @@ class DeliveryDetailsUIController(
         // ---- End Icon Clicks ----
         binding.etlDateOfDelivery.setEndIconOnClickListener { pickDeliveryDate() }
 
+        binding.etlDateOfPlacentaDelivery.setEndIconOnClickListener { pickPlacentaDate() }
+
         binding.etlTimeOfDelivery.setEndIconOnClickListener {
             selectTimeForAllParameters("timeOfDelivery")
         }
@@ -233,6 +236,8 @@ class DeliveryDetailsUIController(
 
         // ---- Field Clicks ----
         binding.etDateOfDelivery.setOnClickListener { pickDeliveryDate() }
+
+        binding.etDateOfPlacentaDelivery.setOnClickListener { pickPlacentaDate() }
 
         binding.etTimeOfDelivery.setOnClickListener { selectTimeForAllParameters("timeOfDelivery") }
 
@@ -286,6 +291,54 @@ class DeliveryDetailsUIController(
         dialog.show(fragmentManager, "DatePicker")
     }
 
+
+    /**
+     * Single entry point for choosing the date of placenta delivery. Nepal gets the Bikram Sambat
+     * wheel picker; every other region gets the standard Gregorian calendar dialog.
+     *
+     * <p>Both paths must assign the private [dateOfPlacentaDelivery] field, because that is what
+     * [getDateOfPlacentaDelivery] returns and what validation reads. Assigning only
+     * `deliveryDetails.dateOfPlacentaDelivery` is not enough: that object is re-created during
+     * setup, so the value is discarded and the field reads as empty forever.
+     *
+     * <p>The BS path stores Gregorian and displays BS, so the obs value is identical in both
+     * regions.
+     */
+    private fun pickPlacentaDate() {
+        if (!AppRegion.usesBikramSambat()) {
+            selectPlacentaDate()
+            return
+        }
+        showNepaliDatePicker(
+            R.string.select_date_of_placenta_delivery,
+            NepaliDateUtils.gregStringToBs(dateOfPlacentaDelivery)
+        ) { y, m, d ->
+            val greg = NepaliDateConverter.bsToGregorian(y, m, d) ?: return@showNepaliDatePicker
+            dateOfPlacentaDelivery = toGregFmt(greg)
+            binding.etDateOfPlacentaDelivery.setText(NepaliDateUtils.formatBsDate(y, m, d))
+            clearTextInputError(binding.etlDateOfPlacentaDelivery)
+            deliveryDetails.dateOfPlacentaDelivery = dateOfPlacentaDelivery
+        }
+    }
+
+    private fun selectPlacentaDate() {
+        val isTablet = context.resources.getBoolean(R.bool.isTabletSize)
+        val maxHeight = context.resources.getDimensionPixelOffset(R.dimen.std_430dp)
+
+        val dialog = CalendarDialog.Builder(context)
+            .title("")
+            .positiveButtonLabel(R.string.ok)
+            .maxHeight(if (!isTablet) maxHeight else 0)
+            .build()
+
+        dialog.setListener { day, month, year, value ->
+            dateOfPlacentaDelivery = value
+            binding.etDateOfPlacentaDelivery.setText(value)
+            clearTextInputError(binding.etlDateOfPlacentaDelivery)
+            deliveryDetails.dateOfPlacentaDelivery = dateOfPlacentaDelivery
+        }
+        dialog.show(fragmentManager, "PlacentaDatePicker")
+    }
 
     private fun selectTimeForAllParameters(forWhichParameter: String) {
 
@@ -760,6 +813,10 @@ class DeliveryDetailsUIController(
 
      fun getDateOfDelivery(): String?{
         return dateOfDelivery;
+    }
+
+    fun getDateOfPlacentaDelivery(): String? {
+        return dateOfPlacentaDelivery
     }
     private fun setupTypeOfStillBirthDropdown() {
         val options = context.resources.getStringArray(R.array.type_of_stillbirth_options)

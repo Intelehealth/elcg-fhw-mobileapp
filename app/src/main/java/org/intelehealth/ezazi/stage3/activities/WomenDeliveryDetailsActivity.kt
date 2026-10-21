@@ -391,6 +391,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
 
             // Section 2: Placenta &amp; Membrane Delivery Details
             placentaMembraneStatus = binding.autotvPlacentaMembraneDelivery.text.toString().trim()
+            dateOfPlacentaDelivery = uiHandler.getDateOfPlacentaDelivery()
             timeOfPlacentaDelivery = binding.etTimeOfPlacentaDelivery.text.toString().trim()
             placentalOrCordAbnormality = uiHandler.handleOtherField(
                 mainValue = uiHandler.getYesNoValue(binding.layoutPlacentalAbnormalityRadio.radioYesNoGroupCommon),

@@ -220,9 +220,21 @@ public class NepaliDateConverter {
         return BS_MONTHS_DATA[idx][bsMonth];
     }
 
-    /** Returns today's date in BS as int[]{year, month, day}. */
+    /**
+     * Returns today's date in BS as int[]{year, month, day}, using the DEVICE'S LOCAL calendar day.
+     *
+     * Previously this passed {@code new Date()} straight to {@link #gregorianToBs(Date)}, which
+     * reads the instant in the UTC calendar. East of UTC that is still yesterday for part of the
+     * morning: in Nepal (UTC+5:45) every BS picker defaulted to the previous day between local
+     * 00:00 and 05:45. Taking the local Y/M/D fields first and pinning them to UTC midnight keeps
+     * the exact day-count arithmetic in gregorianToBs while making the day itself the local one.
+     */
     public static int[] getCurrentBsDate() {
-        return gregorianToBs(new Date());
+        Calendar local = Calendar.getInstance();
+        return gregorianToBs(utcMidnight(
+                local.get(Calendar.YEAR),
+                local.get(Calendar.MONTH),
+                local.get(Calendar.DAY_OF_MONTH)).getTime());
     }
 
     /**
