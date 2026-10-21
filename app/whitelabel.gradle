@@ -61,17 +61,75 @@ android {
 
         buildVariantConfigField("${keyFor('client')}_${keyFor('server')}", variant)
 
-        // <brand>-<versionName>-<timestamp>-<serverTier>-<buildType>.apk
-        // outputFileName replaces the WHOLE name, so archivesBaseName plays no part -- which is why
-        // the per-flavour archivesBaseName lines were removed; they were project-global and dead.
-        // variant.versionName is the merged per-flavour value: elcgNepal 3.1.1, ezaziDefault 3.0.0.
+        // <brand>-<versionName>-<timestamp>-<serverTier>-<buildType>.<ext>
+        // variant.versionName is the merged per-flavour value: elcgNepal 3.1.1, ezaziDefault 3.1.0.
         def brand = flavourFor('client').name
         def tier = flavourFor('server').name
-        variant.outputs.all {
-            outputFileName = "${brand}-${variant.versionName}-${date}-${tier}-${variant.buildType.name}.apk"
+        def outputName = { String ext ->
+            "${brand}-${variant.versionName}-${date}-${tier}-${variant.buildType.name}.${ext}"
         }
 
+        variant.outputs.all {
+            outputFileName = outputName('apk')
+        }
+        registerBundleRename(variant.name, outputName('aab'))
+
         registerBrandAssetCheck(variant, flavourFor('client'))
+    }
+}
+
+/**
+ * Renames a variant's .aab so it matches the .apk. Registered per variant, so every production
+ * variant is covered, elcgNepal as well as ezaziDefault.
+ *
+ * outputFileName governs APKs only. A bundle is named
+ * <archivesBaseName>-<flavours>-<buildType>.aab, and archivesBaseName is project-global: it cannot
+ * carry the flavour, and it reads defaultConfig.versionName rather than the merged per-flavour
+ * one, so elcgNepal would be stamped eZazi's version. No value of it produces the APK's name.
+ *
+ * TIMING IS THE WHOLE PROBLEM. The path comes from signXxxBundle's finalBundleFile, but the rename
+ * must NOT happen there: produceXxxBundleIdeListingFile runs next and validates that exact path,
+ * so renaming in signXxxBundle fails the build with "property 'finalBundleFile' specifies file
+ * ... which doesn't exist". Verified order for a production bundle:
+ *
+ *   96  signXxxBundle
+ *   97  produceXxxBundleIdeListingFile          <- reads finalBundleFile
+ *   98  createXxxBundleListingFileRedirect
+ *   99  bundleXxx                               <- terminal, nothing reads it after
+ *
+ * So the rename hangs off bundleXxx and only reads the path from the sign task. Reading rather
+ * than assuming also handles the output directory moving: a command-line build writes to
+ * build/outputs/bundle/<variant>/, while Android Studio's signed-bundle wizard injects a location
+ * and AGP writes to <injected>/<flavours>/<buildType>/ instead.
+ *
+ * Known cost: the IDE listing file still records the pre-rename name, so Android Studio's
+ * post-build "locate" link may not resolve. The .aab itself is correct and in the same folder.
+ *
+ * Warns rather than fails: this must never be what breaks a release build.
+ */
+def registerBundleRename(String variantName, String targetName) {
+    def cap = variantName.capitalize()
+    tasks.matching { it.name == "bundle${cap}" }.configureEach { t ->
+        t.doLast {
+            def signTask = t.project.tasks.findByName("sign${cap}Bundle")
+            if (signTask == null) {
+                t.logger.warn("Bundle rename: sign${cap}Bundle not found; name left as AGP wrote it")
+                return
+            }
+            def produced = signTask.finalBundleFile.getOrNull()?.asFile
+            if (produced == null || !produced.isFile()) {
+                t.logger.warn("Bundle rename: no bundle at ${produced}; name left as AGP wrote it")
+                return
+            }
+            if (produced.name == targetName) return
+            def target = new File(produced.parentFile, targetName)
+            if (target.exists() && !target.delete()) {
+                t.logger.warn("Bundle rename: could not replace existing ${target}")
+                return
+            }
+            if (produced.renameTo(target)) t.logger.lifecycle("Bundle renamed: ${produced.name} -> ${targetName}")
+            else t.logger.warn("Bundle rename: failed, left as ${produced.name}")
+        }
     }
 }
 
