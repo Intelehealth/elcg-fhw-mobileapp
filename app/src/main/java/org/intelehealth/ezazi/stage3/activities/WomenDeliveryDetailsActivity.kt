@@ -42,6 +42,8 @@ import java.util.Calendar
 import java.util.Date
 import java.util.UUID
 
+private const val MAX_PLACENTA_INTERVAL_MIN = 60L
+
 class WomenDeliveryDetailsActivity : AppCompatActivity() {
     private val TAG = "WomenDeliveryDetailsAct"
     private lateinit var binding: ActivityWomenDeliveryDetailsBinding
@@ -224,6 +226,14 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             return false
         }
 
+        if (binding.etDateOfPlacentaDelivery.text.isNullOrEmpty()) {
+            setFieldError(
+                binding.etlDateOfPlacentaDelivery,
+                getString(R.string.this_field_is_mandatory)
+            )
+            return false
+        }
+
         if (binding.etTimeOfPlacentaDelivery.text.isNullOrEmpty()) {
             setFieldError(
                 binding.etlTimeOfPlacentaDelivery,
@@ -242,6 +252,45 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
                 )
                 return false
             }
+        }
+
+        val placentaDate = uiHandler.getDateOfPlacentaDelivery()
+        val placentaDateTime = NepaliDateUtils.parseGregDateTime(placentaDate, placentaTime)
+
+        if (placentaDate.isNullOrEmpty() || placentaDateTime == null) {
+            setFieldError(
+                binding.etlDateOfPlacentaDelivery,
+                getString(R.string.this_field_is_mandatory)
+            )
+            return false
+        }
+
+        if (!placentaDateTime.before(nowToMinute)) {
+            setFieldError(
+                binding.etlDateOfPlacentaDelivery,
+                getString(R.string.placenta_delivery_future_not_allowed)
+            )
+            return false
+        }
+
+        val placentaInterval = placentaIntervalMinutes(
+            deliveryDate, deliveryTime, placentaDate, placentaTime
+        )
+
+        if (placentaInterval == null || placentaInterval <= 0L) {
+            setFieldError(
+                binding.etlTimeOfPlacentaDelivery,
+                getString(R.string.error_placenta_time_after_delivery)
+            )
+            return false
+        }
+
+        if (placentaInterval > MAX_PLACENTA_INTERVAL_MIN) {
+            setFieldError(
+                binding.etlTimeOfPlacentaDelivery,
+                getString(R.string.error_placenta_within_sixty_minutes)
+            )
+            return false
         }
 
         if (!validatePlacentalAbnormality()) return false
@@ -571,6 +620,27 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             }
         }
         return true
+    }
+
+    /**
+     * Signed minutes from the delivery datetime to the placenta datetime. Negative or zero means
+     * the placenta datetime does not strictly follow delivery. Null when either pair fails to
+     * parse.
+     *
+     * Delegates to NepaliDateUtils.parseGregDateTime rather than deriving a formatter here: it
+     * accepts 12-hour as well as 24-hour input and pins Locale.ENGLISH, both of which a local
+     * "dd/MM/yyyy HH:mm" formatter would get wrong. The dates passed in are always the stored
+     * Gregorian values, never the Bikram Sambat text shown on screen in Nepal.
+     */
+    private fun placentaIntervalMinutes(
+        deliveryDate: String?,
+        deliveryTime: String?,
+        placentaDate: String?,
+        placentaTime: String?
+    ): Long? {
+        val delivery = NepaliDateUtils.parseGregDateTime(deliveryDate, deliveryTime) ?: return null
+        val placenta = NepaliDateUtils.parseGregDateTime(placentaDate, placentaTime) ?: return null
+        return (placenta.time - delivery.time) / 60_000L
     }
 
     private fun isTimeAfterOrEqual(laterTime: String, earlierTime: String): Boolean {
