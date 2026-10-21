@@ -244,15 +244,6 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
 
         val deliveryTime = binding.etTimeOfDelivery.text.toString().trim()
         val placentaTime = binding.etTimeOfPlacentaDelivery.text.toString().trim()
-        if (deliveryTime.isNotEmpty() && placentaTime.isNotEmpty()) {
-            if (!isTimeAfterOrEqual(placentaTime, deliveryTime)) {
-                setFieldError(
-                    binding.etlTimeOfPlacentaDelivery,
-                    getString(R.string.error_placenta_time_after_delivery)
-                )
-                return false
-            }
-        }
 
         val placentaDate = uiHandler.getDateOfPlacentaDelivery()
         val placentaDateTime = NepaliDateUtils.parseGregDateTime(placentaDate, placentaTime)
@@ -641,21 +632,6 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
         val delivery = NepaliDateUtils.parseGregDateTime(deliveryDate, deliveryTime) ?: return null
         val placenta = NepaliDateUtils.parseGregDateTime(placentaDate, placentaTime) ?: return null
         return (placenta.time - delivery.time) / 60_000L
-    }
-
-    private fun isTimeAfterOrEqual(laterTime: String, earlierTime: String): Boolean {
-        return try {
-            val format = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
-            format.isLenient = false
-
-            val t1 = format.parse(earlierTime)
-            val t2 = format.parse(laterTime)
-
-            t2 != null && t1 != null && t2.after(t1)
-
-        } catch (e: Exception) {
-            false
-        }
     }
 
     private fun navigateToTimeline() {
