@@ -187,6 +187,9 @@ object Stage3DataTransformer {
             ?: encounterTime))
         out.put("deliveryMode", textOrDash(obs[DeliveryDetailsConcept.MODE_OF_DELIVERY.uuid]))
         out.put("placentaMembraneDelivery", textOrDash(obs[DeliveryDetailsConcept.PLACENTA_MEMBRANE_STATUS.uuid]))
+        out.put("placentaDeliveryDate", toIsoOrRaw(obs[DeliveryDetailsConcept.PLACENTA_DELIVERY_DATE.uuid].orEmpty()))
+        out.put("placentaDeliveryDateBs",
+            NepaliDateConverter.localDayToBsDisplay(out.optString("placentaDeliveryDate")))
         out.put("placentaDeliveryTime", toIsoOrRaw(obs[DeliveryDetailsConcept.PLACENTA_DELIVERY_TIME.uuid].orEmpty()))
         out.put("placentaCordAbnormality", textOrDash(obs[DeliveryDetailsConcept.PLACENTA_CORD_ABNORMALITY.uuid]))
         out.put("perinealLaceration", textOrDash(obs[DeliveryDetailsConcept.PERINEAL_TEAR.uuid]))

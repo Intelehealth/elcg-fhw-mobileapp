@@ -325,6 +325,7 @@ object Stage3SheetRenderer {
                 "Placenta & Membrane Delivery",
                 o.optString("placentaMembraneDelivery").ifEmpty { "-" }, span = 2
             ),
+            Field("Placenta Delivery Date", patientDate(o.optString("placentaDeliveryDate"))),
             Field("Placenta Delivery Time", clockOnly(o.optString("placentaDeliveryTime"))),
             Field(
                 "Placenta/Cord Abnormality",
