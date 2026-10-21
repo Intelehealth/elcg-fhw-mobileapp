@@ -37,6 +37,7 @@ class DeliveryDetailsObsMapper{
         add(DeliveryDetailsConcept.PERINEAL_TEAR, deliveryDetails.perinealTear)
         add(DeliveryDetailsConcept.DEGREE_OF_PERINEAL_TEAR, deliveryDetails.degreeOfPerinealTear)
         add(DeliveryDetailsConcept.PLACENTA_MEMBRANE_STATUS, deliveryDetails.placentaMembraneStatus)
+        add(DeliveryDetailsConcept.PLACENTA_DELIVERY_DATE, deliveryDetails.dateOfPlacentaDelivery)
         add(DeliveryDetailsConcept.PLACENTA_DELIVERY_TIME, deliveryDetails.timeOfPlacentaDelivery)
         add(DeliveryDetailsConcept.PLACENTA_CORD_ABNORMALITY, deliveryDetails.placentalOrCordAbnormality)
         add(DeliveryDetailsConcept.MEDICATIONS_AMTSL, deliveryDetails.amtsl)

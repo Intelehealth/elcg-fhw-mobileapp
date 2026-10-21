@@ -22,6 +22,7 @@ class DeliveryDetails {
     // ===============================
 
     var placentaMembraneStatus: String? = null
+    var dateOfPlacentaDelivery: String? = null
     var timeOfPlacentaDelivery: String? = null
 
     var placentalOrCordAbnormality: String? = null
