@@ -336,6 +336,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
         binding.etlModeOfDelivery.error = null
         binding.etlDegreeOfPerinealTear.error = null
         binding.etlPlacentaMembraneDelivery.error = null
+        binding.etlDateOfPlacentaDelivery.error = null
         binding.etlTimeOfPlacentaDelivery.error = null
         binding.etlAmtsl.error = null
         binding.etlTypeOfBirth.error = null
