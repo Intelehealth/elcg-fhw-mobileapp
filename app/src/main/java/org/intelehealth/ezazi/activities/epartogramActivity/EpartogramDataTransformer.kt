@@ -165,10 +165,15 @@ object EpartogramDataTransformer {
      * @param visitUuid the visit UUID whose data should be rendered
      * @return JSON string, or null on fatal error
      */
-    suspend fun transform(visitUuid: String): String? = withContext(Dispatchers.IO) {
+    suspend fun transform(
+        visitUuid: String,
+        lcgTitle: String
+    ): String? = withContext(Dispatchers.IO) {
         try {
             val db   = AppConstants.inteleHealthDatabaseHelper.writeDb
             val root = JSONObject()
+
+            root.put("lcgTitle", lcgTitle)
 
             val patientUuid = queryPatientUuid(db, visitUuid) ?: ""
             root.put("pInfo", buildPinfo(db, patientUuid, visitUuid))

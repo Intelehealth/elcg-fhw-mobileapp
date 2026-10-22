@@ -73,7 +73,9 @@ class OfflineEPartogramViewActivity : BaseActionBarActivity() {
     }
 
     private suspend fun displayData(webView: WebView) {
-        val json = visitUuid?.let { EpartogramDataTransformer.transform(it) } ?: run {
+        val json = visitUuid?.let {
+            EpartogramDataTransformer.transform(it, getString(R.string.lcg_title))
+        } ?: run {
             showPageLoadingErrorDialog()
             return
         }

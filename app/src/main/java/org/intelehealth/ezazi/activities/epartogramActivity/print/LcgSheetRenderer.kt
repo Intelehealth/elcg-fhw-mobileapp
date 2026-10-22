@@ -324,7 +324,7 @@ object LcgSheetRenderer {
         val p = patientInfo(data)
 
         val title = paint(g.TEXT_TITLE, bold = true, align = Paint.Align.CENTER)
-        canvas.drawText("WHO LABOUR CARE GUIDE", (left + right) / 2f, top + 11f, title)
+        canvas.drawText(sheetTitle(data), (left + right) / 2f, top + 11f, title)
 
         val meta = paint(g.TEXT_LABEL, align = Paint.Align.RIGHT)
         meta.color = GRID
@@ -973,6 +973,19 @@ object LcgSheetRenderer {
         return pagesWritten + 1
     }
 
+    /**
+     * The brand's name for the instrument, upper-cased to match the rest of the sheet.
+     *
+     * Supplied per flavour as `lcgTitle` on the payload, so this renderer never resolves a
+     * string resource itself: it holds no Context, and the one it could reach has its locale
+     * mutated globally by SyncDAO, which would make getString() non-deterministic. Falls back
+     * to the WHO instrument's own unqualified name, which is not brand-specific.
+     */
+    private fun sheetTitle(data: JSONObject): String =
+        data.optString("lcgTitle").trim()
+            .ifEmpty { "Labour Care Guide" }
+            .uppercase(Locale.ROOT)
+
     private fun drawNotesHeader(
         canvas: Canvas,
         data: JSONObject,
@@ -985,7 +998,7 @@ object LcgSheetRenderer {
         var y = g.MARGIN + 12f
 
         canvas.drawText(
-            "LABOUR CARE GUIDE — NOTES", left, y, paint(g.TEXT_TITLE, bold = true)
+            "${sheetTitle(data)} — NOTES", left, y, paint(g.TEXT_TITLE, bold = true)
         )
         val meta = paint(g.TEXT_LABEL, align = Paint.Align.RIGHT)
         meta.color = GRID

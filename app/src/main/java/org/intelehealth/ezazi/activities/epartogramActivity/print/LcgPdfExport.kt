@@ -4,6 +4,7 @@ import android.app.Activity
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import kotlinx.coroutines.runBlocking
+import org.intelehealth.ezazi.R
 import org.intelehealth.ezazi.activities.epartogramActivity.EpartogramDataTransformer
 import org.intelehealth.ezazi.utilities.WebViewPdfExporter
 import org.json.JSONObject
@@ -52,8 +53,11 @@ object LcgPdfExport {
         Thread {
             var temp: File? = null
             try {
-                val json = runBlocking { EpartogramDataTransformer.transform(visitUuid) }
-                    ?: throw IOException("No labour care guide data for this visit")
+                val json = runBlocking {
+                    EpartogramDataTransformer.transform(
+                        visitUuid, activity.getString(R.string.lcg_title)
+                    )
+                } ?: throw IOException("No labour care guide data for this visit")
 
                 val data = JSONObject(json)
                 Timber.tag(TAG).d(

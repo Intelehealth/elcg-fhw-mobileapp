@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import org.intelehealth.ezazi.utilities.WebViewPdfExporter
+import org.intelehealth.ezazi.R
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
@@ -29,7 +30,11 @@ object LcgSheetPreview {
 
     /** Renders [data] (sample data when null) and returns the saved file's Uri. */
     fun generate(context: Context, data: JSONObject? = null): Pair<Uri, String> {
-        val visit = data ?: LcgSampleVisit.build()
+        val visit = (data ?: LcgSampleVisit.build()).apply {
+            if (optString("lcgTitle").isEmpty()) {
+                put("lcgTitle", context.getString(R.string.lcg_title))
+            }
+        }
         val document = PdfDocument()
         var pageNumber = 1
 

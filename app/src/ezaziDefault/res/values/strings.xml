@@ -7,4 +7,5 @@
     <string name="enter_postal_limit">Please enter 6 digits valid postal code</string>
     <string name="default_country_code" translatable="false">IN</string>
     <string name="country_preference" translatable="false">in,np</string>
+    <string name="lcg_title">WHO Labour Care Guide</string>
 </resources>
