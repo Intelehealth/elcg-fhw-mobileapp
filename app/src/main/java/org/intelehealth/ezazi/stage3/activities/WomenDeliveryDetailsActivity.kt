@@ -89,7 +89,6 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             Log.d("kkcheck", "onCreate: deliveryDetails : " + Gson().toJson(deliveryDetails))
             if (validateFields(deliveryDetails)) {
                 clearErrors()
-                warnIfProlongedThirdStage(deliveryDetails)
                 viewModel.saveDelivery(
                     encounterDto,
                     deliveryDetails,
@@ -258,14 +257,6 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             return false
         }
 
-        if (!placentaDateTime.before(nowToMinute)) {
-            setFieldError(
-                binding.etlDateOfPlacentaDelivery,
-                getString(R.string.placenta_delivery_future_not_allowed)
-            )
-            return false
-        }
-
         val placentaInterval = placentaIntervalMinutes(
             deliveryDate, deliveryTime, placentaDate, placentaTime
         )
@@ -411,7 +402,8 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
         uiHandler = DeliveryDetailsUIController(
             binding = binding,
             context = this,
-            fragmentManager = supportFragmentManager
+            fragmentManager = supportFragmentManager,
+            onPlacentaDateTimeChanged = { warnIfProlongedThirdStage() }
         )
         uiHandler.initialize()
     }
@@ -637,19 +629,24 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
     }
 
     /**
-     * Non-blocking caution when the third stage runs long.
+     * Non-blocking caution when the third stage runs long, raised as soon as both placenta
+     * fields are known rather than at save, matching how the partogram screen surfaces its
+     * range warnings (PartogramQueryListingAdapter).
      *
-     * Called only after validation has passed, so the interval is already known to be within
-     * MAX_PLACENTA_INTERVAL_MIN and strictly positive. Nothing here can stop the save: the
-     * record is clinically valid, the toast only asks the user to watch for postpartum
-     * haemorrhage.
+     * Reads live field state rather than a DeliveryDetails, because it fires from the pickers,
+     * before any model has been collected. placentaIntervalMinutes returns null while any of
+     * the four values is still empty, so the toast simply waits for the missing one -- which
+     * is what makes date-then-time and time-then-date behave identically.
+     *
+     * Deliberately NOT re-raised when the delivery date or time changes: the owner chose not to
+     * make the screen that reactive.
      */
-    private fun warnIfProlongedThirdStage(deliveryDetails: DeliveryDetails) {
+    private fun warnIfProlongedThirdStage() {
         val interval = placentaIntervalMinutes(
-            deliveryDetails.dateOfDelivery,
-            deliveryDetails.timeOfDelivery,
-            deliveryDetails.dateOfPlacentaDelivery,
-            deliveryDetails.timeOfPlacentaDelivery
+            uiHandler.getDateOfDelivery(),
+            binding.etTimeOfDelivery.text?.toString()?.trim(),
+            uiHandler.getDateOfPlacentaDelivery(),
+            binding.etTimeOfPlacentaDelivery.text?.toString()?.trim()
         ) ?: return
 
         if (interval > WARN_PLACENTA_INTERVAL_MIN) {

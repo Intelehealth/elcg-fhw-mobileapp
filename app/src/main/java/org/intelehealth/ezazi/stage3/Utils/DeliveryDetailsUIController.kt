@@ -34,7 +34,8 @@ import java.util.TimeZone
 class DeliveryDetailsUIController(
     private val binding: ActivityWomenDeliveryDetailsBinding,
     private val context: Context,
-    private val fragmentManager: FragmentManager
+    private val fragmentManager: FragmentManager,
+    private val onPlacentaDateTimeChanged: () -> Unit = {}
 ) {
     private lateinit var deliveryDetails: DeliveryDetails;
     private  val GREG_FMT = "dd/MM/yyyy"
@@ -318,6 +319,7 @@ class DeliveryDetailsUIController(
             binding.etDateOfPlacentaDelivery.setText(NepaliDateUtils.formatBsDate(y, m, d))
             clearTextInputError(binding.etlDateOfPlacentaDelivery)
             deliveryDetails.dateOfPlacentaDelivery = dateOfPlacentaDelivery
+            onPlacentaDateTimeChanged()
         }
     }
 
@@ -336,6 +338,7 @@ class DeliveryDetailsUIController(
             binding.etDateOfPlacentaDelivery.setText(value)
             clearTextInputError(binding.etlDateOfPlacentaDelivery)
             deliveryDetails.dateOfPlacentaDelivery = dateOfPlacentaDelivery
+            onPlacentaDateTimeChanged()
         }
         dialog.show(fragmentManager, "PlacentaDatePicker")
     }
@@ -363,6 +366,7 @@ class DeliveryDetailsUIController(
                 "timeOfPlacentaDelivery" -> {
                     binding.etTimeOfPlacentaDelivery.setText(timeString)
                     deliveryDetails.timeOfPlacentaDelivery = timeString
+                    onPlacentaDateTimeChanged()
                 }
             }
         }
