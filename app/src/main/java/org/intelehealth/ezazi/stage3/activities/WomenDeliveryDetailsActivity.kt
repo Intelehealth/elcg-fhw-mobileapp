@@ -43,6 +43,7 @@ import java.util.Date
 import java.util.UUID
 
 private const val MAX_PLACENTA_INTERVAL_MIN = 60L
+private const val WARN_PLACENTA_INTERVAL_MIN = 30L
 
 class WomenDeliveryDetailsActivity : AppCompatActivity() {
     private val TAG = "WomenDeliveryDetailsAct"
@@ -88,6 +89,7 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             Log.d("kkcheck", "onCreate: deliveryDetails : " + Gson().toJson(deliveryDetails))
             if (validateFields(deliveryDetails)) {
                 clearErrors()
+                warnIfProlongedThirdStage(deliveryDetails)
                 viewModel.saveDelivery(
                     encounterDto,
                     deliveryDetails,
@@ -632,6 +634,29 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
         val delivery = NepaliDateUtils.parseGregDateTime(deliveryDate, deliveryTime) ?: return null
         val placenta = NepaliDateUtils.parseGregDateTime(placentaDate, placentaTime) ?: return null
         return (placenta.time - delivery.time) / 60_000L
+    }
+
+    /**
+     * Non-blocking caution when the third stage runs long.
+     *
+     * Called only after validation has passed, so the interval is already known to be within
+     * MAX_PLACENTA_INTERVAL_MIN and strictly positive. Nothing here can stop the save: the
+     * record is clinically valid, the toast only asks the user to watch for postpartum
+     * haemorrhage.
+     */
+    private fun warnIfProlongedThirdStage(deliveryDetails: DeliveryDetails) {
+        val interval = placentaIntervalMinutes(
+            deliveryDetails.dateOfDelivery,
+            deliveryDetails.timeOfDelivery,
+            deliveryDetails.dateOfPlacentaDelivery,
+            deliveryDetails.timeOfPlacentaDelivery
+        ) ?: return
+
+        if (interval > WARN_PLACENTA_INTERVAL_MIN) {
+            Toast.makeText(
+                this, R.string.warn_prolonged_third_stage, Toast.LENGTH_LONG
+            ).show()
+        }
     }
 
     private fun navigateToTimeline() {
