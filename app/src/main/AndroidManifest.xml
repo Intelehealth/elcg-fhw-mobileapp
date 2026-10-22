@@ -52,7 +52,7 @@
         <activity
             android:name=".activities.epartogramActivity.OfflineEPartogramViewActivity"
             android:exported="false"
-            android:label="@string/title_activity_epartogram"
+            android:label="@string/lcg_title"
             android:screenOrientation="landscape"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
@@ -103,7 +103,7 @@
             android:name=".activities.epartogramActivity.EpartogramViewActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:exported="false"
-            android:label="@string/title_activity_epartogram"
+            android:label="@string/lcg_title"
             android:screenOrientation="landscape"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
