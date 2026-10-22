@@ -257,6 +257,14 @@ class WomenDeliveryDetailsActivity : AppCompatActivity() {
             return false
         }
 
+        if (placentaDateTime.after(nowToMinute)) {
+            setFieldError(
+                binding.etlDateOfPlacentaDelivery,
+                getString(R.string.placenta_delivery_future_not_allowed)
+            )
+            return false
+        }
+
         val placentaInterval = placentaIntervalMinutes(
             deliveryDate, deliveryTime, placentaDate, placentaTime
         )

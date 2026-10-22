@@ -239,6 +239,7 @@
     <string name="specify_anomaly">Specify Anomaly</string>
     <string name="error_placenta_time_after_delivery">Time of placenta delivery must be after time of delivery</string>
     <string name="error_placenta_within_sixty_minutes">Placenta delivery must be within 60 minutes of the delivery time</string>
+    <string name="placenta_delivery_future_not_allowed">Date and time of placenta delivery cannot be in the future</string>
     <string name="warn_prolonged_third_stage">Prolonged third stage: placenta delivered more than 30 min after birth. Monitor for PPH</string>
     <string name="label_women">Mother</string>
     <string name="label_newborn">Newborn</string>
