@@ -232,6 +232,29 @@ public class PatientsDAO {
 
     }
 
+    /**
+     * Whether an attribute carries nothing worth storing.
+     *
+     * <p>The pull sends a row for every attribute type the server knows about, including ones the
+     * patient has no value for. Household ID (10720d1a-1471-431b-be28-285d64767093) is the one that
+     * surfaced this. A row with a blank value reads back identically to no row at all — see
+     * {@link #getHouseHoldValue} — so storing it only adds noise to tbl_patient_attribute.</p>
+     *
+     * <p>Consequence worth knowing: if the server ever clears an attribute that already has a local
+     * value, the incoming blank no longer overwrites it and the stale value survives. If that case
+     * ever matters, delete the existing row here rather than skipping.</p>
+     */
+    private static boolean isBlankAttributeValue(PatientAttributesDTO attribute) {
+        return attribute == null
+                || attribute.getValue() == null
+                || attribute.getValue().trim().isEmpty();
+    }
+
+    /**
+     * Stores attributes arriving from the pull.
+     *
+     * <p>Attributes with a blank value are skipped — see {@link #isBlankAttributeValue}.</p>
+     */
     public boolean patientAttributes(List<PatientAttributesDTO> patientAttributesDTOS) throws DAOException {
         boolean isInserted = true;
         SQLiteDatabase db = AppConstants.inteleHealthDatabaseHelper.getWriteDb();
@@ -239,6 +262,7 @@ public class PatientsDAO {
         try {
             ContentValues values = new ContentValues();
             for (int i = 0; i < patientAttributesDTOS.size(); i++) {
+                if (isBlankAttributeValue(patientAttributesDTOS.get(i))) continue;
                 values.put("uuid", patientAttributesDTOS.get(i).getUuid());
                 values.put("person_attribute_type_uuid", patientAttributesDTOS.get(i).getPersonAttributeTypeUuid());
                 values.put("patientuuid", patientAttributesDTOS.get(i).getPatientuuid());
@@ -429,12 +453,18 @@ public class PatientsDAO {
         return name;
     }
 
+    /**
+     * Stores attributes created on this device, pending push.
+     *
+     * <p>Attributes with a blank value are skipped — see {@link #isBlankAttributeValue}.</p>
+     */
     public boolean insertPatientAttributes(List<PatientAttributesDTO> patientAttributesDTOS, SQLiteDatabase db) throws DAOException {
         boolean isInserted = true;
         ContentValues values = new ContentValues();
         db.beginTransaction();
         try {
             for (int i = 0; i < patientAttributesDTOS.size(); i++) {
+                if (isBlankAttributeValue(patientAttributesDTOS.get(i))) continue;
                 values.put("uuid", patientAttributesDTOS.get(i).getUuid());
                 values.put("person_attribute_type_uuid", patientAttributesDTOS.get(i).getPersonAttributeTypeUuid());
                 values.put("patientuuid", patientAttributesDTOS.get(i).getPatientuuid());

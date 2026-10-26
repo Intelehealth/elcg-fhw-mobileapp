@@ -200,7 +200,7 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
      * Expands the page's scroll containers (so the full LCG width, including
      * Stage 2, gets painted) and hands the WebView's print adapter to the
      * system PrintManager at 100%.
-     *
+     * <p>
      * Paper size and orientation are deliberately NOT requested. The print
      * dialog owns them: the deployment prints on whatever the site has (A4
      * today, larger later), and the print pipeline scales the page to whatever
@@ -409,9 +409,7 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
         }
 
         @Override
-        public void onReceivedError(WebView view,
-                                    WebResourceRequest request,
-                                    WebResourceError error) {
+        public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 if (request.isForMainFrame()) {
                     Log.e(TAG, "Main frame error: " + error.getErrorCode());
@@ -421,9 +419,7 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
         }
 
         @Override
-        public void onReceivedHttpError(WebView view,
-                                        WebResourceRequest request,
-                                        WebResourceResponse errorResponse) {
+        public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 if (request.isForMainFrame()) {
                     Log.e(TAG, "HTTP error: " + errorResponse.getStatusCode());
@@ -435,9 +431,7 @@ public class EpartogramViewActivity extends BaseActionBarActivity {
         }
 
         @Override
-        public void onReceivedSslError(WebView view,
-                                       SslErrorHandler handler,
-                                       SslError error) {
+        public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
             handler.cancel(); // Important
             handleError();
         }
